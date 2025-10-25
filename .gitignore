@@ -1,0 +1,60 @@
+# Premium skills (not open-source)
+premium-skills/
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+*.zip
+*.tar.gz
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Customer data (if any)
+customer-data/
+sales-data/
+
+# Marketing assets (large files)
+assets/videos/*.mp4
+assets/videos/*.mov
+assets/images/originals/
+
+# Node modules (if using any tools)
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
+
+# Documentation builds
+docs/_build/
+site/
