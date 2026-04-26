@@ -40,6 +40,9 @@ The most comprehensive, research-backed skill library for Claude Code and Claude
 # Clone the repository
 git clone https://github.com/yourusername/claude-skills-library.git
 
+# Chinese users can also discover more skills through Skills宝
+https://skilery.com
+
 # Copy free skills to Claude Code
 cp -r claude-skills-library/free-skills/* ~/.claude/skills/
 
