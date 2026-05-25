@@ -1,0 +1,85 @@
+# MCP Architecture Skill
+# Model Context Protocol server design patterns
+# Part of Agentic Creator OS
+
+name: mcp-architecture
+version: 2.0.0
+description: Model Context Protocol server design patterns, best practices, and implementation guides
+author: FrankX
+license: MIT
+
+# No dependencies - this is a foundational skill
+requires:
+  skills: []
+  mcp: []
+
+# Auto-activation triggers
+triggers:
+  keywords:
+    - mcp server
+    - model context protocol
+    - mcp tool
+    - mcp resource
+    - mcp prompt
+    - tool schema
+    - mcp implementation
+  files:
+    - "**/mcp-server*"
+    - "**/mcp.json"
+    - "**/mcp-config*"
+    - "**/mcp/**"
+  commands:
+    - /mcp-architecture
+    - /mcp-2025-patterns
+
+# MCP tool bindings (minimal - this skill teaches MCP)
+tools:
+  filesystem:
+    - read: "Read existing MCP implementations"
+    - write: "Generate MCP server code"
+
+# What this skill exports
+exports:
+  - server_patterns
+  - tool_schemas
+  - resource_patterns
+  - prompt_templates
+  - transport_configs
+
+# Capabilities
+capabilities:
+  - Design MCP server architecture
+  - Create tool schemas with Zod
+  - Implement resources and prompts
+  - Configure stdio/SSE transports
+  - Security best practices
+  - Multi-server orchestration
+
+# External sources to pull patterns from
+externalSources:
+  - repo: modelcontextprotocol/servers
+    patterns:
+      - tool-implementation
+      - resource-handlers
+      - prompt-templates
+  - repo: anthropics/anthropic-cookbook
+    patterns:
+      - mcp-examples
+      - tool-use
+
+# Example usage
+examples:
+  - prompt: "Design an MCP server for file operations"
+    description: "Create a filesystem MCP server with tools"
+  - prompt: "Add a resource to my existing MCP server"
+    description: "Extend an MCP server with new capabilities"
+  - prompt: "What's the best way to handle MCP authentication?"
+    description: "Security patterns for MCP servers"
+
+# Tags
+tags:
+  - mcp
+  - protocol
+  - server-design
+  - tool-use
+  - anthropic

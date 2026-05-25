@@ -1,0 +1,87 @@
+# Creator Intelligence Skill
+# Personal Jarvis system for creator intelligence operations
+# Part of Agentic Creator OS
+
+name: creator-intelligence
+version: 1.0.0
+description: Personal Jarvis system - transforms Claude Code into a creator intelligence operating system
+author: FrankX
+license: MIT
+
+# Dependencies on other skills
+requires:
+  skills:
+    - content-strategy@^1.0.0
+    - daily-ops@^1.0.0
+  mcp:
+    - filesystem-mcp
+    - database-mcp
+    - browser-mcp
+    - email-mcp
+
+# Auto-activation triggers
+triggers:
+  keywords:
+    - jarvis
+    - personal ai
+    - intelligence system
+    - creator os
+    - my own jarvis
+    - ai assistant setup
+  files:
+    - "**/intelligence/**"
+    - "**/jarvis/**"
+    - "**/creator-os/**"
+    - "**/CLAUDE.md"
+  commands:
+    - /creator-intelligence-system
+    - /agentic-creator-os
+    - /jarvis
+
+# MCP tool bindings
+tools:
+  filesystem:
+    - read: "Read project files and CLAUDE.md"
+    - write: "Create skill files and configurations"
+    - glob: "Find files matching patterns"
+  database:
+    - query: "Retrieve past sessions and context"
+    - insert: "Store session logs and state"
+  browser:
+    - screenshot: "Capture UI for testing"
+    - navigate: "Test deployed applications"
+  email:
+    - send: "Send notifications and reports"
+
+# What this skill exports for other skills
+exports:
+  - system_architecture
+  - department_configs
+  - mcp_setup
+  - skill_templates
+  - workflow_patterns
+
+# Capabilities this skill provides
+capabilities:
+  - Multi-department agent orchestration
+  - Persistent context across sessions
+  - Automated workflow execution
+  - Cross-project intelligence
+  - Self-improving skill system
+
+# Example usage
+examples:
+  - prompt: "Set up my personal Jarvis"
+    description: "Initialize the full creator intelligence system"
+  - prompt: "Create a new skill for content repurposing"
+    description: "Extend the system with custom skills"
+  - prompt: "Run my morning ops routine"
+    description: "Execute automated daily operations"
+
+# Tags for discovery
+tags:
+  - jarvis
+  - personal-ai
+  - creator-tools
+  - automation
+  - intelligence-system

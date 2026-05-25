@@ -1,0 +1,128 @@
+# 7 Pillars Skill
+# Life transformation framework
+# Part of Agentic Creator OS
+
+name: 7-pillars
+version: 1.0.0
+description: The 7 Pillars life transformation framework - holistic personal development system
+author: FrankX
+license: MIT
+
+# No dependencies - foundational soulbook skill
+requires:
+  skills: []
+  mcp:
+    - filesystem-mcp
+
+# Auto-activation triggers
+triggers:
+  keywords:
+    - 7 pillars
+    - life pillars
+    - soulbook
+    - transformation
+    - personal development
+    - life balance
+    - holistic growth
+  files:
+    - "**/pillars/**"
+    - "**/soulbook/**"
+    - "**/7-pillars/**"
+    - "**/SOULBOOK.md"
+  commands:
+    - /soulbook
+    - /7-pillars
+
+# MCP tool bindings
+tools:
+  filesystem:
+    - read: "Read pillar assessments and notes"
+    - write: "Create pillar plans and tracking docs"
+    - glob: "Find soulbook-related files"
+
+# What this skill exports
+exports:
+  - pillar_framework
+  - assessment_tools
+  - transformation_guides
+  - progress_tracking
+  - balance_metrics
+
+# The 7 Pillars
+pillars:
+  health:
+    description: Physical vitality and energy
+    focus:
+      - fitness
+      - nutrition
+      - sleep
+      - recovery
+  wealth:
+    description: Financial abundance and security
+    focus:
+      - income
+      - investments
+      - assets
+      - freedom
+  relationships:
+    description: Meaningful connections
+    focus:
+      - family
+      - friends
+      - community
+      - networking
+  career:
+    description: Professional purpose and growth
+    focus:
+      - skills
+      - impact
+      - leadership
+      - legacy
+  creativity:
+    description: Artistic expression and innovation
+    focus:
+      - art
+      - music
+      - writing
+      - invention
+  spirituality:
+    description: Inner peace and transcendence
+    focus:
+      - meditation
+      - consciousness
+      - purpose
+      - gratitude
+  adventure:
+    description: Growth through experiences
+    focus:
+      - travel
+      - challenges
+      - learning
+      - exploration
+
+# Capabilities
+capabilities:
+  - Pillar assessment and scoring
+  - Balance visualization
+  - Goal setting per pillar
+  - Progress tracking
+  - Integration strategies
+  - Weekly review rituals
+
+# Example usage
+examples:
+  - prompt: "Assess my current life balance"
+    description: "Score each pillar and identify gaps"
+  - prompt: "Create a 90-day transformation plan"
+    description: "Design focused pillar improvement program"
+  - prompt: "What should I focus on this week?"
+    description: "Prioritize pillars based on current state"
+
+# Tags
+tags:
+  - soulbook
+  - transformation
+  - personal-development
+  - life-balance
+  - holistic
+  - wellness

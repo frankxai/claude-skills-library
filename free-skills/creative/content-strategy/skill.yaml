@@ -1,0 +1,115 @@
+# Content Strategy Skill
+# Strategic content planning with calendar management
+# Part of Agentic Creator OS
+
+name: content-strategy
+version: 1.2.0
+description: Strategic content planning with calendar management, pillar mapping, and SEO optimization
+author: FrankX
+license: MIT
+
+# Dependencies
+requires:
+  skills:
+    - frankx-brand@^1.0.0
+  mcp:
+    - filesystem-mcp
+
+# Auto-activation triggers
+triggers:
+  keywords:
+    - content strategy
+    - content plan
+    - editorial calendar
+    - content pillar
+    - content marketing
+    - blog planning
+    - content audit
+  files:
+    - "**/CONTENT_STRATEGY.md"
+    - "**/CONTENT_CALENDAR.md"
+    - "**/content-calendar/**"
+    - "**/content-strategy/**"
+  commands:
+    - /content-strategy
+    - /content-calendar
+
+# MCP tool bindings
+tools:
+  filesystem:
+    - read: "Read existing content and strategy docs"
+    - write: "Create strategy documents and calendars"
+    - glob: "Find content files and patterns"
+
+# What this skill exports
+exports:
+  - content_pillars
+  - calendar_schema
+  - publishing_workflow
+  - seo_guidelines
+  - audience_personas
+
+# Capabilities
+capabilities:
+  - Content audit and analysis
+  - Pillar-based content mapping
+  - Editorial calendar management
+  - SEO keyword planning
+  - Content repurposing workflows
+  - Performance tracking setup
+
+# External sources for content patterns
+externalSources:
+  - repo: vercel/ai
+    patterns:
+      - streaming-content
+      - edge-generation
+
+# Content pillar framework
+contentPillars:
+  educational:
+    description: Teaching AI tools and workflows
+    frequency: 2x/week
+    formats:
+      - tutorials
+      - guides
+      - how-tos
+  thought-leadership:
+    description: Vision and industry insights
+    frequency: 1x/week
+    formats:
+      - opinion
+      - analysis
+      - predictions
+  product:
+    description: Product updates and showcases
+    frequency: 1x/week
+    formats:
+      - announcements
+      - case-studies
+      - demos
+  community:
+    description: User stories and engagement
+    frequency: 1x/week
+    formats:
+      - interviews
+      - showcases
+      - roundups
+
+# Example usage
+examples:
+  - prompt: "Plan my content for next week"
+    description: "Generate a weekly content calendar"
+  - prompt: "Audit my existing blog posts"
+    description: "Analyze content gaps and opportunities"
+  - prompt: "Create a content pillar strategy"
+    description: "Map content to strategic themes"
+
+# Tags
+tags:
+  - content
+  - strategy
+  - calendar
+  - planning
+  - marketing
+  - seo

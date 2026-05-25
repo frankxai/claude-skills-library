@@ -1,0 +1,156 @@
+{
+  "_description": "ACOS v6.2 Model Routing Rules - Intelligent Haiku/Sonnet/Opus selection",
+  "_version": "1.1.0",
+  "_source": "claude-flow Q-Learning Router pattern + model-registry.json",
+  "_updated": "2026-02-06",
+  "_note": "Updated for Claude Opus 4.6 (adaptive thinking, 1M context, $5/$25 pricing)",
+
+  "models": {
+    "haiku": {
+      "id": "claude-haiku-4-5-20251001",
+      "cost_per_1m_input": 0.80,
+      "cost_per_1m_output": 4.0,
+      "latency": "fastest",
+      "capability": "basic",
+      "use_for": [
+        "Simple file operations",
+        "Scaffolding and boilerplate",
+        "Status checks",
+        "Deployment execution",
+        "Formatting and linting",
+        "List operations"
+      ]
+    },
+    "sonnet": {
+      "id": "claude-sonnet-4-5-20250929",
+      "cost_per_1m_input": 3.0,
+      "cost_per_1m_output": 15.0,
+      "latency": "medium",
+      "capability": "balanced",
+      "use_for": [
+        "Feature implementation",
+        "Content creation",
+        "Code review",
+        "Bug fixes",
+        "Test generation",
+        "API integration"
+      ]
+    },
+    "opus": {
+      "id": "claude-opus-4-6",
+      "cost_per_1m_input": 5.0,
+      "cost_per_1m_output": 25.0,
+      "context_window": 200000,
+      "context_window_beta": 1000000,
+      "max_output_tokens": 128000,
+      "thinking_mode": "adaptive",
+      "effort_levels": ["low", "medium", "high", "max"],
+      "latency": "slowest",
+      "capability": "maximum",
+      "use_for": [
+        "Architecture decisions",
+        "Strategic planning",
+        "Multi-agent coordination",
+        "Complex debugging",
+        "Security audits",
+        "Research synthesis"
+      ]
+    }
+  },
+
+  "command_routing": {
+    "haiku": [
+      "/mcp-status",
+      "/inventory-status",
+      "/publish",
+      "/nextjs-deploy"
+    ],
+    "sonnet": [
+      "/acos",
+      "/article-creator",
+      "/create-music",
+      "/infogenius",
+      "/generate-images",
+      "/generate-social",
+      "/factory",
+      "/spec",
+      "/polish-content",
+      "/review-content",
+      "/classify-content",
+      "/ux-design",
+      "/automation-dev",
+      "/planning-with-files",
+      "/products-creation",
+      "/harvest"
+    ],
+    "opus": [
+      "/starlight-architect",
+      "/council",
+      "/research",
+      "/plan-week",
+      "/author-team",
+      "/starlight-intelligence"
+    ]
+  },
+
+  "keyword_routing": {
+    "haiku_keywords": [
+      "status", "check", "list", "deploy", "format", "lint", "scaffold",
+      "simple", "quick", "fast"
+    ],
+    "sonnet_keywords": [
+      "write", "create", "implement", "fix", "build", "test", "article",
+      "music", "image", "social", "feature", "review", "polish"
+    ],
+    "opus_keywords": [
+      "architect", "design", "strategy", "council", "enterprise", "complex",
+      "research", "plan", "analyze", "system", "multi-agent", "book"
+    ]
+  },
+
+  "escalation_rules": {
+    "enabled": true,
+    "max_retries": 2,
+    "escalation_path": ["haiku", "sonnet", "opus"],
+    "escalation_triggers": [
+      "task_failed",
+      "quality_below_threshold",
+      "complexity_underestimated"
+    ]
+  },
+
+  "cost_optimization": {
+    "enabled": true,
+    "target_savings": 0.5,
+    "prefer_cheaper_when_ambiguous": true,
+    "track_actual_vs_predicted": true
+  },
+
+  "agent_routing": {
+    "haiku_agents": [
+      "performance-guardian",
+      "seo_specialist"
+    ],
+    "sonnet_agents": [
+      "content-polisher",
+      "frankx-content-creation",
+      "music-production",
+      "nano-banana-image-generation",
+      "nextjs-vercel-deployment",
+      "ui-ux-design-guidance",
+      "social-content-generator",
+      "mcp-server-advising"
+    ],
+    "opus_agents": [
+      "starlight-architecture-design",
+      "starlight-orchestrator",
+      "luminor-strategic-guidance",
+      "master-story-architect",
+      "golden-age-visionary",
+      "line-editor-voice-alchemist",
+      "research-librarian",
+      "world-architect",
+      "character-psychologist"
+    ]
+  }
+}
