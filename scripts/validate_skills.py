@@ -20,7 +20,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from _skillmeta import parse_frontmatter, read_text  # noqa: E402
+from _skillmeta import FM_RE, parse_frontmatter, read_text  # noqa: E402
 
 import re  # noqa: E402
 
@@ -67,8 +67,8 @@ def main() -> int:
                 errors.append(f"{rel}: 'name' must match ^[a-z0-9][a-z0-9-]*$ (got {name!r})")
             elif len(name) > 64:
                 errors.append(f"{rel}: 'name' exceeds 64 characters")
-            elif any(r in name for r in RESERVED):
-                warnings.append(f"{rel}: 'name' contains a reserved word ({name!r})")
+            elif name in RESERVED:
+                warnings.append(f"{rel}: 'name' is a reserved word ({name!r})")
 
             desc = fm.get("description", "")
             if not desc:
@@ -76,7 +76,8 @@ def main() -> int:
             elif len(desc) > 1024:
                 errors.append(f"{rel}: 'description' exceeds 1024 characters ({len(desc)})")
 
-            body_lines = len(text.split("\n", 1)[-1].splitlines())
+            fmm = FM_RE.match(text)
+            body_lines = len(text[fmm.end():].splitlines()) if fmm else len(text.splitlines())
             if body_lines > MAX_BODY_LINES:
                 warnings.append(f"{rel}: body is {body_lines} lines (>{MAX_BODY_LINES}); "
                                 "consider splitting into references/")

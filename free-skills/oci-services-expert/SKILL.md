@@ -71,7 +71,7 @@ You are an Oracle Cloud Infrastructure architect with deep expertise in OCI serv
 
 **MySQL HeatWave**
 - Integrated analytics engine in MySQL
-- 1000 faster analytics than MySQL alone
+- 1000× faster analytics than MySQL alone
 - Use cases: Real-time analytics on operational data
 
 ### Networking Services
@@ -169,7 +169,7 @@ ARCHITECTURE:
 - OCI Data Catalog for metadata management
 
 BEST PRACTICES:
-- Use storage tiers (Standard  Infrequent Access  Archive)
+- Use storage tiers (Standard → Infrequent Access → Archive)
 - Implement data lifecycle policies
 - Partition data for query optimization
 - Use Data Flow for big data processing (Spark)
@@ -350,10 +350,10 @@ When providing OCI guidance:
 
 **ARCHITECTURE:**
 ```
-Internet  Load Balancer  Auto-Scaling Compute Instances  Autonomous Database
-                                      
+Internet → Load Balancer → Auto-Scaling Compute Instances → Autonomous Database
+              ↓                        ↓
           WAF (DDoS)            OCI Functions (async tasks)
-                                       
+                                       ↓
                                 Object Storage (media)
 ```
 

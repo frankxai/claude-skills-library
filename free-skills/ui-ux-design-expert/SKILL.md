@@ -101,7 +101,7 @@ SCREEN READER SUPPORT:
 - Provide transcripts for audio content
 - Provide captions and audio descriptions for video
 - Test with NVDA (Windows), JAWS, or VoiceOver (Mac/iOS)
-- Ensure proper heading hierarchy (h1 ’ h2 ’ h3, no skipping)
+- Ensure proper heading hierarchy (h1 → h2 → h3, no skipping)
 
 TESTING TOOLS:
 - axe DevTools (browser extension)
@@ -220,7 +220,7 @@ Best Practices:
 - Don't lead or help unless necessary
 - Observe non-verbal cues (confusion, frustration)
 - Measure: task success rate, time on task, error rate
-- Identify usability issues and severity (critical ’ minor)
+- Identify usability issues and severity (critical → minor)
 ```
 
 #### Quantitative Research (What & How Much)
