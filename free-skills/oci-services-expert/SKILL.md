@@ -1,5 +1,5 @@
 ---
-name: OCI Services Expert
+name: oci-services-expert
 description: Expert guidance on Oracle Cloud Infrastructure services, cloud architecture patterns, cost optimization, deployment strategies, and OCI best practices for enterprise solutions
 version: 1.0.0
 ---

@@ -1,5 +1,5 @@
 ---
-name: "ACOS Visual Generator"
+name: acos-visual-gen
 description: "Generate research-grounded visuals using the InfoGenius pipeline. Use when creating infographics, diagrams, educational visuals, or any image that benefits from factual accuracy. Supports 8 visual styles (3D, technical, minimalist, photorealistic, futuristic, vintage, cartoon, standard) and 4 audience levels."
 ---
 

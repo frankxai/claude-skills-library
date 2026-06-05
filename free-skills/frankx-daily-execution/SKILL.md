@@ -1,5 +1,5 @@
 ---
-name: FrankX Daily Execution System
+name: frankx-daily-execution
 description: Helps execute Frank's daily workflow using the FRANKX-SUPERINTELLIGENT-AGENT-SYSTEM, Starlight Intelligence, and productivity methodologies for conscious creation
 version: 1.0.0
 ---

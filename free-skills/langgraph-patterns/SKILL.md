@@ -1,5 +1,5 @@
 ---
-name: LangGraph Patterns Expert
+name: langgraph-patterns
 description: Build production-grade agentic workflows with LangGraph using graph-based orchestration, state machines, human-in-the-loop, and advanced control flow
 version: 1.0.0
 ---

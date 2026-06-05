@@ -1,5 +1,5 @@
 ---
-name: Gym & Training Expert
+name: gym-training-expert
 description: Apply cutting-edge exercise science from 2025 research on hypertrophy, progressive overload, biomechanics, and evidence-based training protocols for optimal strength and muscle development
 version: 1.0.0
 ---

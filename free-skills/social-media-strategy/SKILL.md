@@ -1,5 +1,5 @@
 ---
-name: Social Media Strategy
+name: social-media-strategy
 description: Expert platform-specific tactics, content optimization, audience growth, and analytics-driven social media marketing strategies for 2025.
 version: 1.0.0
 ---

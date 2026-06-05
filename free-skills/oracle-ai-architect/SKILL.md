@@ -1,5 +1,5 @@
 ---
-name: Oracle AI Architect
+name: oracle-ai-architect
 description: Extended reference material for Oracle AI architecture with deep technical implementations
 version: 1.0.0
 ---

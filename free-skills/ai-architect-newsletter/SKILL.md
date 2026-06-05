@@ -1,5 +1,5 @@
 ---
-name: "AI Architect Newsletter"
+name: ai-architect-newsletter
 description: "Generate high-quality AI Architect newsletters with latest AI news, research integration, and visual design. Use when creating newsletters, researching AI developments, synthesizing AI news for architects, or distributing intelligence reports. Covers AI model releases, research papers, tool launches, architecture patterns, production systems, and enterprise AI trends. Integrates with FrankX research hub and supports both daily briefs and weekly deep-dives."
 ---
 

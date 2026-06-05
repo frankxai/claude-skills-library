@@ -1,3 +1,9 @@
+---
+name: ai-architecture
+description: Expert guidance on multi-cloud architecture, cost analysis, and technical decision-making for AI-powered platforms across AWS, GCP, Azure, and OCI.
+version: 1.0.0
+---
+
 # AI Architecture Skill
 
 ## Purpose
