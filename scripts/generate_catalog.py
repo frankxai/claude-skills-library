@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 """Generate docs/CATALOG.md from the frontmatter of every SKILL.md.
 
-Skills are deduplicated by `name` (the shortest path wins, so a top-level skill
-folder is preferred over a nested duplicate) and grouped into categories by a
-simple, ordered keyword map. Run this whenever skills are added or renamed:
+Skills are deduplicated by `name` (the shortest path wins, so a top-level
+skill folder is preferred over a nested one) and grouped into categories by a
+simple, ordered keyword map. The frontmatter parser is shared with the
+validator and understands YAML block scalars, so multi-line descriptions
+resolve correctly. Files are read as UTF-8, so characters like em-dashes are
+preserved instead of being mangled. Run this whenever skills change:
 
-    python3 scripts/generate_catalog.py
+    python3 scripts/generate_catalog.py            # write docs/CATALOG.md
+    python3 scripts/generate_catalog.py --check    # exit 1 if it would change
 """
 from __future__ import annotations
+
 import collections
 import os
 import re
+import sys
+
+sys.path.insert(0, os.path.dirname(__file__))
+from _skillmeta import parse_frontmatter, read_text  # noqa: E402
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.normpath(os.path.join(HERE, "..", "free-skills"))
 REPO = os.path.normpath(os.path.join(HERE, ".."))
 OUT = os.path.join(REPO, "docs", "CATALOG.md")
-
-FM_RE = re.compile(r"^\ufeff?---\s*\n(.*?)\n?---", re.S)
 
 # Ordered (first match wins). Each entry: (category title, name-regex).
 CATEGORIES = [
@@ -34,18 +41,6 @@ CATEGORIES = [
 ]
 
 
-def parse_frontmatter(path: str) -> dict:
-    text = open(path, encoding="latin-1").read()
-    m = FM_RE.match(text)
-    fm: dict[str, str] = {}
-    if m:
-        for line in m.group(1).splitlines():
-            kv = re.match(r"^([A-Za-z_]+):\s*(.*)$", line)
-            if kv:
-                fm[kv.group(1)] = kv.group(2).strip().strip('"')
-    return fm
-
-
 def collect() -> dict[str, tuple[str, str]]:
     skills: dict[str, tuple[str, str]] = {}
     for dirpath, _dirs, files in os.walk(ROOT):
@@ -53,7 +48,12 @@ def collect() -> dict[str, tuple[str, str]]:
             if fn.lower() != "skill.md":
                 continue
             p = os.path.join(dirpath, fn)
-            fm = parse_frontmatter(p)
+            try:
+                fm = parse_frontmatter(read_text(p))
+            except UnicodeDecodeError:
+                continue
+            if not fm:
+                continue
             name = fm.get("name")
             if not name:
                 continue
@@ -70,8 +70,7 @@ def categorize(name: str) -> str:
     return "Other"
 
 
-def main() -> None:
-    skills = collect()
+def render(skills: dict[str, tuple[str, str]]) -> str:
     grouped: dict[str, list[tuple[str, str, str]]] = collections.defaultdict(list)
     for name, (rel, desc) in sorted(skills.items()):
         grouped[categorize(name)].append((name, rel, desc))
@@ -82,7 +81,7 @@ def main() -> None:
         "# 📚 Skills Catalog\n",
         f"The complete index of all **{total} skills** in this library. "
         "Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter "
-        "(`name`, `description`, `version`) and works across Claude Code, Claude.ai, and other "
+        "(`name`, `description`) and works across Claude Code, Claude.ai, and other "
         "agentic runtimes (see [`runtimes/`](../runtimes/)).\n",
         "\n> This file is generated. After adding or renaming a skill, run "
         "`python3 scripts/generate_catalog.py` to regenerate it, then "
@@ -96,16 +95,31 @@ def main() -> None:
         lines.append(f"_{len(items)} skill{'s' if len(items) != 1 else ''}_\n")
         lines.append("\n| Skill | Description |\n|---|---|\n")
         for name, rel, desc in items:
-            d = desc.replace("|", "\\|")
+            d = " ".join(desc.split()).replace("|", "\\|")  # collapse newlines from block scalars
             if len(d) > 180:
                 d = d[:177].rstrip() + "..."
             lines.append(f"| [`{name}`]({rel}) | {d} |\n")
+    return "".join(lines)
 
+
+def main() -> int:
+    skills = collect()
+    content = render(skills)
+    if "--check" in sys.argv:
+        current = read_text(OUT) if os.path.exists(OUT) else ""
+        if current != content:
+            print("DRIFT: docs/CATALOG.md is out of date. Run scripts/generate_catalog.py.")
+            return 1
+        print(f"OK: docs/CATALOG.md is up to date ({len(skills)} skills).")
+        return 0
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    open(OUT, "w", encoding="utf-8").write("".join(lines))
-    print(f"Wrote {OUT} with {total} skills across "
-          f"{sum(1 for c in order if grouped.get(c))} categories.")
+    with open(OUT, "w", encoding="utf-8") as fh:
+        fh.write(content)
+    cats = sum(1 for c in [x[0] for x in CATEGORIES] + ["Other"]
+               if any(categorize(n) == c for n in skills))
+    print(f"Wrote {OUT} with {len(skills)} skills across {cats} categories.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

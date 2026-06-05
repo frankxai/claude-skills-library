@@ -1,5 +1,5 @@
 # 📚 Skills Catalog
-The complete index of all **108 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`, `version`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **108 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
@@ -37,25 +37,25 @@ _13 skills_
 | [`openai-agentkit`](free-skills/openai-agentkit/SKILL.md) | Build production-ready multi-agent systems using OpenAI AgentKit and Agents SDK with best practices for agent orchestration, handoffs, and routines |
 | [`oracle-adk`](free-skills/oracle-adk/SKILL.md) | Build production agentic applications on OCI using Oracle Agent Development Kit with multi-agent orchestration, function tools, and enterprise patterns |
 | [`oracle-agent-spec`](free-skills/oracle-agent-spec/SKILL.md) | Design framework-agnostic AI agents using Oracle's Open Agent Specification for portable, interoperable agentic systems with JSON/YAML definitions |
-| [`partner-anthropic`](free-skills/partner-anthropic/SKILL.md) | Anthropic intelligence â Claude model family, Claude Code, MCP protocol, Claude for Work programs, May 2026 state, Frank's relationship state, integration patterns. Use when g... |
-| [`partner-arrow`](free-skills/partner-arrow/SKILL.md) | Arrow Electronics ECS intelligence â ArrowSphere marketplace, AI Accelerator program, Oracle Global Distributor of the Year 2025, Oracle x NVIDIA accelerator pack, May 2026 st... |
-| [`partner-google`](free-skills/partner-google/SKILL.md) | Google Cloud intelligence â Gemini (Nano Banana / Veo / Imagen), Vertex AI, ADK, A2A protocol, Cloud Partner Advantage, May 2026 state, Frank's relationship state, integration... |
-| [`partner-nvidia`](free-skills/partner-nvidia/SKILL.md) | NVIDIA intelligence â NIM microservices, NeMo, NVIDIA AI Enterprise, DGX Cloud, Inception program, EMEA accelerator wave, May 2026 state, Frank's relationship state, integrati... |
-| [`partner-vercel`](free-skills/partner-vercel/SKILL.md) | Vercel intelligence â Next.js + Turbopack, AI SDK, AI Gateway, Fluid Compute, Sandbox, Queues, Agent, Vercel Partner Program, May 2026 state, Frank's relationship state, integ... |
+| [`partner-anthropic`](free-skills/partner-anthropic/SKILL.md) | Anthropic intelligence — Claude model family, Claude Code, MCP protocol, Claude for Work programs, May 2026 state, Frank's relationship state, integration patterns. Use when gen... |
+| [`partner-arrow`](free-skills/partner-arrow/SKILL.md) | Arrow Electronics ECS intelligence — ArrowSphere marketplace, AI Accelerator program, Oracle Global Distributor of the Year 2025, Oracle x NVIDIA accelerator pack, May 2026 stat... |
+| [`partner-google`](free-skills/partner-google/SKILL.md) | Google Cloud intelligence — Gemini (Nano Banana / Veo / Imagen), Vertex AI, ADK, A2A protocol, Cloud Partner Advantage, May 2026 state, Frank's relationship state, integration p... |
+| [`partner-nvidia`](free-skills/partner-nvidia/SKILL.md) | NVIDIA intelligence — NIM microservices, NeMo, NVIDIA AI Enterprise, DGX Cloud, Inception program, EMEA accelerator wave, May 2026 state, Frank's relationship state, integration... |
+| [`partner-vercel`](free-skills/partner-vercel/SKILL.md) | Vercel intelligence — Next.js + Turbopack, AI SDK, AI Gateway, Fluid Compute, Sandbox, Queues, Agent, Vercel Partner Program, May 2026 state, Frank's relationship state, integra... |
 
 ## Oracle & Cloud
 _8 skills_
 
 | Skill | Description |
 |---|---|
-| [`ai-architecture`](free-skills/ai-architecture/skill.md) | Expert guidance on multi-cloud architecture, cost analysis, and technical decision-making for AI-powered platforms across AWS, GCP, Azure, and OCI. |
+| [`ai-architecture`](free-skills/ai-architecture/SKILL.md) | Expert guidance on multi-cloud architecture, cost analysis, and technical decision-making for AI-powered platforms across AWS, GCP, Azure, and OCI. |
 | [`oci-drawio-icon-native`](free-skills/oci-drawio-icon-native/SKILL.md) | Build and validate OCI draw.io diagrams in icon-native mode so diagrams never depend on `mxgraph.oci.*` runtime libraries. |
 | [`oci-services-expert`](free-skills/oci-services-expert/SKILL.md) | Expert guidance on Oracle Cloud Infrastructure services, cloud architecture patterns, cost optimization, deployment strategies, and OCI best practices for enterprise solutions |
 | [`oracle-ai-architect`](free-skills/oracle-ai-architect/SKILL.md) | Extended reference material for Oracle AI architecture with deep technical implementations |
 | [`oracle-confidentiality`](free-skills/oracle-confidentiality/SKILL.md) | Enforce confidentiality protocol across Oracle deliverables with pre-delivery audits, codename enforcement, and content sanitization before any client handoff. |
 | [`oracle-database-expert`](free-skills/oracle-database-expert/SKILL.md) | Expert Oracle Database engineering across Oracle Database 23ai, Autonomous Database, SQL/PLSQL tuning, AI Vector Search, JSON Relational Duality, partitioning, high availability... |
 | [`oracle-solution-design`](free-skills/oracle-solution-design/SKILL.md) | Orchestrate complete OCI solution designs with parallel Task agents and quality gates, producing Solution Design Documents, architectures, and bills of materials. |
-| [`si`](free-skills/si/SKILL.md) | Superintelligence router â composes /superintelligence reasoning with swarm execution only when verb intent demands it. Defaults to reasoning-only to prevent runaway swarm cos... |
+| [`si`](free-skills/si/SKILL.md) | Superintelligence router — composes /superintelligence reasoning with swarm execution only when verb intent demands it. Defaults to reasoning-only to prevent runaway swarm cost.... |
 
 ## Web, Frontend & Animation
 _14 skills_
@@ -90,8 +90,8 @@ _10 skills_
 | [`performance-analysis`](free-skills/performance-analysis/SKILL.md) | Comprehensive performance analysis, bottleneck detection, and optimization recommendations for Claude Flow swarms |
 | [`template-skill`](free-skills/anthropic/template-skill/SKILL.md) | Replace with description of the skill and when Claude should use it. |
 | [`verification-quality`](free-skills/verification-quality/SKILL.md) | Comprehensive truth scoring, code quality verification, and automatic rollback system with 0.95 accuracy threshold for ensuring high-quality agent outputs and codebase reliability. |
-| [`worker-benchmarks`](free-skills/worker-benchmarks/skill.md) | Run comprehensive worker system benchmarks and performance analysis |
-| [`worker-integration`](free-skills/worker-integration/skill.md) | Worker-Agent integration for intelligent task dispatch and performance tracking |
+| [`worker-benchmarks`](free-skills/worker-benchmarks/SKILL.md) | Run comprehensive worker system benchmarks and performance analysis |
+| [`worker-integration`](free-skills/worker-integration/SKILL.md) | Worker-Agent integration for intelligent task dispatch and performance tracking |
 
 ## Content, Writing & Brand
 _14 skills_
@@ -126,20 +126,20 @@ _22 skills_
 | [`artifacts-builder`](free-skills/anthropic/artifacts-builder/SKILL.md) | Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifact... |
 | [`cacos`](free-skills/cacos/SKILL.md) | Claude Agentic Creator OS - Native Claude Code implementation |
 | [`canvas-design`](free-skills/anthropic/canvas-design/SKILL.md) | Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other s... |
-| [`higgsfield-generate`](free-skills/higgsfield-generate/SKILL.md) | \| |
-| [`higgsfield-marketplace-cards`](free-skills/higgsfield-marketplace-cards/SKILL.md) | \| |
-| [`higgsfield-product-photoshoot`](free-skills/higgsfield-product-photoshoot/SKILL.md) | \| |
-| [`higgsfield-soul-id`](free-skills/higgsfield-soul-id/SKILL.md) | \| |
-| [`hyperframes-cli`](free-skills/hyperframes-cli/SKILL.md) | HyperFrames CLI dev loop â `npx hyperframes` for scaffolding (init), validation (lint, inspect), preview, render, and environment troubleshooting (doctor, browser, info, upgra... |
-| [`hyperframes-media`](free-skills/hyperframes-media/SKILL.md) | Asset preprocessing for HyperFrames compositions â text-to-speech narration (Kokoro), audio/video transcription (Whisper), and background removal for transparent overlays (u2n... |
+| [`higgsfield-generate`](free-skills/higgsfield-generate/SKILL.md) | Generate images/videos via Higgsfield AI. Default: GPT Image 2 for images/design/text, Seedance 2.0 for video, Nano Banana 2/Pro for character/reference image work, Marketing St... |
+| [`higgsfield-marketplace-cards`](free-skills/higgsfield-marketplace-cards/SKILL.md) | Generate marketplace product image cards through Higgsfield: compliant main image, secondary product images, and A+ style content modules. Use when the user asks for marketplace... |
+| [`higgsfield-product-photoshoot`](free-skills/higgsfield-product-photoshoot/SKILL.md) | Generate brand-quality product images through Higgsfield product-photoshoot prompt enhancement on GPT Image 2 / gpt_image_2. Entry point for professional brand/product visuals.... |
+| [`higgsfield-soul-id`](free-skills/higgsfield-soul-id/SKILL.md) | Train a Soul Character — a personalized model on a person's face that Higgsfield uses for identity-faithful image and video generation. Use when: "create my Soul", "train my fac... |
+| [`hyperframes-cli`](free-skills/hyperframes-cli/SKILL.md) | HyperFrames CLI dev loop — `npx hyperframes` for scaffolding (init), validation (lint, inspect), preview, render, and environment troubleshooting (doctor, browser, info, upgrade... |
+| [`hyperframes-media`](free-skills/hyperframes-media/SKILL.md) | Asset preprocessing for HyperFrames compositions — text-to-speech narration (Kokoro), audio/video transcription (Whisper), and background removal for transparent overlays (u2net... |
 | [`hyperframes-registry`](free-skills/hyperframes-registry/SKILL.md) | Install and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add, installing a block or component, wiring an installed item into i... |
 | [`remotion-to-hyperframes`](free-skills/remotion-to-hyperframes/SKILL.md) | Translate an existing Remotion (React-based) video composition into a HyperFrames HTML composition. Use ONLY when the user explicitly asks to port, convert, migrate, translate,... |
-| [`starlight-chronicle`](free-skills/starlight-chronicle/SKILL.md) | The reflective layer of the FrankX OS. A four-cadence practice â weekly Palace Review, monthly Survey, quarterly Constellation Census, annual Legacy Audit â that witnesses w... |
-| [`suno-ai-mastery`](free-skills/suno-ai-mastery/SKILL.md) | Expert prompt engineering and music generation with Suno AI v4/v4.5 for professional-quality songs across all genres with advanced composition techniques |
+| [`starlight-chronicle`](free-skills/starlight-chronicle/SKILL.md) | The reflective layer of the FrankX OS. A four-cadence practice — weekly Palace Review, monthly Survey, quarterly Constellation Census, annual Legacy Audit — that witnesses what'... |
+| [`suno-ai-mastery`](free-skills/suno-ai-mastery/SKILL.md) | Expert prompt engineering and music generation with Suno AI v4.5+ for professional-quality songs across all genres with advanced composition techniques |
 | [`suno-prompt-architect`](free-skills/suno-prompt-architect/SKILL.md) | Expert Suno AI prompt engineering for professional music creation. Use this skill when creating Suno prompts for any AI-generated music that needs commercial quality. |
 | [`theme-factory`](free-skills/anthropic/theme-factory/SKILL.md) | Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can... |
 | [`video-production-workflow`](free-skills/video-production-workflow/SKILL.md) | End-to-end video production workflow covering ideation, scripting, storyboarding, shooting/recording, editing, sound design, publishing, and data-driven iteration for YouTube, s... |
-| [`website-to-hyperframes`](free-skills/website-to-hyperframes/SKILL.md) | \| |
+| [`website-to-hyperframes`](free-skills/website-to-hyperframes/SKILL.md) | Capture a website and create a HyperFrames video from it. Use when: (1) a user provides a URL and wants a video, (2) someone says "capture this site", "turn this into a video",... |
 
 ## Mind, Body & Philosophy
 _5 skills_
