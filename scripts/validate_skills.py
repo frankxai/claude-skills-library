@@ -16,7 +16,8 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "free-skills")
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
-FM_RE = re.compile(r"^\ufeff?---\s*\n(.*?\n)---", re.S)
+# Frontmatter block: tolerant of a BOM and of the closing `---` having no trailing newline.
+FM_RE = re.compile(r"^\ufeff?---\s*\n(.*?)\n?---", re.S)
 
 
 def parse_frontmatter(text: str) -> dict | None:
@@ -40,6 +41,9 @@ def main() -> int:
                 continue
             count += 1
             path = os.path.relpath(os.path.join(dirpath, fn), os.path.join(ROOT, ".."))
+            # A few skills contain legacy Windows-1252 bytes (e.g. smart quotes) in their body.
+            # We only inspect the ASCII frontmatter keys, so latin-1 is used to read every byte
+            # losslessly without ever raising a UnicodeDecodeError.
             text = open(os.path.join(dirpath, fn), encoding="latin-1").read()
             if not text.strip():
                 errors.append(f"{path}: file is empty")

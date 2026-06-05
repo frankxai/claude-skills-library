@@ -38,6 +38,12 @@ Run the validator before opening a PR:
 python3 scripts/validate_skills.py
 ```
 
+If you add, rename, or remove a skill, regenerate the catalog so `docs/CATALOG.md` stays in sync:
+
+```bash
+python3 scripts/generate_catalog.py
+```
+
 ## How to Contribute
 
 ### 1. Fork the Repository
