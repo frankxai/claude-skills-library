@@ -1,6 +1,6 @@
 ---
 name: oci-drawio-icon-native
-description: Build and validate OCI draw.io diagrams in icon-native mode so diagrams never depend on `mxgraph.oci.*` runtime libraries.
+description: Build and validate OCI draw.io diagrams in icon-native mode so they never depend on `mxgraph.oci.*` runtime libraries. Use when authoring or fixing Oracle Cloud architecture diagrams in draw.io that must render portably.
 version: 1.1.0
 keywords: [oci, drawio, mcp, icon-native, architecture, validation]
 triggers:

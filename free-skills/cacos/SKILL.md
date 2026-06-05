@@ -1,6 +1,6 @@
 ---
 name: cacos
-description: Claude Agentic Creator OS - Native Claude Code implementation
+description: Claude Agentic Creator OS — a native Claude Code implementation of the creator operating system. Use when setting up, extending, or operating ACOS-style skills, agents, and commands directly inside Claude Code.
 version: 1.0.0
 category: projects
 aliases: [cacos, claude-agentic-creator-os]

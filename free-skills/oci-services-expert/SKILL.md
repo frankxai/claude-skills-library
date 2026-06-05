@@ -1,6 +1,6 @@
 ---
 name: oci-services-expert
-description: Expert guidance on Oracle Cloud Infrastructure services, cloud architecture patterns, cost optimization, deployment strategies, and OCI best practices for enterprise solutions
+description: Expert guidance on Oracle Cloud Infrastructure services, architecture patterns, cost optimization, and deployment strategies. Use when designing on OCI, selecting OCI services, estimating cost, or applying OCI enterprise best practices.
 version: 1.0.0
 ---
 

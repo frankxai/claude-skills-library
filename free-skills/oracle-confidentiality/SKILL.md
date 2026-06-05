@@ -1,6 +1,6 @@
 ---
 name: oracle-confidentiality
-description: Enforce confidentiality protocol across Oracle deliverables with pre-delivery audits, codename enforcement, and content sanitization before any client handoff.
+description: Enforce confidentiality across Oracle deliverables — pre-delivery audits, codename enforcement, and content sanitization. Use before any Oracle client handoff, when sanitizing documents, or when checking deliverables for confidential leaks.
 version: 1.0.0
 ---
 

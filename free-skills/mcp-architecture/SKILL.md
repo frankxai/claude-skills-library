@@ -1,6 +1,6 @@
 ---
 name: mcp-architecture
-description: Design and implement Model Context Protocol servers for standardized AI-to-data integration with resources, tools, prompts, and security best practices
+description: Design and implement Model Context Protocol servers with resources, tools, prompts, and security best practices. Use when architecting an MCP server, modeling its resources/tools/prompts, or integrating a service as an MCP endpoint.
 version: 1.0.0
 ---
 

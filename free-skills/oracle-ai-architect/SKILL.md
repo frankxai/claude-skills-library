@@ -1,6 +1,6 @@
 ---
 name: oracle-ai-architect
-description: Extended reference material for Oracle AI architecture with deep technical implementations
+description: Deep reference for Oracle AI architecture with end-to-end technical implementations. Use when architecting Oracle AI/GenAI solutions, designing enterprise Oracle AI systems, or needing detailed Oracle AI reference patterns.
 version: 1.0.0
 ---
 

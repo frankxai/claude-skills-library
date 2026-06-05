@@ -1,6 +1,6 @@
 ---
 name: openai-agentkit
-description: Build production-ready multi-agent systems using OpenAI AgentKit and Agents SDK with best practices for agent orchestration, handoffs, and routines
+description: Build production multi-agent systems with OpenAI AgentKit and the Agents SDK — orchestration, handoffs, and routines. Use when writing agents against OpenAI's AgentKit/Agents SDK or porting an agent design to the OpenAI stack.
 version: 1.0.0
 ---
 

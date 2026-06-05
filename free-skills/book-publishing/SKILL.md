@@ -1,6 +1,6 @@
 ---
 name: book-publishing
-description: ACOS book publishing intelligence for multi-book content, voice, and production workflows.
+description: Multi-book content, voice, and production workflows for nonfiction authoring. Use when planning a book, maintaining consistent voice across chapters, structuring a manuscript, or running an end-to-end publishing pipeline.
 ---
 
 # ACOS Book Publishing Skill v1.0

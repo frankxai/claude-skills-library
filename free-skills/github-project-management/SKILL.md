@@ -3,7 +3,7 @@ name: github-project-management
 title: GitHub Project Management
 version: 2.0.0
 category: github
-description: Comprehensive GitHub project management with swarm-coordinated issue tracking, project board automation, and sprint planning
+description: GitHub project management with issue tracking, project-board automation, and sprint planning. Use when triaging or organizing issues, automating a project board, planning a sprint, or running release/roadmap coordination on GitHub.
 author: Claude Code
 tags:
   - github

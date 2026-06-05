@@ -1,6 +1,6 @@
 ---
 name: web-design-expert
-description: Web design and UX guidance for visual systems, accessibility, interaction patterns, and performance-aware interfaces.
+description: Web design and UX guidance for visual systems, accessibility, interaction patterns, and performance-aware interfaces. Use when designing a website's look and feel, improving UX/accessibility, or reviewing a UI for polish and performance.
 version: 1.0.0
 ---
 

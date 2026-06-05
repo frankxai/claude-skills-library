@@ -1,6 +1,6 @@
 ---
 name: agentic-orchestration
-description: Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Best practices for building and managing agent systems.
+description: Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Use when designing or debugging agent systems, splitting a large task across sub-agents, defining handoff contracts, or choosing an orchestration topology.
 version: 1.0.0
 last_updated: 2025-12-19
 external_version: "Claude Agent SDK 2025"

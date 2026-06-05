@@ -1,6 +1,6 @@
 ---
 name: claude-sdk
-description: Build autonomous AI agents using Claude Agent SDK with computer use, tool calling, MCP integration, and production best practices for Anthropic models
+description: Build autonomous AI agents with the Claude Agent SDK — computer use, tool calling, MCP integration, and production best practices for Anthropic models. Use when writing agent code against the Claude/Anthropic SDK, wiring tools or MCP servers, or hardening an agent for production.
 version: 1.0.0
 ---
 

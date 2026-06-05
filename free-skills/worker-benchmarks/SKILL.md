@@ -1,6 +1,6 @@
 ---
 name: worker-benchmarks
-description: Run comprehensive worker system benchmarks and performance analysis
+description: Run comprehensive worker-system benchmarks and performance analysis. Use when benchmarking worker throughput/latency, comparing worker configurations, or diagnosing worker performance.
 version: 1.0.0
 invocable: true
 author: agentic-flow
