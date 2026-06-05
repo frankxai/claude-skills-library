@@ -248,7 +248,7 @@ Installation is simple..."
 **[SCREEN: Show installation commands]**
 
 ```bash
-git clone https://github.com/yourusername/claude-skills-library.git
+git clone https://github.com/frankxai/claude-skills-library.git
 cp -r claude-skills-library/free-skills/* ~/.claude/skills/
 # That's it. Ready to use.
 ```
@@ -296,7 +296,7 @@ Let's make Claude brilliant together."
 **[TEXT ON SCREEN]:**
 ```
 Claude Skills Library
-github.com/yourusername/claude-skills-library
+github.com/frankxai/claude-skills-library
 claudeskillslibrary.com
 
 ⭐ Star | 💬 Discuss | 🛒 Get Premium

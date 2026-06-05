@@ -1,24 +1,42 @@
 # Contributing to Claude Skills Library
 
-Thank you for your interest in contributing! We welcome contributions to the **free skills** in this repository.
+Thank you for your interest in contributing! This is an open, MIT-licensed library and we welcome
+contributions to **any** skill, as well as brand-new skills.
 
 ## What Can You Contribute?
 
-### Free Skills (Open for Contributions)
-- 🏛️ Greek Philosopher
-- ⚔️ Spartan Warrior
-- 🔌 MCP Architecture Expert
-- 🎨 UI/UX Design Expert
-- 📱 Social Media Strategy
+- **New skills**: A new `free-skills/<skill-name>/SKILL.md` for a domain not yet covered.
+- **Bug fixes**: Typos, formatting issues, broken examples or links.
+- **Improvements**: Better examples, clearer explanations, updated research.
+- **Documentation**: Usage guides, tutorials, case studies.
+- **Translations**: Non-English versions of skills.
 
-You can contribute:
-- **Bug fixes**: Typos, formatting issues, broken examples
-- **Improvements**: Better examples, clearer explanations, updated research
-- **Documentation**: Usage guides, tutorials, case studies
-- **Translations**: Non-English versions of skills (pending)
+Browse the full [skills catalog](docs/CATALOG.md) to see what already exists before adding a new skill.
 
-### Premium Skills (Not Open for Contributions)
-Premium skills are proprietary and not open for community contributions.
+## The Skill Standard
+
+Every skill **must** pass [`scripts/validate_skills.py`](scripts/validate_skills.py). Concretely, each
+`SKILL.md` must:
+
+- Start with YAML frontmatter containing at least `name`, `description`, and `version`.
+- Use a `name` that is lowercase, hyphenated, ≤ 64 characters, and matches `^[a-z0-9][a-z0-9-]*$`
+  (conventionally identical to the skill's folder name).
+- Provide a specific, non-empty `description` (≤ 1024 chars) that tells the model **when** to use the skill.
+- Not be empty.
+
+```yaml
+---
+name: my-new-skill
+description: What this skill does and the situations in which the agent should load it.
+version: 1.0.0
+---
+```
+
+Run the validator before opening a PR:
+
+```bash
+python3 scripts/validate_skills.py
+```
 
 ## How to Contribute
 
@@ -27,7 +45,7 @@ Click the "Fork" button at the top right of this repository.
 
 ### 2. Clone Your Fork
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-skills-library.git
+git clone https://github.com/YOUR_USERNAME/claude-skills-library.git  # your fork
 cd claude-skills-library
 ```
 
@@ -57,7 +75,12 @@ Use descriptive branch names:
 ### 5. Test Your Changes
 
 Before submitting:
-1. Install the skill locally:
+1. Validate frontmatter:
+   ```bash
+   python3 scripts/validate_skills.py
+   ```
+
+2. Install the skill locally:
    ```bash
    cp -r free-skills/[skill-name] ~/.claude/skills/
    ```
@@ -167,7 +190,6 @@ Any other information that would be helpful for reviewers.
 - **Testing**: Has it been tested in Claude Code?
 
 ### What We Don't Accept:
-- ❌ Changes to premium skills (proprietary)
 - ❌ Marketing or promotional content
 - ❌ Unverified claims or opinions presented as facts
 - ❌ Breaking changes without discussion
@@ -189,9 +211,8 @@ Contributors will be:
 
 ## Questions?
 
-- 💬 Open a [Discussion](https://github.com/yourusername/claude-skills-library/discussions)
-- 🐛 Report bugs via [Issues](https://github.com/yourusername/claude-skills-library/issues)
-- 📧 Email: support@claudeskillslibrary.com
+- 💬 Open a [Discussion](https://github.com/frankxai/claude-skills-library/discussions)
+- 🐛 Report bugs via [Issues](https://github.com/frankxai/claude-skills-library/issues)
 
 ## Code of Conduct
 

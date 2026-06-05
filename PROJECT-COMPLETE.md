@@ -277,7 +277,7 @@ claude-skills-library/
 
 ## 📧 Contact & Support
 
-**Repository**: github.com/yourusername/claude-skills-library
+**Repository**: github.com/frankxai/claude-skills-library
 **Website**: claudeskillslibrary.com (to be created)
 **Email**: support@claudeskillslibrary.com (to be set up)
 **Discord**: [community server] (to be created)
