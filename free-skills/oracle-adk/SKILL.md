@@ -1,5 +1,5 @@
 ---
-name: Oracle ADK Expert
+name: oracle-adk
 description: Build production agentic applications on OCI using Oracle Agent Development Kit with multi-agent orchestration, function tools, and enterprise patterns
 version: 1.0.0
 ---

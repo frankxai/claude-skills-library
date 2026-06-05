@@ -1,5 +1,5 @@
 ---
-name: UI/UX Design Expert
+name: ui-ux-design-expert
 description: Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user research, and creating inclusive, user-centered interfaces with 2025 best practices
 version: 1.0.0
 ---

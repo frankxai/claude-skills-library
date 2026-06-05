@@ -1,3 +1,9 @@
+---
+name: oracle-solution-design
+description: Orchestrate complete OCI solution designs with parallel Task agents and quality gates, producing Solution Design Documents, architectures, and bills of materials.
+version: 1.0.0
+---
+
 # Oracle Solution Design Orchestrator
 
 > **Replaces:** claude-flow swarm orchestration for solution design workflows

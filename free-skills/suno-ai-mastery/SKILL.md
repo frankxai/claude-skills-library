@@ -1,5 +1,5 @@
 ---
-name: Suno AI Mastery
+name: suno-ai-mastery
 description: Expert prompt engineering and music generation with Suno AI v4/v4.5 for professional-quality songs across all genres with advanced composition techniques
 version: 1.0.0
 ---

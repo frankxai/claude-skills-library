@@ -1,3 +1,9 @@
+---
+name: arcanea-infogenius
+description: Visual intelligence system for generating on-brand infographics, diagrams, and imagery using the Arcanea Gates color and composition framework.
+version: 1.0.0
+---
+
 # Arcanea Infogenius
 
 ## The Visual Intelligence of the Gates

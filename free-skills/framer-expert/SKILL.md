@@ -1,5 +1,5 @@
 ---
-name: Framer Expert
+name: framer-expert
 description: Expert in Framer design and development - from interactive prototypes to production sites with Framer Motion, CMS integration, and the Framer MCP server
 version: 1.0.0
 ---

@@ -1,610 +1,224 @@
-# 🎯 Claude Skills Library
-### Professional-Grade Skills for Claude Code & Claude AI
-> Transform Claude into a domain expert with comprehensive, research-backed skills
+<div align="center">
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/claude-skills-library?style=social)](https://github.com/yourusername/claude-skills-library)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+# 🧠 Claude Skills Library
 
----
+### 108 production-grade Agent Skills for Claude Code, Claude.ai & every major agentic runtime
 
-## 🚀 What is This?
+> Turn your AI agent into a domain expert. Each skill is a self-contained, spec-compliant
+> `SKILL.md` engineered with real frameworks, current best practices, and opinionated guidance —
+> not 500 words of generic advice.
 
-The most comprehensive, research-backed skill library for Claude Code and Claude AI. Unlike basic examples that offer 500 words of generic guidance, **each skill is a 3,000-6,000 word expert system** grounded in 2025 best practices, latest research, and proven methodologies.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Skills](https://img.shields.io/badge/skills-108-blue.svg)](docs/CATALOG.md)
+[![Spec compliant](https://img.shields.io/badge/frontmatter-validated-success.svg)](scripts/validate_skills.py)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-### Free Skills Include:
-- 🏛️ **Greek Philosopher** - Socratic questioning and Stoic wisdom
-- ⚔️ **Spartan Warrior** - Discipline, courage, and relentless action
-- 🔌 **MCP Architecture Expert** - Model Context Protocol server design
-- 🎨 **UI/UX Design Expert** - WCAG 2.2 compliance, design systems, accessibility
-- 📱 **Social Media Strategy** - Platform tactics and engagement optimization *(coming soon)*
+[**📚 Full Catalog**](docs/CATALOG.md) · [**⚡ Quick Start**](#-quick-start) · [**🌐 Multi-Runtime**](#-works-with-every-runtime) · [**🤝 Contributing**](CONTRIBUTING.md)
 
-### Premium Skills Available:
-- 🎵 **Suno AI Mastery** - Professional music generation
-- 🤖 **AI Agent Development Suite** - 6 framework experts (OpenAI, Claude, Oracle, LangGraph, MCP, Agent Spec)
-- ☁️ **Oracle Enterprise Suite** - OCI Services, Database, ADK
-- 💪 **Health & Wellness Mastery** - Exercise science + nutrition + philosophy
-- 🎬 **Creative Production Bundle** - Music, video, social media
-- And more...
-
-[👉 See Full Premium Catalog](#premium-skills)
+</div>
 
 ---
 
-## ⚡ Quick Start
+## 🚀 What is this?
 
-### Installation
+A comprehensive, open-source library of **[Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)** —
+the portable, model-invoked capability format introduced by Anthropic. Drop a skill into your agent
+and it gains expert knowledge in a domain: it loads automatically when relevant and stays out of the
+way when it isn't.
 
-**Method 1: Manual Installation** (Recommended for testing)
+Every skill in this repo:
+
+- ✅ Is a **self-contained folder** with a `SKILL.md` and optional `scripts/`, `references/`, and `examples/`.
+- ✅ Has **spec-compliant frontmatter** (`name`, `description`, `version`) — verified by [`scripts/validate_skills.py`](scripts/validate_skills.py).
+- ✅ Is **progressive-disclosure friendly**: a tight description for routing, deep guidance loaded only when invoked.
+- ✅ Works across **Claude Code, Claude.ai, and 6+ other runtimes** (see [`runtimes/`](runtimes/)).
+
+**108 skills** spanning AI agents, MCP, frontend, Oracle/cloud, content & creative production,
+engineering workflow, and personal performance. **All free. MIT licensed.**
+
+👉 **[Browse the complete, categorized catalog → `docs/CATALOG.md`](docs/CATALOG.md)**
+
+---
+
+## 🗂️ Skill categories
+
+| Category | Count | Examples |
+|---|---:|---|
+| 🤖 **AI Agents & Orchestration** | 15 | `agentic-orchestration`, `swarm-orchestration`, `model-routing`, `reasoningbank-intelligence` |
+| 🔌 **AI Frameworks, MCP & SDKs** | 13 | `mcp-architecture`, `mcp-builder`, `openai-agentkit`, `claude-sdk`, `langgraph-patterns` |
+| ☁️ **Oracle & Cloud** | 7 | `oracle-ai-architect`, `oracle-database-expert`, `oci-services-expert`, `ai-architecture` |
+| 🎨 **Web, Frontend & Animation** | 14 | `nextjs-expert`, `nextjs-react-expert`, `ui-ux-design-expert`, `tailwind`, `gsap`, `three` |
+| 🛠️ **Engineering Workflow & GitHub** | 10 | `github-code-review`, `performance-analysis`, `verification-quality`, `hooks-automation` |
+| ✍️ **Content, Writing & Brand** | 14 | `brand-voice`, `book-publishing`, `social-media-strategy`, `creator-productivity` |
+| 🎬 **Creative & Media Production** | 22 | `suno-ai-mastery`, `video-production-workflow`, `hyperframes-media`, `higgsfield-soul-id` |
+| 🧭 **Mind, Body & Philosophy** | 5 | `greek-philosopher`, `spartan-warrior`, `gym-training-expert`, `health-nutrition-expert` |
+| 📄 **Documents & Productivity** | 6 | `pdf`, `docx`, `pptx`, `xlsx`, `product-management-expert`, `webapp-testing` |
+| 🧩 **Meta & Library** | 2 | `contribute-catalog`, `creator-meta` |
+
+> Counts are generated from the repo. See the **[full catalog](docs/CATALOG.md)** for every skill with descriptions and links.
+
+---
+
+## ⚡ Quick start
+
+### Claude Code (most native)
+
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/claude-skills-library.git
+# 1. Clone the library
+git clone https://github.com/frankxai/claude-skills-library.git ~/claude-skills-library
 
-# Copy free skills to Claude Code
-cp -r claude-skills-library/free-skills/* ~/.claude/skills/
+# 2. Install the skills you want (or all of them)
+mkdir -p ~/.claude/skills
+cp -r ~/claude-skills-library/free-skills/greek-philosopher ~/.claude/skills/
+cp -r ~/claude-skills-library/free-skills/mcp-architecture  ~/.claude/skills/
 
-# Restart Claude Code (if running)
+# 3. Restart Claude Code — skills are auto-discovered
 ```
 
-**Method 2: Symlink** (Recommended for development)
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/claude-skills-library.git
+Prefer to install everything at once:
 
-# Create symlinks
-ln -s ~/claude-skills-library/free-skills/greek-philosopher ~/.claude/skills/greek-philosopher
-ln -s ~/claude-skills-library/free-skills/spartan-warrior ~/.claude/skills/spartan-warrior
-# Repeat for other skills...
+```bash
+cp -r ~/claude-skills-library/free-skills/* ~/.claude/skills/
 ```
 
-**Method 3: Claude Code Plugin** *(coming soon)*
-```bash
-/plugin install claude-skills-library
-```
+> Some skills are namespaced under subfolders (e.g. `free-skills/anthropic/pdf`). Copy the
+> individual skill folder that contains the `SKILL.md` you want.
 
 ### Usage
 
-Skills activate automatically when relevant, or invoke explicitly:
+Skills activate automatically when relevant, or you can invoke one explicitly:
 
-```
-"Use the Greek Philosopher skill to examine my career decision"
-
-"Apply the Spartan Warrior approach to my discipline problem"
-
-"Help me implement WCAG 2.2 accessibility using the UI/UX Design Expert skill"
-
-"Design an MCP server with the MCP Architecture Expert"
+```text
+"Use the greek-philosopher skill to examine my career decision."
+"Apply spartan-warrior discipline to my procrastination problem."
+"Design an MCP server with the mcp-architecture skill."
+"Review this PR using the github-code-review skill."
 ```
 
 ---
 
-## 📚 Free Skills Documentation
+## 🌐 Works with every runtime
 
-### 🏛️ Greek Philosopher
+Agent Skills are a portable format. This library documents import paths for the major agentic runtimes:
 
-**Transform Claude into a Socratic philosopher with poetic wisdom**
+| Runtime | Maturity | Guide |
+|---|---|---|
+| Claude Code | ✅ Native | [`runtimes/claude-code.md`](runtimes/claude-code.md) |
+| Antigravity (`agy`) | ✅ Substrate-compatible | [`runtimes/antigravity.md`](runtimes/antigravity.md) |
+| OpenCode | ✅ Adapter pattern | [`runtimes/opencode.md`](runtimes/opencode.md) |
+| Codex CLI | 🟡 Per-skill MCP wrap | [`runtimes/codex.md`](runtimes/codex.md) |
+| Gemini CLI | 🟡 Per-skill template | [`runtimes/gemini-cli.md`](runtimes/gemini-cli.md) |
+| Cursor | 🟡 Per-skill convert | [`runtimes/cursor.md`](runtimes/cursor.md) |
 
-#### What You Get:
-- **Socratic Questioning Method**: Elenchus technique for examining beliefs
-- **Stoic Philosophy**: Four cardinal virtues (Wisdom, Courage, Justice, Temperance)
-- **Philosophical Frameworks**: Decision-making through ancient wisdom
-- **Poetic Communication**: Ultra-high-quality language and metaphors
-
-#### Use Cases:
-- Life decisions and career choices
-- Examining assumptions and beliefs
-- Deep thinking on complex problems
-- Philosophical inquiry and self-examination
-
-#### Sample Interaction:
-```
-User: "Should I quit my job to start a business?"
-
-Greek Philosopher: "Ah, dear friend, let us walk together through this
-inquiry, as Socrates walked with his companions in the Agora...
-
-Tell me first: when you speak of 'should,' do you ask what is safe,
-or what is true to your nature? For the oak does not ask whether it
-should grow toward the sun—it simply grows. What within you grows
-toward this venture, and what shrinks from it? Let us examine both
-with equal care, for wisdom lies not in certainty, but in honest
-examination of what we truly seek."
-```
-
-**[📖 Full Documentation](free-skills/greek-philosopher/SKILL.md)** | **[⭐ See Examples](#examples)**
+See [`MULTI_RUNTIME.md`](MULTI_RUNTIME.md) for the universal-MCP rationale and the full strategy.
 
 ---
 
-### ⚔️ Spartan Warrior
+## 🧱 Anatomy of a skill
 
-**Direct, uncompromising discipline and action**
-
-#### What You Get:
-- **Laconic Wisdom**: Short, powerful statements that cut through excuses
-- **Five Spartan Principles**: Discipline, Courage, Brotherhood, Excellence, Resilience
-- **Warrior Mentality**: Hardship as forge for strength
-- **Action-Oriented Guidance**: No philosophizing, just execution
-
-#### Use Cases:
-- Overcoming procrastination
-- Building discipline and habits
-- Cutting through excuses and fear
-- Motivation for difficult challenges
-
-#### Sample Interaction:
 ```
-User: "I'm thinking about starting my workout program tomorrow..."
-
-Spartan Warrior: "Tomorrow is for cowards. Start now.
-
-You speak as if you need permission. You don't. You speak as if you
-need the perfect plan. You don't. You need only to begin.
-
-The Spartans didn't wait for perfect conditions to train. They trained
-in all conditions, which is why conditions didn't matter in battle.
-
-Do one push-up. Now. Not tomorrow. Now. That is the Spartan way.
-
-MOLON LABE - Come and take it. Let resistance try to stop you."
+free-skills/<skill-name>/
+├── SKILL.md          # required — frontmatter + instructions
+├── references/       # optional — deep-dive docs loaded on demand
+├── scripts/          # optional — executable helpers the agent can run
+└── examples/         # optional — worked examples
 ```
 
-**[📖 Full Documentation](free-skills/spartan-warrior/SKILL.md)** | **[⭐ See Examples](#examples)**
+Every `SKILL.md` starts with YAML frontmatter:
+
+```yaml
+---
+name: mcp-architecture          # lowercase, hyphenated, ≤ 64 chars
+description: Design and implement Model Context Protocol servers...   # when to use this skill
+version: 1.0.0
+---
+```
+
+The `description` is the most important line you'll write — it's what the model uses to decide
+**when** to load the skill. Make it specific about the task and trigger conditions.
 
 ---
 
-### 🔌 MCP Architecture Expert
+## ✅ Quality & validation
 
-**Build production-grade Model Context Protocol servers**
+Consistency is what makes this library "world class." A single validator enforces the standard
+across every `SKILL.md` in the repo (108 distinct skills, 124 files including runtime variants):
 
-#### What You Get:
-- **Complete MCP Specification**: Resources, Tools, Prompts
-- **Security Best Practices**: Authentication, authorization, data protection
-- **Architecture Patterns**: Server design, integration strategies
-- **Implementation Guides**: TypeScript, Python examples
-- **N+M Solution**: Any agent × any MCP server
-
-#### Use Cases:
-- Building MCP servers for custom data sources
-- Enterprise AI-to-data integration
-- Standardizing AI tool access
-- Multi-agent system integration
-
-#### Key Capabilities:
-```
-MCP SERVERS COMPONENTS:
-- Resources: Expose data (files, databases, APIs)
-- Tools: Enable actions (search, CRUD operations)
-- Prompts: Provide templates and workflows
-
-BEST PRACTICES:
-- Stateless server design
-- Proper error handling
-- Rate limiting and caching
-- Comprehensive logging
-```
-
-**[📖 Full Documentation](free-skills/mcp-architecture/SKILL.md)** | **[⭐ See Examples](#examples)**
-
----
-
-### 🎨 UI/UX Design Expert
-
-**Master WCAG 2.2 compliance for the 2025 EAA deadline**
-
-#### What You Get:
-- **WCAG 2.2 Complete Guide**: All success criteria explained
-- **European Accessibility Act (EAA)**: June 28, 2025 compliance deadline
-- **Design Systems**: Component libraries, design tokens, atomic design
-- **User Research**: Qualitative and quantitative methodologies
-- **Figma Workflows**: Best practices for design and handoff
-- **2025 Design Trends**: AI integration, inclusive design
-
-#### Use Cases:
-- Ensuring WCAG 2.2 / EAA compliance
-- Building accessible design systems
-- Conducting user research
-- Creating inclusive interfaces
-- Design-to-development handoff
-
-#### Critical Compliance Features:
-```
-WCAG 2.2 REQUIREMENTS:
-- Contrast: 4.5:1 for text, 3:1 for UI components
-- Keyboard Navigation: All interactive elements accessible
-- Touch Targets: 44×44px minimum (WCAG 2.2)
-- Screen Readers: Proper ARIA labels and semantic HTML
-- Forms: Visible labels, clear errors, autocomplete
-
-EAA DEADLINE: June 28, 2025
-Non-compliance = legal consequences
-```
-
-**[📖 Full Documentation](free-skills/ui-ux-design-expert/SKILL.md)** | **[⭐ See Examples](#examples)**
-
----
-
-### 📱 Social Media Strategy *(Coming Soon)*
-
-**Platform-specific tactics for 2025 algorithms**
-
-#### What You'll Get:
-- **Platform Mastery**: LinkedIn, Twitter/X, Instagram, TikTok, YouTube
-- **Content Calendars**: Planning and scheduling frameworks
-- **Analytics & Optimization**: Metrics that matter, A/B testing
-- **Engagement Strategies**: Community building, algorithm understanding
-- **2025 Algorithm Updates**: Latest changes across platforms
-
-**[🔔 Get Notified When Available](#newsletter)**
-
----
-
-## 💎 Premium Skills
-
-### 🤖 AI Agent Development Suite - $149
-**Master 6 AI agent frameworks**
-
-**Includes:**
-- OpenAI AgentKit Expert ($39)
-- Claude SDK Expert ($39)
-- Oracle ADK Expert ($49)
-- Oracle Agent Spec Expert ($39)
-- LangGraph Patterns Expert ($39)
-- MCP Architecture Expert (FREE - included)
-
-**Value:** $235 → **Save $86 (37% off)**
-
-**Perfect for:**
-- AI engineers building production agents
-- Consultants needing multi-framework expertise
-- Teams standardizing on agentic workflows
-
-**[🛒 Purchase AI Agent Development Suite](#pricing)**
-
----
-
-### ☁️ Oracle Enterprise Suite - $179
-**Complete Oracle Cloud & AI expertise**
-
-**Includes:**
-- Oracle ADK Expert ($49)
-- OCI Services Expert ($49)
-- Oracle Database Expert ($49)
-- Oracle Agent Spec Expert ($39)
-
-**Value:** $186 → **Optimized Bundle Pricing**
-
-**Perfect for:**
-- Oracle Cloud architects
-- DBAs and database developers
-- Enterprises on OCI
-- Oracle AI agent development
-
-**[🛒 Purchase Oracle Enterprise Suite](#pricing)**
-
----
-
-### 🎬 Creative Production Bundle - $99
-**Music, video, and social media mastery**
-
-**Includes:**
-- Suno AI Mastery ($29)
-- Video Production Workflow ($29)
-- Social Media Strategy (FREE - included)
-
-**Perfect for:**
-- Content creators and influencers
-- Marketing professionals
-- Video producers and editors
-- Musicians using AI
-
-**[🛒 Purchase Creative Production Bundle](#pricing)**
-
----
-
-### 💪 Health & Wellness Mastery - $89
-**Complete mind-body optimization**
-
-**Includes:**
-- Gym & Training Expert ($29) - 2025 exercise science
-- Health & Nutrition Expert ($29) - Longevity and metabolic health
-- Greek Philosopher (FREE - included)
-- Spartan Warrior (FREE - included)
-
-**Perfect for:**
-- Fitness enthusiasts and athletes
-- Health coaches and trainers
-- Anyone optimizing performance
-- Longevity and wellness focus
-
-**[🛒 Purchase Health & Wellness Mastery](#pricing)**
-
----
-
-### 🌟 Complete Library - $299
-**All 22+ skills + lifetime updates**
-
-**Includes:**
-- All current skills (17 created)
-- All future skills (5 in development)
-- 1 year of updates (latest research, new features)
-- Priority support
-- Commercial license
-
-**Value if purchased separately:** $500+
-**Savings:** $201+ (40% off)
-
-**Perfect for:**
-- Consultants and agencies
-- Power users across multiple domains
-- Enterprises standardizing on Claude Code
-- Anyone wanting the complete ecosystem
-
-**[🛒 Purchase Complete Library](#pricing)**
-
----
-
-## 🏆 Why This Library is Different
-
-### vs. Basic Examples
-| Feature | Basic Examples | Our Skills |
-|---------|---------------|------------|
-| Depth | 500-1,000 words | 3,000-6,000 words |
-| Research | Generic advice | 2025 best practices |
-| Frameworks | None | Complete methodologies |
-| Updates | Static | Quarterly updates |
-| Support | Community | Priority support (premium) |
-
-### vs. obra/superpowers
-| Domain | Superpowers | Our Library |
-|--------|-------------|-------------|
-| Development | ✅ Excellent | ⚠️ Not primary focus |
-| AI Architecture | ❌ Not covered | ✅ 6 frameworks |
-| Health & Wellness | ❌ Not covered | ✅ Complete system |
-| Creative Production | ❌ Not covered | ✅ Music, video, social |
-| Enterprise Oracle | ❌ Not covered | ✅ Full suite |
-| Philosophy & Wisdom | ❌ Not covered | ✅ 2 unique skills |
-
-**Complementary, not competitive.** Use superpowers for development workflows, use our library for domain expertise.
-
----
-
-## 🎯 Use Cases
-
-### For Developers
-```
-Free: MCP Architecture, UI/UX Design
-Premium: AI Agent Development Suite ($149)
-→ Build production AI agents with MCP integration and accessible UIs
-```
-
-### For Content Creators
-```
-Free: Social Media Strategy, Greek Philosopher, Spartan Warrior
-Premium: Creative Production Bundle ($99)
-→ Create music, videos, and optimized social content with discipline
-```
-
-### For Consultants
-```
-Free: All 5 free skills (broad expertise demo)
-Premium: Complete Library ($299)
-→ Domain expertise across all client industries and use cases
-```
-
-### For Enterprises (Oracle Stack)
-```
-Free: MCP Architecture, UI/UX Design
-Premium: Oracle Enterprise Suite ($179) + AI Agent Development Suite ($149)
-→ Complete Oracle Cloud + AI agent deployment solution
-```
-
-### For Personal Optimization
-```
-Free: Greek Philosopher, Spartan Warrior
-Premium: Health & Wellness Mastery ($89)
-→ Philosophy + discipline + fitness + nutrition = complete life optimization
-```
-
----
-
-## 📊 What You Get
-
-### Every Skill Includes:
-
-✅ **Core Competencies**: Comprehensive knowledge domain coverage
-✅ **2025 Best Practices**: Latest research and methodologies
-✅ **Frameworks & Templates**: Proven, actionable structures
-✅ **Sample Interactions**: Real examples of skill in action
-✅ **Integration Notes**: How skills work together
-✅ **Communication Style**: Optimized for domain-appropriate responses
-✅ **Response Frameworks**: Step-by-step guidance structures
-
-### Premium Skills Also Include:
-
-✅ **Quarterly Updates**: Latest research and best practices
-✅ **Priority Support**: Email support with 24-48hr response
-✅ **Commercial License**: Use in client work and products
-✅ **Private Community**: Discord server with other premium users
-
----
-
-## 🛠️ Installation & Setup
-
-### System Requirements
-- Claude Code or Claude AI (claude.ai)
-- macOS, Linux, or WSL on Windows
-- Git (for installation)
-
-### Detailed Installation
-
-1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/claude-skills-library.git
-cd claude-skills-library
+python3 scripts/validate_skills.py
+# OK: 124 skill file(s) are spec-compliant.
 ```
 
-2. **Copy free skills:**
-```bash
-# Create skills directory if it doesn't exist
-mkdir -p ~/.claude/skills
+It checks that every `SKILL.md`:
 
-# Copy free skills
-cp -r free-skills/* ~/.claude/skills/
-```
+- has well-formed YAML frontmatter,
+- has a `name` matching `^[a-z0-9][a-z0-9-]*$` (≤ 64 chars),
+- has a non-empty `description` (≤ 1024 chars),
+- is not empty.
 
-3. **Verify installation:**
-```bash
-ls ~/.claude/skills/
-# Should show: greek-philosopher, spartan-warrior, mcp-architecture, ui-ux-design-expert
-```
+Run it before opening a pull request. Wire it into CI to keep contributions clean.
 
-4. **Test a skill:**
-Open Claude Code and try:
-```
-"Use the Greek Philosopher skill to examine my career goals"
-```
+---
 
-### Premium Skills Installation
+## 🆚 How this compares
 
-After purchase, you'll receive:
-1. Download link for premium skills
-2. License key for updates
-3. Installation instructions
-4. Discord community invite
+### vs. one-off prompts
+
+| | A prompt | A skill |
+|---|---|---|
+| Scope | Single message | Reusable, model-invoked capability |
+| Activation | You paste it every time | Loads automatically when relevant |
+| Depth | A paragraph | Frameworks, references, runnable scripts |
+| Portability | Locked to one chat | Versioned folder, shared across runtimes |
+
+### vs. `obra/superpowers`
+
+`superpowers` is excellent for **development workflows**. This library is **breadth-first across
+domains** — AI architecture, Oracle/cloud, creative production, content, and personal performance.
+They're complementary: use both.
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Normalize all skills to the official Agent Skills frontmatter spec
+- [x] Ship a validator and a generated, categorized catalog
+- [x] Document import paths for 6 agentic runtimes
+- [ ] CI workflow running `validate_skills.py` on every PR
+- [ ] Per-skill `examples/` coverage for the most-used skills
+- [ ] One-command installer / Claude Code plugin packaging
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions to the free skills!
+Contributions are welcome — new skills, deeper examples, fixes, and better docs.
 
-### How to Contribute:
-
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/improvement`)
-3. **Make your changes** (improve documentation, fix typos, add examples)
-4. **Commit your changes** (`git commit -m 'Add helpful example'`)
-5. **Push to the branch** (`git push origin feature/improvement`)
-6. **Open a Pull Request**
-
-### Contribution Guidelines:
-
-- Maintain the quality and depth of existing skills
-- Include examples and use cases
-- Update documentation
-- Test with Claude Code before submitting
-- Follow existing formatting and structure
-
-**Note:** Premium skills are not open for contributions (proprietary).
-
----
-
-## 📈 Roadmap
-
-### Q4 2025
-- ✅ Launch free skill library (5 skills)
-- ✅ Release premium bundles
-- 🔄 Social Media Strategy skill (free) - In Progress
-- 🔄 Oracle Database Expert (premium) - In Progress
-- 🔄 Video Production Workflow (premium) - In Progress
-
-### Q1 2026
-- Next.js/React Expert (premium)
-- Product Management Expert (premium)
-- Official Claude Code Plugin support
-- Anthropic Marketplace listing (if available)
-
-### Q2 2026
-- 5 new domain-specific skills
-- Enterprise custom skill development service
-- Certification program launch
-- Community skill submissions
-
----
-
-## 💬 Support & Community
-
-### Free Support
-- 📖 [Documentation](docs/)
-- 💬 [GitHub Discussions](https://github.com/yourusername/claude-skills-library/discussions)
-- 🐛 [Issue Tracker](https://github.com/yourusername/claude-skills-library/issues)
-
-### Premium Support
-- ✉️ Email: support@claudeskillslibrary.com (24-48hr response)
-- 💬 Private Discord server
-- 📞 Priority issue resolution
-- 🎯 Quarterly office hours
+1. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and the **skill standard**.
+2. Add or edit a skill under `free-skills/<skill-name>/SKILL.md`.
+3. Run `python3 scripts/validate_skills.py` until it passes.
+4. Open a pull request.
 
 ---
 
 ## 📜 License
 
-### Free Skills: MIT License
-Free to use, modify, and distribute. See [LICENSE](LICENSE) file.
+MIT — free to use, modify, and distribute. See [LICENSE](LICENSE).
 
-### Premium Skills: Commercial License
-Premium skills include commercial license for client work. See purchase agreement for details.
+Some skills under `free-skills/anthropic/` retain their original upstream licenses
+(see the `LICENSE.txt` next to each). Always check a skill's folder for license notes.
 
 ---
 
 ## 🙏 Acknowledgments
 
-Built with insights from:
-- Anthropic's Claude Code best practices
-- obra's superpowers library (development workflow inspiration)
-- 2025 research across all domains (WCAG, nutrition science, exercise science, etc.)
-- Claude Code community feedback
-
----
-
-## 📧 Stay Updated
-
-- 🌟 [Star this repo](https://github.com/yourusername/claude-skills-library) for updates
-- 📬 [Newsletter](#) - New skills, tips, and updates
-- 🐦 [Twitter/X](#) - Daily tips and examples
-- 💼 [LinkedIn](#) - Professional updates
-
----
-
-## ❓ FAQ
-
-**Q: Are these skills compatible with claude.ai (web version)?**
-A: Yes! Skills work with both Claude Code and claude.ai. Some features are optimized for Claude Code but core functionality works everywhere.
-
-**Q: Can I use premium skills for client work?**
-A: Yes, premium licenses include commercial use. You can use skills in client projects and products.
-
-**Q: Do you offer refunds?**
-A: Yes, 30-day money-back guarantee on all premium purchases if skills don't meet your expectations.
-
-**Q: Will skills be updated?**
-A: Free skills receive occasional updates. Premium skills receive quarterly updates with latest research and best practices.
-
-**Q: Can I request custom skills?**
-A: Yes! Custom skill development starts at $2,500 per skill. Contact support@claudeskillslibrary.com
-
-**Q: How do skills compare to prompts?**
-A: Skills are comprehensive expert systems (3,000-6,000 words) with frameworks, methodologies, and integration. Prompts are single-use instructions.
-
-**Q: Do I need all the AI framework skills?**
-A: No. Choose based on your stack. If you only use OpenAI, just get OpenAI AgentKit Expert. The bundle is for multi-framework work.
-
----
-
-## 🚀 Get Started Now
-
-1. **Star this repository** to stay updated
-2. **Install free skills** to test quality
-3. **Join the community** in Discussions
-4. **Consider premium** if free skills deliver value
-5. **Share with others** who might benefit
-
----
+Built on Anthropic's Agent Skills format and Claude Code best practices, with inspiration from the
+broader open-source skills community (including `obra/superpowers`) and current, domain-specific research.
 
 <div align="center">
 
-**Made with 💙 by developers, for developers**
+**[⭐ Star the repo](https://github.com/frankxai/claude-skills-library)** · **[📚 Catalog](docs/CATALOG.md)** · **[🐛 Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[💬 Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
 
-[⭐ Star](https://github.com/yourusername/claude-skills-library) | [🐛 Issues](https://github.com/yourusername/claude-skills-library/issues) | [💬 Discussions](https://github.com/yourusername/claude-skills-library/discussions) | [🛒 Premium](https://claudeskillslibrary.com)
+Made with 💙 for the agentic era.
 
 </div>

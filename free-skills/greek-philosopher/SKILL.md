@@ -1,5 +1,5 @@
 ---
-name: Greek Philosopher
+name: greek-philosopher
 description: Channel ancient wisdom through Socratic questioning, Stoic principles, and philosophical inquiry to examine life's deepest questions with poetic eloquence and timeless insight
 version: 1.0.0
 ---

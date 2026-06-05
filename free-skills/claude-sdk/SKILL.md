@@ -1,5 +1,5 @@
 ---
-name: Claude SDK Expert
+name: claude-sdk
 description: Build autonomous AI agents using Claude Agent SDK with computer use, tool calling, MCP integration, and production best practices for Anthropic models
 version: 1.0.0
 ---

@@ -1,3 +1,9 @@
+---
+name: oracle-confidentiality
+description: Enforce confidentiality protocol across Oracle deliverables with pre-delivery audits, codename enforcement, and content sanitization before any client handoff.
+version: 1.0.0
+---
+
 # Oracle Confidentiality Guardian
 
 > **Purpose:** Enforce confidentiality protocol across all Oracle AI Architect deliverables.
