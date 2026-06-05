@@ -15,22 +15,27 @@ Browse the full [skills catalog](docs/CATALOG.md) to see what already exists bef
 
 ## The Skill Standard
 
-Every skill **must** pass [`scripts/validate_skills.py`](scripts/validate_skills.py). Concretely, each
-`SKILL.md` must:
+The full authoring standard — frontmatter rules, progressive disclosure, and a PR-review quality
+checklist — lives in [`spec/README.md`](spec/README.md). Start a new skill by copying
+[`template/`](template/). In short, every skill **must** pass
+[`scripts/validate_skills.py`](scripts/validate_skills.py). Concretely, each `SKILL.md` must:
 
-- Start with YAML frontmatter containing at least `name`, `description`, and `version`.
+- Be named exactly `SKILL.md`, be valid UTF-8, and not be empty.
+- Start with YAML frontmatter containing `name` and `description` (the two required fields). An
+  optional `version` is fine but not required.
 - Use a `name` that is lowercase, hyphenated, ≤ 64 characters, and matches `^[a-z0-9][a-z0-9-]*$`
   (conventionally identical to the skill's folder name).
-- Provide a specific, non-empty `description` (≤ 1024 chars) that tells the model **when** to use the skill.
-- Not be empty.
+- Provide a specific, non-empty `description` (≤ 1024 chars) that tells the model **what the skill
+  does AND when** to use it, in the third person, with explicit trigger keywords.
 
 ```yaml
 ---
 name: my-new-skill
-description: What this skill does and the situations in which the agent should load it.
-version: 1.0.0
+description: What this skill does and the situations in which the agent should load it. Use when ...
 ---
 ```
+
+Keep the body under ~500 lines and push depth into `references/` (the validator warns past 500).
 
 Run the validator before opening a PR:
 
@@ -245,7 +250,7 @@ Violations may result in temporary or permanent ban from the project.
 
 ## License
 
-By contributing to this project, you agree that your contributions will be licensed under the MIT License (for free skills only).
+By contributing to this project, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
