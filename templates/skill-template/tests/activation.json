@@ -1,0 +1,70 @@
+{
+  "skill": "your-skill-name",
+  "version": "1.0.0",
+  "activation_tests": [
+    {
+      "prompt": "Example prompt that SHOULD activate this skill",
+      "expected": true,
+      "reason": "This is clearly within the skill's domain",
+      "category": "core_functionality"
+    },
+    {
+      "prompt": "Another prompt that SHOULD activate",
+      "expected": true,
+      "reason": "Another core use case",
+      "category": "core_functionality"
+    },
+    {
+      "prompt": "Edge case that might activate",
+      "expected": true,
+      "reason": "Related but not obvious",
+      "category": "edge_case"
+    },
+    {
+      "prompt": "Prompt about something completely different",
+      "expected": false,
+      "reason": "Outside the skill's scope",
+      "category": "out_of_scope"
+    },
+    {
+      "prompt": "Technical problem unrelated to this skill",
+      "expected": false,
+      "reason": "Wrong domain entirely",
+      "category": "out_of_scope"
+    }
+  ],
+  "quality_tests": [
+    {
+      "name": "response_depth",
+      "description": "Skill provides detailed, actionable guidance",
+      "min_word_count": 200,
+      "includes_examples": true
+    },
+    {
+      "name": "response_structure",
+      "description": "Response is well-structured with clear sections",
+      "requires_sections": ["explanation", "implementation", "example"]
+    },
+    {
+      "name": "response_accuracy",
+      "description": "Information is accurate and up-to-date",
+      "check_for_outdated_patterns": true,
+      "requires_current_best_practices": true
+    }
+  ],
+  "integration_tests": [
+    {
+      "name": "works_with_related_skill",
+      "related_skill": "another-skill-name",
+      "prompt": "Prompt that should trigger both skills",
+      "expected_behavior": "Both skills coordinate effectively"
+    }
+  ],
+  "regression_tests": [
+    {
+      "name": "prevent_known_issue_1",
+      "prompt": "Prompt that previously caused Issue #123",
+      "should_not_contain": ["incorrect pattern", "deprecated approach"]
+    }
+  ]
+}
