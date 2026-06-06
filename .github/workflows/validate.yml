@@ -1,0 +1,74 @@
+name: Validate Skills
+
+on:
+  push:
+    branches: [ main, cursor/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Validate skill frontmatter
+        run: |
+          echo "🔍 Validating all skill files..."
+          python3 scripts/validate_skills.py
+      
+      - name: Check catalog is up to date
+        run: |
+          echo "📚 Checking catalog synchronization..."
+          python3 scripts/generate_catalog.py
+          if ! git diff --exit-code docs/CATALOG.md; then
+            echo "❌ Catalog is out of sync!"
+            echo "Please run: python3 scripts/generate_catalog.py"
+            exit 1
+          fi
+          echo "✅ Catalog is synchronized"
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+      
+      - name: Check markdown formatting
+        run: |
+          echo "📝 Checking markdown formatting..."
+          markdownlint '**/*.md' \
+            --ignore node_modules \
+            --ignore .git \
+            --config .markdownlint.json || true
+      
+      - name: Check for broken links
+        run: |
+          echo "🔗 Checking for broken links..."
+          python3 scripts/check_links.py || true
+      
+      - name: Generate quality metrics
+        run: |
+          echo "📊 Generating quality metrics..."
+          python3 scripts/quality_metrics.py --output metrics.json
+      
+      - name: Upload quality metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-metrics
+          path: metrics.json
+      
+      - name: Summary
+        run: |
+          echo "✅ All validation checks passed!"
+          echo "📊 Quality metrics generated"
+          echo "🎉 Ready to merge"

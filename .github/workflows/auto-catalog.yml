@@ -1,0 +1,50 @@
+name: Auto-update Catalog
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'free-skills/**/SKILL.md'
+
+jobs:
+  update-catalog:
+    runs-on: ubuntu-latest
+    
+    # Prevent running if commit message contains [skip catalog]
+    if: "!contains(github.event.head_commit.message, '[skip catalog]')"
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Regenerate catalog
+        run: |
+          echo "📚 Regenerating catalog..."
+          python3 scripts/generate_catalog.py
+      
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet docs/CATALOG.md; then
+            echo "No changes to catalog"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Catalog has changes"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: auto-update catalog [skip ci]"
+          file_pattern: "docs/CATALOG.md"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"

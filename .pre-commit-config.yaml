@@ -1,0 +1,46 @@
+# Pre-commit hooks for Claude Skills Library
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  - repo: local
+    hooks:
+      - id: validate-skills
+        name: Validate skill frontmatter
+        entry: python3 scripts/validate_skills.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+      
+      - id: regenerate-catalog
+        name: Regenerate catalog
+        entry: python3 scripts/generate_catalog.py
+        language: system
+        pass_filenames: false
+        files: 'free-skills/.*/SKILL\.md$'
+        stages: [commit]
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+      - id: end-of-file-fixer
+        name: Fix end of files
+      - id: check-yaml
+        name: Check YAML syntax
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+      - id: mixed-line-ending
+        name: Fix mixed line endings
+  
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        name: Lint markdown files
+        args: ['--config', '.markdownlint.json']
+        exclude: '^(node_modules|\.git)'
