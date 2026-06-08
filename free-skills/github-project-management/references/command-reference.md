@@ -57,7 +57,7 @@ done
 # Automated progress comment + label promotion
 PROGRESS=$(npx ruv-swarm github issue-progress 456)
 gh issue comment 456 --body "$(echo "$PROGRESS" | jq -r '"## 📊 Progress Update\n\n**Completion**: \(.completion)%\n**ETA**: \(.eta)"')"
-[[ $(echo "$PROGRESS" | jq -r '.completion') -eq 100 ]] && gh issue edit 456 --add-label "ready-for-review" --remove-label "in-progress"
+[[ "$(echo "$PROGRESS" | jq -r '.completion')" == "100" ]] && gh issue edit 456 --add-label "ready-for-review" --remove-label "in-progress"
 ```
 
 ### Stale issue management
@@ -161,10 +161,15 @@ jobs:
     steps:
       - name: Process Issue
         uses: ruvnet/swarm-action@v1
+        env:
+          LABEL_NAME: ${{ github.event.label.name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         with:
           command: |
-            if [[ "${{ github.event.label.name }}" == "swarm-ready" ]]; then
-              npx ruv-swarm github issue-init ${{ github.event.issue.number }}
+            # Pass GitHub context via env vars, never inline — inline expansion of
+            # untrusted label/title text into the shell is a command-injection vector.
+            if [[ "$LABEL_NAME" == "swarm-ready" ]]; then
+              npx ruv-swarm github issue-init "$ISSUE_NUMBER"
             fi
 ```
 
