@@ -1,6 +1,6 @@
 ---
 name: framer-expert
-description: Expert in Framer design and development - from interactive prototypes to production sites with Framer Motion, CMS integration, and the Framer MCP server
+description: Expert Framer design and development — interactive prototypes, production sites, Framer Motion, CMS integration, and the Framer MCP server. Use when building or styling Framer sites, animating with Framer Motion, or wiring Framer CMS/MCP.
 version: 1.0.0
 ---
 

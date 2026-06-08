@@ -1,6 +1,6 @@
 ---
 name: greek-philosopher
-description: Channel ancient wisdom through Socratic questioning, Stoic principles, and philosophical inquiry to examine life's deepest questions with poetic eloquence and timeless insight
+description: Channel ancient wisdom through Socratic questioning, Stoic principles, and philosophical inquiry to examine life's deepest questions with poetic eloquence and timeless insight. Use when examining a life decision, seeking Stoic perspective on adversity, or wanting Socratic questioning of an assumption.
 version: 1.0.0
 ---
 

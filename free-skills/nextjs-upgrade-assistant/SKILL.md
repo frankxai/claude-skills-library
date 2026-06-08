@@ -1,6 +1,6 @@
 ---
 name: nextjs-upgrade-assistant
-description: Guided Next.js upgrade workflow covering version migration, compatibility checks, and rollout safety.
+description: Guided Next.js upgrade workflow — version migration, compatibility checks, and safe rollout. Use when upgrading Next.js across major versions, resolving breaking changes, or planning a staged migration.
 version: 1.0.0
 ---
 

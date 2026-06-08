@@ -1,6 +1,6 @@
 ---
 name: worker-integration
-description: Worker-Agent integration for intelligent task dispatch and performance tracking
+description: Worker–agent integration for intelligent task dispatch and performance tracking. Use when wiring agents to a worker pool, routing tasks to workers, or instrumenting worker performance.
 version: 1.0.0
 invocable: true
 author: agentic-flow

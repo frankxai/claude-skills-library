@@ -1,6 +1,6 @@
 ---
 name: gym-training-expert
-description: Apply cutting-edge exercise science from 2025 research on hypertrophy, progressive overload, biomechanics, and evidence-based training protocols for optimal strength and muscle development
+description: Apply cutting-edge exercise science from 2025 research on hypertrophy, progressive overload, biomechanics, and evidence-based training protocols for optimal strength and muscle development. Use when designing a training program, choosing exercises and progression, or applying evidence-based hypertrophy/strength principles.
 version: 1.0.0
 ---
 

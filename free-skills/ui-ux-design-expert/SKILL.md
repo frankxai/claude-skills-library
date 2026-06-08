@@ -1,6 +1,6 @@
 ---
 name: ui-ux-design-expert
-description: Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user research, and creating inclusive, user-centered interfaces with 2025 best practices
+description: Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user research, and creating inclusive, user-centered interfaces with 2025 best practices. Use when designing or auditing an interface, building a design system, or checking accessibility against WCAG 2.2.
 version: 1.0.0
 ---
 
@@ -36,7 +36,7 @@ COLOR GUIDELINES:
 
 TEXT LEGIBILITY:
 - Minimum font size: 16px for body text
-- Line height: 1.5× font size minimum
+- Line height: 1.5Ã— font size minimum
 - Paragraph width: 45-75 characters optimal
 - Avoid all-caps for long text (reduces readability)
 ```
@@ -51,9 +51,9 @@ KEYBOARD NAVIGATION:
 - No keyboard traps (users can navigate away from all elements)
 
 TOUCH TARGETS:
-- Minimum size: 44×44 CSS pixels (WCAG 2.2)
+- Minimum size: 44Ã—44 CSS pixels (WCAG 2.2)
 - Adequate spacing between targets (8px minimum)
-- Larger targets for primary actions (48×48px recommended)
+- Larger targets for primary actions (48Ã—48px recommended)
 
 TIMING & MOTION:
 - Allow users to pause, stop, or hide moving content
@@ -101,7 +101,7 @@ SCREEN READER SUPPORT:
 - Provide transcripts for audio content
 - Provide captions and audio descriptions for video
 - Test with NVDA (Windows), JAWS, or VoiceOver (Mac/iOS)
-- Ensure proper heading hierarchy (h1 ’ h2 ’ h3, no skipping)
+- Ensure proper heading hierarchy (h1 â†’ h2 â†’ h3, no skipping)
 
 TESTING TOOLS:
 - axe DevTools (browser extension)
@@ -220,7 +220,7 @@ Best Practices:
 - Don't lead or help unless necessary
 - Observe non-verbal cues (confusion, frustration)
 - Measure: task success rate, time on task, error rate
-- Identify usability issues and severity (critical ’ minor)
+- Identify usability issues and severity (critical â†’ minor)
 ```
 
 #### Quantitative Research (What & How Much)
@@ -291,9 +291,9 @@ Body: 16px (1rem) - Default text
 Small: 14px (0.875rem) - Captions, labels
 
 LINE HEIGHT:
-Headings: 1.2-1.3× font size (tighter)
-Body text: 1.5-1.7× font size (comfortable reading)
-Small text: 1.4-1.5× font size
+Headings: 1.2-1.3Ã— font size (tighter)
+Body text: 1.5-1.7Ã— font size (comfortable reading)
+Small text: 1.4-1.5Ã— font size
 
 FONT PAIRING:
 - Serif heading + Sans-serif body (classic contrast)
@@ -334,7 +334,7 @@ ACCESSIBILITY-FIRST COLOR:
 WHITE SPACE PRINCIPLES:
 - Macro white space: Between major sections (48-64px)
 - Micro white space: Between related elements (8-16px)
-- Line spacing: 1.5× for body text
+- Line spacing: 1.5Ã— for body text
 - Padding inside components: 16-24px typically
 
 RESPONSIVE GRID:
@@ -683,7 +683,7 @@ When providing UI/UX guidance:
 1. **Visible, Persistent Labels**: Never use placeholder-only labels (WCAG 3.3.2)
 2. **Show Password Toggle**: Reduces errors, improves UX (especially mobile)
 3. **Autocomplete Attributes**: Enables password managers, reduces friction
-4. **Large Touch Targets**: Minimum 44×44px for buttons/inputs (WCAG 2.5.5)
+4. **Large Touch Targets**: Minimum 44Ã—44px for buttons/inputs (WCAG 2.5.5)
 5. **Clear Error Messages**: Specific guidance, not just "Invalid login"
 6. **Keyboard Accessible**: Full keyboard navigation, visible focus indicators
 7. **Contrast**: Minimum 4.5:1 for text, 3:1 for form borders (WCAG 1.4.3)

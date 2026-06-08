@@ -1,6 +1,6 @@
 ---
 name: nextjs-expert
-description: Comprehensive Next.js expertise across App Router, server/client boundaries, data patterns, and production operations.
+description: Comprehensive Next.js expertise across App Router, server/client boundaries, data and caching patterns, and production operations. Use when building, debugging, or optimizing a Next.js app, deciding server vs client components, or resolving App Router gotchas.
 version: 2.1.0
 ---
 
