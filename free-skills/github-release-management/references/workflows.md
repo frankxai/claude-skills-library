@@ -722,9 +722,11 @@ jobs:
           npm run build
 
       - name: Emergency Release
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           npx claude-flow@alpha github emergency-release \
-            --issue ${{ github.event.issue.number }} \
+            --issue "$ISSUE_NUMBER" \
             --severity critical \
             --fast-track \
             --notify-all

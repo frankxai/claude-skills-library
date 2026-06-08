@@ -464,9 +464,11 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
       - name: Run Review Swarm
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          # Get PR context with gh CLI
-          PR_NUM=${{ github.event.pull_request.number }}
+          # Get PR context with gh CLI (pass context via env, never inline in shell)
+          PR_NUM="$PR_NUMBER"
           PR_DATA=$(gh pr view $PR_NUM --json files,title,body,labels)
           PR_DIFF=$(gh pr diff $PR_NUM)
 
@@ -743,9 +745,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Swarm Review
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           npx ruv-swarm github review-all \
-            --pr ${{ github.event.pull_request.number }} \
+            --pr "$PR_NUMBER" \
             --include-build-results
 ```
 
