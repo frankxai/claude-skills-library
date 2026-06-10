@@ -302,8 +302,8 @@ npx claude-flow@alpha github version-sync \
 ### Documentation
 - [GitHub CLI Documentation](https://cli.github.com/manual/)
 - [Semantic Versioning Spec](https://semver.org/)
-- [Claude Flow SPARC Guide](../../docs/sparc-methodology.md)
-- [Swarm Coordination Patterns](../../docs/swarm-patterns.md)
+- [SPARC methodology skill](../sparc-methodology/SKILL.md)
+- [Swarm coordination patterns skill](../swarm-advanced/SKILL.md)
 
 ### Related Skills
 - **github-pr-management**: PR review and merge automation

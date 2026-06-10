@@ -183,7 +183,11 @@ python3 scripts/validate_skills.py
 
 python3 scripts/generate_catalog.py          # regenerate docs/CATALOG.md
 python3 scripts/generate_catalog.py --check   # CI-friendly drift check
+python3 scripts/check_links.py                # verify no broken internal links
 ```
+
+All three run automatically on every push and pull request via
+[GitHub Actions](.github/workflows/validate.yml).
 
 It verifies that every skill has well-formed UTF-8 frontmatter, a spec-valid `name`, a non-empty
 `description` (≤ 1024 chars), and the exact filename `SKILL.md`; it also warns on oversized bodies

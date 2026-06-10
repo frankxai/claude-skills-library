@@ -28,7 +28,7 @@ For the runtimes that don't natively read `SKILL.md` files (Codex, Gemini CLI, p
 
 - All four runtimes support MCP servers (Claude Code, Codex, Gemini CLI/AG via Vertex, Cursor).
 - A skill can be wrapped as an MCP tool by exposing its functionality via stdio MCP server.
-- See [`runtimes/mcp-wrapper-template/`](./runtimes/mcp-wrapper-template/) for the canonical wrapper pattern.
+- See the per-runtime guides in [`runtimes/`](./runtimes/) for the canonical wrapper pattern.
 
 When MCP is wired, the skill is callable from any MCP-aware runtime with identical semantics. This is the long-term direction.
 
