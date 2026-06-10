@@ -98,7 +98,7 @@ def render(skills: dict[str, tuple[str, str]]) -> str:
             d = " ".join(desc.split()).replace("|", "\\|")  # collapse newlines from block scalars
             if len(d) > 180:
                 d = d[:177].rstrip() + "..."
-            lines.append(f"| [`{name}`]({rel}) | {d} |\n")
+            lines.append(f"| [`{name}`](../{rel}) | {d} |\n")
     return "".join(lines)
 
 

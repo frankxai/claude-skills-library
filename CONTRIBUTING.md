@@ -208,7 +208,7 @@ Any other information that would be helpful for reviewers.
 
 ## Review Process
 
-1. **Automated Checks**: Your PR will run through automated checks (if configured)
+1. **Automated Checks**: CI validates frontmatter, catalog sync, and internal links on every PR
 2. **Maintainer Review**: A maintainer will review your PR within 3-5 business days
 3. **Feedback**: You may receive requests for changes or clarifications
 4. **Merge**: Once approved, your PR will be merged!

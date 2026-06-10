@@ -307,9 +307,7 @@ const outputPath = isAcademy
 This SKILL.md provides core workflow. For detailed information:
 
 - **[ai-news-sources.md](references/ai-news-sources.md)** - Complete source list, search patterns, RSS feeds
-- **[visual-standards.md](references/visual-standards.md)** - Design guidelines, brand colors, image specs
 - **[content-patterns.md](references/content-patterns.md)** - Newsletter structures, voice guide, templates
-- **[topic-clusters.md](references/topic-clusters.md)** - AI Architect topic taxonomy, tagging system
 
 ## Integration with Existing Commands
 

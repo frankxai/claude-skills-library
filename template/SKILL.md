@@ -28,7 +28,7 @@ Assume the reader is a capable engineer — don't explain the basics.
 
 Link to deeper docs the agent should read only when needed:
 
-- [`references/deep-dive.md`](references/deep-dive.md) — loaded on demand.
+- `references/deep-dive.md` — loaded on demand (link it once the file exists).
 
 ## Scripts (optional)
 
