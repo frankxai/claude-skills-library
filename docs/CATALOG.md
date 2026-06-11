@@ -1,5 +1,5 @@
 # 📚 Skills Catalog
-The complete index of all **107 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **108 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
@@ -113,7 +113,7 @@ _14 skills_
 | [`social-media-strategy`](../free-skills/social-media-strategy/SKILL.md) | Platform-specific tactics, content optimization, audience growth, and analytics-driven social media strategy. Use when planning a social strategy, optimizing posts for a specifi... |
 
 ## Creative & Media Production
-_22 skills_
+_23 skills_
 
 | Skill | Description |
 |---|---|
@@ -137,6 +137,7 @@ _22 skills_
 | [`suno-ai-mastery`](../free-skills/suno-ai-mastery/SKILL.md) | Expert prompt engineering and music generation with Suno AI v4.5+ for professional-quality songs across all genres. Use when writing Suno prompts, designing song structure/style... |
 | [`suno-prompt-architect`](../free-skills/suno-prompt-architect/SKILL.md) | Expert Suno AI prompt engineering for professional music creation. Use this skill when creating Suno prompts for any AI-generated music that needs commercial quality. |
 | [`theme-factory`](../free-skills/anthropic/theme-factory/SKILL.md) | Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can... |
+| [`vibe-os-master`](../free-skills/vibe-os-master/SKILL.md) | Research-backed music for state change. Use this skill to design AI music prompts, frequency sessions, and listening plans grounded in music psychology (tempo, mode, timbre, lyr... |
 | [`video-production-workflow`](../free-skills/video-production-workflow/SKILL.md) | End-to-end video production workflow covering ideation, scripting, storyboarding, shooting/recording, editing, sound design, publishing, and data-driven iteration for YouTube, s... |
 | [`website-to-hyperframes`](../free-skills/website-to-hyperframes/SKILL.md) | Capture a website and create a HyperFrames video from it. Use when: (1) a user provides a URL and wants a video, (2) someone says "capture this site", "turn this into a video",... |
 

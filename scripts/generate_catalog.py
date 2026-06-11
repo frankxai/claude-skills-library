@@ -34,7 +34,7 @@ CATEGORIES = [
     ("Web, Frontend & Animation", r"nextjs|tailwind|^three$|framer|web-design|ui-ux|css-animations|animejs|gsap|lottie|waapi|defuddle"),
     ("Engineering Workflow & GitHub", r"github|performance-analysis|verification-quality|hooks-automation|worker-|skill-comply|template-skill"),
     ("Content, Writing & Brand", r"brand|book|newsletter|social-media|content-strategy|creator|prompt-hub|internal-comms"),
-    ("Creative & Media Production", r"suno|higgsfield|hyperframes|website-to|remotion|starlight|arcanea|acos|cacos|video-production|algorithmic-art|canvas|theme-factory|slack-gif|artifacts-builder|creator-intelligence"),
+    ("Creative & Media Production", r"suno|vibe-os|higgsfield|hyperframes|website-to|remotion|starlight|arcanea|acos|cacos|video-production|algorithmic-art|canvas|theme-factory|slack-gif|artifacts-builder|creator-intelligence"),
     ("Mind, Body & Philosophy", r"greek-philosopher|spartan|gym-training|health-nutrition|soulbook|frankx-daily"),
     ("Documents & Productivity", r"^pdf$|^docx$|^pptx$|^xlsx$|webapp-testing|mcp-builder|product-management"),
     ("Meta & Library", r"meta$|contribute-catalog|brand-guidelines"),
