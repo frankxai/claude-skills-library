@@ -19,6 +19,8 @@ The most comprehensive, research-backed skill library for Claude Code and Claude
 - 🎨 **UI/UX Design Expert** - WCAG 2.2 compliance, design systems, accessibility
 - 📱 **Social Media Strategy** - Platform tactics and engagement optimization *(coming soon)*
 
+**Sharing note (per SHARING.md + SIP):** Free skills here are core/shared (propagated via claude-code-config junctions to ACOS/SIS/.claude/.grok compat). Kenya-magical (personal excellence like certain health/creative/soul) stay in personal/.grok/FrankX overlays only — never auto in this library or ACOS core. Use /sip-share-audit + tags before any sync.
+
 ### Premium Skills Available:
 - 🎵 **Suno AI Mastery** - Professional music generation
 - 🤖 **AI Agent Development Suite** - 6 framework experts (OpenAI, Claude, Oracle, LangGraph, MCP, Agent Spec)

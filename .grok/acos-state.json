@@ -1,0 +1,19 @@
+{
+  "version": "10.1.0",
+  "platform": "grok",
+  "adapter": "grok-harness-adapter",
+  "installedAt": "2026-06-04T01:34:53Z",
+  "features": {
+    "grokNative": true,
+    "skills": true,
+    "agentsSubagents": true,
+    "hooks": true,
+    "claudeCompat": true,
+    "excellenceGates": true,
+    "gstackQA": true,
+    "repoMastery": true,
+    "multiHarness": true
+  },
+  "seeds": ["harness-integration", "excellence-review", "repo-mastery", "multi-harness-orchestrator"],
+  "note": "Run 'grok' in this dir; trust hooks with /hooks-trust; skills auto or /skills <name>"
+}

@@ -1,0 +1,9 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "echo 'Frank DNA excellence mode activated. Read CLAUDE.md/AGENTS.md/SHARING.md/SIP.md first (deeper wins). Shared .claude catalog active. MCPs (github/fs-starlight/git) ready. Use multi-harness-orchestrator + repo-mastery + excellence-review + harness-integration. Gates: verification-loop/santa-method/qa/cso/plan-reviews/gstack before ship. Grok .grok personal excellence seeds (excellence gates) opt-in only.'"
+      }
+    ]
+  }
+}
