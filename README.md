@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/assets/hero.svg" width="100%" alt="Claude Skills Library hero banner"/></p>
+
 <div align="center">
 
 # 🧠 Claude Skills Library
