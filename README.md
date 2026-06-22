@@ -71,14 +71,14 @@ Every skill here:
 - ✅ Is **progressive-disclosure friendly**: a tight description for routing, deep guidance loaded only on use.
 - ✅ Carries a **trigger-rich description** so the right skill activates from a library of 100+.
 
-**107 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
+**108 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
 engineering workflow, and personal performance. **All free. MIT-licensed.**
 
 ---
 
 ## ⭐ Featured skills
 
-A small taste — see the **[full catalog](docs/CATALOG.md)** for all 107.
+A small taste — see the **[full catalog](docs/CATALOG.md)** for all 108.
 
 | Skill | Why you'd reach for it | Category |
 |---|---|---|
@@ -103,7 +103,7 @@ A small taste — see the **[full catalog](docs/CATALOG.md)** for all 107.
 | 🎨 **Web, Frontend & Animation** | 14 | `nextjs-expert`, `ui-ux-design-expert`, `tailwind`, `gsap`, `three`, `framer-expert` |
 | 🛠️ **Engineering Workflow & GitHub** | 9 | `github-code-review`, `performance-analysis`, `verification-quality`, `hooks-automation` |
 | ✍️ **Content, Writing & Brand** | 14 | `brand-voice`, `book-publishing`, `social-media-strategy`, `creator-productivity` |
-| 🎬 **Creative & Media Production** | 22 | `suno-ai-mastery`, `video-production-workflow`, `hyperframes-media`, `higgsfield-soul-id` |
+| 🎬 **Creative & Media Production** | 23 | `suno-ai-mastery`, `vibe-os-master`, `video-production-workflow`, `hyperframes-media` |
 | 🧭 **Mind, Body & Philosophy** | 5 | `greek-philosopher`, `spartan-warrior`, `gym-training-expert`, `health-nutrition-expert` |
 | 📄 **Documents & Productivity** | 6 | `pdf`, `docx`, `pptx`, `xlsx`, `product-management-expert`, `webapp-testing` |
 | 🧩 **Meta & Library** | 1 | `contribute-catalog` |
