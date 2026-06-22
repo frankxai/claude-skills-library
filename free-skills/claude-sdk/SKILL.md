@@ -99,7 +99,7 @@ from anthropic import Anthropic
 client = Anthropic()
 
 response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",
     max_tokens=4096,
     tools=[
         {"type": "computer_use"},
@@ -133,7 +133,7 @@ Task → Plan → Show to Human → Approve? → Execute → Result
 ```python
 # Step 1: Generate plan
 plan_response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",
     messages=[{
         "role": "user",
         "content": "Create a plan to refactor the authentication system"
@@ -144,7 +144,7 @@ plan_response = client.messages.create(
 if human_approves(plan_response.content):
     # Step 3: Execute with tools
     execution_response = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         tools=all_tools,
         messages=[{
             "role": "user",
@@ -250,7 +250,7 @@ mcp_config = {
 
 # Claude automatically discovers tools from MCP servers
 response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",
     mcp_servers=mcp_config,
     messages=[{
         "role": "user",
@@ -288,7 +288,7 @@ def update_customer_notes(customer_id: str, notes: str):
 
 ```python
 with client.messages.stream(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",
     max_tokens=4096,
     tools=tools,
     messages=messages
@@ -306,7 +306,7 @@ with client.messages.stream(
 ```python
 try:
     response = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         tools=tools,
         messages=messages
     )
@@ -336,12 +336,12 @@ except Exception as e:
 ```python
 # Use appropriate model for task
 simple_task_response = client.messages.create(
-    model="claude-haiku-4",  # Cheaper, faster
+    model="claude-haiku-4-5",  # Cheaper, faster
     messages=[{"role": "user", "content": "Format this JSON"}]
 )
 
 complex_task_response = client.messages.create(
-    model="claude-sonnet-4-5",  # More capable
+    model="claude-sonnet-4-6",  # More capable
     messages=[{"role": "user", "content": "Analyze architectural trade-offs"}]
 )
 ```
@@ -397,7 +397,7 @@ Claude can use multiple tools simultaneously when appropriate:
 ```python
 # Claude automatically parallelizes when possible
 response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",
     tools=[weather_api, stock_api, news_api],
     messages=[{
         "role": "user",
@@ -411,7 +411,7 @@ response = client.messages.create(
 ```python
 # Cache system prompts and large contexts
 response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",
     system=[{
         "type": "text",
         "text": large_system_prompt,
@@ -438,7 +438,7 @@ def test_customer_lookup_tool():
 def test_agent_workflow():
     """Test agent using multiple tools"""
     response = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         tools=[tool1, tool2, tool3],
         messages=[{
             "role": "user",
@@ -476,7 +476,7 @@ eval_results = eval_client.evaluate(
 async def research_agent(query: str):
     """Agent researches topic using multiple sources"""
     response = await client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         tools=[web_search, web_fetch, summarize],
         messages=[{
             "role": "user",
@@ -492,7 +492,7 @@ async def research_agent(query: str):
 def code_agent(requirements: str):
     """Agent writes and tests code"""
     response = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         tools=[write_file, bash, read_file],
         messages=[{
             "role": "user",
@@ -508,7 +508,7 @@ def code_agent(requirements: str):
 def data_pipeline_agent(source: str, destination: str):
     """Agent ETL pipeline"""
     response = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         tools=[read_file, bash, postgres_insert],
         messages=[{
             "role": "user",
@@ -521,33 +521,23 @@ def data_pipeline_agent(source: str, destination: str):
 
 ## Model Selection
 
-### Claude Sonnet 4.5 (claude-sonnet-4-5)
-**Best For:**
-- Complex reasoning and analysis
-- Multi-step autonomous tasks
-- Code generation and debugging
-- Research and synthesis
-- High-stakes decisions
+> Current family (June 2026 — verify at [platform.claude.com](https://platform.claude.com/docs/en/about-claude/models/overview)).
+> Default to `claude-opus-4-8` unless you have a reason to choose otherwise.
 
-**Characteristics:**
-- Highest capability
-- Best for computer use
-- More expensive
-- Slower than Haiku
+### Claude Fable 5 (`claude-fable-5`)
+The most capable model — hardest reasoning and long-horizon agentic work. Thinking is always on.
+Priced above Opus tier; reserve for genuinely demanding tasks.
 
-### Claude Haiku 4 (claude-haiku-4)
-**Best For:**
-- Simple, well-defined tasks
-- Format conversions
-- Quick classifications
-- High-throughput scenarios
-- Cost-sensitive applications
+### Claude Opus 4.8 (`claude-opus-4-8`) — default
+Strong reasoning, agentic execution, knowledge work, and computer use. 1M context. Adaptive
+thinking + the `effort` parameter (no `budget_tokens`).
 
-**Characteristics:**
-- Fast responses
-- Lower cost
-- Good for structured tasks
-- Limited complex reasoning
+### Claude Sonnet 4.6 (`claude-sonnet-4-6`)
+Best balance of speed and intelligence for high-volume production workloads. 1M context.
+
+### Claude Haiku 4.5 (`claude-haiku-4-5`)
+Fastest and cheapest — simple, well-defined, latency-sensitive tasks (classification, format
+conversion, high-throughput). 200K context.
 
 ## Integration Examples
 
@@ -562,7 +552,7 @@ client = Anthropic()
 @app.post("/agent/task")
 async def run_agent_task(task: dict):
     response = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         tools=load_tools_for_task(task),
         messages=[{
             "role": "user",
@@ -577,7 +567,7 @@ async def run_agent_task(task: dict):
 from langchain_anthropic import ChatAnthropic
 from langchain.agents import initialize_agent
 
-llm = ChatAnthropic(model="claude-sonnet-4-5")
+llm = ChatAnthropic(model="claude-sonnet-4-6")
 agent = initialize_agent(
     tools=[tool1, tool2],
     llm=llm,
@@ -607,7 +597,7 @@ def run_agent_with_logging(task):
     logger.info(f"Starting task: {task}")
 
     response = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",
         tools=tools,
         messages=[{"role": "user", "content": task}]
     )

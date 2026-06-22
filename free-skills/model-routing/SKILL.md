@@ -18,6 +18,11 @@ source: claude-flow
 
 You have access to intelligent model routing. Before executing any task, analyze complexity and route to the appropriate model tier.
 
+> **Current model IDs (June 2026 — verify at [platform.claude.com](https://platform.claude.com/docs/en/about-claude/models/overview)):**
+> Haiku → `claude-haiku-4-5` · Sonnet → `claude-sonnet-4-6` · Opus → `claude-opus-4-8` (default).
+> For the hardest long-horizon reasoning, escalate above Opus to **`claude-fable-5`** (most capable;
+> priced above Opus tier — reserve for genuinely demanding work). The tiers below are model-agnostic.
+
 ## Routing Decision Matrix
 
 ```

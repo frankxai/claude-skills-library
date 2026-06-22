@@ -42,7 +42,7 @@ Agent Spec defines **conceptual building blocks** (components) that make up agen
 ```yaml
 type: LLMNode
 name: "text_generator"
-model: "claude-sonnet-4-5"
+model: "claude-sonnet-4-6"
 system_prompt: "You are a helpful assistant"
 temperature: 0.7
 max_tokens: 2000
@@ -105,13 +105,13 @@ error_handling: retry
     "components": {
       "classifier": {
         "type": "LLMNode",
-        "model": "claude-haiku-4",
+        "model": "claude-haiku-4-5",
         "system_prompt": "Classify customer inquiry type",
         "output": "inquiry_type"
       },
       "technical_support": {
         "type": "AgentNode",
-        "model": "claude-sonnet-4-5",
+        "model": "claude-sonnet-4-6",
         "tools": ["diagnose_issue", "escalate_ticket"]
       },
       "billing_support": {
@@ -148,7 +148,7 @@ system:
   agents:
     researcher:
       type: AgentNode
-      model: claude-sonnet-4-5
+      model: claude-sonnet-4-6
       tools:
         - web_search
         - fetch_document
@@ -164,7 +164,7 @@ system:
 
     synthesizer:
       type: AgentNode
-      model: claude-sonnet-4-5
+      model: claude-sonnet-4-6
       system_prompt: "Synthesize findings into coherent report"
 
   workflow:
@@ -246,7 +246,7 @@ name: TriageSystem
 components:
   classifier:
     type: LLMNode
-    model: claude-haiku-4
+    model: claude-haiku-4-5
     prompt: "Classify: {input}"
 
   router:
@@ -398,7 +398,7 @@ from pyagentspec import AgentSpec, LLMNode, AgentNode
 spec = AgentSpec(
     name="MyAgent",
     components=[
-        LLMNode(name="classifier", model="claude-haiku-4"),
+        LLMNode(name="classifier", model="claude-haiku-4-5"),
         AgentNode(name="executor", model="gpt-4")
     ]
 )

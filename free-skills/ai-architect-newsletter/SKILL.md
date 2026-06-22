@@ -21,7 +21,7 @@ Automated intelligence newsletter generation for AI Architects, combining latest
 ### Generate Weekly Newsletter
 
 ```bash
-# Basic invocation (uses Opus 4.6 recommended)
+# Basic invocation (uses Opus 4.8 recommended)
 /ai-architect-newsletter
 
 # The system will:
@@ -141,7 +141,7 @@ Cross-references news with research to provide context and depth.
 - Tools section
 - ~15-20 min read time
 
-**Recommended Model:** Opus 4.6 (deep synthesis)
+**Recommended Model:** Opus 4.8 (deep synthesis)
 
 ### Daily Brief
 **Trigger:** `/ai-architect-newsletter daily`
@@ -152,7 +152,7 @@ Cross-references news with research to provide context and depth.
 - Notable tools (1-2)
 - ~5 min read time
 
-**Recommended Model:** Sonnet 4.5 (faster)
+**Recommended Model:** Sonnet 4.6 (faster)
 
 ### Topic Deep Dive
 **Trigger:** `/ai-architect-newsletter [topic]`
@@ -168,7 +168,7 @@ Cross-references news with research to provide context and depth.
 - Code examples and patterns
 - Architecture recommendations
 
-**Recommended Model:** Opus 4.6 (depth)
+**Recommended Model:** Opus 4.8 (depth)
 
 ### Status Check
 **Trigger:** `/ai-architect-newsletter status`
@@ -347,23 +347,23 @@ Before sending newsletter:
 
 ## Model Recommendations
 
-**Opus 4.6 (Recommended for quality):**
+**Opus 4.8 (Recommended for quality):**
 - Weekly newsletter generation
 - Deep dive topics
 - Multi-source synthesis
 - Complex architecture diagrams
 
-**Sonnet 4.5 (Faster):**
+**Sonnet 4.6 (Faster):**
 - Daily briefs
 - Status checks
 - Quick updates
 - Research indexing
 
 **When to use each:**
-- First newsletter run: Opus 4.6 (establish quality baseline)
-- Daily operations: Sonnet 4.5 (speed)
-- Important editions: Opus 4.6 (quality)
-- Routine updates: Sonnet 4.5 (efficiency)
+- First newsletter run: Opus 4.8 (establish quality baseline)
+- Daily operations: Sonnet 4.6 (speed)
+- Important editions: Opus 4.8 (quality)
+- Routine updates: Sonnet 4.6 (efficiency)
 
 ## Troubleshooting
 
@@ -401,5 +401,5 @@ Before sending newsletter:
 
 **Created:** 2026-02-16
 **Status:** Production Ready
-**Model:** Works with Sonnet 4.5, Opus 4.6 recommended for quality
+**Model:** Works with Sonnet 4.6, Opus 4.8 recommended for quality
 **Line Count:** 458 (under 500-line rule ✅)

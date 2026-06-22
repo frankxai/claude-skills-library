@@ -2,7 +2,7 @@
 name: arcanea-book-cover
 description: Design and generate premium book covers using NB2 (Nano Banana 2 / Gemini 3.1 Flash Image) with deep thinking about book tension, emotion, and genre. Pulls from top book cover design principles (Chip Kidd, Peter Mendelsund, Coralie Bickford-Smith). Auto-activates when user requests book cover, cover art, cover design, or mentions generating a cover for a book project.
 triggers: book cover, cover art, cover design, book jacket, cover generation, generate cover, book cover art
-model: claude-opus-4-6
+model: claude-opus-4-8
 ---
 
 # Arcanea Book Cover Design Skill
