@@ -250,7 +250,7 @@ app.invoke(input)
 ```python
 from langchain_anthropic import ChatAnthropic
 
-llm = ChatAnthropic(model="claude-sonnet-4-5")
+llm = ChatAnthropic(model="claude-sonnet-4-6")
 agent = create_react_agent(llm, tools)
 ```
 

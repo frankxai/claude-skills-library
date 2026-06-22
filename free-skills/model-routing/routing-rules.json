@@ -2,14 +2,14 @@
   "_description": "ACOS v6.2 Model Routing Rules - Intelligent Haiku/Sonnet/Opus selection",
   "_version": "1.1.0",
   "_source": "claude-flow Q-Learning Router pattern + model-registry.json",
-  "_updated": "2026-02-06",
-  "_note": "Updated for Claude Opus 4.6 (adaptive thinking, 1M context, $5/$25 pricing)",
+  "_updated": "2026-06-22",
+  "_note": "Current family: Haiku 4.5 / Sonnet 4.6 / Opus 4.8 (default). Escalate above Opus to claude-fable-5 for the hardest long-horizon reasoning (priced above Opus tier). Verify IDs/pricing at platform.claude.com.",
 
   "models": {
     "haiku": {
       "id": "claude-haiku-4-5-20251001",
-      "cost_per_1m_input": 0.80,
-      "cost_per_1m_output": 4.0,
+      "cost_per_1m_input": 1.0,
+      "cost_per_1m_output": 5.0,
       "latency": "fastest",
       "capability": "basic",
       "use_for": [
@@ -22,7 +22,7 @@
       ]
     },
     "sonnet": {
-      "id": "claude-sonnet-4-5-20250929",
+      "id": "claude-sonnet-4-6",
       "cost_per_1m_input": 3.0,
       "cost_per_1m_output": 15.0,
       "latency": "medium",
@@ -37,14 +37,14 @@
       ]
     },
     "opus": {
-      "id": "claude-opus-4-6",
+      "id": "claude-opus-4-8",
       "cost_per_1m_input": 5.0,
       "cost_per_1m_output": 25.0,
       "context_window": 200000,
       "context_window_beta": 1000000,
       "max_output_tokens": 128000,
       "thinking_mode": "adaptive",
-      "effort_levels": ["low", "medium", "high", "max"],
+      "effort_levels": ["low", "medium", "high", "xhigh", "max"],
       "latency": "slowest",
       "capability": "maximum",
       "use_for": [

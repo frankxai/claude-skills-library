@@ -1,31 +1,69 @@
 ---
 name: opus-extended-thinking
-description: Leverage Claude Opus 4.5's extended thinking capabilities for deep reasoning, complex analysis, and multi-step synthesis. Use when problems require thorough deliberation before response.
-version: 1.0.0
-last_updated: 2025-12-19
-external_version: "Claude Opus 4.5 (November 2025)"
+description: Use Claude's extended/adaptive thinking for deep reasoning, complex analysis, and multi-step synthesis — both the prompt patterns that elicit deliberation and the current thinking API (adaptive thinking + the effort parameter). Use when a problem needs thorough deliberation before answering, or when configuring thinking on a Claude request.
+version: 2.0.0
+last_updated: 2026-06-22
+external_version: "Current Claude family — Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5 (June 2026)"
 changelog: |
+  - 2.0.0: Update to the current model family and the adaptive-thinking + effort API (budget_tokens is removed on current models). Patterns are model-agnostic.
   - 1.0.0: Initial skill for Opus 4.5 extended thinking patterns
 ---
 
-# Claude Opus 4.5 Extended Thinking
+# Extended & Adaptive Thinking
 
-This skill guides optimal use of Claude Opus 4.5's extended thinking capabilities - the model's ability to reason deeply before responding, leading to more thoughtful, accurate, and nuanced outputs.
+This skill covers Claude's ability to reason deeply before responding — both the **prompt patterns**
+that elicit genuine deliberation (model-agnostic, below) and the **current thinking API** (how to
+turn it on and tune its depth). It applies to the current Claude family: **Fable 5** (most capable),
+**Opus 4.8** (default), **Sonnet 4.6**, and **Haiku 4.5**.
+
+> Model IDs and API details move fast. This skill is dated; always confirm against
+> **[platform.claude.com](https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking)**.
 
 ---
 
-## Understanding Extended Thinking
+## How thinking works today (the API)
 
-### What It Is
-Extended thinking allows Opus 4.5 to:
+The modern control is **adaptive thinking** plus the **`effort`** parameter — *not* a fixed token
+budget. The older `thinking: {type: "enabled", budget_tokens: N}` is **deprecated on Opus 4.6 and
+removed (returns a 400) on Opus 4.7, Opus 4.8, and Fable 5** — do not use it on current models.
+
+```python
+# Current pattern (Opus 4.8 / 4.7 / 4.6, Sonnet 4.6)
+response = client.messages.create(
+    model="claude-opus-4-8",
+    max_tokens=16000,
+    thinking={"type": "adaptive", "display": "summarized"},  # default display is "omitted"
+    output_config={"effort": "high"},  # low | medium | high | xhigh | max
+    messages=[{"role": "user", "content": "Solve this step by step..."}],
+)
+```
+
+- **`effort`** controls depth and overall token spend. Use `xhigh` for coding/agentic work and a
+  minimum of `high` for most intelligence-sensitive tasks; drop to `medium`/`low` for routine work.
+  `max` is for the hardest, latency-insensitive cases (`max`/`xhigh` are Opus-tier + Fable 5, not Haiku).
+- **`display`** defaults to `"omitted"` on Fable 5 / Opus 4.8 / 4.7 (thinking still happens and is
+  billed; the text is just empty). Set `"summarized"` to surface a readable summary to users.
+- **Fable 5**: thinking is **always on** — omit the `thinking` parameter entirely (an explicit
+  `{type: "disabled"}` 400s), and the raw chain of thought is never returned (only summaries).
+- Stream any request with a large `max_tokens` (>~16K) to avoid HTTP timeouts.
+
+Everything below is about *eliciting* good deliberation through prompting — it works regardless of
+which model or effort level you choose.
+
+---
+
+## Understanding deliberate reasoning
+
+### What it is
+Adaptive/extended thinking lets the model:
 - Deliberate longer before producing output
 - Consider multiple perspectives and approaches
 - Self-critique and refine reasoning
 - Handle complex multi-step problems
 - Produce more thoughtful, less reactive responses
 
-### When It Activates
-Extended thinking engages automatically when:
+### When it engages
+With adaptive thinking on, the model decides *when and how much* to think — typically when:
 - Problems require multi-step reasoning
 - Questions have nuance or ambiguity
 - Tasks require weighing tradeoffs
@@ -283,14 +321,17 @@ For these, don't add complexity. Just ask directly.
 
 ---
 
-## Model-Specific Notes (Opus 4.5)
+## Model notes (current family)
 
-Opus 4.5 specifically excels at:
-- **Sustained reasoning chains** - Can maintain coherence over long analytical sequences
-- **Self-correction** - Will catch and correct its own errors when given space
-- **Nuance handling** - Better at "it depends" answers with clear conditions
-- **Multi-factor synthesis** - Can hold many variables in consideration simultaneously
-- **Creative-analytical blend** - Can reason rigorously about creative work
+- **Fable 5** — Anthropic's most capable model for the hardest reasoning and long-horizon agentic
+  work; thinking is always on. Reserve for genuinely demanding tasks (it is priced above Opus tier).
+- **Opus 4.8** — the default for strong reasoning and agentic work; adaptive thinking + `effort`.
+- **Sonnet 4.6** — best balance of speed and intelligence; supports adaptive thinking.
+- **Haiku 4.5** — fastest/cheapest for simple, latency-sensitive tasks (no `xhigh`/`max` effort).
+
+All current models excel at sustained reasoning chains, self-correction when given space, nuanced
+"it depends" answers, and multi-factor synthesis — raise `effort` before adding prose scaffolding
+when you need more rigor.
 
 ---
 
