@@ -49,10 +49,14 @@ graph TD
 
 ## Links
 
+Copy these into your README — replace destinations with your actual paths:
+
+```markdown
 - [Documentation](docs/)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 - [Issues](../../issues)
+```
 
 ---
 
