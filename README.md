@@ -19,7 +19,7 @@ nothing in context until a skill actually fires.
 [![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#-works-with-six-runtimes)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[**⚡ Quick start**](#-quick-start) · [**📚 Full catalog**](docs/CATALOG.md) · [**🗂️ Categories**](#️-skill-categories) · [**🤝 Contribute**](#-contributing) · [**❓ FAQ**](#-faq)
+[**⚡ Quick start**](#-quick-start) · [**📚 Full catalog**](docs/CATALOG.md) · [**🗂️ Categories**](#-skill-categories) · [**🤝 Contribute**](#-contributing) · [**❓ FAQ**](#-faq)
 
 </div>
 
@@ -107,14 +107,14 @@ See the **[full catalog](docs/CATALOG.md)** for every skill with its description
 
 | Skill | Why you'd reach for it | Category |
 |---|---|---|
-| [`nextjs-expert`](free-skills/nextjs-expert/SKILL.md) | App Router, server/client boundaries, caching, and the production gotchas that bite | Web & Frontend |
-| [`mcp-architecture`](free-skills/mcp-architecture/SKILL.md) | Design an MCP server's resources, tools, prompts, and security from first principles | MCP & SDKs |
-| [`oracle-database-expert`](free-skills/oracle-database-expert/SKILL.md) | Oracle 23ai, Autonomous DB, AI Vector Search, SQL/PLSQL tuning, HA | Oracle & Cloud |
-| [`github-code-review`](free-skills/github-code-review/SKILL.md) | Turn a raw diff into a correctness/security/style review with actionable comments | Engineering |
-| [`suno-ai-mastery`](free-skills/suno-ai-mastery/SKILL.md) | Prompt-engineer commercial-quality music with Suno v4.5+ | Creative |
-| [`ui-ux-design-expert`](free-skills/ui-ux-design-expert/SKILL.md) | Design systems, interaction patterns, and WCAG 2.2 accessibility audits | Web & Frontend |
-| [`langgraph-patterns`](free-skills/langgraph-patterns/SKILL.md) | Graph orchestration, state machines, and human-in-the-loop for agent workflows | AI Frameworks |
-| [`greek-philosopher`](free-skills/greek-philosopher/SKILL.md) | Socratic questioning and Stoic perspective on a hard decision | Mind & Body |
+| [`nextjs-expert`](free-skills/nextjs-expert/SKILL.md) | App Router, server/client boundaries, caching, and the production gotchas that bite | 🎨 Web, Frontend & Animation |
+| [`mcp-architecture`](free-skills/mcp-architecture/SKILL.md) | Design an MCP server's resources, tools, prompts, and security from first principles | 🔌 AI Frameworks, MCP & SDKs |
+| [`oracle-database-expert`](free-skills/oracle-database-expert/SKILL.md) | Oracle 23ai, Autonomous DB, AI Vector Search, SQL/PLSQL tuning, HA | ☁️ Oracle & Cloud |
+| [`github-code-review`](free-skills/github-code-review/SKILL.md) | Turn a raw diff into a correctness/security/style review with actionable comments | 🛠️ Engineering Workflow & GitHub |
+| [`suno-ai-mastery`](free-skills/suno-ai-mastery/SKILL.md) | Prompt-engineer commercial-quality music with Suno v4.5+ | 🎬 Creative & Media Production |
+| [`ui-ux-design-expert`](free-skills/ui-ux-design-expert/SKILL.md) | Design systems, interaction patterns, and WCAG 2.2 accessibility audits | 🎨 Web, Frontend & Animation |
+| [`langgraph-patterns`](free-skills/langgraph-patterns/SKILL.md) | Graph orchestration, state machines, and human-in-the-loop for agent workflows | 🔌 AI Frameworks, MCP & SDKs |
+| [`greek-philosopher`](free-skills/greek-philosopher/SKILL.md) | Socratic questioning and Stoic perspective on a hard decision | 🧭 Mind, Body & Philosophy |
 
 ---
 
