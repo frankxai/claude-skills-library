@@ -1,5 +1,5 @@
 # 📚 Skills Catalog
-The complete index of all **107 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **108 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
@@ -169,3 +169,10 @@ _1 skill_
 | Skill | Description |
 |---|---|
 | [`contribute-catalog`](../free-skills/contribute-catalog/SKILL.md) | Author a new HyperFrames registry block (caption style, VFX block, transition, lower third) or component (text effect, overlay, snippet) and ship it as an upstream PR to the hyp... |
+
+## Other
+_1 skill_
+
+| Skill | Description |
+|---|---|
+| [`premium-web-os`](../free-skills/premium-web-os/SKILL.md) | Build cinematic, premium, 3D/motion-rich websites with taste and repeatability. Use when designing or building a landing page, hero, marketing site, product page, or any UI that... |
