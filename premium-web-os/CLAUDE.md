@@ -13,19 +13,19 @@ You are operating inside the Premium Intelligence Web OS. These rules are bindin
 ## Required build sequence
 
 1. Read the relevant `_intelligence` docs for this task.
-2. Create / update a **page spec** (`templates/page-spec.template.md`).
-3. Create / update a **scene brief** (`templates/scene-brief.template.md`).
+2. Create / update a **page spec** (`_intelligence/templates/page-spec.template.md`).
+3. Create / update a **scene brief** (`_intelligence/templates/scene-brief.template.md`).
 4. Build the **static composition** first — layout, type, hierarchy, color. No motion yet.
 5. Add **motion** second — choreographed, per `motion.md`.
 6. Add **3D** third — only with a metaphor, budget, and fallback, per `three-webgl.md`.
 7. Add **polish** fourth — the taste polish pass.
-8. Run **QA** — `checklists/release-check.md`.
+8. Run **QA** — `_intelligence/checklists/release-check.md`.
 9. Update [`_intelligence/decision-log.md`](./_intelligence/decision-log.md).
 
 ## Hard rules (these block a build)
 
 - Always inspect the repo before editing: stack, package manager, framework, styling system, existing conventions. Preserve existing architecture unless clearly broken.
-- Do not use dependencies absent from `package.json` unless you explicitly add them with a justification recorded in the decision log. Verify a package's real API from `node_modules`/docs before coding against it — never from memory.
+- Do not use dependencies absent from `package.json` unless you explicitly add them with a justification recorded in the decision log. Verify a package's real API from the package source in `node_modules` (or its official docs) before coding against it — never from memory.
 - Do not animate everything. Motion serves hierarchy; one cinematic moment per page, no more.
 - Do not use random colors, random gradients, stock SaaS layouts, emoji-as-icons, Unicode-glyph icons, or generic equal-card grids.
 - Do not create components without responsive behavior. Mobile (375px) is a first-class target, not a squeezed desktop.

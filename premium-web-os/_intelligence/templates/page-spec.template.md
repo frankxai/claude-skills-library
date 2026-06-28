@@ -59,7 +59,7 @@
 | `postprocessing` | bloom/vignette | `<y/n — often NOT present>` | `<add lazily + log>` |
 | `lenis` | smooth scroll | `<y/n — often NOT present>` | `<one scroll system only>` |
 
-- [ ] Verified each present package's real API from `node_modules`/docs, not memory.
+- [ ] Verified each present package's real API from the package source in `node_modules` (or its official docs), not memory.
 - [ ] Every "no" has a decision-log entry before use.
 
 ## SEO / meta

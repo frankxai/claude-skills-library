@@ -20,7 +20,7 @@ Premium is not more effects — it is compression, restraint, hierarchy, materia
 
 Follow the build sequence in order — do not jump ahead:
 
-1. **Inspect** the repo: stack, package manager, framework, styling, conventions, existing components, the brand's token source. Preserve what works. Verify package APIs from `node_modules`/docs, never from memory.
+1. **Inspect** the repo: stack, package manager, framework, styling, conventions, existing components, the brand's token source. Preserve what works. Verify package APIs from the package source in `node_modules` (or its official docs), never from memory.
 2. **Page spec** — fill `templates/page-spec.template.md`: scenes (hook → proof → mechanism → conversion), component list, data, states, and any dependency NOT in `package.json` (flag it; add only with a justification logged in `decision-log.md`).
 3. **Scene brief** per scene — fill `templates/scene-brief.template.md`: dominant idea, palette (≤2 accents on a dark base), type, motion intent, 3D metaphor (or none). Translate any vague adjective into constraints before building (taste.md Agent Translation Rule).
 4. **Static build** — layout, type, hierarchy, color from tokens. No motion yet. This must already hit hierarchy/typography/color before anything moves. No raw hex, no arbitrary spacing, no equal-card grid standing in for real content.

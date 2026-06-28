@@ -17,7 +17,7 @@ Onboard in this order, and do not write code until step 5:
 
 1. Read the latest handover doc and `decision-log.md`. Extract: what shipped, what is in flight, open TODOs (TODOs live in the decision log, never in code), and any logged dependency additions or trade-offs.
 2. Read the current page spec and any scene brief it points to. This is the contract for what the page must become; treat divergence between spec and shipped code as a bug to reconcile, not a license to redesign.
-3. Inspect the repo yourself — do not trust memory. Confirm: stack, package manager, framework, styling system, token source, and which files the prior agent touched (`git status`, `git diff`). Verify any package's real API from `node_modules`/docs before you rely on it.
+3. Inspect the repo yourself — do not trust memory. Confirm: stack, package manager, framework, styling system, token source, and which files the prior agent touched (`git status`, `git diff`). Verify any package's real API from the package source in `node_modules` (or its official docs) before you rely on it.
 4. Run the build, typecheck, and lint. Record the current green/red state. If it is red, the first task is to reconcile that, not to add features.
 5. State a short continuation plan: the next 1–3 steps from the build sequence (static → motion → 3D → polish → QA), each with a verification check.
 

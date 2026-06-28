@@ -34,7 +34,7 @@
 
 ## Lazy-load
 
-- [ ] Heavy 3D lazy-loaded: `dynamic(() => import(...), { ssr: false, loading: <Poster/> })`.
+- [ ] Heavy 3D lazy-loaded: `dynamic(() => import(...), { ssr: false, loading: () => <Poster/> })`.
 - [ ] Scene contents wrapped in `<Suspense fallback={...}>`.
 - [ ] Loading state shows the poster, not a spinner on blank.
 

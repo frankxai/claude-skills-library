@@ -23,15 +23,15 @@ A control plane that constrains agents to produce premium, cinematic web output 
 
 ## What it does (build sequence — do not skip)
 
-1. **Read the canon** — `operating-system.md`, `taste.md`, `brand-worlds.md`, then scoped `design.md` / `motion.md` / `three-webgl.md` / `copywriting.md`.
-2. **Intake** — turn the vague ask into verifiable targets (`workflows/00-intake.md`).
-3. **Reference board** — deconstruct references into reusable principles, never copies (`workflows/01-reference-board.md`, `reference-deconstruction.md`).
-4. **Art direction + scene brief** — lock the dominant idea per scene (`templates/scene-brief.template.md`).
+1. **Read the canon** — `_intelligence/operating-system.md`, `_intelligence/taste.md`, `_intelligence/brand-worlds.md`, then scoped `_intelligence/design.md` / `_intelligence/motion.md` / `_intelligence/three-webgl.md` / `_intelligence/copywriting.md`.
+2. **Intake** — turn the vague ask into verifiable targets (`_intelligence/workflows/00-intake.md`).
+3. **Reference board** — deconstruct references into reusable principles, never copies (`_intelligence/workflows/01-reference-board.md`, `_intelligence/reference-deconstruction.md`).
+4. **Art direction + scene brief** — lock the dominant idea per scene (`_intelligence/templates/scene-brief.template.md`).
 5. **Build static composition** — layout, type, hierarchy, color bound to brand tokens. No motion yet.
-6. **Motion pass** — choreographed, one cinematic moment per page (`motion.md`).
-7. **3D pass** — only with a metaphor, budget, and fallback (`three-webgl.md`).
-8. **Polish + Visual QA + Performance pass** (`workflows/06-08`, `checklists/`).
-9. **Release gate + handover + decision log** (`checklists/release-check.md`, `templates/handover.template.md`).
+6. **Motion pass** — choreographed, one cinematic moment per page (`_intelligence/motion.md`).
+7. **3D pass** — only with a metaphor, budget, and fallback (`_intelligence/three-webgl.md`).
+8. **Polish + Visual QA + Performance pass** (`_intelligence/workflows/06-08`, `_intelligence/checklists/`).
+9. **Release gate + handover + decision log** (`_intelligence/checklists/release-check.md`, `_intelligence/templates/handover.template.md`).
 
 ## Multi-agent mode
 

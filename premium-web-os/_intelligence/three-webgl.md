@@ -27,7 +27,7 @@ A scene without this spec does not get built (use `templates/motion-spec.templat
 ## React Three Fiber rules
 
 - Isolate WebGL in `components/visuals/` (or `components/web-os/` for this build). Keep it out of server components.
-- **Lazy-load** heavy 3D: `dynamic(() => import(...), { ssr: false, loading: <Poster/> })`.
+- **Lazy-load** heavy 3D: `dynamic(() => import(...), { ssr: false, loading: () => <Poster/> })`.
 - Wrap scene contents in `<Suspense fallback={...}>`.
 - Cap DPR: `<Canvas dpr={[1, 2]}>`; lower on mobile.
 - Avoid massive geometry; compress GLB (draco/meshopt). Avoid unbounded particle counts — declare the ceiling.

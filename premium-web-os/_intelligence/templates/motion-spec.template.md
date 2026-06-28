@@ -56,7 +56,7 @@ gsap.context(() => {                         // scoped, cleaned up on unmount
 - **Fallback image:** `<static poster path — also the LCP image>`
 - **Mobile behavior:** `<simplified scene | poster>`
 - **Reduced-motion behavior:** `<frozen frame | poster>`
-- **Lazy-load:** `dynamic(() => import(...), { ssr: false, loading: <Poster/> })` + `<Suspense>`
+- **Lazy-load:** `dynamic(() => import(...), { ssr: false, loading: () => <Poster/> })` + `<Suspense>`
 - **Postprocessing (if any):** `<bloom/vignette — lazy, justified, logged; none on mobile>`
 
 ## QA checks

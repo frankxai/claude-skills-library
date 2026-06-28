@@ -16,7 +16,7 @@
 3. **Define data + sources:** static/CMS/API, the shape, and where it loads. Flag anything not yet available.
 4. **Specify every interaction state** for each interactive component: **loading / empty / error / success** (plus hover/focus/disabled). A component without its states is incomplete — this is a hard part of the spec, not an afterthought.
 5. **Responsive plan:** behavior at 1920 / 1440 / 768 / **375**. Mobile is a first-class layout, never a squeezed desktop.
-6. **Dependency check:** every library the plan needs must exist in `package.json`. **Flag anything missing.** If a new dependency is genuinely required, record the justification in [`../decision-log.md`](../decision-log.md) before adding it; verify its real API from `node_modules`/docs, never memory.
+6. **Dependency check:** every library the plan needs must exist in `package.json`. **Flag anything missing.** If a new dependency is genuinely required, record the justification in [`../decision-log.md`](../decision-log.md) before adding it; verify its real API from the package source in `node_modules` (or its official docs), never memory.
 7. **Run the plan-time gate.** Submit the spec + briefs to the design-review discipline in [`../quality-gates.md`](../quality-gates.md) (Gate 1). Fix the plan until each dimension hits target before any code.
 
 ## Output / artifact

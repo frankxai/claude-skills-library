@@ -26,7 +26,7 @@ Bring it to standard on these axes only:
 Constraints:
 - Surgical changes only. Touch what these five axes require; do not reformat or "improve" adjacent code, and do not delete unrelated dead code — mention it, leave it.
 - Match the surrounding style even if you would write it differently.
-- Verify any package API from `node_modules`/docs before relying on it. Do not add a dependency without logging it.
+- Verify any package API from the package source in `node_modules` (or its official docs) before relying on it. Do not add a dependency without logging it.
 - No TODOs in code — open items go to `decision-log.md` with owner + reason.
 
 Required outputs:

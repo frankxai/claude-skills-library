@@ -34,4 +34,4 @@
 
 - [ ] Every library the build will use is present in `package.json` (`three`, `@react-three/fiber`, `@react-three/drei`, `motion`/`framer-motion` as applicable).
 - [ ] Any not-present dependency (`postprocessing`, `lenis`, etc.) is justified and recorded in [`../decision-log.md`](../decision-log.md) before adding.
-- [ ] Real API of each key library confirmed from `node_modules`/docs for the installed version — not from memory.
+- [ ] Real API of each key library confirmed from the package source in `node_modules` (or its official docs) for the installed version — not from memory.

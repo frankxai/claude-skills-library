@@ -8,7 +8,7 @@ alwaysApply: false
 
 When building any web UI/visual in this repo, follow the Premium Intelligence Web OS.
 
-Read first: `premium-web-os/_intelligence/operating-system.md`, `taste.md`, `brand-worlds.md`.
+Read first: `premium-web-os/_intelligence/operating-system.md`, `premium-web-os/_intelligence/taste.md`, `premium-web-os/_intelligence/brand-worlds.md`.
 
 Build sequence (non-negotiable):
 read docs → page spec → scene brief → static composition → motion → 3D → polish → QA → decision log.

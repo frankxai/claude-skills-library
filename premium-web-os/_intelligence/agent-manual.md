@@ -39,7 +39,7 @@ Run the available lint/typecheck/build/test commands. Fix failures your work int
 
 ## Anti-hallucination discipline
 
-- Verify package APIs from `node_modules`/docs before coding; never from memory.
+- Verify package APIs from the package source in `node_modules` (or its official docs) before coding; never from memory.
 - Don't add a dependency that isn't declared without logging the justification.
 - State assumptions; if you'd have to guess a path/schema/type, stop and surface it.
 - When tests/types/build disagree with your mental model, the model is wrong — re-read.
