@@ -1,11 +1,11 @@
 # Example — Arcanea Flagship Page Spec
 
-A worked page spec produced from the OS templates, used to build the first flagship proof (`arcanea-ai-app` → `apps/web/app/labs/web-os/`). Demonstrates that the OS templates yield a buildable spec. Brand canon: Arcanea `TASTE.md` / `DESIGN.md` / `@arcanea/design-system`.
+A worked page spec produced from the OS templates, used to build the first flagship proof (`arcanea-ai-app` → `apps/web/app/design-lab/web-os/`). Demonstrates that the OS templates yield a buildable spec. Brand canon: Arcanea `TASTE.md` / `DESIGN.md` / `@arcanea/design-system`.
 
 ## Page
 
 - **Brand / token source:** Arcanea · `@arcanea/design-system` (tokens + `motion`) · base `#09090b`, Atlantean Teal `#00bcd4`, Cosmic Blue `#0d47a1`, Gold `#ffd700`; Geist / Instrument Serif / Geist Mono; glass `bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm`.
-- **Route:** `/labs/web-os` (isolated labs route — no nav/SEO impact; a real showcase, not "coming soon").
+- **Route:** `/design-lab/web-os` (isolated labs route — no nav/SEO impact; a real showcase, not "coming soon").
 - **Register:** AI-lab premium, never fantasy-game. Mythology in the words, not the chrome.
 - **Editorial rhythm:** large (hero) → quiet (thesis) → dense (system) → quiet (proof) → conversion.
 
