@@ -8,7 +8,7 @@ alwaysApply: false
 
 When building any web UI/visual in this repo, follow the Premium Intelligence Web OS.
 
-Read first: `premium-web-os/_intelligence/operating-system.md`, `premium-web-os/_intelligence/taste.md`, `premium-web-os/_intelligence/brand-worlds.md`.
+Read first: `free-skills/premium-web-os/_intelligence/operating-system.md`, `free-skills/premium-web-os/_intelligence/taste.md`, `free-skills/premium-web-os/_intelligence/brand-worlds.md`.
 
 Build sequence (non-negotiable):
 read docs → page spec → scene brief → static composition → motion → 3D → polish → QA → decision log.
@@ -22,4 +22,4 @@ Hard rules:
 - No stock SaaS layouts, random gradients, emoji/glyph icons, equal-card grids.
 - Everything responsive; mobile (375px) first-class. Ship only after the release checklist passes.
 
-Full system: `premium-web-os/_intelligence/`.
+Full system: `free-skills/premium-web-os/_intelligence/`.

@@ -48,4 +48,4 @@ When the host repo has design subagents, compose them: `design-architect` → `d
 
 ## Where the full system lives
 
-The complete OS (docs, workflows, prompts, templates, checklists, examples) is in the `premium-web-os/_intelligence/` tree of this repo. Mirror `_intelligence/` into a target web repo to run the OS locally there.
+The complete OS (docs, workflows, prompts, templates, checklists, examples) is in the `free-skills/premium-web-os/_intelligence/` tree of this repo. Mirror `_intelligence/` into a target web repo to run the OS locally there.

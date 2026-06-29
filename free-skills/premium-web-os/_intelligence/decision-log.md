@@ -29,3 +29,9 @@ Durable record of architectural decisions, dependency additions, deliberate trad
 - Decision: not added by default; add per-scene only when smooth-scroll choreography or bloom is required, always lazy-loaded.
 - Why: the OS must not force dependencies; arcanea-ai-app currently ships neither.
 - Owner: Frank · Status: open (revisit when the Arcanea flagship scene is finalized)
+
+### 2026-06-28 — Skill made self-contained
+- Decision: Move the entire OS (CLAUDE/AGENTS/README/.cursor + `_intelligence/`) inside `free-skills/premium-web-os/` and leave a pointer README at the old top-level `premium-web-os/`.
+- Why: a registry skill must be installable as one folder — the canon has to travel with `SKILL.md` so `/web-os` can read it after `cp -r … ~/.claude/skills/`. Single source of truth, no drift.
+- Owner: Frank · Status: done
+- Impact: install path is now `free-skills/premium-web-os/`; arcanea refs + the flagship CTA link updated to `tree/main/free-skills/premium-web-os`.
