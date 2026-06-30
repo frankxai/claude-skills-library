@@ -14,13 +14,14 @@ You are operating inside the Premium Intelligence Web OS. These rules are bindin
 
 1. Read the relevant `_intelligence` docs for this task.
 2. Create / update a **page spec** (`_intelligence/templates/page-spec.template.md`).
-3. Create / update a **scene brief** (`_intelligence/templates/scene-brief.template.md`).
-4. Build the **static composition** first — layout, type, hierarchy, color. No motion yet.
-5. Add **motion** second — choreographed, per `motion.md`.
-6. Add **3D** third — only with a metaphor, budget, and fallback, per `three-webgl.md`.
-7. Add **polish** fourth — the taste polish pass.
-8. Run **QA** — `_intelligence/checklists/release-check.md`.
-9. Update [`_intelligence/decision-log.md`](./_intelligence/decision-log.md).
+3. Create / update a **scene brief** (`_intelligence/templates/scene-brief.template.md`) + an **asset manifest** (`_intelligence/templates/asset-manifest.template.md`).
+4. **Produce assets** — imagery / 3D-GLB / video via the gen-lanes + Higgsfield, gated. See [`_intelligence/visuals.md`](./_intelligence/visuals.md) + `_intelligence/workflows/03b-asset-production.md`. (No keys? plan the manifest, fall back to procedural/poster, mark `pending`.)
+5. Build the **static composition** — layout, type, hierarchy, color. No motion yet.
+6. Add **motion** — choreographed, per `motion.md`.
+7. Add **3D / video** — generated GLB (`useGLTF`) or hero `<video>`, or procedural; always with poster + mobile + reduced-motion fallback, per `three-webgl.md`.
+8. **Polish** — the taste polish pass.
+9. Run **QA** — `_intelligence/checklists/release-check.md`; then **distribute** per-platform via VIS.
+10. Update [`_intelligence/decision-log.md`](./_intelligence/decision-log.md) + the asset registry.
 
 ## Hard rules (these block a build)
 

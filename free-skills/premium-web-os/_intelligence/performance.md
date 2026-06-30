@@ -11,7 +11,8 @@ Speed is part of the design. A premium site that janks is not premium.
 
 - **Images:** `next/image` with `sizes`, AVIF/WebP, never raw `<img>` for hero/above-fold. The 3D poster doubles as the LCP image.
 - **Fonts:** self-host / `next/font`, preload the display face, `font-display: swap`, subset.
-- **3D/heavy visuals:** lazy-load, DPR cap `[1,2]`, bounded particles, dispose on unmount, no heavy postprocessing on mobile (see `three-webgl.md`).
+- **3D/heavy visuals:** lazy-load, DPR cap `[1,2]`, bounded particles, dispose on unmount, no heavy postprocessing on mobile (see `three-webgl.md`). Generated GLB: draco/meshopt-compressed, `useGLTF.preload` only above-fold.
+- **Hero video** (generated, see `visuals.md`): the **poster is the LCP** (`next/image`); `<video>` is `preload="metadata"`, muted/inline/loop only if earned; reduced-motion → poster; mobile → poster or a short loop, never an autoplaying heavy clip. Cap bitrate; serve a compressed MP4 (+ WebM if cheap).
 - **Motion:** animate transforms/opacity only; one scroll system; respect reduced-motion (also a perf win).
 - **Bundles:** `LazyMotion`+`domAnimation` (not `domMax`); code-split per route; tree-shake icons (no full icon-font).
 - **Dev hygiene:** verify with a production **build**, not a long-running `dev` server (RAM). Never run `dev` and `build` simultaneously.

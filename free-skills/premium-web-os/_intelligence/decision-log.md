@@ -35,3 +35,8 @@ Durable record of architectural decisions, dependency additions, deliberate trad
 - Why: a registry skill must be installable as one folder — the canon has to travel with `SKILL.md` so `/web-os` can read it after `cp -r … ~/.claude/skills/`. Single source of truth, no drift.
 - Owner: Frank · Status: done
 - Impact: install path is now `free-skills/premium-web-os/`; arcanea refs + the flagship CTA link updated to `tree/main/free-skills/premium-web-os`.
+
+### 2026-06-29 — Visual/Asset Production layer added
+- Decision: Add `visuals.md` + `asset-manifest.template.md` + `workflows/03b-asset-production.md`; insert an ASSET PLAN → ASSET PRODUCTION stage into the build sequence (before static build) and a DISTRIBUTE stage after QA. Generated 3D-GLB + hero video are now first-class (three-webgl + performance updated).
+- Why: a page is only as premium as its hero asset; the flagship used procedural R3F. Bind to the existing systems — lib/gen route()/lanes, VIS, nb-generate.mjs, Higgsfield generate_3d/generate_video, visual-creation gates, registry — rather than build new.
+- Owner: Frank · Status: done · Degrades gracefully without GEMINI_API_KEY/Higgsfield (procedural/poster + status:pending).

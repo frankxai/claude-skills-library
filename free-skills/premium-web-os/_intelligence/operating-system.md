@@ -9,11 +9,15 @@ Agents are strong at implementation and weak at taste, hierarchy, motion restrai
 ## The control loop
 
 ```
-INTAKE → REFERENCE → ART DIRECTION → SCENE BRIEF → STATIC BUILD
-   → MOTION → 3D → POLISH → VISUAL QA → PERFORMANCE → RELEASE GATE → HANDOVER
+INTAKE → REFERENCE → ART DIRECTION → SCENE BRIEF + ASSET PLAN
+   → ASSET PRODUCTION (imagery / 3D-GLB / video) → STATIC BUILD → MOTION
+   → 3D/VIDEO INTEGRATION → POLISH → VISUAL QA → PERFORMANCE
+   → RELEASE GATE → DISTRIBUTE (per-platform) → HANDOVER
 ```
 
-Each step has a workflow doc (`workflows/00..09`), and most produce an artifact (a template under `templates/`). The loop is gated: you do not advance past a gate that fails.
+Each step has a workflow doc (`workflows/00..09`, plus `03b-asset-production`), and most produce an artifact (a template under `templates/`). The loop is gated: you do not advance past a gate that fails.
+
+Generated assets are first-class: a page is only as premium as its hero asset, so the asset stage (imagery, 3D GLB, cinematic video) runs *before* the static build — see [`visuals.md`](./visuals.md). It degrades gracefully to procedural/poster when generation keys aren't available.
 
 ### Why this order
 

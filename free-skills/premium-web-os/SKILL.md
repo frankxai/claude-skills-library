@@ -26,12 +26,13 @@ A control plane that constrains agents to produce premium, cinematic web output 
 1. **Read the canon** — `_intelligence/operating-system.md`, `_intelligence/taste.md`, `_intelligence/brand-worlds.md`, then scoped `_intelligence/design.md` / `_intelligence/motion.md` / `_intelligence/three-webgl.md` / `_intelligence/copywriting.md`.
 2. **Intake** — turn the vague ask into verifiable targets (`_intelligence/workflows/00-intake.md`).
 3. **Reference board** — deconstruct references into reusable principles, never copies (`_intelligence/workflows/01-reference-board.md`, `_intelligence/reference-deconstruction.md`).
-4. **Art direction + scene brief** — lock the dominant idea per scene (`_intelligence/templates/scene-brief.template.md`).
-5. **Build static composition** — layout, type, hierarchy, color bound to brand tokens. No motion yet.
-6. **Motion pass** — choreographed, one cinematic moment per page (`_intelligence/motion.md`).
-7. **3D pass** — only with a metaphor, budget, and fallback (`_intelligence/three-webgl.md`).
-8. **Polish + Visual QA + Performance pass** (`_intelligence/workflows/06-08`, `_intelligence/checklists/`).
-9. **Release gate + handover + decision log** (`_intelligence/checklists/release-check.md`, `_intelligence/templates/handover.template.md`).
+4. **Art direction + scene brief + asset plan** — lock the dominant idea + the asset manifest (`_intelligence/templates/scene-brief.template.md`, `_intelligence/templates/asset-manifest.template.md`).
+5. **Asset production** — generate imagery / 3D-GLB / video via the gen-lanes + Higgsfield, gated (`_intelligence/visuals.md`, `_intelligence/workflows/03b-asset-production.md`). Degrades to procedural/poster without keys.
+6. **Build static composition** — layout, type, hierarchy, color bound to brand tokens. No motion yet.
+7. **Motion pass** — choreographed, one cinematic moment per page (`_intelligence/motion.md`).
+8. **3D/video integration** — generated GLB (`useGLTF`) or hero `<video>`, or procedural; always with fallback (`_intelligence/three-webgl.md`).
+9. **Polish + Visual QA + Performance** (`_intelligence/checklists/`).
+10. **Release gate → distribute (VIS per-platform) → handover + decision log + registry** (`_intelligence/checklists/release-check.md`, `_intelligence/templates/handover.template.md`).
 
 ## Multi-agent mode
 

@@ -46,6 +46,18 @@ Use sparingly and **lazily** (the `postprocessing` lib is only added when a scen
 
 Every 3D hero ships with: a static poster fallback (also the LCP image), a mobile simplification, a reduced-motion frozen state, and a loading state that does not look broken (poster, not a spinner on blank). If you can't produce the fallback, you can't ship the 3D.
 
+## Generated 3D (GLB) — the "real 3D at the core" path
+
+Procedural geometry is right when the metaphor is generative (constellation, signal field). When the hero is a *brand object* (a core, monolith, product), use a **generated GLB** instead — see [`visuals.md`](./visuals.md).
+
+- **Produce:** Higgsfield `generate_3d` from a lane-routed concept still → a `.glb` mesh; gate it (council + brand) before committing.
+- **Wire:** `useGLTF('/models/<name>.glb')` + drei inside the isolated, lazy R3F scene. Draco/meshopt-compress the GLB; `useGLTF.preload` only the above-fold one; dispose on unmount.
+- **Fallbacks (mandatory, same as procedural):** static poster (the LCP), mobile simplification, reduced-motion frozen frame. If the GLB isn't generated yet, fall back to procedural or the poster and mark it `pending` in the asset manifest — never block the build.
+
+## Generated hero video
+
+When the hero must *move*, a generated video can beat WebGL. Use Higgsfield `generate_video` (lane-routed), then wire a poster-disciplined `<video>` — full rules in [`performance.md`](./performance.md). The poster is the LCP; reduced-motion and mobile fall back to it.
+
 ## Dependency honesty
 
 `three`, `@react-three/fiber`, `@react-three/drei` are commonly present — verify versions in `package.json`. `postprocessing` and `lenis` are often **not** present; add only with justification and lazy usage. Never code against an API from memory — confirm from the installed version.

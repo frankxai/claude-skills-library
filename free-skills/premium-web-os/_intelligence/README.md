@@ -12,7 +12,8 @@ The Premium Intelligence Web OS is a control plane for creating cinematic, AI-na
 **Scoped to the task:**
 - [`design.md`](./design.md) — visual grammar, token categories, component standards, responsive doctrine.
 - [`motion.md`](./motion.md) — motion grammar, easings, timing, GSAP/Motion rules.
-- [`three-webgl.md`](./three-webgl.md) — 3D metaphors, per-scene spec, budgets, fallbacks.
+- [`three-webgl.md`](./three-webgl.md) — 3D metaphors, per-scene spec, generated GLB, budgets, fallbacks.
+- [`visuals.md`](./visuals.md) — the asset production layer: generated imagery / 3D / video, gen-lane binding, manage/registry.
 - [`copywriting.md`](./copywriting.md) — voice, page copy architecture, CTA rules.
 - [`reference-deconstruction.md`](./reference-deconstruction.md) — how to use references without copying.
 
