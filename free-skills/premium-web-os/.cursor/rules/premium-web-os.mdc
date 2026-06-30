@@ -1,0 +1,25 @@
+---
+description: Premium Intelligence Web OS — cinematic, premium, 3D/motion-rich web builds
+globs: ["**/*.tsx","**/*.ts","**/*.css","**/app/**","**/components/**"]
+alwaysApply: false
+---
+
+# Premium Intelligence Web OS (Cursor)
+
+When building any web UI/visual in this repo, follow the Premium Intelligence Web OS.
+
+Read first: `free-skills/premium-web-os/_intelligence/operating-system.md`, `free-skills/premium-web-os/_intelligence/taste.md`, `free-skills/premium-web-os/_intelligence/brand-worlds.md`.
+
+Build sequence (non-negotiable):
+read docs → page spec → scene brief → static composition → motion → 3D → polish → QA → decision log.
+
+Hard rules:
+- Don't build from a vague adjective — write a scene brief first (`_intelligence/templates/scene-brief.template.md`).
+- Don't animate everything — one cinematic moment per page; motion serves hierarchy (`_intelligence/motion.md`).
+- No raw hex in app code — bind to the brand token source (`_intelligence/brand-worlds.md`).
+- No dep that isn't in package.json without a logged justification; verify APIs from source.
+- No 3D without static poster fallback + mobile simplification + reduced-motion (`_intelligence/three-webgl.md`).
+- No stock SaaS layouts, random gradients, emoji/glyph icons, equal-card grids.
+- Everything responsive; mobile (375px) first-class. Ship only after the release checklist passes.
+
+Full system: `free-skills/premium-web-os/_intelligence/`.
