@@ -29,6 +29,8 @@ fails any REQUIRED check must not be started.
 | H5 | `clean_cycles` math consistent with journal flags | promotion gate being gamed by sloppy bookkeeping |
 | H6 | Iterations within wall-clock budget (journal timestamps) | units too big — return to D5 |
 | H7 | Same unit not picked >2 iterations in a row without a Flags note | thrash on one item; force-skip and escalate it |
+| H8 | Every ❌ journal entry with an identifiable cause has a matching sign in signs.md | failures not being converted into immunity — the loop will repeat them |
+| H9 | signs.md under ~40 lines and free of speculative entries | sign bloat polluting every iteration's context |
 
 ## Verdict format
 

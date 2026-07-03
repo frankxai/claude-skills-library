@@ -62,9 +62,11 @@ exists. Also permanent monitors (cost watch, drift detection).
 **Terminates** never; runs on cadence until retired.
 
 **Fails by** reporting everything every time (alarm fatigue → human stops reading) or
-silently failing (nobody notices a dead monitor). **Counter:** delta-only reporting
-with an explicit "no change" suppression rule, plus a heartbeat entry in the journal
-so deadness is detectable.
+silently failing (nobody notices a dead monitor). **Counter:** the silence contract —
+no-change cycles reply exactly the charter's OK-token (`LOOP_OK`) and suppress the
+channel report; cap proactive reports (~3–5/day); every watch item is a specific
+check ("did any cron job fail?"), never "keep an eye on things". A heartbeat entry
+still lands in the journal each cycle so deadness stays detectable.
 
 ## 5. evaluate-optimize (generator + judge)
 
@@ -119,3 +121,23 @@ WIP limit in the charter (max artifacts mid-pipeline).
 - Goal is *someone else's* state machine? → babysitter. Goal is awareness, not
   change? → watch-and-report. Multi-stage with handoffs? → pipeline.
 - Genuinely mixed: primary = the shape of the *termination condition*.
+
+## The meta layer: signs (applies to every archetype)
+
+Loops converge through **eventual consistency engineered reactively**, not first-pass
+correctness. The mechanism is `signs.md`: when the loop fails a specific way, the
+runner writes a one-line rule that makes that exact failure impossible to repeat —
+the way you'd bolt a "SLIDE DOWN, DON'T JUMP" sign onto the playground equipment
+Ralph keeps falling off. Rules for signs:
+
+- Reactive only — a sign records an *observed* failure. Speculative signs are context
+  pollution.
+- Binding — the runner treats signs as Guardrails-tier constraints, read every
+  iteration.
+- Prunable — the designer deletes signs that newer models or refactors made obsolete
+  (stale signs pollute every future iteration's context).
+- Upstream beats prose — if the loop keeps generating the wrong pattern, fixing the
+  code it imitates (utilities, examples in src/) steers harder than another sign.
+
+The operator's leverage lives here: sit **on** the loop, watch failure classes,
+upgrade signs/charter/gates between runs — don't sit *in* the loop re-prompting.

@@ -13,9 +13,11 @@ Execute in order. Do not skip, reorder, or batch steps.
 
 ### 0 · Load
 
-Read, in this order: `.loop/<name>/LOOP.md` (the whole charter), `state.json`, the
-**last 3 entries** of `journal.md`, and `backlog.md` if the archetype uses one. Do
-not read the full journal — old entries are archive, not context.
+Read, in this order: `.loop/<name>/LOOP.md` (the whole charter), `signs.md` (every
+line is a binding rule earned from a past failure — treat them like Guardrails),
+`state.json`, the **last 3 entries** of `journal.md`, and `backlog.md` if the
+archetype uses one. Do not read the full journal — old entries are archive, not
+context.
 
 ### 1 · Gate
 
@@ -66,6 +68,13 @@ nothing failed.
   regression with the ❌ flag. Do not debug forward. Do not leave the regression for
   the next iteration.
 - Verification fails → fix within budget or revert. Never record a ❌ unit as done.
+- Any failure with an identifiable cause → append one line to `signs.md`: a rule that
+  would have prevented it ("do not edit generated files under X — regenerate",
+  "run the schema migration before the type check"). Signs come only from observed
+  failures — never add speculative ones.
+- You overran the wall-clock budget noticeably? Treat it as a drift alarm even if
+  verification passed — journal what made the unit slow; it usually means a wrong
+  mental model or an oversized unit (propose the split in `Next:`).
 
 ### 5 · Record
 
@@ -84,9 +93,16 @@ state with no evidence):
 
 ### 6 · Report & handoff
 
-- `stall_count >= stall_threshold` → set `status: stalled` and escalate per the
-  charter's Escalation channel — a real message to a human, not a journal line.
+- `stall_count >= stall_threshold` → before escalating to a human, take one
+  in-loop escalation if the charter allows it: hand the blocker (files + failed
+  approaches from the journal) to a stronger reasoner or a fresh different-vendor
+  model for a hypothesis. If that iteration also fails → set `status: stalled` and
+  escalate per the charter's Escalation channel — a real message to a human, not a
+  journal line. Recommend a backlog regeneration if the journal shows circling.
 - Done-when now passes → `status: done`, escalate the good news the same way.
+- Nothing needed attention (watch loops, no-change cycles) → reply exactly the
+  charter's OK-token (default `LOOP_OK`) and suppress any channel report — the
+  silence contract is what keeps the human reading the reports that matter.
 - Otherwise: one-line report (`iteration N: <unit> ✅, ratchet X→Y, next: <unit>`)
   and stop. **Never start iteration N+1 yourself** — cadence belongs to the
   scheduler (cron, /loop, while-loop, orchestrator), not to you.

@@ -84,3 +84,19 @@ Rules:
   good".
 - Never rewrite or delete old entries — the journal is the loop's memory and audit
   trail. Corrections are new entries.
+
+## signs.md
+
+The loop's accumulated immune system — one binding rule per line, each earned from an
+observed failure. Read by the runner every iteration at Guardrails tier; appended by
+the runner whenever a failure has an identifiable cause; pruned by the designer when
+a sign goes stale (obsolete after a refactor or a model upgrade). Format:
+
+```markdown
+- <date> · do not edit files under gen/ — regenerate via `pnpm gen` (edit was clobbered, it.7)
+- <date> · run db migrations before the type check (it.12 failed on stale types)
+```
+
+Keep it under ~40 lines — a bloated signs file pollutes every future iteration; if it
+grows past that, the top offenders belong upstream (fix the code the loop imitates,
+or the charter).

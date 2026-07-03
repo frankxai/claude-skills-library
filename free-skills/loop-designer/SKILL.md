@@ -41,7 +41,7 @@ Hybrids are normal (a backlog-drain whose verify step is a ratchet). Name the pr
 
 ### 3. Size the iteration
 
-The single highest-leverage design decision. One iteration = one fresh-context agent session that must **complete its unit and verify it** with room to spare. Too big → the agent runs out of context mid-unit and leaves debris; too small → overhead dominates. Heuristics:
+The single highest-leverage design decision — undersized units are the #1 divergence cause across every loop system studied. Think **blast radius**: files touched × duration per unit; many small bombs, never one big one. One iteration = one fresh-context agent session that must **complete its unit and verify it** inside the context "smart zone" (~40–60% utilization). Heuristics:
 
 - One backlog item, one test, one page, one file-family per iteration.
 - If a unit needs >~15 tool calls to verify, split it in the backlog, not in the iteration.
@@ -54,7 +54,8 @@ Create `.loop/<name>/LOOP.md` from `references/loop-charter-template.md` (read i
 ### 5. Emit the state files
 
 - `state.json` — from the schema in `references/state-schema.md`: `{name, archetype, status: "designed", iteration: 0, ratchet: {...}, promotion: {mode: "propose-only", clean_cycles: 0, required_cycles: 3}, budget, last_run: null}`.
-- `backlog.md` — prioritized checklist of units, each sized per step 3. For non-backlog archetypes, this holds the watch-list or rubric instead.
+- `backlog.md` — prioritized checklist of units, each sized per step 3. For non-backlog archetypes, this holds the watch-list or rubric instead. The backlog is **disposable**: regenerating it from goal + current code costs one planning pass and is always cheaper than a loop going in circles against a stale plan. When building it, never assume something is unimplemented — verify by searching the code first.
+- `signs.md` — starts with any known failure patterns for this domain; the runner appends a "sign" after every observed failure (see the signs rule below).
 - `journal.md` — created empty with just the header row; the runner appends.
 
 ### 6. Run the doctor and hand off
@@ -74,11 +75,16 @@ Run the checks in `references/loop-doctor.md` against what you just wrote (done-
 5. **Stall is a first-class outcome.** K iterations without ratchet movement (default 3) → status `stalled`, escalate per charter. A loop that spins without progress is worse than a stopped loop.
 6. **Budgets are hard.** Max iterations, max wall-clock, max spend — enforced by the runner, declared by you.
 7. **Smaller charter beats smarter charter.** The agent reading LOOP.md is already smart; encode *constraints and checks*, not lectures.
+8. **Mechanical verification catches correctness, not taste.** A loop that never shows a human its output slops itself into a corner — the anti-pattern the loop-engineering practitioners all converge on. Design a taste checkpoint into the cadence: every K iterations (or every promotion review), a human looks at *the artifact*, not the metrics. Loops automate iteration, not judgment. The operator sits **on** the loop, not in it: their job is upgrading charter, signs, and gates between runs.
+9. **Watch loops need a silence contract.** A monitor that reports "all fine" every cycle trains the human to stop reading. Charter the exact OK-token for no-change cycles ("reply `LOOP_OK`, suppressed from the channel") and cap proactive reports (~3–5/day); "check whether X failed" is a valid watch item, "keep an eye on things" is not.
+10. **Every failure becomes a sign.** When the loop fails a specific way, a one-line rule goes into `signs.md` so that exact failure cannot recur ("SLIDE DOWN, DON'T JUMP"). Signs are written reactively from observed failures, never speculatively; prune signs that newer models make obsolete. This accumulation layer is what makes a loop converge over weeks instead of circling.
+11. **Forbid weakening the ratchet, in writing.** Agents under pressure delete tests, skip gates, and relax lint rules to "pass". The charter's Guardrails must say verbatim that removing or editing tests/checks to make work pass is unacceptable, and protect gate configs as no-touch paths.
 
 ## References
 
-- `references/archetypes.md` — full taxonomy with worked examples and failure modes.
+- `references/archetypes.md` — full taxonomy with worked examples, failure modes, and the signs meta-layer.
 - `references/loop-charter-template.md` — the LOOP.md template (parse-stable section names).
-- `references/state-schema.md` — state.json schema + journal.md format.
+- `references/state-schema.md` — state.json schema + journal.md and signs.md formats.
 - `references/loop-doctor.md` — pre-flight checklist the designer runs before handoff.
 - `references/loop-native-skills.md` — how skills and loops compose; guidance for skill-creator/plugin-creator authors.
+- `references/loop-canon.md` — the source lineages (Huntley/Ralph, Steinberger, Cherny, Anthropic harnesses, 12-factor), where they agree, and the disagreements this family resolved.

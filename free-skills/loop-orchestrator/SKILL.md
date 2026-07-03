@@ -29,6 +29,8 @@ Pick the next loop(s) to run. Priority order:
 1. `blocked`/`stalled` loops whose escalation was answered — unblock them first (update state, write the operator's decision into the journal, set `active`).
 2. Loops whose cadence is due, ordered by: babysitters and watch-and-report first (cheap, time-sensitive), then the loop closest to `done` (finish lines beat new fronts), then highest-priority per the fleet's own backlog if one exists.
 3. Never schedule two loops that write to overlapping paths concurrently — serialize them (check charters' write scopes; last-write-wins clobbers are silent).
+4. Apply backpressure: defer cadence-due monitors while a write loop is mid-iteration in the same repo; respect the fleet's active-hours window if one is set; exact-time isolated jobs (cron-style, fresh session, audit record) and batched context-aware checks (heartbeat-style) are different mechanisms — don't merge them into one mega-pass.
+5. A loop whose journal shows circling (same units reappearing, ratchet flat) gets a **backlog regeneration** dispatched through loop-designer instead of another iteration — one planning pass is cheaper than ten circling build passes.
 
 Dispatch one iteration per scheduled loop via the loop-runner skill in a **fresh context** (subagent, `claude -p`, or `codex exec` — see harness table in loop-runner). You may run non-overlapping loops in parallel.
 
