@@ -20,6 +20,13 @@
 
 ---
 
+> [!TIP]
+> **New — curated lanes.** The best of this library, curated and actively maintained as two installable flagships:
+> [`frankxai/skills`](https://github.com/frankxai/skills) for AI architects (MCP, orchestration, model routing, context engineering) and
+> [`frankxai/creator-skills`](https://github.com/frankxai/creator-skills) for creators (video routing, music, images, brand voice).
+> Install with `npx skills add frankxai/skills` or `npx skills add frankxai/creator-skills`.
+> This library remains the full catalog.
+
 ## ⚡ Quick start
 
 **Option A — install as a Claude Code plugin (recommended).** One command, auto-updating:
