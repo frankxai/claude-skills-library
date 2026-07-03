@@ -53,10 +53,10 @@ Create `.loop/<name>/LOOP.md` from `references/loop-charter-template.md` (read i
 
 ### 5. Emit the state files
 
-- `state.json` — from the schema in `references/state-schema.md`: `{name, archetype, status: "designed", iteration: 0, ratchet: {...}, promotion: {mode: "propose-only", clean_cycles: 0, required_cycles: 3}, budget, last_run: null}`.
-- `backlog.md` — prioritized checklist of units, each sized per step 3. For non-backlog archetypes, this holds the watch-list or rubric instead. The backlog is **disposable**: regenerating it from goal + current code costs one planning pass and is always cheaper than a loop going in circles against a stale plan. When building it, never assume something is unimplemented — verify by searching the code first.
-- `signs.md` — starts with any known failure patterns for this domain; the runner appends a "sign" after every observed failure (see the signs rule below).
-- `journal.md` — created empty with just the header row; the runner appends.
+- `.loop/<name>/state.json` — from the schema in `references/state-schema.md`: `{name, archetype, status: "designed", iteration: 0, ratchet: {...}, promotion: {mode: "propose-only", clean_cycles: 0, required_cycles: 3}, budget, last_run: null}`.
+- `.loop/<name>/backlog.md` — prioritized checklist of units, each sized per step 3. For non-backlog archetypes, this holds the watch-list or rubric instead. The backlog is **disposable**: regenerating it from goal + current code costs one planning pass and is always cheaper than a loop going in circles against a stale plan. When building it, never assume something is unimplemented — verify by searching the code first.
+- `.loop/<name>/signs.md` — starts with any known failure patterns for this domain; the runner appends a "sign" after every observed failure (see the signs rule below).
+- `.loop/<name>/journal.md` — created empty with just the header row; the runner appends.
 
 ### 6. Run the doctor and hand off
 

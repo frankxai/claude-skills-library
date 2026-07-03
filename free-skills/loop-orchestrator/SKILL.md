@@ -13,13 +13,13 @@ You run the fleet, not the iterations. The designer compiles loops, the runner e
 
 Read every `.loop/*/state.json` (skip `retired`). Build the fleet table:
 
-`name · archetype · status · iteration/budget · ratchet value→best · stall_count · promotion mode · clean_cycles/required · last_run · last_agent`
+`name · archetype · status · iteration/budget.max_iterations · ratchet.value→ratchet.best · ratchet.stall_count · promotion.mode · promotion.clean_cycles/promotion.required_cycles · last_run · last_agent`
 
 Flag immediately, before any scheduling:
 
-- **Dead loop** — `active` but `last_run` older than 2× its cadence. A dead monitor is worse than no monitor: escalate.
+- **Dead loop** — `active` but `last_run` older than 2× its `budget.cadence`. A dead monitor is worse than no monitor: escalate.
 - **Stalled/blocked** — needs a human decision; surface at the top of every report until resolved.
-- **Budget-exhausted** — `iteration >= max_iterations` while not `done`: candidate for redesign (unit sizing was wrong) or retirement.
+- **Budget-exhausted** — `iteration >= budget.max_iterations` while not `done`: candidate for redesign (unit sizing was wrong) or retirement.
 - **Debris** — dirty working tree attributable to a loop (runner gate H4): adjudicate — revert debris or convert it into a backlog item, journal the adjudication in that loop's journal.
 
 ### 2 · Schedule
@@ -50,8 +50,8 @@ Typical assignment when multiple harnesses are available: strongest/cheapest-ade
 The gate is the core safety mechanism — guard it:
 
 - Every loop starts `propose-only`. Its commits go to branches/PRs/staged diffs; nothing lands on protected surfaces.
-- Promotion to `write-scoped` requires: `clean_cycles >= required_cycles` (consecutive, checker-verified) **AND explicit human approval** recorded in the journal with who/when. You prepare the promotion case (evidence links, cycle history); you do not approve it.
-- Any regression, guardrail violation, or failed verification after promotion → **automatic demotion** to `propose-only`, `clean_cycles: 0`, journal entry, escalation. Demotion is yours to execute without asking.
+- Promotion to `write-scoped` requires: `promotion.clean_cycles >= promotion.required_cycles` (consecutive, checker-verified) **AND explicit human approval** recorded in the journal with who/when. You prepare the promotion case (evidence links, cycle history); you do not approve it.
+- Any regression, guardrail violation, or failed verification after promotion → **automatic demotion** to `propose-only`, `promotion.clean_cycles: 0`, journal entry, escalation. Demotion is yours to execute without asking.
 - `write-scoped` unlocks only the charter's declared write scope. There is no fleet-wide write-full.
 
 ### 5 · Operate the control surfaces

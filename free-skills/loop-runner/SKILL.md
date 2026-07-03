@@ -13,11 +13,11 @@ Execute in order. Do not skip, reorder, or batch steps.
 
 ### 0 · Load
 
-Read, in this order: `.loop/<name>/LOOP.md` (the whole charter), `signs.md` (every
-line is a binding rule earned from a past failure — treat them like Guardrails),
-`state.json`, the **last 3 entries** of `journal.md`, and `backlog.md` if the
-archetype uses one. Do not read the full journal — old entries are archive, not
-context.
+Read, in this order: `.loop/<name>/LOOP.md` (the whole charter), `.loop/<name>/signs.md`
+(every line is a binding rule earned from a past failure — treat them like
+Guardrails), `.loop/<name>/state.json`, the **last 3 entries** of
+`.loop/<name>/journal.md`, and `.loop/<name>/backlog.md` if the archetype uses one.
+Do not read the full journal — old entries are archive, not context.
 
 ### 1 · Gate
 
@@ -68,7 +68,7 @@ nothing failed.
   regression with the ❌ flag. Do not debug forward. Do not leave the regression for
   the next iteration.
 - Verification fails → fix within budget or revert. Never record a ❌ unit as done.
-- Any failure with an identifiable cause → append one line to `signs.md`: a rule that
+- Any failure with an identifiable cause → append one line to `.loop/<name>/signs.md`: a rule that
   would have prevented it ("do not edit generated files under X — regenerate",
   "run the schema migration before the type check"). Signs come only from observed
   failures — never add speculative ones.
@@ -81,19 +81,21 @@ nothing failed.
 In this order (order matters — a crash between steps must never leave done-looking
 state with no evidence):
 
-1. Append the journal entry (format in the loop's `state-schema` reference — Unit /
-   Did / Verify with actual command output / Ratchet old→new / Next / Flags).
-2. Update `state.json`: `iteration+1`, `ratchet.value` (and `best`), `stall_count`
-   (0 if moved, +1 if not), `clean_cycles` (+1 if clean; reset to 0 on any ❌,
-   regression, or guardrail near-miss), `last_run`, `last_agent`.
-3. Strike through / advance the unit in `backlog.md`.
+1. Append the journal entry to `.loop/<name>/journal.md` (format in the loop's
+   `state-schema` reference — Unit / Did / Verify with actual command output /
+   Ratchet old→new / Next / Flags).
+2. Update `.loop/<name>/state.json`: `iteration+1`, `ratchet.value` (and
+   `ratchet.best`), `ratchet.stall_count` (0 if moved, +1 if not),
+   `promotion.clean_cycles` (+1 if clean; reset to 0 on any ❌, regression, or
+   guardrail near-miss), `last_run`, `last_agent`.
+3. Strike through / advance the unit in `.loop/<name>/backlog.md`.
 4. Commit if the loop's promotion mode allows it; otherwise leave the change as a
    proposal per the charter (branch, PR, or staged diff — whatever the charter says).
    Working tree must end clean-or-committed either way.
 
 ### 6 · Report & handoff
 
-- `stall_count >= stall_threshold` → before escalating to a human, take one
+- `ratchet.stall_count >= ratchet.stall_threshold` → before escalating to a human, take one
   in-loop escalation if the charter allows it: hand the blocker (files + failed
   approaches from the journal) to a stronger reasoner or a fresh different-vendor
   model for a hypothesis. If that iteration also fails → set `status: stalled` and
@@ -110,8 +112,8 @@ state with no evidence):
 ## Hard rules
 
 1. **One unit per iteration.** The loop's convergence proof depends on it.
-2. **Files are the only memory.** Anything worth knowing goes in journal/state/backlog
-   before you exit.
+2. **Files are the only memory.** Anything worth knowing goes in `.loop/<name>/`
+   (journal/state/backlog/signs) before you exit.
 3. **Propose-only means propose-only.** If `promotion.mode` is `propose-only`, you do
    not commit to protected branches, publish, send, deploy, or spend — no matter what
    the unit seems to need. The gate is the point.

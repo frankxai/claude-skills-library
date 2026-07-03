@@ -15,22 +15,22 @@ fails any REQUIRED check must not be started.
 | D5 | Units sized | spot-check 3 backlog items: each completable + verifiable in one fresh-context session | split oversized items in backlog.md |
 | D6 | Guardrails inherited | charter Guardrails include the repo's hard-stops (check CLAUDE.md / AGENTS.md) | copy them in explicitly |
 | D7 | Escalation reaches a human | Escalation names a real channel (Slack/PR/inbox), not just the journal | wire a channel |
-| D8 | Propose-only start | state.json `promotion.mode` is `propose-only` for any loop that could write/publish/send | reset mode |
-| D9 | Budget declared | max_iterations, per-iteration wall-clock, cadence all set | set them |
+| D8 | Propose-only start | `.loop/<name>/state.json` `promotion.mode` is `propose-only` for any loop that could write/publish/send | reset mode |
+| D9 | Budget declared | `budget.max_iterations`, `budget.max_minutes_per_iteration`, `budget.cadence` all set | set them |
 
 ## HEALTH — runtime (run when a loop looks sick)
 
 | # | Check | Symptom it catches |
 |---|---|---|
-| H1 | journal entry per iteration (`iteration` in state.json == entry count) | silent iterations — work happening off the books |
-| H2 | `ratchet.value` moved within last `stall_threshold` iterations | spinning without progress |
+| H1 | journal entry per iteration (`iteration` in `.loop/<name>/state.json` == entry count) | silent iterations — work happening off the books |
+| H2 | `ratchet.value` moved within last `ratchet.stall_threshold` iterations | spinning without progress |
 | H3 | No ❌ verify in last 3 entries without a matching revert/escalation flag | failures being absorbed instead of handled |
 | H4 | Working tree clean between iterations | debris — a prior iteration died mid-unit |
-| H5 | `clean_cycles` math consistent with journal flags | promotion gate being gamed by sloppy bookkeeping |
+| H5 | `promotion.clean_cycles` math consistent with journal flags | promotion gate being gamed by sloppy bookkeeping |
 | H6 | Iterations within wall-clock budget (journal timestamps) | units too big — return to D5 |
 | H7 | Same unit not picked >2 iterations in a row without a Flags note | thrash on one item; force-skip and escalate it |
-| H8 | Every ❌ journal entry with an identifiable cause has a matching sign in signs.md | failures not being converted into immunity — the loop will repeat them |
-| H9 | signs.md under ~40 lines and free of speculative entries | sign bloat polluting every iteration's context |
+| H8 | Every ❌ journal entry with an identifiable cause has a matching sign in `.loop/<name>/signs.md` | failures not being converted into immunity — the loop will repeat them |
+| H9 | `.loop/<name>/signs.md` under ~40 lines and free of speculative entries | sign bloat polluting every iteration's context |
 
 ## Verdict format
 
