@@ -31,7 +31,7 @@ CATEGORIES = [
     ("AI Agents & Orchestration", r"agentic|swarm|hive-mind|stream-chain|model-routing|reasoningbank|memory-prune|opus-extended|sparc|pair-programming|nextjs-agent-team"),
     ("AI Frameworks, MCP & SDKs", r"^mcp|mcp-|openai-agentkit|claude-sdk|langgraph|oracle-adk|oracle-agent-spec|partner-"),
     ("Oracle & Cloud", r"oracle|^oci|^si$|ai-architecture"),
-    ("Web, Frontend & Animation", r"nextjs|tailwind|^three$|framer|web-design|ui-ux|css-animations|animejs|gsap|lottie|waapi|defuddle"),
+    ("Web, Frontend & Animation", r"nextjs|tailwind|^three$|framer|web-design|ui-ux|css-animations|animejs|gsap|lottie|waapi|defuddle|design-asset"),
     ("Engineering Workflow & GitHub", r"github|performance-analysis|verification-quality|hooks-automation|worker-|skill-comply|template-skill"),
     ("Content, Writing & Brand", r"brand|book|newsletter|social-media|content-strategy|creator|prompt-hub|internal-comms"),
     ("Creative & Media Production", r"suno|higgsfield|hyperframes|website-to|remotion|starlight|arcanea|acos|cacos|video-production|algorithmic-art|canvas|theme-factory|slack-gif|artifacts-builder|creator-intelligence"),

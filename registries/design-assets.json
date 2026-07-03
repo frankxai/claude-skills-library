@@ -1,0 +1,44 @@
+{
+  "$schema": "https://frankxai.github.io/claude-skills-library/schemas/design-assets.schema.json",
+  "description": "Source of truth for external GitHub design/UI/motion libraries adopted across FrankX and Arcanea sites. Triage every new find here before touching any site repo. See free-skills/design-asset-intake/SKILL.md for the process this registry supports.",
+  "assets": [
+    {
+      "name": "react-three-fiber",
+      "source_url": "https://github.com/pmndrs/react-three-fiber",
+      "integration_type": "npm-dependency",
+      "package": "@react-three/fiber",
+      "target_design_system": ["frankx.ai-vercel-website", "arcanea-ai-app/packages/design-system"],
+      "added_date": "2026-07-03",
+      "brand_fit_notes": "Canonical React renderer for three.js. Already installed in FrankX (frankx.ai-vercel-website/FrankX). Missing in arcanea-ai-app — needed as the base for the ShaderGradient primitive below."
+    },
+    {
+      "name": "ShaderGradient",
+      "source_url": "https://github.com/ruucm/shadergradient",
+      "integration_type": "npm-dependency",
+      "package": "@shadergradient/react",
+      "requires": ["@react-three/fiber", "three", "three-stdlib", "camera-controls"],
+      "target_design_system": ["arcanea-ai-app/packages/design-system"],
+      "added_date": "2026-07-03",
+      "brand_fit_notes": "3D animated gradient background. Wrap in a brand-token-driven primitive (feed cosmic teal/blue/gold into color1/color2/color3 props, don't ship its default palette). One hero moment per page — route through design-motion's restraint rule. Route through design-architect -> design-generator -> design-motion -> design-verifier before shipping. Skipped @shadergradient/ui (published at 0.0.0, editor-controls package, not needed for a static/parameterized background)."
+    },
+    {
+      "name": "liquid-glass-js",
+      "source_url": "https://github.com/dashersw/liquid-glass-js",
+      "integration_type": "vendor-copy",
+      "package": null,
+      "requires": ["html2canvas (hard runtime dependency — container.js calls it unconditionally in capturePageSnapshot())"],
+      "target_design_system": ["arcanea-ai-app/packages/design-system"],
+      "added_date": "2026-07-03",
+      "brand_fit_notes": "Vanilla JS, no npm package exists — vendored verbatim (container.js/button.js/glass.css/LICENSE) into packages/design-system/src/primitives/liquid-glass/vendor/, plus a bridge.js adapter (authored here) that exposes the classic-script Container/Button classes as window.__LiquidGlassJS for the LiquidGlassButton React wrapper to consume. Static assets copied to apps/web/public/vendor/liquid-glass-js/ for serving (design-system's tsc build doesn't copy non-TS assets — flagged as future build-step work). Ships OPT-IN alongside the existing CSS glass-card recipe (bg-white/[0.03] border-white/[0.06] backdrop-blur-sm), which stays the default per taste.md/TASTE.md. KNOWN LIMITATION: upstream registers a permanent window scroll listener with no destroy()/teardown API — mount once for the page's lifetime, don't remount."
+    },
+    {
+      "name": "liquid-logo (Paper Shaders)",
+      "source_url": "https://github.com/paper-design/liquid-logo",
+      "integration_type": "reference-study",
+      "package": null,
+      "target_design_system": ["arcanea-ai-app/packages/design-system"],
+      "added_date": "2026-07-03",
+      "brand_fit_notes": "This is a full Next.js demo app for Paper Shaders' liquid-metal effect, not an installable library. Do NOT vendor the repo. Study the GLSL shader technique and, if wanted, hand-port a single derived primitive (candidate: liquid-metal-text.tsx) the same way Magic UI primitives were already hand-ported into @arcanea/design-system. Logged as future work, not yet built."
+    }
+  ]
+}

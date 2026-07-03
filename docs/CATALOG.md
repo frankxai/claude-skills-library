@@ -1,5 +1,5 @@
 # 📚 Skills Catalog
-The complete index of all **107 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **108 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
@@ -58,13 +58,14 @@ _8 skills_
 | [`si`](../free-skills/si/SKILL.md) | Superintelligence router — composes /superintelligence reasoning with swarm execution only when verb intent demands it. Defaults to reasoning-only to prevent runaway swarm cost.... |
 
 ## Web, Frontend & Animation
-_14 skills_
+_15 skills_
 
 | Skill | Description |
 |---|---|
 | [`animejs`](../free-skills/animejs/SKILL.md) | Anime.js adapter patterns for HyperFrames. Use when writing Anime.js animations or timelines inside HyperFrames compositions, registering animations on window.__hfAnime, making... |
 | [`css-animations`](../free-skills/css-animations/SKILL.md) | CSS animation adapter patterns for HyperFrames. Use when authoring CSS keyframes, animation-delay based timing, animation-fill-mode, animation-play-state, or CSS-only motion tha... |
 | [`defuddle`](../free-skills/defuddle/SKILL.md) | Extract clean markdown content from web pages using Defuddle CLI, removing clutter and navigation to save tokens. Use instead of WebFetch when the user provides a URL to read or... |
+| [`design-asset-intake`](../free-skills/design-asset-intake/SKILL.md) | Triage an external GitHub design/UI/motion/shader library before wiring it into any site's design system. Use when someone shares a "free design asset library" repo/link (social... |
 | [`framer-expert`](../free-skills/framer-expert/SKILL.md) | Expert Framer design and development — interactive prototypes, production sites, Framer Motion, CMS integration, and the Framer MCP server. Use when building or styling Framer s... |
 | [`gsap`](../free-skills/gsap/SKILL.md) | GSAP animation reference for HyperFrames. Covers gsap.to(), from(), fromTo(), easing, stagger, defaults, timelines (gsap.timeline(), position parameter, labels, nesting, playbac... |
 | [`lottie`](../free-skills/lottie/SKILL.md) | Lottie and dotLottie adapter patterns for HyperFrames. Use when embedding lottie-web JSON animations, .lottie files, @lottiefiles/dotlottie-web players, registering instances on... |

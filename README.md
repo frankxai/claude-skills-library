@@ -2,14 +2,14 @@
 
 # 🧠 Claude Skills Library
 
-### 107 production-grade Agent Skills for Claude Code, Claude.ai & every major agentic runtime
+### 108 production-grade Agent Skills for Claude Code, Claude.ai & every major agentic runtime
 
 > Turn your AI agent into a domain expert. Each skill is a self-contained, spec-compliant
 > `SKILL.md` — engineered with real frameworks, current best practices, and opinionated guidance,
 > not 500 words of filler. Free. MIT-licensed. Installable in one command.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-107-blue.svg)](docs/CATALOG.md)
+[![Skills](https://img.shields.io/badge/skills-108-blue.svg)](docs/CATALOG.md)
 [![Frontmatter validated](https://img.shields.io/badge/frontmatter-validated-success.svg)](scripts/validate_skills.py)
 [![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#-works-with-every-runtime)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -78,14 +78,14 @@ Every skill here:
 - ✅ Is **progressive-disclosure friendly**: a tight description for routing, deep guidance loaded only on use.
 - ✅ Carries a **trigger-rich description** so the right skill activates from a library of 100+.
 
-**107 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
+**108 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
 engineering workflow, and personal performance. **All free. MIT-licensed.**
 
 ---
 
 ## ⭐ Featured skills
 
-A small taste — see the **[full catalog](docs/CATALOG.md)** for all 107.
+A small taste — see the **[full catalog](docs/CATALOG.md)** for all 108.
 
 | Skill | Why you'd reach for it | Category |
 |---|---|---|
@@ -186,7 +186,7 @@ A single zero-dependency validator enforces the standard across every `SKILL.md`
 
 ```bash
 python3 scripts/validate_skills.py
-# OK: 107 skill file(s) are spec-compliant.
+# OK: 108 skill file(s) are spec-compliant.
 
 python3 scripts/generate_catalog.py          # regenerate docs/CATALOG.md
 python3 scripts/generate_catalog.py --check   # CI-friendly drift check
@@ -208,7 +208,7 @@ GitHub Pages (Settings → Pages → *Deploy from branch* → `main` / `/docs`).
 
 ## ❓ FAQ
 
-**Does loading 107 skills bloat my context?**
+**Does loading 108 skills bloat my context?**
 No. Only each skill's `name` + `description` is preloaded for routing; the full body loads **only when
 a skill triggers**, and `references/` load only when read. That's the whole point of progressive disclosure.
 
