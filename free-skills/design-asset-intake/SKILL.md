@@ -30,8 +30,10 @@ Read its README/package.json first — don't guess from the marketing post.
 2. **vendor-copy** — no npm package exists, but the source is small, self-contained, and
    meant to be copied (vanilla JS/CSS files, a single component file, "no build step" in
    the README). Copy the actual source files into the target design-system package under
-   `src/primitives/<name>/`, wrapped in whatever component API the design system expects.
-   Never leave vendored code un-wrapped or inconsistent with the rest of the primitives.
+   its own primitives convention (e.g. `src/primitives/<name>/` in `@arcanea/design-system`,
+   `components/ui/primitives/<name>/` in FrankX — check the target repo's own layout rather
+   than assuming), wrapped in whatever component API the design system expects. Never leave
+   vendored code un-wrapped or inconsistent with the rest of the primitives.
 3. **reference-study** — the repo is a demo app, a playground, or otherwise not meant to
    be installed or copied wholesale (e.g. a Next.js showcase for a shader technique). Do
    **not** vendor the whole app. Extract the specific technique (the shader, the easing
@@ -86,8 +88,14 @@ glass-card recipe), that's a call for the human, not something this skill decide
 ## Distributing a new primitive to other sites
 
 Once a primitive is built and gated in one design system, don't hand-recreate it in
-every other repo. Copy the skill/primitive folder across using the existing sync
-mechanism (`starlight-agent-skills/scripts/port-skill.mjs <domain/skill> --target=<repo>`
-for skills; a plain folder copy plus a design-system export for code primitives), and
-add the target repo to the registry entry's `target_design_system` list so the registry
-stays the accurate cross-repo record.
+every other repo. For skills, the sibling `starlight-agent-skills` repo (a different
+repo from this one) has a sync script, `scripts/port-skill.mjs <domain/skill>
+--target=<repo>` — but it assumes that repo's own nested `domain/skill` + `manifest.json`
+shape, which doesn't match this repo's flat `free-skills/<name>/SKILL.md` layout, so it
+won't run as-is against a skill copied from here. For a flat skill like this one, a plain
+folder copy into the target repo's own skill convention (checking whether it's
+`.claude/skills/` or something else — some repos gitignore `.claude/skills/*/` and keep
+the committed copy elsewhere, e.g. `.arcanea/skills/`) is the practical fallback. For code
+primitives, copy the file plus add its export to the target design-system's index. Either
+way, add the target repo to the registry entry's `target_design_system` list so the
+registry stays the accurate cross-repo record.

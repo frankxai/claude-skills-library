@@ -1,5 +1,4 @@
 {
-  "$schema": "https://frankxai.github.io/claude-skills-library/schemas/design-assets.schema.json",
   "description": "Source of truth for external GitHub design/UI/motion libraries adopted across FrankX and Arcanea sites. Triage every new find here before touching any site repo. See free-skills/design-asset-intake/SKILL.md for the process this registry supports.",
   "assets": [
     {
@@ -26,10 +25,10 @@
       "source_url": "https://github.com/dashersw/liquid-glass-js",
       "integration_type": "vendor-copy",
       "package": null,
-      "requires": ["html2canvas (hard runtime dependency — container.js calls it unconditionally in capturePageSnapshot())"],
+      "requires": ["html2canvas"],
       "target_design_system": ["arcanea-ai-app/packages/design-system"],
       "added_date": "2026-07-03",
-      "brand_fit_notes": "Vanilla JS, no npm package exists — vendored verbatim (container.js/button.js/glass.css/LICENSE) into packages/design-system/src/primitives/liquid-glass/vendor/, plus a bridge.js adapter (authored here) that exposes the classic-script Container/Button classes as window.__LiquidGlassJS for the LiquidGlassButton React wrapper to consume. Static assets copied to apps/web/public/vendor/liquid-glass-js/ for serving (design-system's tsc build doesn't copy non-TS assets — flagged as future build-step work). Ships OPT-IN alongside the existing CSS glass-card recipe (bg-white/[0.03] border-white/[0.06] backdrop-blur-sm), which stays the default per taste.md/TASTE.md. KNOWN LIMITATION: upstream registers a permanent window scroll listener with no destroy()/teardown API — mount once for the page's lifetime, don't remount."
+      "brand_fit_notes": "Vanilla JS, no npm package exists — vendored verbatim (container.js/button.js/glass.css/LICENSE) into packages/design-system/src/primitives/liquid-glass/vendor/, plus a bridge.js adapter (authored here) that exposes the classic-script Container/Button classes as window.__LiquidGlassJS for the LiquidGlassButton React wrapper to consume. html2canvas is a hard runtime dependency, not optional — container.js calls it unconditionally in capturePageSnapshot(). Static assets copied to apps/web/public/vendor/liquid-glass-js/ for serving (design-system's tsc build doesn't copy non-TS assets — flagged as future build-step work). Ships OPT-IN alongside the existing CSS glass-card recipe (bg-white/[0.03] border-white/[0.06] backdrop-blur-sm), which stays the default per taste.md/TASTE.md. KNOWN LIMITATION: upstream registers a permanent window scroll listener with no destroy()/teardown API — mount once for the page's lifetime, don't remount."
     },
     {
       "name": "liquid-logo (Paper Shaders)",
