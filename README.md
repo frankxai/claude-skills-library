@@ -2,19 +2,24 @@
 
 # 🧠 Claude Skills Library
 
-### 107 production-grade Agent Skills for Claude Code, Claude.ai & every major agentic runtime
+### 107 production-grade Agent Skills for Claude Code, Claude.ai, and every major agentic runtime
 
-> Turn your AI agent into a domain expert. Each skill is a self-contained, spec-compliant
-> `SKILL.md` — engineered with real frameworks, current best practices, and opinionated guidance,
-> not 500 words of filler. Free. MIT-licensed. Installable in one command.
+A free, MIT-licensed catalog of self-contained `SKILL.md` files. Each one teaches your AI agent a
+domain — MCP architecture, Next.js, Oracle Cloud, Suno music, code review, and more — with real
+frameworks and current best practices, not 500 words of filler.
+
+**For** anyone running Claude Code or another skills-aware agent who wants expert behavior on tap.
+**Why not just copy skills by hand?** These are spec-validated, version-tracked, install in one
+command, auto-update via the plugin, and load only when relevant — so a library of 107 costs almost
+nothing in context until a skill actually fires.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/skills-107-blue.svg)](docs/CATALOG.md)
 [![Frontmatter validated](https://img.shields.io/badge/frontmatter-validated-success.svg)](scripts/validate_skills.py)
-[![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#-works-with-every-runtime)
+[![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#-works-with-six-runtimes)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[**⚡ Quick start**](#-quick-start) · [**🌐 Browse online**](https://frankxai.github.io/claude-skills-library/) · [**📚 Full catalog**](docs/CATALOG.md) · [**🗂️ Categories**](#️-skill-categories) · [**❓ FAQ**](#-faq) · [**🤝 Contribute**](CONTRIBUTING.md)
+[**⚡ Quick start**](#-quick-start) · [**📚 Full catalog**](docs/CATALOG.md) · [**🗂️ Categories**](#-skill-categories) · [**🤝 Contribute**](#-contributing) · [**❓ FAQ**](#-faq)
 
 </div>
 
@@ -76,31 +81,17 @@ Every skill here:
 - ✅ Is a **self-contained folder** with a `SKILL.md` and optional `references/`, `scripts/`, `assets/`.
 - ✅ Has **spec-compliant frontmatter** (`name` + `description`) — enforced by [`scripts/validate_skills.py`](scripts/validate_skills.py).
 - ✅ Is **progressive-disclosure friendly**: a tight description for routing, deep guidance loaded only on use.
-- ✅ Carries a **trigger-rich description** so the right skill activates from a library of 100+.
+- ✅ Carries a **trigger-rich description** so the right skill activates from a library this large.
 
 **107 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
 engineering workflow, and personal performance. **All free. MIT-licensed.**
 
 ---
 
-## ⭐ Featured skills
-
-A small taste — see the **[full catalog](docs/CATALOG.md)** for all 107.
-
-| Skill | Why you'd reach for it | Category |
-|---|---|---|
-| [`nextjs-expert`](free-skills/nextjs-expert/SKILL.md) | App Router, server/client boundaries, caching, and the production gotchas that bite | Web & Frontend |
-| [`mcp-architecture`](free-skills/mcp-architecture/SKILL.md) | Design an MCP server's resources, tools, prompts, and security from first principles | MCP & SDKs |
-| [`oracle-database-expert`](free-skills/oracle-database-expert/SKILL.md) | Oracle 23ai, Autonomous DB, AI Vector Search, SQL/PLSQL tuning, HA | Oracle & Cloud |
-| [`github-code-review`](free-skills/github-code-review/SKILL.md) | Turn a raw diff into a correctness/security/style review with actionable comments | Engineering |
-| [`suno-ai-mastery`](free-skills/suno-ai-mastery/SKILL.md) | Prompt-engineer commercial-quality music with Suno v4.5+ | Creative |
-| [`ui-ux-design-expert`](free-skills/ui-ux-design-expert/SKILL.md) | Design systems, interaction patterns, and WCAG 2.2 accessibility audits | Web & Frontend |
-| [`langgraph-patterns`](free-skills/langgraph-patterns/SKILL.md) | Graph orchestration, state machines, and human-in-the-loop for agent workflows | AI Frameworks |
-| [`greek-philosopher`](free-skills/greek-philosopher/SKILL.md) | Socratic questioning and Stoic perspective on a hard decision | Mind & Body |
-
----
-
 ## 🗂️ Skill categories
+
+Counts below are the source-of-truth groupings from [`docs/CATALOG.md`](docs/CATALOG.md), regenerated
+from the repo by [`scripts/generate_catalog.py`](scripts/generate_catalog.py).
 
 | Category | Count | Examples |
 |---|---:|---|
@@ -115,8 +106,22 @@ A small taste — see the **[full catalog](docs/CATALOG.md)** for all 107.
 | 📄 **Documents & Productivity** | 6 | `pdf`, `docx`, `pptx`, `xlsx`, `product-management-expert`, `webapp-testing` |
 | 🧩 **Meta & Library** | 1 | `contribute-catalog` |
 
-> Counts are generated from the repo by [`scripts/generate_catalog.py`](scripts/generate_catalog.py).
-> See the **[full catalog](docs/CATALOG.md)** for every skill with its description.
+See the **[full catalog](docs/CATALOG.md)** for every skill with its description.
+
+---
+
+## ⭐ A few to start with
+
+| Skill | Why you'd reach for it | Category |
+|---|---|---|
+| [`nextjs-expert`](free-skills/nextjs-expert/SKILL.md) | App Router, server/client boundaries, caching, and the production gotchas that bite | 🎨 Web, Frontend & Animation |
+| [`mcp-architecture`](free-skills/mcp-architecture/SKILL.md) | Design an MCP server's resources, tools, prompts, and security from first principles | 🔌 AI Frameworks, MCP & SDKs |
+| [`oracle-database-expert`](free-skills/oracle-database-expert/SKILL.md) | Oracle 23ai, Autonomous DB, AI Vector Search, SQL/PLSQL tuning, HA | ☁️ Oracle & Cloud |
+| [`github-code-review`](free-skills/github-code-review/SKILL.md) | Turn a raw diff into a correctness/security/style review with actionable comments | 🛠️ Engineering Workflow & GitHub |
+| [`suno-ai-mastery`](free-skills/suno-ai-mastery/SKILL.md) | Prompt-engineer commercial-quality music with Suno v4.5+ | 🎬 Creative & Media Production |
+| [`ui-ux-design-expert`](free-skills/ui-ux-design-expert/SKILL.md) | Design systems, interaction patterns, and WCAG 2.2 accessibility audits | 🎨 Web, Frontend & Animation |
+| [`langgraph-patterns`](free-skills/langgraph-patterns/SKILL.md) | Graph orchestration, state machines, and human-in-the-loop for agent workflows | 🔌 AI Frameworks, MCP & SDKs |
+| [`greek-philosopher`](free-skills/greek-philosopher/SKILL.md) | Socratic questioning and Stoic perspective on a hard decision | 🧭 Mind, Body & Philosophy |
 
 ---
 
@@ -137,9 +142,10 @@ system; use a **prompt** for a one-off. Many skills here pair naturally with an 
 
 ---
 
-## 🌐 Works with every runtime
+## 🌐 Works with six runtimes
 
-Agent Skills are a portable format. This library documents import paths for the major agentic runtimes:
+Agent Skills are a portable format. This library documents an import path for each major agentic
+runtime, with one adapter guide per runtime in [`runtimes/`](runtimes/):
 
 | Runtime | Maturity | Guide |
 |---|---|---|
@@ -182,27 +188,48 @@ The `description` is the most important line you'll write — it's what the mode
 
 ## ✅ Quality & validation
 
-A single zero-dependency validator enforces the standard across every `SKILL.md`:
+Three zero-dependency scripts enforce the standard across every `SKILL.md`:
 
 ```bash
-python3 scripts/validate_skills.py
-# OK: 107 skill file(s) are spec-compliant.
-
-python3 scripts/generate_catalog.py          # regenerate docs/CATALOG.md
-python3 scripts/generate_catalog.py --check   # CI-friendly drift check
-python3 scripts/check_links.py                # verify no broken internal links
+python3 scripts/validate_skills.py          # frontmatter + structure (exits non-zero on failure)
+python3 scripts/generate_catalog.py         # regenerate docs/CATALOG.md
+python3 scripts/generate_catalog.py --check  # CI-friendly drift check
+python3 scripts/check_links.py              # verify no broken internal links
 ```
 
 All three run automatically on every push and pull request via
-[GitHub Actions](.github/workflows/validate.yml).
+[GitHub Actions](.github/workflows/validate.yml). `validate_skills.py` checks that every skill has
+well-formed UTF-8 frontmatter, a spec-valid `name`, a non-empty `description` (≤ 1024 chars), and the
+exact filename `SKILL.md`; it also warns (without failing) on bodies over 500 lines and on
+reserved-word names. Run it before opening a PR.
 
-It verifies that every skill has well-formed UTF-8 frontmatter, a spec-valid `name`, a non-empty
-`description` (≤ 1024 chars), and the exact filename `SKILL.md`; it also warns on oversized bodies
-and reserved-word names. Run it before opening a PR.
+A browsable catalog is generated by `scripts/generate_site.py` into [`docs/index.html`](docs/index.html)
+for serving via GitHub Pages.
 
-The browsable catalog at **[frankxai.github.io/claude-skills-library](https://frankxai.github.io/claude-skills-library/)**
-is generated by `scripts/generate_site.py` into [`docs/index.html`](docs/index.html) and served by
-GitHub Pages (Settings → Pages → *Deploy from branch* → `main` / `/docs`).
+---
+
+## 🤝 Contributing
+
+New skills, deeper examples, fixes, and better docs are all welcome.
+
+1. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [authoring standard](spec/README.md).
+2. Copy [`template/`](template/) to `free-skills/<skill-name>/` and write your `SKILL.md`.
+3. Run `python3 scripts/validate_skills.py` and `python3 scripts/generate_catalog.py` until both are clean.
+4. Open a pull request.
+
+---
+
+## 🔗 Related repositories
+
+This library is the public, install-from storefront. Two sibling repos sit behind it:
+
+- **[frankxai/agentic-creator-os](https://github.com/frankxai/agentic-creator-os)** — the canonical,
+  larger internal source for skills, agents, and commands. New skills are authored and battle-tested
+  in ACOS first; the strongest, most broadly useful ones are mirrored out to this public library.
+- **[frankxai/Starlight-Intelligence-System](https://github.com/frankxai/Starlight-Intelligence-System)** —
+  the substrate: the persistent context, memory, and multi-agent layer the skills run on top of.
+
+In short: **Starlight is the substrate, ACOS is the canonical skill source, and this repo is the free public catalog.**
 
 ---
 
@@ -228,17 +255,6 @@ Yes — see [`runtimes/`](runtimes/) for Antigravity, OpenCode, Codex, Gemini CL
 
 ---
 
-## 🤝 Contributing
-
-New skills, deeper examples, fixes, and better docs are all welcome.
-
-1. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [authoring standard](spec/README.md).
-2. Copy [`template/`](template/) to `free-skills/<skill-name>/` and write your `SKILL.md`.
-3. Run `python3 scripts/validate_skills.py` and `python3 scripts/generate_catalog.py` until both are clean.
-4. Open a pull request.
-
----
-
 ## 📜 License
 
 MIT — free to use, modify, and distribute. See [LICENSE](LICENSE). Skills under
@@ -246,16 +262,8 @@ MIT — free to use, modify, and distribute. See [LICENSE](LICENSE). Skills unde
 
 ---
 
-## 🙏 Acknowledgments
-
-Built on Anthropic's open [Agent Skills](https://agentskills.io) standard and Claude Code best
-practices, with inspiration from the broader open-source skills community (including
-[`obra/superpowers`](https://github.com/obra/superpowers)) and current, domain-specific research.
-
 <div align="center">
 
 **[⭐ Star the repo](https://github.com/frankxai/claude-skills-library)** · **[📚 Catalog](docs/CATALOG.md)** · **[🐛 Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[💬 Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
-
-Made for the agentic era.
 
 </div>
