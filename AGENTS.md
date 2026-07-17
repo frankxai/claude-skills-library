@@ -4,10 +4,10 @@ This repo is part of the FrankX / Starlight / Arcanea agent estate.
 
 ## Classification
 
-- Repo: $title
-- Class: $Classification
-- Default health command: $HealthCommand
-- Remote: $Remote
+- Repo: claude-skills-library
+- Class: public skills catalog (Claude Code / Anthropic ecosystem)
+- Default health command: `node scripts/validate-skills.mjs`
+- Remote: https://github.com/frankxai/claude-skills-library.git
 
 ## Agent Rules
 

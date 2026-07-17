@@ -59,7 +59,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 - **Consistency**: Daily presence > sporadic bursts
 
 **Growth Tactics:**
-- Reply to accounts 1-2 tiers above you (10-100× your followers)
+- Reply to accounts 1-2 tiers above you (10-100x your followers)
 - Quote tweet with added value, not just agreement
 - Create "reply guys" value: be helpful in others' comments
 - Use Twitter Spaces for authority building (weekly)
@@ -135,7 +135,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 #### Instagram Strategy
 
 **Algorithm Understanding (2025):**
-- **Reels Dominance**: Reels get 3-5× reach of static posts
+- **Reels Dominance**: Reels get 3-5x reach of static posts
 - **Watch Time**: Longer Reels (45-90 seconds) perform better than short loops
 - **Shares > Likes**: Content sent via DM gets massive boost
 - **Consistency**: Posting at same times trains algorithm
@@ -261,7 +261,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 
    Hook Examples:
    - "If you [do X], stop immediately. Here's why..."
-   - "I spent $10K learning [skill]. Here's the shortcut..."
+   - "I spent USD 10K learning [skill]. Here's the shortcut..."
    - "This [thing] is a scam. Here's what actually works..."
 
 2. **Trend Participation**
@@ -271,7 +271,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 
 3. **Storytelling Hooks**
    - "Storytime" format
-   - Problem ’ Tension ’ Resolution
+   - Problem -> Tension -> Resolution
    - 30-60 seconds
 
 4. **Behind-the-Scenes**
@@ -287,7 +287,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 **Growth Tactics:**
 - Reply to comments with video responses (boosts engagement)
 - Duet/Stitch popular videos in your niche (piggyback on viral content)
-- Go live 1-2×/week (algorithm promotes live creators)
+- Go live 1-2x/week (algorithm promotes live creators)
 - Use 3-5 specific hashtags + 1 broad hashtag (#FYP)
 - Post when your target audience is active (check analytics)
 
@@ -303,7 +303,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 
 **The Curiosity Gap:**
 - Promises information but creates gap
-- Example: "The one metric that 10× my growth (it's not engagement)."
+- Example: "The one metric that 10x my growth (it's not engagement)."
 
 **The Specific Number:**
 - Concrete, credible
@@ -459,7 +459,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 #### The "Reply Guy" Strategy (Twitter)
 
 **How It Works:**
-- Find accounts 1-2 tiers above you (10-100× your size)
+- Find accounts 1-2 tiers above you (10-100x your size)
 - Turn on notifications for their tweets
 - Reply within first 30 minutes with valuable addition (not just "Great point!")
 - Add data, personal story, or actionable insight
@@ -467,7 +467,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 **Example:**
 If they tweet: "Content marketing is changing in 2025"
 Don't reply: "So true!"
-Do reply: "Absolutely. We analyzed 500 B2B blogs last quarter. Video content got 3× more backlinks than text. But the combination of video + written summary performed best (5× backlinks). The future is multi-format."
+Do reply: "Absolutely. We analyzed 500 B2B blogs last quarter. Video content got 3x more backlinks than text. But the combination of video + written summary performed best (5x backlinks). The future is multi-format."
 
 **Result**: Their audience sees your value, clicks your profile, follows you.
 
@@ -476,10 +476,10 @@ Do reply: "Absolutely. We analyzed 500 B2B blogs last quarter. Video content got
 **Process:**
 1. Identify your top 10 performing posts (across all platforms)
 2. Remix each into different formats:
-   - Twitter thread ’ LinkedIn carousel
-   - YouTube video ’ TikTok series (5-part)
-   - Instagram Reel ’ Twitter video + thread
-   - LinkedIn post ’ Blog article ’ Email newsletter
+   - Twitter thread -> LinkedIn carousel
+   - YouTube video -> TikTok series (5-part)
+   - Instagram Reel -> Twitter video + thread
+   - LinkedIn post -> Blog article -> Email newsletter
 
 **Why It Works:**
 - Different audiences consume content differently
@@ -489,7 +489,7 @@ Do reply: "Absolutely. We analyzed 500 B2B blogs last quarter. Video content got
 #### The "Authority Build" Strategy (LinkedIn)
 
 **6-Month Plan:**
-- **Month 1-2**: Post 3×/week, focus on storytelling
+- **Month 1-2**: Post 3x/week, focus on storytelling
 - **Month 3-4**: Publish 2 LinkedIn articles (long-form, 1,500+ words)
 - **Month 5-6**: Host LinkedIn Audio Event or Live (weekly)
 
@@ -502,34 +502,34 @@ Do reply: "Absolutely. We analyzed 500 B2B blogs last quarter. Video content got
 #### Direct Monetization (By Follower Count)
 
 **1,000-10,000 Followers:**
-- Sponsored posts: $100-500 per post
-- Affiliate marketing: $500-2,000/month
-- Digital products: $1,000-5,000/month (guides, templates)
+- Sponsored posts: USD 100-500 per post
+- Affiliate marketing: USD 500-2,000/month
+- Digital products: USD 1,000-5,000/month (guides, templates)
 
 **10,000-50,000 Followers:**
-- Sponsored posts: $500-2,500 per post
-- Affiliate marketing: $2,000-10,000/month
-- Consulting/coaching: $5,000-15,000/month
-- Online course: $10,000-50,000/month
+- Sponsored posts: USD 500-2,500 per post
+- Affiliate marketing: USD 2,000-10,000/month
+- Consulting/coaching: USD 5,000-15,000/month
+- Online course: USD 10,000-50,000/month
 
 **50,000-100,000+ Followers:**
-- Sponsored posts: $2,500-10,000+ per post
-- Affiliate marketing: $10,000-50,000/month
-- Consulting/coaching: $15,000-100,000/month
-- Online course: $50,000-500,000/month
-- Brand partnerships: $25,000-250,000/year
+- Sponsored posts: USD 2,500-10,000+ per post
+- Affiliate marketing: USD 10,000-50,000/month
+- Consulting/coaching: USD 15,000-100,000/month
+- Online course: USD 50,000-500,000/month
+- Brand partnerships: USD 25,000-250,000/year
 
-#### Indirect Monetization (Attention ’ Opportunities)
+#### Indirect Monetization (Attention -> Opportunities)
 
 **For Creators:**
-- Speaking engagements: $5,000-50,000 per talk
-- Book deals: $50,000-500,000 advance
-- Podcast sponsorships: $50-100 CPM
+- Speaking engagements: USD 5,000-50,000 per talk
+- Book deals: USD 50,000-500,000 advance
+- Podcast sponsorships: USD 50-100 CPM
 
 **For Professionals:**
 - Job offers: 20-50% salary increase
-- Consulting opportunities: $200-500/hour
-- Board positions: $25,000-100,000/year
+- Consulting opportunities: USD 200-500/hour
+- Board positions: USD 25,000-100,000/year
 
 ---
 
@@ -583,7 +583,7 @@ Here's a 90-day growth plan to get you from 500 to 5,000 followers:
      - Reply within 30 minutes with value-added comments (not just "Great post!")
      - Goal: 20-30 thoughtful replies/day
 
-**Expected Result**: 500 ’ 1,200 followers (+140% growth)
+**Expected Result**: 500 -> 1,200 followers (+140% growth)
 
 **Phase 2 (Days 31-60): Momentum**
 
@@ -604,7 +604,7 @@ Here's a 90-day growth plan to get you from 500 to 5,000 followers:
    - Propose collaboration: quote tweet each other, mention in threads
    - Cross-pollinate audiences
 
-**Expected Result**: 1,200 ’ 2,800 followers (+133% growth)
+**Expected Result**: 1,200 -> 2,800 followers (+133% growth)
 
 **Phase 3 (Days 61-90): Scale**
 
@@ -625,7 +625,7 @@ Here's a 90-day growth plan to get you from 500 to 5,000 followers:
    - Agree to engage with each other's content within first 30 minutes
    - Boosts initial engagement signal
 
-**Expected Result**: 2,800 ’ 5,500 followers (+96% growth)
+**Expected Result**: 2,800 -> 5,500 followers (+96% growth)
 
 **Key Metrics to Track Weekly**:
 - Follower growth rate (%)
@@ -692,9 +692,9 @@ If people don't watch to the end, Instagram won't promote your Reel.
 - Add text overlays (many watch muted)
 
 **Loop Example**:
-- Start: "The one thing that 10× my Instagram growth was..."
+- Start: "The one thing that 10x my Instagram growth was..."
 - Middle: [Explain the thing]
-- End: "So that's why [the thing] 10× my growth. Try it and let me know!"
+- End: "So that's why [the thing] 10x my growth. Try it and let me know!"
 - User watches again to catch what they missed
 
 **4. Posting at Wrong Time**
@@ -702,7 +702,7 @@ If people don't watch to the end, Instagram won't promote your Reel.
 Instagram's algorithm tests your Reel with a small audience first. If they engage, it pushes to larger audience.
 
 **Optimize Posting Time**:
-- Check Instagram Insights ’ Audience ’ Most Active Times
+- Check Instagram Insights -> Audience -> Most Active Times
 - Post when your followers are online (not when you're free)
 - Test 3 different times over 2 weeks, track results
 
@@ -758,7 +758,7 @@ Instagram rewards content that keeps users on the platform.
    - Post at optimal time + engage first hour
 
 3. **Track**: Monitor Insights for:
-   - Reach (aim for 2-3× your follower count)
+   - Reach (aim for 2-3x your follower count)
    - Shares (most important metric)
    - Saves (second most important)
 

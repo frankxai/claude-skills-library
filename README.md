@@ -60,7 +60,7 @@ All accepted skills must be provided as a `SKILL.md` file containing:
 <br>
 
 - **[MCP Architecture Expert](free-skills/mcp-architecture/SKILL.md)** — Transforms Claude into a Model Context Protocol (MCP) design specialist. Enforces stateless server design, proper tool definition, and rigorous security boundaries.
-- **[UI/UX Design Expert](free-skills/ui-ux-design/SKILL.md)** — Grounds Claude in WCAG 2.2 compliance, atomic design principles, and modern design token architecture.
+- **[UI/UX Design Expert](free-skills/ui-ux-design-expert/SKILL.md)** — Grounds Claude in WCAG 2.2 compliance, atomic design principles, and modern design token architecture.
 </details>
 
 <details open>
