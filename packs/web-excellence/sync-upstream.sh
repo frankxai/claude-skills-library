@@ -16,7 +16,15 @@ set -euo pipefail
 
 PACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$PACK_DIR/skills"
-WORK="${TMPDIR:-/tmp}/web-excellence-sync.$$"
+# mktemp, not "$TMPDIR/name.$$" — the PID space is small enough to pre-enumerate,
+# so a predictable name in a world-writable dir can be pre-created as a symlink to
+# somewhere a local co-tenant owns, and `mkdir -p` would happily accept it. The
+# clones would then land in their directory and the vendored result — which
+# includes ui-ux-pro-max's Python and every SKILL.md an agent later reads as
+# instructions — is what install.sh fans out to every repo. mktemp -d fails
+# instead of reusing, and creates 0700, which also closes the window where a
+# second entry's copy could read a tree mutated after the first copy.
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/web-excellence-sync.XXXXXXXX")"
 CHECK_ONLY=0
 [ "${1:-}" = "--check" ] && CHECK_ONLY=1
 
@@ -40,7 +48,6 @@ UPSTREAM=(
 
 cleanup() { rm -rf "$WORK"; }
 trap cleanup EXIT
-mkdir -p "$WORK"
 
 declare -A SHAS
 drift=0
