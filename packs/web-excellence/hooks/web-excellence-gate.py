@@ -54,15 +54,39 @@ Touch only what the task requires. Do not restyle adjacent components.\
 """
 
 
+# The state path is predictable and the temp dir is world-writable, so on a
+# shared host another local user can pre-create it as a symlink aimed at
+# something we can write. 0o600 keeps the *content* private once the file is
+# ours; it does nothing about following a link that is already there. O_NOFOLLOW
+# makes the open fail instead of truncating the target. Absent on Windows, where
+# a shared /tmp is not the threat model — hence getattr rather than a hard
+# reference.
+NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
+
+
 def state_path(session_id: str) -> str:
     # session_id comes from the harness; sanitize before it becomes a filename.
     safe = re.sub(r"[^A-Za-z0-9_-]", "", str(session_id))[:64] or "nosession"
     return os.path.join(tempfile.gettempdir(), f"web-gate-{safe}.json")
 
 
+def read_state(path: str) -> dict:
+    """Read prior state, refusing to follow a symlink planted at that path."""
+    try:
+        fd = os.open(path, os.O_RDONLY | NOFOLLOW)
+    except OSError:
+        return {}
+    try:
+        with os.fdopen(fd, "r") as fh:
+            data = json.load(fh)
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def write_state(path: str, state: dict) -> None:
-    """Write 0600 — the temp dir is world-writable on a shared host."""
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    """Write 0600, never through a symlink."""
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | NOFOLLOW, 0o600)
     with os.fdopen(fd, "w") as fh:
         json.dump(state, fh)
 
@@ -84,10 +108,7 @@ def main() -> int:
 
     session_id = payload.get("session_id", "")
     sp = state_path(session_id)
-    try:
-        state = json.load(open(sp)) if os.path.exists(sp) else {}
-    except Exception:
-        state = {}
+    state = read_state(sp)
 
     already_fired = bool(state.get("fired"))
     touched = set(state.get("touched", []))

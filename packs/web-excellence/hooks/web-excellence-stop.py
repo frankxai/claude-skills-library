@@ -47,10 +47,29 @@ VISUAL_EVIDENCE = (
 )
 
 
+# See web-excellence-gate.py: the state path is predictable and the temp dir is
+# world-writable, so a symlink planted there would otherwise be followed on both
+# read and write. O_NOFOLLOW turns that into a failed open. Absent on Windows.
+NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
+
+
 def state_path(session_id: str) -> str:
     # session_id comes from the harness; sanitize before it becomes a filename.
     safe = re.sub(r"[^A-Za-z0-9_-]", "", str(session_id))[:64] or "nosession"
     return os.path.join(tempfile.gettempdir(), f"web-gate-{safe}.json")
+
+
+def read_state(path: str) -> dict:
+    try:
+        fd = os.open(path, os.O_RDONLY | NOFOLLOW)
+    except OSError:
+        return {}
+    try:
+        with os.fdopen(fd, "r") as fh:
+            data = json.load(fh)
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 def transcript_mentions(path: str, needles) -> bool:
@@ -80,12 +99,7 @@ def main() -> int:
 
     session_id = payload.get("session_id", "")
     sp = state_path(session_id)
-    if not os.path.exists(sp):
-        return 0
-    try:
-        state = json.load(open(sp))
-    except Exception:
-        return 0
+    state = read_state(sp)
 
     touched = state.get("touched") or []
     if not touched or state.get("blocked"):
@@ -104,7 +118,7 @@ def main() -> int:
 
     state["blocked"] = True
     try:
-        fd = os.open(sp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        fd = os.open(sp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | NOFOLLOW, 0o600)
         with os.fdopen(fd, "w") as fh:
             json.dump(state, fh)
     except OSError:

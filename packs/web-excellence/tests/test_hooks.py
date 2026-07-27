@@ -227,6 +227,41 @@ def test_state_file_is_private() -> None:
     check("state file is 0600", mode == 0o600, f"got {oct(mode)}")
 
 
+def test_state_file_refuses_a_planted_symlink() -> None:
+    """A symlink pre-planted at the predictable state path must not be followed.
+
+    0o600 protects the content once the file is ours, but O_CREAT|O_TRUNC alone
+    happily truncates through a symlink another local user planted first. The
+    temp dir is world-writable and the path is guessable, so that is a real
+    write-anywhere primitive on a shared host.
+    """
+    if not hasattr(os, "O_NOFOLLOW"):
+        print("  skip symlink test (no O_NOFOLLOW on this platform)")
+        return
+    sid = "symlinktest"
+    sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
+    with tempfile.TemporaryDirectory() as d:
+        victim = os.path.join(d, "victim.txt")
+        with open(victim, "w") as fh:
+            fh.write("do not clobber me")
+        try:
+            os.remove(sp)
+        except OSError:
+            pass
+        os.symlink(victim, sp)
+        try:
+            run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/S.tsx"}})
+            check("planted symlink target is untouched",
+                  open(victim).read() == "do not clobber me")
+            check("the symlink itself was not replaced by real state",
+                  os.path.islink(sp))
+        finally:
+            try:
+                os.remove(sp)
+            except OSError:
+                pass
+
+
 def test_session_id_is_sanitized() -> None:
     out, _ = run_hook(GATE, {"session_id": "../../etc/pwn", "tool_input": {"file_path": "components/H.tsx"}})
     escaped = os.path.exists("/tmp/etc/pwn.json") or os.path.exists(
