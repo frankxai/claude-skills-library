@@ -324,6 +324,54 @@ def test_linter_div_onclick_exempts_keyboard_path() -> None:
         check("accessible div+onClick is exempt", "Backdrop.tsx" not in r.stdout, r.stdout)
 
 
+def test_linter_sees_multiline_jsx_tags() -> None:
+    """Prettier splits a tag with several props across lines.
+
+    Matching one physical line at a time missed exactly that shape, so the
+    accessibility rule looked stronger than it was on real formatted code.
+    """
+    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+        return
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, "components"))
+        open(os.path.join(d, "components", "Split.tsx"), "w").write(
+            "export const A = () => (\n"
+            "  <div\n"
+            '    className="backdrop"\n'
+            "    onClick={close}\n"
+            "  >\n"
+            "    x\n"
+            "  </div>\n"
+            ");\n")
+        open(os.path.join(d, "components", "SplitOk.tsx"), "w").write(
+            "export const B = () => (\n"
+            "  <div\n"
+            '    role="button"\n'
+            "    tabIndex={0}\n"
+            "    onKeyDown={onKey}\n"
+            "    onClick={close}\n"
+            "  >\n"
+            "    x\n"
+            "  </div>\n"
+            ");\n")
+        open(os.path.join(d, "components", "SplitImg.tsx"), "w").write(
+            "export const C = () => (\n"
+            "  <img\n"
+            '    src="/a.png"\n'
+            '    alt="a"\n'
+            "  />\n"
+            ");\n")
+        r = subprocess.run(
+            ["node", LINT, "components/Split.tsx", "components/SplitOk.tsx",
+             "components/SplitImg.tsx"],
+            cwd=d, capture_output=True, text=True)
+        check("multi-line div+onClick is caught", "Split.tsx:2" in r.stdout, r.stdout)
+        check("multi-line img without dimensions is caught",
+              "SplitImg.tsx:2" in r.stdout, r.stdout)
+        check("multi-line accessible div is still exempt",
+              "SplitOk.tsx" not in r.stdout, r.stdout)
+
+
 def test_linter_survives_a_hostile_base_ref() -> None:
     """`base` reaches git as argv, not as a shell string."""
     if subprocess.run(["which", "node"], capture_output=True).returncode != 0:

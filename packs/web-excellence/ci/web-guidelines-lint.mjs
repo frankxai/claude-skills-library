@@ -34,6 +34,11 @@ function git(argv, opts = {}) {
 }
 
 const UI_EXT = /\.(tsx|jsx|vue|svelte|astro|css|scss|sass)$/;
+// Deliberately NARROWER than the PreToolUse hook's NOT_UI, which also skips
+// lib/, utils/, hooks/ and server/. The hook is deciding "is this change worth
+// interrupting a human about"; this is deciding "does this file contain markup
+// worth checking". A component that happens to live under lib/ still ships to a
+// browser, so it gets linted even though it does not get nagged about.
 const NOT_UI = /(^|\/)(api|__tests__)\/|\.(test|spec|d)\.(ts|tsx|js|jsx)$|(^|\/)route\.(ts|js)$/;
 
 const args = process.argv.slice(2);
@@ -125,6 +130,27 @@ const RULES = [
     /prefers-reduced-motion/],
 ];
 
+// Rules that match a whole JSX tag rather than a bare pattern. Prettier breaks
+// a tag with several props across lines, so testing one physical line at a time
+// silently misses the common real-world shape — a false NEGATIVE, and one that
+// makes the rule look like more of a guarantee than it is. For these, join
+// forward from the line opening the tag to the line closing it and test that.
+// The finding still anchors to the opening line, which is what the ratchet checks.
+const TAG_SCOPED = new Set(['div-onclick', 'img-no-dims']);
+const TAG_OPEN = /<(?:div|span|img)\b/;
+
+function tagText(lines, i) {
+  const line = lines[i];
+  const m = TAG_OPEN.exec(line);
+  if (!m || line.slice(m.index).includes('>')) return line;
+  let out = line;
+  for (let j = i + 1; j < Math.min(lines.length, i + 30); j++) {
+    out += ' ' + lines[j].trim();
+    if (lines[j].includes('>')) break;
+  }
+  return out;
+}
+
 let errors = 0;
 let warns = 0;
 const byFile = new Map();
@@ -146,7 +172,7 @@ for (const file of files) {
       // skip obvious comment lines to cut noise
       const t = line.trim();
       if (t.startsWith('//') || t.startsWith('*') || t.startsWith('/*')) return;
-      if (!re.test(line)) return;
+      if (!re.test(TAG_SCOPED.has(id) ? tagText(lines, i) : line)) return;
       const entry = { line: i + 1, severity, id, message };
       if (!byFile.has(file)) byFile.set(file, []);
       byFile.get(file).push(entry);

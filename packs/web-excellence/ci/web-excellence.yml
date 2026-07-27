@@ -39,6 +39,19 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Smoke-test the hooks
+        # The hooks' real tests live with the pack upstream and are deliberately
+        # not vendored. This is the floor: prove each vendored file still parses
+        # and exits clean on an empty payload, so a local hand-edit that breaks
+        # one is caught here rather than by a silently dead gate in a session.
+        run: |
+          for h in .claude/hooks/web-excellence-*.py; do
+            [ -e "$h" ] || continue
+            echo '{}' | python3 "$h" >/dev/null || { echo "FAIL: $h"; exit 1; }
+            echo "ok $h"
+          done
+          node --check .claude/ci/web-guidelines-lint.mjs && echo "ok lint script parses"
+
       - name: Lint changed UI files
         # checkout above used fetch-depth: 0, so the base ref is already local.
         run: node .claude/ci/web-guidelines-lint.mjs --changed --base "origin/${{ github.base_ref }}"
