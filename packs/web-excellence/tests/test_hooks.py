@@ -372,6 +372,37 @@ def test_linter_sees_multiline_jsx_tags() -> None:
               "SplitOk.tsx" not in r.stdout, r.stdout)
 
 
+def test_workflow_filters_are_not_root_anchored() -> None:
+    """A `paths:` glob without a leading `**/` only matches at the repo root.
+
+    The first cut listed `app/**`, `src/**`, `components/**`… — none of which
+    exist at the root of a monorepo like arcanea (apps/web/app, arcanea.ai/app).
+    The job silently never ran on a .tsx-only PR. Filter by extension instead;
+    which directories count is the linter's job, not the workflow's.
+    """
+    wf = open(os.path.join(PACK, "ci", "web-excellence.yml"), encoding="utf-8").read()
+    paths = re.findall(r"^\s+- '([^']+)'", wf, re.M)
+    check("workflow declares path filters", bool(paths))
+    bad = [p for p in paths
+           if not p.startswith("**/") and not os.path.splitext(p)[1] in ("", ".yml", ".mjs")]
+    check("no root-anchored directory glob", not bad, f"root-anchored: {bad}")
+    exts = {p[3:] for p in paths if p.startswith("**/*.")}
+    lint = open(LINT, encoding="utf-8").read()
+    ui_ext = re.search(r"const UI_EXT = /\\\.\(([^)]+)\)", lint).group(1).split("|")
+    missing = [e for e in ui_ext if f"*.{e}" not in exts]
+    check("every extension the linter checks is also a workflow trigger",
+          not missing, f"linter checks {missing} but CI would not fire on them")
+
+
+def test_capture_label_cannot_escape_the_output_dir() -> None:
+    """--label becomes a path segment; it must stay a single segment."""
+    src = open(os.path.join(PACK, "skills", "visual-proof", "capture.mjs"),
+               encoding="utf-8").read()
+    m = re.search(r"const label = (.+);", src)
+    check("label is sanitized before use as a path segment",
+          bool(m) and "replace(" in m.group(1), m.group(1) if m else "not found")
+
+
 def test_linter_survives_a_hostile_base_ref() -> None:
     """`base` reaches git as argv, not as a shell string."""
     if subprocess.run(["which", "node"], capture_output=True).returncode != 0:

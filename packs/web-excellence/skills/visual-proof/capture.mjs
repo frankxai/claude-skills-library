@@ -19,7 +19,11 @@ function arg(name, fallback = null) {
 }
 
 const url = arg('url');
-const label = arg('label', 'shot');
+// `label` becomes a path segment under --out. Keep it a single segment: a
+// value like `../../etc` would otherwise write outside .visual-proof/. The
+// agent picks this itself (before/after), so this is a guard against a typo
+// or a templated label, not against an attacker.
+const label = String(arg('label', 'shot')).replace(/[^A-Za-z0-9._-]/g, '-').replace(/^\.+/, '') || 'shot';
 const widths = String(arg('widths', '375,768,1440')).split(',').map(n => parseInt(n, 10));
 const themes = String(arg('themes', 'light,dark')).split(',');
 const fullPage = Boolean(arg('full', false));

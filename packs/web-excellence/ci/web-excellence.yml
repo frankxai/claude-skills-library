@@ -9,17 +9,25 @@ name: Web excellence
 #
 # Installed by packs/web-excellence/install.sh. Safe to edit the paths list.
 
+# Filter by EXTENSION, mirroring the linter's own UI_EXT — not by directory.
+# A `paths:` entry like `app/**` is root-anchored, so in a monorepo (arcanea:
+# apps/web/app, arcanea.ai/app; none of app|src|components|styles|layouts exist
+# at the root) it matches nothing and the job silently never runs. Only the
+# `**/`-led CSS globs fired, so a PR touching just .tsx skipped the gate
+# entirely. Extensions are layout-independent; which directories count is the
+# linter's NOT_UI to decide, and it short-circuits cheaply when nothing is in
+# scope.
 on:
   pull_request:
     paths:
-      - 'app/**'
-      - 'src/**'
-      - 'components/**'
-      - 'pages/**'
-      - 'styles/**'
-      - 'layouts/**'
+      - '**/*.tsx'
+      - '**/*.jsx'
+      - '**/*.vue'
+      - '**/*.svelte'
+      - '**/*.astro'
       - '**/*.css'
       - '**/*.scss'
+      - '**/*.sass'
       - '.github/workflows/web-excellence.yml'
       - '.claude/ci/web-guidelines-lint.mjs'
 
