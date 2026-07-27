@@ -23,8 +23,15 @@
 // cries wolf gets disabled, and then nothing is enforced at all. Judgment calls
 // belong in the skill, not here.
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
+
+// argv array, never a template string: `base` comes from --base, which in CI is
+// github.base_ref — externally influenced. Low practical risk (you need push
+// access to name a branch), but string-built shell is not a habit worth having.
+function git(argv, opts = {}) {
+  return execFileSync('git', argv, { encoding: 'utf8', ...opts });
+}
 
 const UI_EXT = /\.(tsx|jsx|vue|svelte|astro|css|scss|sass)$/;
 const NOT_UI = /(^|\/)(api|__tests__)\/|\.(test|spec|d)\.(ts|tsx|js|jsx)$|(^|\/)route\.(ts|js)$/;
@@ -37,7 +44,7 @@ const base = baseIdx !== -1 ? args[baseIdx + 1] : 'origin/main';
 
 function requireBase() {
   try {
-    execSync(`git rev-parse --verify ${base}`, { stdio: 'ignore' });
+    git(['rev-parse', '--verify', base], { stdio: 'ignore' });
   } catch {
     console.error(`web-guidelines-lint: base ref '${base}' not found — fetch it first, or pass files explicitly.`);
     process.exit(2);
@@ -46,15 +53,14 @@ function requireBase() {
 
 function changedFiles() {
   requireBase();
-  const out = execSync(`git diff --name-only --diff-filter=d ${base}...HEAD`, { encoding: 'utf8' });
+  const out = git(['diff', '--name-only', '--diff-filter=d', `${base}...HEAD`]);
   return out.split('\n').filter(Boolean);
 }
 
 // Map of file → Set of line numbers this diff ADDS. Parsed from -U0 hunks.
 function addedLines() {
   requireBase();
-  const diff = execSync(`git diff -U0 --diff-filter=d ${base}...HEAD`, {
-    encoding: 'utf8',
+  const diff = git(['diff', '-U0', '--diff-filter=d', `${base}...HEAD`], {
     maxBuffer: 64 * 1024 * 1024,
   });
   const map = new Map();
@@ -94,8 +100,13 @@ const RULES = [
     'outline removed with no :focus-visible replacement anywhere in this file',
     /focus-visible|focusVisible/],
 
-  ['div-onclick', 'error', /<(?:div|span)\b[^>]*\sonClick=/,
-    '<div>/<span> with onClick — use <button> for actions, <a>/<Link> for navigation'],
+  // Exempts the deliberate accessible escape hatch: a div that also carries a
+  // role and a keyboard affordance (modal backdrops, custom listbox rows) is a
+  // legitimate pattern, and flagging it is how this rule would get muted. A
+  // bare onClick with no keyboard path is still a real a11y defect.
+  ['div-onclick', 'error',
+    /<(?:div|span)\b(?![^>]*\b(?:role=|tabIndex|onKeyDown|onKeyUp|onKeyPress))[^>]*\sonClick=/,
+    '<div>/<span> with onClick and no keyboard path — use <button> for actions, <a>/<Link> for navigation, or add role + tabIndex + onKeyDown if it genuinely must be a div'],
 
   ['no-zoom', 'error', /user-scalable\s*=\s*["']?no|maximum-scale\s*=\s*["']?1(?![\d.])/,
     'viewport disables zoom — never block pinch-zoom'],

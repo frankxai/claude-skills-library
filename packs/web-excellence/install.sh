@@ -96,12 +96,26 @@ else:
     settings = {}
 
 hooks = settings.setdefault("hooks", {})
-added = 0
+added = updated = 0
+
+# Ours by command string. Re-running must UPGRADE these in place (a changed
+# timeout, a renamed script) rather than skip them because the command already
+# exists — otherwise the pack can never ship a fix to an installed repo.
+ours = {h["command"]: h for entries in snippet.values() for e in entries for h in e["hooks"]}
+
 for event, entries in snippet.items():
     existing = hooks.setdefault(event, [])
+    seen = set()
+    for e in existing:
+        for i, h in enumerate(e.get("hooks", [])):
+            cmd = h.get("command")
+            if cmd in ours:
+                seen.add(cmd)
+                if h != ours[cmd]:
+                    e["hooks"][i] = dict(ours[cmd])
+                    updated += 1
     for entry in entries:
-        cmds = {h.get("command") for e in existing for h in e.get("hooks", [])}
-        new = [h for h in entry["hooks"] if h.get("command") not in cmds]
+        new = [h for h in entry["hooks"] if h.get("command") not in seen]
         if not new:
             continue
         merged = dict(entry)
@@ -113,7 +127,7 @@ os.makedirs(os.path.dirname(settings_path), exist_ok=True)
 with open(settings_path, "w", encoding="utf-8") as fh:
     json.dump(settings, fh, indent=2, ensure_ascii=False)
     fh.write("\n")
-print(f"  merge  .claude/settings.json ({added} hook(s) added, existing hooks preserved)")
+print(f"  merge  .claude/settings.json ({added} added, {updated} upgraded; other hooks untouched)")
 PY
 fi
 

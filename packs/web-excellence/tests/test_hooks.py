@@ -127,22 +127,53 @@ def test_stop_blocks_then_never_again() -> None:
     check("stop never blocks twice", second is None)
 
 
-def test_stop_respects_real_audit_evidence() -> None:
-    sid = "evidencetest"
+AUDIT_LINE = ("fetched https://raw.githubusercontent.com/vercel-labs/"
+              "web-interface-guidelines/main/command.md\n")
+
+
+def stop_with_transcript(sid: str, body: str):
+    """Arm the gate for `sid`, then run the Stop hook against a fake transcript."""
     sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
     try:
         os.remove(sp)
     except OSError:
         pass
-    run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/D.tsx"}})
-
+    run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/X.tsx"}})
     with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as fh:
-        fh.write("fetched https://raw.githubusercontent.com/vercel-labs/"
-                 "web-interface-guidelines/main/command.md\n")
-        transcript = fh.name
-    out, _ = run_hook(STOP, {"session_id": sid, "transcript_path": transcript})
-    check("stop allows the turn once the guidelines were actually fetched", out is None)
-    os.unlink(transcript)
+        fh.write(body)
+        path = fh.name
+    out, _ = run_hook(STOP, {"session_id": sid, "transcript_path": path})
+    os.unlink(path)
+    return out
+
+
+def test_stop_requires_both_halves() -> None:
+    """Audit alone must not close the gate.
+
+    The first cut returned early on `audited` and never consulted `proved`, so a
+    turn that ran the guidelines but rendered nothing passed silently — the
+    screenshot requirement had no enforcement path at all. Same failure shape as
+    the reminder-satisfies-its-own-evidence bug: a gate that does not gate.
+    """
+    audit_only = stop_with_transcript("bothaudit", AUDIT_LINE)
+    check("audit without visual proof still blocks",
+          audit_only is not None and audit_only.get("decision") == "block")
+    if audit_only:
+        reason = audit_only.get("reason", "")
+        check("the block names only what is actually missing",
+              "visual-proof" in reason and "web-design-guidelines" not in reason,
+              reason)
+
+    visual_only = stop_with_transcript("bothvisual", "wrote 6 shot(s) for /pricing\n")
+    check("visual proof without an audit still blocks",
+          visual_only is not None and visual_only.get("decision") == "block")
+
+    both = stop_with_transcript("bothdone", AUDIT_LINE + "wrote 6 shot(s) for /pricing\n")
+    check("gate closes when both halves ran", both is None)
+
+    excused = stop_with_transcript(
+        "bothexcused", AUDIT_LINE + "cannot capture: no dev server on :3000\n")
+    check("an honest 'cannot capture' counts as visual proof", excused is None)
 
 
 def test_stop_opt_out() -> None:
@@ -233,6 +264,42 @@ def test_linter_ratchet() -> None:
         r2 = subprocess.run(["node", LINT, "--changed", "--base", "main", "--all-lines"],
                             cwd=d, capture_output=True, text=True)
         check("--all-lines does report the pre-existing violation", "Legacy.tsx" in r2.stdout)
+
+
+def test_linter_div_onclick_exempts_keyboard_path() -> None:
+    """A div with onClick is only an error when there is no keyboard path.
+
+    Flagging the deliberate accessible pattern (modal backdrop with role +
+    tabIndex + onKeyDown) is how a rule earns itself a blanket disable.
+    """
+    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+        print("  skip node linter tests (node not available)")
+        return
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, "components"))
+        open(os.path.join(d, "components", "Bare.tsx"), "w").write(
+            'export const A = () => <div onClick={close}>x</div>;\n')
+        open(os.path.join(d, "components", "Backdrop.tsx"), "w").write(
+            'export const B = () => <div role="button" tabIndex={0} '
+            'onKeyDown={onKey} onClick={close}>x</div>;\n')
+        r = subprocess.run(
+            ["node", LINT, "components/Bare.tsx", "components/Backdrop.tsx"],
+            cwd=d, capture_output=True, text=True)
+        check("bare div+onClick is still an error", "Bare.tsx" in r.stdout and r.returncode == 1)
+        check("accessible div+onClick is exempt", "Backdrop.tsx" not in r.stdout, r.stdout)
+
+
+def test_linter_survives_a_hostile_base_ref() -> None:
+    """`base` reaches git as argv, not as a shell string."""
+    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+        return
+    with tempfile.TemporaryDirectory() as d:
+        canary = os.path.join(d, "pwned")
+        r = subprocess.run(
+            ["node", LINT, "--changed", "--base", f"main; touch {canary}"],
+            cwd=d, capture_output=True, text=True)
+        check("hostile --base does not reach a shell",
+              not os.path.exists(canary) and r.returncode == 2, r.stderr.strip())
 
 
 if __name__ == "__main__":

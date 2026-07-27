@@ -31,6 +31,11 @@ import tempfile
 #
 # So: match the guidelines URL (present only once WebFetch has pulled it) and
 # the runner's own output, never a skill name.
+#
+# That test lives with the pack, at packs/web-excellence/tests/test_hooks.py in
+# frankxai/claude-skills-library. install.sh does not vendor it into target
+# repos — it tests the pack, not the repo. If you hand-edit this file in a
+# target repo, run it upstream.
 EVIDENCE = (
     "web-interface-guidelines/main/command.md",
     "raw.githubusercontent.com/vercel-labs/web-interface-guidelines",
@@ -89,7 +94,12 @@ def main() -> int:
     transcript = payload.get("transcript_path", "")
     audited = transcript_mentions(transcript, EVIDENCE)
     proved = transcript_mentions(transcript, VISUAL_EVIDENCE)
-    if audited:
+    # BOTH halves close the gate. Gating on `audited` alone let a turn that ran
+    # the guidelines audit but never rendered anything pass silently, which is
+    # exactly the enforcement-that-does-not-enforce failure this hook exists to
+    # prevent. `proved` is satisfied by capture.mjs succeeding OR by its honest
+    # "cannot capture:" line — reporting that you could not render counts.
+    if audited and proved:
         return 0
 
     state["blocked"] = True
@@ -102,7 +112,9 @@ def main() -> int:
 
     shown = touched[:8]
     more = f" (+{len(touched) - 8} more)" if len(touched) > 8 else ""
-    missing = ["`web-design-guidelines` audit on the changed files"]
+    missing = []
+    if not audited:
+        missing.append("`web-design-guidelines` audit on the changed files")
     if not proved:
         missing.append("`visual-proof` capture at 375 / 768 / 1440 (or an explicit statement that capture was impossible here, and why)")
 
