@@ -1,0 +1,40 @@
+{
+  "$comment": "web-excellence pack hooks. install.sh merges this into .claude/settings.json; if you are wiring it by hand, merge the three arrays into your existing hooks block rather than replacing it. `timeout` is in SECONDS per the Claude Code hook schema — a repo whose other hooks carry timeout:5000 is using a different tool's convention, do not copy it. The stop hook gets longer because it reads a transcript tail.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/web-excellence-session.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/web-excellence-gate.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/web-excellence-stop.py",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
