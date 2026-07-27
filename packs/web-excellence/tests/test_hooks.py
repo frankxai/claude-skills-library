@@ -1,0 +1,247 @@
+#!/usr/bin/env python3
+"""Tests for the web-excellence hooks and the CI linter.
+
+    python3 packs/web-excellence/tests/test_hooks.py
+
+Zero dependencies, no pytest — this has to run anywhere the hooks do.
+
+The load-bearing one is test_reminder_cannot_satisfy_evidence. The first
+version of this pack matched the Stop hook's "did the audit run" check against
+the skill *names*, and the PreToolUse reminder names those same skills. The
+reminder text landed in the transcript, the check saw the names, and the Stop
+hook passed every time — the enforcement loop was a no-op from day one and
+nothing caught it. That test is the reason it cannot come back.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PACK = os.path.dirname(HERE)
+HOOKS = os.path.join(PACK, "hooks")
+GATE = os.path.join(HOOKS, "web-excellence-gate.py")
+STOP = os.path.join(HOOKS, "web-excellence-stop.py")
+SESSION = os.path.join(HOOKS, "web-excellence-session.py")
+LINT = os.path.join(PACK, "ci", "web-guidelines-lint.mjs")
+
+failures: list[str] = []
+
+
+def check(name: str, condition: bool, detail: str = "") -> None:
+    if condition:
+        print(f"  ok   {name}")
+    else:
+        print(f"  FAIL {name}" + (f" — {detail}" if detail else ""))
+        failures.append(name)
+
+
+def run_hook(path: str, payload: dict, env: dict | None = None):
+    e = dict(os.environ)
+    e.update(env or {})
+    p = subprocess.run(
+        [sys.executable, path],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        env=e,
+    )
+    out = p.stdout.strip()
+    return (json.loads(out) if out else None), p.returncode
+
+
+def load_reminder() -> str:
+    src = open(GATE, encoding="utf-8").read()
+    return re.search(r'REMINDER = """\\\n(.*?)"""', src, re.S).group(1)
+
+
+def load_tuple(path: str, name: str) -> tuple:
+    ns: dict = {}
+    src = open(path, encoding="utf-8").read()
+    block = re.search(rf"^{name} = \((.*?)\)$", src, re.S | re.M).group(1)
+    exec(f"{name} = ({block})", ns)  # noqa: S102 — reading our own source
+    return ns[name]
+
+
+# --------------------------------------------------------------------------
+# THE regression test.
+# --------------------------------------------------------------------------
+def test_reminder_cannot_satisfy_evidence() -> None:
+    reminder = load_reminder().lower()
+    for group in ("EVIDENCE", "VISUAL_EVIDENCE"):
+        markers = load_tuple(STOP, group)
+        hits = [m for m in markers if m.lower() in reminder]
+        check(
+            f"{group}: no marker appears in the PreToolUse reminder",
+            not hits,
+            f"self-satisfying markers {hits} — the Stop hook would pass on its own nagging",
+        )
+
+
+def test_gate_fires_only_on_ui_paths() -> None:
+    cases = [
+        ("components/Hero.tsx", True),
+        ("app/(marketing)/page.tsx", True),
+        ("styles/main.css", True),
+        ("app/api/checkout/route.ts", False),
+        ("lib/utils.ts", False),
+        ("components/Hero.test.tsx", False),
+        ("scripts/build.mjs", False),
+        ("README.md", False),
+    ]
+    for path, should_fire in cases:
+        out, _ = run_hook(GATE, {"session_id": f"t{abs(hash(path))}", "tool_input": {"file_path": path}})
+        fired = out is not None
+        check(f"gate {'fires' if should_fire else 'silent'}: {path}", fired == should_fire)
+
+
+def test_gate_fires_once_per_session() -> None:
+    sid = "oncetest"
+    try:
+        os.remove(os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json"))
+    except OSError:
+        pass
+    first, _ = run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/A.tsx"}})
+    second, _ = run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/B.tsx"}})
+    check("gate fires on first UI edit", first is not None)
+    check("gate silent on second UI edit", second is None)
+
+
+def test_stop_blocks_then_never_again() -> None:
+    sid = "stoptest"
+    sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
+    try:
+        os.remove(sp)
+    except OSError:
+        pass
+    run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/C.tsx"}})
+
+    first, _ = run_hook(STOP, {"session_id": sid, "transcript_path": "/does/not/exist"})
+    check("stop blocks when UI changed and no audit ran", first is not None and first.get("decision") == "block")
+
+    second, _ = run_hook(STOP, {"session_id": sid, "transcript_path": "/does/not/exist"})
+    check("stop never blocks twice", second is None)
+
+
+def test_stop_respects_real_audit_evidence() -> None:
+    sid = "evidencetest"
+    sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
+    try:
+        os.remove(sp)
+    except OSError:
+        pass
+    run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/D.tsx"}})
+
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as fh:
+        fh.write("fetched https://raw.githubusercontent.com/vercel-labs/"
+                 "web-interface-guidelines/main/command.md\n")
+        transcript = fh.name
+    out, _ = run_hook(STOP, {"session_id": sid, "transcript_path": transcript})
+    check("stop allows the turn once the guidelines were actually fetched", out is None)
+    os.unlink(transcript)
+
+
+def test_stop_opt_out() -> None:
+    sid = "optouttest"
+    try:
+        os.remove(os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json"))
+    except OSError:
+        pass
+    run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/E.tsx"}})
+    out, _ = run_hook(STOP, {"session_id": sid, "transcript_path": "/nope"}, env={"WEB_GATE_NO_STOP": "1"})
+    check("WEB_GATE_NO_STOP=1 disables the stop gate", out is None)
+
+
+def test_stop_never_chains() -> None:
+    sid = "chaintest"
+    try:
+        os.remove(os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json"))
+    except OSError:
+        pass
+    run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/F.tsx"}})
+    out, _ = run_hook(STOP, {"session_id": sid, "transcript_path": "/nope", "stop_hook_active": True})
+    check("stop_hook_active short-circuits (no loop)", out is None)
+
+
+def test_session_hook_silent_without_pack() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        out, code = run_hook(SESSION, {"cwd": d})
+        check("session hook silent where the pack is not installed", out is None and code == 0)
+
+
+def test_session_hook_finds_uppercase_contracts() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, ".claude", "skills", "web-release-gate"))
+        open(os.path.join(d, "DESIGN.md"), "w").close()
+        open(os.path.join(d, "TASTE.md"), "w").close()
+        out, _ = run_hook(SESSION, {"cwd": d})
+        ctx = (out or {}).get("hookSpecificOutput", {}).get("additionalContext", "")
+        check("session hook detects DESIGN.md / TASTE.md regardless of case",
+              "DESIGN.md" in ctx and "TASTE.md" in ctx)
+
+
+def test_state_file_is_private() -> None:
+    sid = "permtest"
+    sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
+    try:
+        os.remove(sp)
+    except OSError:
+        pass
+    run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/G.tsx"}})
+    mode = os.stat(sp).st_mode & 0o777
+    check("state file is 0600", mode == 0o600, f"got {oct(mode)}")
+
+
+def test_session_id_is_sanitized() -> None:
+    out, _ = run_hook(GATE, {"session_id": "../../etc/pwn", "tool_input": {"file_path": "components/H.tsx"}})
+    escaped = os.path.exists("/tmp/etc/pwn.json") or os.path.exists(
+        os.path.join(tempfile.gettempdir(), "..", "..", "etc", "pwn.json")
+    )
+    check("path-traversal session_id cannot escape the temp dir", not escaped)
+
+
+def test_linter_ratchet() -> None:
+    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+        print("  skip node linter tests (node not available)")
+        return
+    with tempfile.TemporaryDirectory() as d:
+        def git(*a):
+            subprocess.run(["git", "-C", d, *a], capture_output=True, check=False)
+
+        os.makedirs(os.path.join(d, "components"))
+        legacy = os.path.join(d, "components", "Legacy.tsx")
+        open(legacy, "w").write('export const A = () => <div className="transition-all">old</div>;\n')
+        git("init", "-q"); git("config", "user.email", "t@t"); git("config", "user.name", "t")
+        git("add", "-A"); git("commit", "-qm", "base"); git("branch", "-M", "main")
+        git("checkout", "-qb", "feature")
+        open(legacy, "w").write(
+            'const x = 1;\nexport const A = () => <div className="transition-all">old</div>;\n')
+        open(os.path.join(d, "components", "New.tsx"), "w").write(
+            'export const B = () => <span onClick={() => {}}>bad</span>;\n')
+        git("add", "-A"); git("commit", "-qm", "feature")
+
+        r = subprocess.run([ "node", LINT, "--changed", "--base", "main"],
+                           cwd=d, capture_output=True, text=True)
+        check("ratchet flags a newly added violation", "New.tsx" in r.stdout and r.returncode == 1)
+        check("ratchet ignores a pre-existing violation in a touched file",
+              "Legacy.tsx" not in r.stdout, r.stdout)
+
+        r2 = subprocess.run(["node", LINT, "--changed", "--base", "main", "--all-lines"],
+                            cwd=d, capture_output=True, text=True)
+        check("--all-lines does report the pre-existing violation", "Legacy.tsx" in r2.stdout)
+
+
+if __name__ == "__main__":
+    print("web-excellence hook tests\n")
+    for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
+        print(fn.__name__)
+        fn()
+    print()
+    if failures:
+        print(f"{len(failures)} check(s) FAILED: {', '.join(failures)}")
+        sys.exit(1)
+    print("all checks passed")

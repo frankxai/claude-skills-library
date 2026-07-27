@@ -17,18 +17,19 @@ set -euo pipefail
 PACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${1:-}"
 shift || true
-DRY=0; SKILLS_ONLY=0; NO_DB=0
+DRY=0; SKILLS_ONLY=0; NO_DB=0; NO_CI=0
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
     --skills-only) SKILLS_ONLY=1 ;;
     --no-db) NO_DB=1 ;;
+    --no-ci) NO_CI=1 ;;
     *) echo "unknown flag: $a" >&2; exit 2 ;;
   esac
 done
 
 if [ -z "$TARGET" ] || [ ! -d "$TARGET" ]; then
-  echo "usage: install.sh <path-to-repo> [--dry-run] [--skills-only] [--no-db]" >&2
+  echo "usage: install.sh <path-to-repo> [--dry-run] [--skills-only] [--no-db] [--no-ci]" >&2
   exit 2
 fi
 TARGET="$(cd "$TARGET" && pwd)"
@@ -110,10 +111,19 @@ for event, entries in snippet.items():
 
 os.makedirs(os.path.dirname(settings_path), exist_ok=True)
 with open(settings_path, "w", encoding="utf-8") as fh:
-    json.dump(settings, fh, indent=2)
+    json.dump(settings, fh, indent=2, ensure_ascii=False)
     fh.write("\n")
 print(f"  merge  .claude/settings.json ({added} hook(s) added, existing hooks preserved)")
 PY
+fi
+
+# ------------------------------------------------------ CI (between sessions)
+# The hooks cover a session. This covers every PR, whoever opened it.
+if [ $NO_CI -eq 0 ]; then
+  say "  ci     .claude/ci/web-guidelines-lint.mjs + .github/workflows/web-excellence.yml"
+  run mkdir -p "$TARGET/.claude/ci" "$TARGET/.github/workflows"
+  run cp "$PACK_DIR/ci/web-guidelines-lint.mjs" "$TARGET/.claude/ci/"
+  run cp "$PACK_DIR/ci/web-excellence.yml" "$TARGET/.github/workflows/"
 fi
 
 # ---------------------------------------------------------------- gitignore

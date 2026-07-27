@@ -55,7 +55,16 @@ Touch only what the task requires. Do not restyle adjacent components.\
 
 
 def state_path(session_id: str) -> str:
-    return os.path.join(tempfile.gettempdir(), f"web-gate-{session_id or 'nosession'}.json")
+    # session_id comes from the harness; sanitize before it becomes a filename.
+    safe = re.sub(r"[^A-Za-z0-9_-]", "", str(session_id))[:64] or "nosession"
+    return os.path.join(tempfile.gettempdir(), f"web-gate-{safe}.json")
+
+
+def write_state(path: str, state: dict) -> None:
+    """Write 0600 — the temp dir is world-writable on a shared host."""
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        json.dump(state, fh)
 
 
 def main() -> int:
@@ -86,8 +95,8 @@ def main() -> int:
     state["touched"] = sorted(touched)
     state["fired"] = True
     try:
-        json.dump(state, open(sp, "w"))
-    except Exception:
+        write_state(sp, state)
+    except OSError:
         pass
 
     if already_fired and os.environ.get("WEB_GATE_EVERY_EDIT") != "1":

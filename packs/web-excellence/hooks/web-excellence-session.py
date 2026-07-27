@@ -8,6 +8,8 @@ and names the repo's own design contracts so they outrank the pack.
 
 Cheap and silent: no network, no repo scan beyond a few stat() calls.
 """
+from __future__ import annotations
+
 import json
 import os
 import sys
@@ -30,14 +32,34 @@ PACK_SKILLS = [
 ]
 
 # Repo-level design contracts, in precedence order. These beat the pack.
+# Casing varies across repos (frankx.ai uses design.md, Arcanea uses DESIGN.md),
+# so each entry is matched case-insensitively against its directory.
 CONTRACTS = [
     "design.md",
     "taste.md",
     "tailwind.config.js",
     "tailwind.config.ts",
     "lib/design-system.ts",
+    "packages/design-system",
     "app/globals.css",
+    "apps/web/app/globals.css",
 ]
+
+
+def find_contract(cwd: str, rel: str) -> str | None:
+    """Return the real relative path if `rel` exists under `cwd`, any casing."""
+    direct = os.path.join(cwd, rel)
+    if os.path.exists(direct):
+        return rel
+    parent, name = os.path.split(rel)
+    base = os.path.join(cwd, parent) if parent else cwd
+    try:
+        for entry in os.listdir(base):
+            if entry.lower() == name.lower():
+                return os.path.join(parent, entry) if parent else entry
+    except OSError:
+        pass
+    return None
 
 
 def main() -> int:
@@ -53,7 +75,7 @@ def main() -> int:
         # Pack not installed here — stay quiet rather than advertising nothing.
         return 0
 
-    contracts = [c for c in CONTRACTS if os.path.exists(os.path.join(cwd, c))]
+    contracts = [r for r in (find_contract(cwd, c) for c in CONTRACTS) if r]
 
     lines = [
         "WEB EXCELLENCE PACK is installed in this repo.",

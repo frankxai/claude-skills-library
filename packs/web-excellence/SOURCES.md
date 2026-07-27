@@ -57,6 +57,41 @@ The upstream set is strong on *judgment* and weak on *proof*. Nothing in it:
 - produces before/after visual evidence at real breakpoints in both themes (`visual-proof`)
 - knows your tokens exist (all three native skills read `design.md` / `taste.md` / `tailwind.config.js` when present)
 
+## Known risk: `web-design-guidelines` fetches live, unpinned rules
+
+The thing that makes this skill good is also its weak point. Ten of the eleven
+vendored skills are frozen at a commit; this one deliberately is not. Every run
+does a `WebFetch` of
+
+```
+https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md
+```
+
+— the mutable `main` branch — and the skill tells the agent that the fetched
+content *is* the rule set to apply. So a compromise or a bad edit upstream
+reaches every session that runs it, with nothing pinned and nothing diffed
+against a known-good copy. That is a prompt-injection and supply-chain surface,
+not a hypothetical one.
+
+Kept as-is for now, deliberately: pinning it would forfeit the freshness that
+makes it worth having over a static checklist, and the upstream is Vercel's own
+repo. But it is the one place in this pack where trust is delegated at run time
+rather than at vendor time, and it should be a conscious choice rather than an
+accident.
+
+If that trade stops being acceptable, the options in order of preference:
+
+1. Pin the fetch to a commit SHA in the skill body and bump it on a schedule —
+   keeps the audit deterministic, costs a periodic manual bump.
+2. Vendor `command.md` alongside the skill and diff the live copy against it,
+   surfacing changes instead of applying them silently.
+3. Treat the fetched file as reference *data* to check code against, never as
+   instructions to follow — the narrower framing, and the one that removes the
+   injection vector rather than just narrowing it.
+
+Note that `sync-upstream.sh` will overwrite any hand-edit to this skill. Change
+it in the `UPSTREAM[]` table or in a wrapper, not in the vendored file.
+
 ## Re-syncing
 
 ```bash

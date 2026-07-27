@@ -15,24 +15,37 @@ Opt out entirely with WEB_GATE_NO_STOP=1.
 """
 import json
 import os
+import re
 import sys
 import tempfile
 
-# Evidence that the audit ran: these strings appear in the transcript when the
-# skill is loaded or the command is executed.
+# Evidence that the audit actually RAN.
+#
+# These markers must be things only a real run produces. Matching on the skill
+# *name* does not work: the PreToolUse reminder names the skills it is asking
+# for, that text lands in the transcript via additionalContext, and the check
+# then passes on the strength of our own nagging. That bug shipped in the first
+# version of this hook and made the whole loop a no-op — see
+# tests/test_hooks.py::test_reminder_cannot_satisfy_evidence, which exists to
+# stop it coming back.
+#
+# So: match the guidelines URL (present only once WebFetch has pulled it) and
+# the runner's own output, never a skill name.
 EVIDENCE = (
-    "web-design-guidelines",
-    "web-interface-guidelines",
+    "web-interface-guidelines/main/command.md",
+    "raw.githubusercontent.com/vercel-labs/web-interface-guidelines",
 )
 VISUAL_EVIDENCE = (
-    "visual-proof",
-    "capture.mjs",
-    "playwright",
+    ".visual-proof/",          # the output directory capture.mjs writes into
+    "shot(s) for",             # capture.mjs success line
+    "cannot capture:",         # capture.mjs honest-failure line — reporting counts
 )
 
 
 def state_path(session_id: str) -> str:
-    return os.path.join(tempfile.gettempdir(), f"web-gate-{session_id or 'nosession'}.json")
+    # session_id comes from the harness; sanitize before it becomes a filename.
+    safe = re.sub(r"[^A-Za-z0-9_-]", "", str(session_id))[:64] or "nosession"
+    return os.path.join(tempfile.gettempdir(), f"web-gate-{safe}.json")
 
 
 def transcript_mentions(path: str, needles) -> bool:
@@ -81,8 +94,10 @@ def main() -> int:
 
     state["blocked"] = True
     try:
-        json.dump(state, open(sp, "w"))
-    except Exception:
+        fd = os.open(sp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as fh:
+            json.dump(state, fh)
+    except OSError:
         pass
 
     shown = touched[:8]

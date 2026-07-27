@@ -57,6 +57,25 @@ The hooks:
 That last one is the loop. PreToolUse opens it, Stop closes it, and the state
 file in `$TMPDIR` carries the touched-file list between them.
 
+**The Stop hook's evidence check must never match a skill *name*.** The first
+version did, and the PreToolUse reminder names the very skills it asks for — so
+the reminder text landed in the transcript, the check saw the names, and the
+gate passed on the strength of its own nagging. The loop was a no-op and nothing
+caught it. Evidence is now the guidelines URL and the capture runner's own
+output; `tests/test_hooks.py::test_reminder_cannot_satisfy_evidence` fails the
+build if a marker ever reappears in the reminder.
+
+## Tests
+
+```bash
+python3 packs/web-excellence/tests/test_hooks.py
+```
+
+22 checks, no dependencies: gate path matching, fire-once-per-session, stop
+blocks-then-never-again, no chaining, opt-out, case-insensitive contract
+detection, `0600` state file, path-traversal-safe session ids, and the linter's
+ratchet semantics both ways.
+
 ## Cloud sessions
 
 Claude Code on the web, in a GitHub Action, or fired by a Routine runs in a
@@ -97,7 +116,9 @@ packs/web-excellence/
 ├── install.sh             install into a repo (idempotent)
 ├── sync-upstream.sh       re-vendor from upstream, rewrite the pin table
 ├── settings.snippet.json  the hooks block install.sh merges
+├── ci/                    the model-free linter + its workflow
 ├── hooks/                 the three hooks
+├── tests/                 test_hooks.py — run it after touching a hook
 └── skills/                14 skills — 11 vendored, 3 native
 ```
 
