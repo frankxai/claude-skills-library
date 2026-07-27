@@ -1,0 +1,37 @@
+{
+  "$comment": "web-excellence pack hooks. install.sh merges this into .claude/settings.json; if you are wiring it by hand, merge the three arrays into your existing hooks block rather than replacing it.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/web-excellence-session.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/web-excellence-gate.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/web-excellence-stop.py"
+          }
+        ]
+      }
+    ]
+  }
+}
