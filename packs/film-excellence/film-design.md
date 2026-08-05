@@ -63,7 +63,13 @@ sound:
     in_point: <timecode>
     out_point: <timecode>
     instrumentation: <string>
-  silence:
+  # speech_free = nobody talking; room tone and foley continue. This is the
+  # 20% budget. total_silence = no signal at all — a separate, rarer event.
+  speech_free:
+    at: <timecode>
+    duration: <seconds>
+    function: <string>
+  total_silence:                    # optional. If used, once only.
     at: <timecode>
     duration: <seconds>
     function: <string>
@@ -91,8 +97,12 @@ empty, the rule was decorative. A real constraint costs you a shot you wanted.
 color, ban it from the entire film, then spend it once. Four seconds of a color
 the audience has not seen for three minutes lands harder than any effect.
 
-**`sound.silence`** — planned, timecoded, and given a *function*. Silence that
-happens because nothing was designed is not silence, it's absence.
+**`sound.speech_free` / `sound.total_silence`** — planned, timecoded, and given
+a *function*. Silence that happens because nothing was designed is not silence,
+it's absence. Keep the two apart: the first is a scene where nobody talks, the
+second is the track going to nothing, and confusing them produces either a
+dropout where you wanted restraint or a wall of tone where you wanted the floor
+to fall away.
 
 **`cast_locks.description`** — copied verbatim into every reference generation.
 Paraphrasing this string is the most common cause of face drift and it is

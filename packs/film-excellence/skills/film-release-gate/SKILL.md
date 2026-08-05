@@ -58,7 +58,10 @@ Certification requires **all** of the following as artifacts, not assertions:
 - [ ] **Three hand shots**, timecoded
 - [ ] **Three deliberate imperfections**, timecoded
 - [ ] **Language pass** logged — the eleven-item checklist from `LANGUAGE.md`
-- [ ] **Silence ≥ 20%** of runtime, measured not estimated
+- [ ] **Speech-free ≥ 20%** of runtime, measured not estimated. *Speech-free*
+      means nobody is talking; room tone and foley continue. Do not accept a
+      signal-free track as evidence — that is a dropout. A deliberate **total
+      silence** is a separate, timecoded entry in the sound map
 - [ ] **Generation ledger** complete — every shot reconstructible from seed
 - [ ] **Cold watch**: one person who did not make it watched at 1× with no
       scrubbing and can answer *what did she want* and *what changed*

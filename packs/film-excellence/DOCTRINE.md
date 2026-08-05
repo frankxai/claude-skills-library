@@ -86,6 +86,16 @@ Minimum bar for anything shipped from this pack:
 - Music enters late and leaves before the end. If music is running under the
   final image, you didn't trust the image.
 
+**A definition, because it gets misread every time.** When this pack says
+*silence*, it means **speech-free** — nobody is talking. Room tone, foley, and
+the location bed keep running underneath. A genuinely signal-free track reads as
+a dropout, not as silence, and the 20% budget is never asking for one.
+
+If a film wants a truly signal-free moment, that is a different thing: name it
+**total silence**, put it in the sound map with a timecode, and spend it once.
+It is one of the loudest events available in the medium, which is exactly why it
+does not survive being used twice.
+
 ### Law 5 — Imperfection is a signature
 
 Model output trends toward clean, symmetric, well-lit, and unblemished, because
