@@ -13,7 +13,10 @@ defines "done." Nobody has to learn a new contract — only a new medium.
 ```yaml
 film:
   title: <string>
-  runtime_target: <mm:ss>          # HGFF: min 3:00, recommended ≤5:00 — verify on the live rules page
+  # Declare BOTH. A festival measures the delivered file, which includes the
+  # end card — so runtime_target is picture + card, never picture alone.
+  runtime_target: <mm:ss>          # total delivered runtime, card included
+  runtime_picture: <mm:ss>         # last beat out-point, card excluded
   aspect: <2.39:1 | 1.85:1 | 16:9 | 4:3 | 1:1>
   frame_rate: <24 | 25>            # 24 unless there is a reason
   track: <series-episode | synopsis | freeform>
@@ -89,6 +92,12 @@ cast_locks:                         # verbatim strings for character-reference g
 ---
 
 ## Notes on the fields that get skipped
+
+**`runtime_target` vs `runtime_picture`** — the beat sheet ends at the last
+beat's out-point, then a title card adds three or four seconds nobody counts.
+Declare both and let the difference be visible. A film whose stated runtime is
+its picture length is quietly wrong by the length of its own card, and the
+number that matters is the one a festival measures off the delivered file.
 
 **`formal_rule.where_it_hurt`** — if you finish production and this list is
 empty, the rule was decorative. A real constraint costs you a shot you wanted.
