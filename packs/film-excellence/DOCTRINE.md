@@ -87,14 +87,22 @@ Minimum bar for anything shipped from this pack:
   final image, you didn't trust the image.
 
 **A definition, because it gets misread every time.** When this pack says
-*silence*, it means **speech-free** — nobody is talking. Room tone, foley, and
-the location bed keep running underneath. A genuinely signal-free track reads as
-a dropout, not as silence, and the 20% budget is never asking for one.
+*silence*, it means **speech-free** — nobody is talking. It says nothing about
+what the bed is doing. Usually room tone, foley, and the location bed keep
+running underneath, and the 20% budget is never asking for a signal-free track,
+because that reads as a dropout rather than as silence.
 
-If a film wants a truly signal-free moment, that is a different thing: name it
-**total silence**, put it in the sound map with a timecode, and spend it once.
-It is one of the loudest events available in the medium, which is exactly why it
-does not survive being used twice.
+If a film wants a truly signal-free moment, that is **total silence** — name it,
+put it in the sound map with a timecode, and spend it once. It is one of the
+loudest events available in the medium, which is exactly why it does not survive
+being used twice.
+
+**Total silence is a *subset* of speech-free, not a sibling.** A signal-free
+moment obviously has no speech in it, so it counts toward the 20% budget and is
+described separately in the sound map. Treating the two as mutually exclusive
+produces a contract that contradicts itself — a beat listed under "the bed keeps
+running" that is also the beat where the bed stops. Say which beats have the bed
+running and which do not; do not try to sort the beat into one bucket.
 
 ### Law 5 — Imperfection is a signature
 
