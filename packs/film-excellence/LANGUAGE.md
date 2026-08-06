@@ -112,6 +112,48 @@ The ledger is the single highest-leverage artifact in the writing phase. Two
 characters with different ledgers cannot sound alike even if the same model
 writes both.
 
+#### Audit the ledger by grep, never by reading
+
+**A ledger checked by eye is not checked.** In the `holdfast` reference build
+the ledger audit was a paragraph of prose, written by the same person who wrote
+the lines, and it declared the ledger clean. It was not. Two defects, both found
+by an outside reviewer:
+
+- The stonemason said *"The file missed one"* — and *file* belonged exclusively
+  to the assessor. One word, four lines from a section asserting zero collisions.
+- **None of her five exclusive words were spoken at all.** Zero of five. They
+  appeared only in *action* lines — "thumbs the spall away" — which are the
+  writer's words, not the character's, and do not count. A ledger exercised
+  entirely in stage directions is decoration.
+
+The second is the more dangerous, because nothing looks wrong. The document is
+present, the words are on the page, and the film sounds fine — but the technique
+did no work, and the argument that ledgers are load-bearing goes with it.
+
+Extract every line by speaker and grep it against both lists. It takes one
+command and it is not optional:
+
+```bash
+# every word only she may say — expect ≥ 1 each, or justify the reservation
+for w in bed course spall green plumb; do
+  printf '%s: ' "$w"
+  awk '/^\*\*KESS\*\*/{getline; print}' SCRIPT.md | grep -iwc "$w"
+done
+# every word only he may say — expect 0 in her mouth
+for w in threshold variance log terminal file; do … done
+```
+
+**A reserved word is legitimate; an unused ledger is not.** In short forms, or
+in a series pilot where the ledger is a forward constraint, some words will not
+land in the film you submit. Say which and why. The line between reserving and
+failing is whether the ledger **binds at least one line you actually shot**.
+
+**When a ledger blocks a line, take the block.** Both times this happened in the
+reference builds, the constraint produced the better line: an assessor who
+cannot say *stay* ends the film on *"Move over"*, and a mason who cannot say
+*file* answers *"It missed one"* — refusing to dignify the record with its name.
+The block is the technique working, not the technique getting in the way.
+
 ### Idiolect over dialect
 
 Never write phonetic accent (*"Oi don' rightly know"*). Write **syntax**. Region
@@ -179,7 +221,11 @@ strongest model available.
 - [ ] Silence ≥ 20% of scene runtime
 - [ ] Names used only when they cost something
 - [ ] Final line is mundane
-- [ ] Every principal's Word Ledger respected — no cross-contamination
+- [ ] Every principal's Word Ledger respected — **verified by grep, not by
+      reading**: zero of another character's exclusive words in this
+      character's mouth, and at least one of their own actually spoken. Words
+      appearing only in action lines do not count; any reserved word is named
+      and justified.
 
 ---
 
