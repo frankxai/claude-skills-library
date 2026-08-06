@@ -68,10 +68,24 @@ sound:
     instrumentation: <string>
   # speech_free = nobody talking; room tone and foley continue. This is the
   # 20% budget. total_silence = no signal at all — a separate, rarer event.
+  # Store PER BEAT and derive every total. A summary figure with no per-item
+  # data behind it has nothing keeping it honest — see DOCTRINE.md § The
+  # derived-figure rule, which exists because both reference builds shipped
+  # this bug in six different forms before anyone caught it.
   speech_free:
-    at: <timecode>
-    duration: <seconds>
-    function: <string>
+    budget_seconds: <20% of runtime_picture>    # the floor
+    actual_seconds: <sum of beat_seconds>       # derive; never type by hand
+    beats: [<beat numbers>]
+    beat_seconds: { <beat>: <seconds>, … }      # the authoritative record
+    whole_beats: [<beats with no dialogue at all>]
+    partial_beats: [<beats that also carry dialogue>]
+    first_spoken_word_at: <timecode>
+    longest_span: <seconds>
+    longest_span_function: <string>
+  # total_silence is a SUBSET of speech-free, not a sibling: a signal-free
+  # moment obviously has no speech in it, so it already counts toward the
+  # budget above. Record it here to describe it, not to add it again.
+  # Set to null if the film never goes signal-free — most shouldn't.
   total_silence:                    # optional. If used, once only.
     at: <timecode>
     duration: <seconds>

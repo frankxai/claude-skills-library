@@ -175,6 +175,47 @@ person who made the thing is the worst available judge of it.
 
 ---
 
+## The derived-figure rule
+
+**A number that summarises a table must be recomputable from that table, or it
+must not be written down.**
+
+This is the failure mode that actually happened across both reference builds,
+repeatedly, in documents that were otherwise careful. Every instance had the
+same shape: a figure written as prose *about* the data rather than read *from*
+it. In order of discovery —
+
+| The claim | What it summarised | How it broke |
+|---|---|---|
+| speech-free total | the beat table | two beats omitted; 86s / 34.4% claimed against a real 102s / 40.8% |
+| runtime | beats + end card | card excluded from the total but not the beat table |
+| speech-free denominator | picture vs total | card excluded from one side of the ratio only |
+| indirect references to a character | the script | invented at bible stage as "thirty-one"; the script came in at four |
+| deflections in a rule-check | the script | "three times" in a row that also said one of the three was an inversion |
+| a hand-reveal timecode | the beat table | pinned to a second that had drifted two beats away |
+
+None of these were sloppiness in the usual sense. They were written accurately
+and then the thing underneath them moved. That is what a derived figure *does*.
+
+**So the rule has three parts:**
+
+1. **Store per-item, derive the total.** `beat_seconds: { 1: 22, 2: 18, … }` in
+   the design contract, and every percentage computed from it. A total with no
+   per-item data behind it has nothing keeping it honest.
+2. **Refer to beats, never timecodes** — outside the beat table itself, which is
+   the timing record and therefore may hold timecodes as its content. Beats are
+   stable under redrafting; the seconds inside them are not.
+3. **Sweep before the commit, not after.** Every one of these was caught by a
+   reader recomputing the arithmetic. Recompute it yourself first, at the moment
+   you change anything the figure depends on.
+
+The general form, worth stating because it outlives film: **prose totals drift
+and per-item data does not.** Any figure a human maintains by hand, in a
+document nobody recounts, is a defect with a delay on it — and precise figures
+are the most dangerous, because precision reads as evidence of care.
+
+---
+
 ## What this doctrine is not
 
 It is not a style. Two films built under it should not look alike — the two
