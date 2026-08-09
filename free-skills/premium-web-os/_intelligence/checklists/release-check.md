@@ -18,7 +18,7 @@
 
 ## Performance budgets met
 
-- [ ] LCP < 2.5s · INP < 200ms · CLS < 0.1 (Lighthouse on a preview build).
+- [ ] LCP < 2.5s · INP < 200ms · CLS < 0.1 — measured via the Performance API from a real Chromium (`browser-qa.md` → `scripts/visual-qa.mjs` or gstack `$B perf`), not a self-assigned score.
 - [ ] 60fps scroll on mid hardware.
 - [ ] Hero above-fold JS minimized; non-critical work dynamic-imported `ssr: false`.
 - [ ] Images via `next/image` with `sizes` (AVIF/WebP); fonts self-hosted/`next/font`, display face preloaded, subset.
@@ -37,7 +37,7 @@
 - [ ] `prefers-reduced-motion` path verified for every reveal, the scroll beat, ambient drift, and all 3D.
 - [ ] Mobile verified at 375px — intentional scene, hierarchy + drama preserved, body ≥16px.
 - [ ] 3D static poster fallback, mobile simplification, and frozen reduced-motion state verified (if 3D).
-- [ ] Playwright screenshots captured at 1920 / 1440 / 768 / 375.
+- [ ] Playwright screenshots captured at 1920 / 1440 / 768 / 375 (`browser-qa.md` runner — CI `scripts/visual-qa.mjs` or gstack `$B responsive`).
 
 ## Gate-3 anti-pattern grep clean
 

@@ -19,4 +19,4 @@ Speed is part of the design. A premium site that janks is not premium.
 
 ## Verification
 
-Lighthouse on a preview build (Gate 3). Check the real LCP element, total blocking time, and CLS sources. Record any deliberate trade-off in `decision-log.md`. Full: `checklists/release-check.md`.
+Measure CWV from a real headless Chromium via the Performance API (LCP / FCP / TTFB / bundle sizes) — see [`browser-qa.md`](./browser-qa.md), which runs `scripts/visual-qa.mjs` (or gstack `$B perf`). This is the gate, not a self-assigned score. Check the real LCP element, total blocking time, and CLS sources. Record any deliberate trade-off in `decision-log.md`. Full: `checklists/release-check.md`.

@@ -31,7 +31,7 @@ A control plane that constrains agents to produce premium, cinematic web output 
 6. **Build static composition** — layout, type, hierarchy, color bound to brand tokens. No motion yet.
 7. **Motion pass** — choreographed, one cinematic moment per page (`_intelligence/motion.md`).
 8. **3D/video integration** — generated GLB (`useGLTF`) or hero `<video>`, or procedural; always with fallback (`_intelligence/three-webgl.md`).
-9. **Polish + Visual QA + Performance** (`_intelligence/checklists/`).
+9. **Polish + Visual QA + Performance** (`_intelligence/checklists/`) — visual proof + CWV from a real Chromium via `_intelligence/browser-qa.md` (CI `scripts/visual-qa.mjs` or gstack `$B`), never a self-assigned score.
 10. **Release gate → distribute (VIS per-platform) → handover + decision log + registry** (`_intelligence/checklists/release-check.md`, `_intelligence/templates/handover.template.md`).
 
 ## Multi-agent mode

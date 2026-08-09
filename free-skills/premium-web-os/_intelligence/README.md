@@ -20,6 +20,7 @@ The Premium Intelligence Web OS is a control plane for creating cinematic, AI-na
 **Process + governance:**
 - [`agent-manual.md`](./agent-manual.md) — how an agent runs the OS end to end (incl. multi-agent mode).
 - [`quality-gates.md`](./quality-gates.md) — the gates and when they fire.
+- [`browser-qa.md`](./browser-qa.md) — visual proof + CWV from real Chromium (gstack-style): CI runner `scripts/visual-qa.mjs` + gstack `/browse` daemon, incl. the locked-Chromium install recipe.
 - [`performance.md`](./performance.md) · [`accessibility.md`](./accessibility.md) · [`implementation-standards.md`](./implementation-standards.md)
 - [`decision-log.md`](./decision-log.md) — durable record of decisions, dep additions, and TODOs.
 
