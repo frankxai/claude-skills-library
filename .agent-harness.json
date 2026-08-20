@@ -1,0 +1,45 @@
+﻿{
+    "name":  "claude-skills-library",
+    "classification":  "agent-substrate",
+    "owner":  "FrankX AI",
+    "updated":  "2026-06-19",
+    "remote":  "https://github.com/frankxai/claude-skills-library.git",
+    "health":  {
+                   "primaryCheck":  "git status",
+                   "manualChecks":  [
+                                        "Review AGENTS.md before edits",
+                                        "Preserve user work and dirty files",
+                                        "Scan public outputs for secrets and private memory"
+                                    ]
+               },
+    "agentGuidance":  {
+                          "readAgentsMd":  true,
+                          "avoidPrivateMemory":  true,
+                          "preserveExistingConventions":  true,
+                          "designTasteKernel":  {
+                                                    "enabled":  true,
+                                                    "root":  "C:\\Users\\frank\\starlight\\repos",
+                                                    "files":  [
+                                                                  "C:\\Users\\frank\\starlight\\repos\\DESIGN_TASTE.md",
+                                                                  "C:\\Users\\frank\\starlight\\repos\\WEB_EXPERIENCE_STANDARD.md",
+                                                                  "C:\\Users\\frank\\starlight\\repos\\MOTION_TASTE_RUBRIC.md",
+                                                                  "C:\\Users\\frank\\starlight\\repos\\MULTI_AGENT_DESIGN_COUNCIL.md",
+                                                                  "C:\\Users\\frank\\starlight\\repos\\VISUAL_QA_GATE.md"
+                                                              ],
+                                                    "appliesTo":  [
+                                                                      "site",
+                                                                      "app",
+                                                                      "landing-page",
+                                                                      "dashboard",
+                                                                      "visual-identity",
+                                                                      "brand",
+                                                                      "motion",
+                                                                      "media",
+                                                                      "social",
+                                                                      "frontend"
+                                                                  ],
+                                                    "motionPlugin":  "motion-design-studio",
+                                                    "visualVerificationRequired":  true
+                                                }
+                      }
+}

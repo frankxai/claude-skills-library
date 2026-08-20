@@ -1,0 +1,1644 @@
+diff --git a/.asph-wip/asph-2026-07-07T23-42-01.patch b/.asph-wip/asph-2026-07-07T23-42-01.patch
+new file mode 100644
+index 0000000..a81e1a0
+--- /dev/null
++++ b/.asph-wip/asph-2026-07-07T23-42-01.patch
+@@ -0,0 +1,1638 @@
++diff --git a/.agent-harness.json b/.agent-harness.json
++new file mode 100644
++index 0000000..a87186c
++--- /dev/null
+++++ b/.agent-harness.json
++@@ -0,0 +1,45 @@
+++﻿{
+++    "name":  "claude-skills-library",
+++    "classification":  "agent-substrate",
+++    "owner":  "FrankX AI",
+++    "updated":  "2026-06-19",
+++    "remote":  "https://github.com/frankxai/claude-skills-library.git",
+++    "health":  {
+++                   "primaryCheck":  "git status",
+++                   "manualChecks":  [
+++                                        "Review AGENTS.md before edits",
+++                                        "Preserve user work and dirty files",
+++                                        "Scan public outputs for secrets and private memory"
+++                                    ]
+++               },
+++    "agentGuidance":  {
+++                          "readAgentsMd":  true,
+++                          "avoidPrivateMemory":  true,
+++                          "preserveExistingConventions":  true,
+++                          "designTasteKernel":  {
+++                                                    "enabled":  true,
+++                                                    "root":  "C:\\Users\\frank\\starlight\\repos",
+++                                                    "files":  [
+++                                                                  "C:\\Users\\frank\\starlight\\repos\\DESIGN_TASTE.md",
+++                                                                  "C:\\Users\\frank\\starlight\\repos\\WEB_EXPERIENCE_STANDARD.md",
+++                                                                  "C:\\Users\\frank\\starlight\\repos\\MOTION_TASTE_RUBRIC.md",
+++                                                                  "C:\\Users\\frank\\starlight\\repos\\MULTI_AGENT_DESIGN_COUNCIL.md",
+++                                                                  "C:\\Users\\frank\\starlight\\repos\\VISUAL_QA_GATE.md"
+++                                                              ],
+++                                                    "appliesTo":  [
+++                                                                      "site",
+++                                                                      "app",
+++                                                                      "landing-page",
+++                                                                      "dashboard",
+++                                                                      "visual-identity",
+++                                                                      "brand",
+++                                                                      "motion",
+++                                                                      "media",
+++                                                                      "social",
+++                                                                      "frontend"
+++                                                                  ],
+++                                                    "motionPlugin":  "motion-design-studio",
+++                                                    "visualVerificationRequired":  true
+++                                                }
+++                      }
+++}
++diff --git a/.github/workflows/link-checker.yml b/.github/workflows/link-checker.yml
++new file mode 100644
++index 0000000..015fb63
++--- /dev/null
+++++ b/.github/workflows/link-checker.yml
++@@ -0,0 +1,20 @@
+++name: Link Checker
+++
+++on:
+++  schedule:
+++    - cron: '0 0 * * 0' # Run every Sunday at midnight
+++  workflow_dispatch: # Allow manual triggering
+++
+++jobs:
+++  check-links:
+++    runs-on: ubuntu-latest
+++    steps:
+++      - uses: actions/checkout@v4
+++      
+++      - name: Link Checker
+++        uses: lycheeverse/lychee-action@v1.9.3
+++        with:
+++          args: --accept=200,204,429 --timeout=10 --max-retries=3 --exclude-mail '*.md' '**/*.md'
+++          fail: true # Fail the workflow if broken links are found
+++        env:
+++          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
++diff --git a/AGENTS.md b/AGENTS.md
++new file mode 100644
++index 0000000..0e81477
++--- /dev/null
+++++ b/AGENTS.md
++@@ -0,0 +1,42 @@
+++﻿# Repository Instructions
+++
+++This repo is part of the FrankX / Starlight / Arcanea agent estate.
+++
+++## Classification
+++
+++- Repo: $title
+++- Class: $Classification
+++- Default health command: $HealthCommand
+++- Remote: $Remote
+++
+++## Agent Rules
+++
+++- Read this file before making changes.
+++- Preserve existing user work and unrelated dirty files.
+++- Keep edits scoped to the requested task.
+++- Prefer existing repo conventions over new abstractions.
+++- Run the health command before handoff when feasible.
+++- Do not publish secrets, private memory, credentials, or internal-only strategy.
+++
+++## Class-Specific Guidance
+++
+++- Preserve skill/plugin/MCP schemas and frontmatter.
+++- Validate skills, manifests, scripts, and generated registries after edits.
+++- Keep public/private memory boundaries explicit.
+++
+++## Handoff
+++
+++Summarize changed files, validation run, risks, and any follow-up needed.
+++
+++## Design Taste Kernel
+++
+++For any site, app, landing page, dashboard, visual identity, brand, motion, media, social, or frontend task, apply the shared Design Taste Kernel before handoff:
+++
+++- C:\Users\frank\starlight\repos\DESIGN_TASTE.md
+++- C:\Users\frank\starlight\repos\WEB_EXPERIENCE_STANDARD.md
+++- C:\Users\frank\starlight\repos\MOTION_TASTE_RUBRIC.md
+++- C:\Users\frank\starlight\repos\MULTI_AGENT_DESIGN_COUNCIL.md
+++- C:\Users\frank\starlight\repos\VISUAL_QA_GATE.md
+++
+++When motion, scroll, generated media, GIF/video, or premium polish matters, route through the Motion Design Studio plugin/skills and verify the result visually.
+++
++diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
++index 0d8c468..8b31171 100644
++--- a/CONTRIBUTING.md
+++++ b/CONTRIBUTING.md
++@@ -1,227 +1,20 @@
++-# Contributing to Claude Skills Library
+++# Contributing Standards
++ 
++-Thank you for your interest in contributing! We welcome contributions to the **free skills** in this repository.
+++We welcome contributions that align with our core thesis of **verifiable, world-healing, and rigorously-tested agent intelligence**.
++ 
++-## What Can You Contribute?
+++## The Golden Rules
++ 
++-### Free Skills (Open for Contributions)
++-- 🏛️ Greek Philosopher
++-- ⚔️ Spartan Warrior
++-- 🔌 MCP Architecture Expert
++-- 🎨 UI/UX Design Expert
++-- 📱 Social Media Strategy
+++1. **No Hallucinated Tooling**: If you submit an agent skill, prompt, or tool, it must be verified to work against a real API or framework.
+++2. **Safety First**: Any capability that interfaces with the physical world, live capital, or critical infrastructure must include strict human-in-the-loop approval gates.
+++3. **High Signal, Low Noise**: We prefer deeply curated, opinionated lists over exhaustive link dumps. If you add a repository, explain *why* it is the best-in-class choice for that specific layer of the agent OS.
+++4. **Formatting**: Ensure your Markdown is clean. If adding to a list, use the existing `<details>` structure to preserve the scannability of the README.
++ 
++-You can contribute:
++-- **Bug fixes**: Typos, formatting issues, broken examples
++-- **Improvements**: Better examples, clearer explanations, updated research
++-- **Documentation**: Usage guides, tutorials, case studies
++-- **Translations**: Non-English versions of skills (pending)
+++## How to Submit
++ 
++-### Premium Skills (Not Open for Contributions)
++-Premium skills are proprietary and not open for community contributions.
+++1. Fork the repository.
+++2. Create a feature branch (`git checkout -b feature/amazing-new-skill`).
+++3. Commit your changes (`git commit -m 'feat: Add incredible new skill'`).
+++4. Push to the branch (`git push origin feature/amazing-new-skill`).
+++5. Open a Pull Request.
++ 
++-## How to Contribute
++-
++-### 1. Fork the Repository
++-Click the "Fork" button at the top right of this repository.
++-
++-### 2. Clone Your Fork
++-```bash
++-git clone https://github.com/YOUR_USERNAME/claude-skills-library.git
++-cd claude-skills-library
++-```
++-
++-### 3. Create a Branch
++-```bash
++-git checkout -b feature/your-improvement-name
++-```
++-
++-Use descriptive branch names:
++-- `fix/typo-in-greek-philosopher`
++-- `improve/mcp-examples`
++-- `docs/add-usage-guide`
++-
++-### 4. Make Your Changes
++-
++-**For Skill Improvements:**
++-- Edit the `SKILL.md` file in the appropriate `free-skills/` directory
++-- Maintain the existing structure and formatting
++-- Add examples if helpful
++-- Ensure accuracy (cite sources if adding research)
++-
++-**For Documentation:**
++-- Update `README.md` or create new docs in `docs/`
++-- Keep language clear and concise
++-- Include code examples where relevant
++-
++-### 5. Test Your Changes
++-
++-Before submitting:
++-1. Install the skill locally:
++-   ```bash
++-   cp -r free-skills/[skill-name] ~/.claude/skills/
++-   ```
++-
++-2. Test with Claude Code:
++-   - Ask relevant questions
++-   - Verify skill activates correctly
++-   - Check that responses are accurate
++-   - Test edge cases
++-
++-3. Review formatting:
++-   - Markdown renders correctly
++-   - Code blocks are properly formatted
++-   - Links work
++-
++-### 6. Commit Your Changes
++-
++-Write clear, descriptive commit messages:
++-
++-```bash
++-git add .
++-git commit -m "Fix: Correct WCAG 2.2 contrast ratio in UI/UX skill"
++-```
++-
++-**Good commit messages:**
++-- `Fix: Typo in Greek Philosopher Stoic principles`
++-- `Improve: Add MCP server authentication example`
++-- `Docs: Add installation troubleshooting guide`
++-- `Update: Include 2025 accessibility research in UI/UX skill`
++-
++-**Bad commit messages:**
++-- `fix stuff`
++-- `update`
++-- `changes`
++-
++-### 7. Push to Your Fork
++-
++-```bash
++-git push origin feature/your-improvement-name
++-```
++-
++-### 8. Open a Pull Request
++-
++-1. Go to the original repository
++-2. Click "New Pull Request"
++-3. Select your fork and branch
++-4. Fill out the PR template (see below)
++-5. Submit!
++-
++-## Pull Request Guidelines
++-
++-### PR Title Format:
++-```
++-[Type] Brief description of change
++-
++-Examples:
++-[Fix] Correct Socratic elenchus definition in Greek Philosopher
++-[Improve] Add comprehensive ARIA examples to UI/UX Design Expert
++-[Docs] Create quickstart installation guide
++-[Update] Include 2025 MCP best practices
++-```
++-
++-### PR Description Template:
++-```markdown
++-## What does this PR do?
++-Brief description of the changes.
++-
++-## Why is this change needed?
++-Explain the problem you're solving or improvement you're making.
++-
++-## What skill(s) does this affect?
++-- [ ] Greek Philosopher
++-- [ ] Spartan Warrior
++-- [ ] MCP Architecture Expert
++-- [ ] UI/UX Design Expert
++-- [ ] Social Media Strategy
++-- [ ] Documentation
++-- [ ] Other (specify)
++-
++-## Testing done:
++-- [ ] Tested skill locally in Claude Code
++-- [ ] Verified examples work as expected
++-- [ ] Checked markdown formatting
++-- [ ] Reviewed for typos and clarity
++-
++-## Screenshots (if applicable):
++-Add screenshots showing the improvement (before/after if applicable).
++-
++-## Additional context:
++-Any other information that would be helpful for reviewers.
++-```
++-
++-## Contribution Standards
++-
++-### Code Quality:
++-- ✅ **Accuracy**: Ensure all information is factually correct
++-- ✅ **Clarity**: Write in clear, concise language
++-- ✅ **Examples**: Include practical examples when adding features
++-- ✅ **Formatting**: Follow existing markdown structure
++-- ✅ **Citations**: Reference sources for research-based claims
++-
++-### What We Look For:
++-- **Value**: Does this improve the skill meaningfully?
++-- **Accuracy**: Is the information correct and up-to-date?
++-- **Clarity**: Is it easy to understand?
++-- **Consistency**: Does it match the existing style?
++-- **Testing**: Has it been tested in Claude Code?
++-
++-### What We Don't Accept:
++-- ❌ Changes to premium skills (proprietary)
++-- ❌ Marketing or promotional content
++-- ❌ Unverified claims or opinions presented as facts
++-- ❌ Breaking changes without discussion
++-- ❌ Low-effort PRs (e.g., only fixing a single typo - batch these)
++-
++-## Review Process
++-
++-1. **Automated Checks**: Your PR will run through automated checks (if configured)
++-2. **Maintainer Review**: A maintainer will review your PR within 3-5 business days
++-3. **Feedback**: You may receive requests for changes or clarifications
++-4. **Merge**: Once approved, your PR will be merged!
++-
++-## Recognition
++-
++-Contributors will be:
++-- Listed in `CONTRIBUTORS.md`
++-- Mentioned in release notes (for significant contributions)
++-- Credited in skill documentation (for major improvements)
++-
++-## Questions?
++-
++-- 💬 Open a [Discussion](https://github.com/yourusername/claude-skills-library/discussions)
++-- 🐛 Report bugs via [Issues](https://github.com/yourusername/claude-skills-library/issues)
++-- 📧 Email: support@claudeskillslibrary.com
++-
++-## Code of Conduct
++-
++-### Our Standards
++-
++-We are committed to providing a welcoming and inspiring community for all.
++-
++-**Expected Behavior:**
++-- ✅ Be respectful and inclusive
++-- ✅ Welcome newcomers and help them learn
++-- ✅ Accept constructive criticism gracefully
++-- ✅ Focus on what's best for the community
++-- ✅ Show empathy towards others
++-
++-**Unacceptable Behavior:**
++-- ❌ Harassment, discrimination, or hostile behavior
++-- ❌ Trolling, insulting, or derogatory comments
++-- ❌ Personal or political attacks
++-- ❌ Publishing others' private information
++-- ❌ Spam or self-promotion
++-
++-**Enforcement:**
++-Violations may result in temporary or permanent ban from the project.
++-
++-## License
++-
++-By contributing to this project, you agree that your contributions will be licensed under the MIT License (for free skills only).
++-
++----
++-
++-**Thank you for making the Claude Skills Library better!** 🙏
++-
++-Every contribution, no matter how small, helps the community. We appreciate your time and effort.
+++Your PR will be reviewed against our strict quality gates. We expect a high standard of engineering and documentation. Thank you for helping build the intelligence layer.
++diff --git a/README.md b/README.md
++index 23c4f75..64a8c01 100644
++--- a/README.md
+++++ b/README.md
++@@ -1,612 +1,121 @@
++-# 🎯 Claude Skills Library
++-### Professional-Grade Skills for Claude Code & Claude AI
++-> Transform Claude into a domain expert with comprehensive, research-backed skills
+++<p align="center">
+++  <img src="assets/hero.png" alt="Claude Skills Library" width="100%">
+++</p>
++ 
++-[![GitHub stars](https://img.shields.io/github/stars/yourusername/claude-skills-library?style=social)](https://github.com/yourusername/claude-skills-library)
++-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
++-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+++<h1 align="center">Claude Skills Library</h1>
++ 
++----
++-
++-## 🚀 What is This?
++-
++-The most comprehensive, research-backed skill library for Claude Code and Claude AI. Unlike basic examples that offer 500 words of generic guidance, **each skill is a 3,000-6,000 word expert system** grounded in 2025 best practices, latest research, and proven methodologies.
++-
++-### Free Skills Include:
++-- 🏛️ **Greek Philosopher** - Socratic questioning and Stoic wisdom
++-- ⚔️ **Spartan Warrior** - Discipline, courage, and relentless action
++-- 🔌 **MCP Architecture Expert** - Model Context Protocol server design
++-- 🎨 **UI/UX Design Expert** - WCAG 2.2 compliance, design systems, accessibility
++-- 📱 **Social Media Strategy** - Platform tactics and engagement optimization *(coming soon)*
++-
++-**Sharing note (per SHARING.md + SIP):** Free skills here are core/shared (propagated via claude-code-config junctions to ACOS/SIS/.claude/.grok compat). Kenya-magical (personal excellence like certain health/creative/soul) stay in personal/.grok/FrankX overlays only — never auto in this library or ACOS core. Use /sip-share-audit + tags before any sync.
++-
++-### Premium Skills Available:
++-- 🎵 **Suno AI Mastery** - Professional music generation
++-- 🤖 **AI Agent Development Suite** - 6 framework experts (OpenAI, Claude, Oracle, LangGraph, MCP, Agent Spec)
++-- ☁️ **Oracle Enterprise Suite** - OCI Services, Database, ADK
++-- 💪 **Health & Wellness Mastery** - Exercise science + nutrition + philosophy
++-- 🎬 **Creative Production Bundle** - Music, video, social media
++-- And more...
++-
++-[👉 See Full Premium Catalog](#premium-skills)
++-
++----
++-
++-## ⚡ Quick Start
++-
++-### Installation
++-
++-**Method 1: Manual Installation** (Recommended for testing)
++-```bash
++-# Clone the repository
++-git clone https://github.com/yourusername/claude-skills-library.git
++-
++-# Copy free skills to Claude Code
++-cp -r claude-skills-library/free-skills/* ~/.claude/skills/
++-
++-# Restart Claude Code (if running)
++-```
++-
++-**Method 2: Symlink** (Recommended for development)
++-```bash
++-# Clone the repository
++-git clone https://github.com/yourusername/claude-skills-library.git
++-
++-# Create symlinks
++-ln -s ~/claude-skills-library/free-skills/greek-philosopher ~/.claude/skills/greek-philosopher
++-ln -s ~/claude-skills-library/free-skills/spartan-warrior ~/.claude/skills/spartan-warrior
++-# Repeat for other skills...
++-```
++-
++-**Method 3: Claude Code Plugin** *(coming soon)*
++-```bash
++-/plugin install claude-skills-library
++-```
++-
++-### Usage
++-
++-Skills activate automatically when relevant, or invoke explicitly:
++-
++-```
++-"Use the Greek Philosopher skill to examine my career decision"
++-
++-"Apply the Spartan Warrior approach to my discipline problem"
++-
++-"Help me implement WCAG 2.2 accessibility using the UI/UX Design Expert skill"
++-
++-"Design an MCP server with the MCP Architecture Expert"
++-```
++-
++----
++-
++-## 📚 Free Skills Documentation
++-
++-### 🏛️ Greek Philosopher
++-
++-**Transform Claude into a Socratic philosopher with poetic wisdom**
++-
++-#### What You Get:
++-- **Socratic Questioning Method**: Elenchus technique for examining beliefs
++-- **Stoic Philosophy**: Four cardinal virtues (Wisdom, Courage, Justice, Temperance)
++-- **Philosophical Frameworks**: Decision-making through ancient wisdom
++-- **Poetic Communication**: Ultra-high-quality language and metaphors
++-
++-#### Use Cases:
++-- Life decisions and career choices
++-- Examining assumptions and beliefs
++-- Deep thinking on complex problems
++-- Philosophical inquiry and self-examination
++-
++-#### Sample Interaction:
++-```
++-User: "Should I quit my job to start a business?"
++-
++-Greek Philosopher: "Ah, dear friend, let us walk together through this
++-inquiry, as Socrates walked with his companions in the Agora...
++-
++-Tell me first: when you speak of 'should,' do you ask what is safe,
++-or what is true to your nature? For the oak does not ask whether it
++-should grow toward the sun—it simply grows. What within you grows
++-toward this venture, and what shrinks from it? Let us examine both
++-with equal care, for wisdom lies not in certainty, but in honest
++-examination of what we truly seek."
++-```
++-
++-**[📖 Full Documentation](free-skills/greek-philosopher/SKILL.md)** | **[⭐ See Examples](#examples)**
+++<p align="center">
+++  <strong>The definitive curation of professional-grade, research-backed agent skills for Claude Code and the Anthropic ecosystem.</strong>
+++</p>
++ 
++----
++-
++-### ⚔️ Spartan Warrior
++-
++-**Direct, uncompromising discipline and action**
++-
++-#### What You Get:
++-- **Laconic Wisdom**: Short, powerful statements that cut through excuses
++-- **Five Spartan Principles**: Discipline, Courage, Brotherhood, Excellence, Resilience
++-- **Warrior Mentality**: Hardship as forge for strength
++-- **Action-Oriented Guidance**: No philosophizing, just execution
++-
++-#### Use Cases:
++-- Overcoming procrastination
++-- Building discipline and habits
++-- Cutting through excuses and fear
++-- Motivation for difficult challenges
++-
++-#### Sample Interaction:
++-```
++-User: "I'm thinking about starting my workout program tomorrow..."
++-
++-Spartan Warrior: "Tomorrow is for cowards. Start now.
++-
++-You speak as if you need permission. You don't. You speak as if you
++-need the perfect plan. You don't. You need only to begin.
++-
++-The Spartans didn't wait for perfect conditions to train. They trained
++-in all conditions, which is why conditions didn't matter in battle.
++-
++-Do one push-up. Now. Not tomorrow. Now. That is the Spartan way.
++-
++-MOLON LABE - Come and take it. Let resistance try to stop you."
++-```
++-
++-**[📖 Full Documentation](free-skills/spartan-warrior/SKILL.md)** | **[⭐ See Examples](#examples)**
++-
++----
++-
++-### 🔌 MCP Architecture Expert
++-
++-**Build production-grade Model Context Protocol servers**
++-
++-#### What You Get:
++-- **Complete MCP Specification**: Resources, Tools, Prompts
++-- **Security Best Practices**: Authentication, authorization, data protection
++-- **Architecture Patterns**: Server design, integration strategies
++-- **Implementation Guides**: TypeScript, Python examples
++-- **N+M Solution**: Any agent × any MCP server
++-
++-#### Use Cases:
++-- Building MCP servers for custom data sources
++-- Enterprise AI-to-data integration
++-- Standardizing AI tool access
++-- Multi-agent system integration
++-
++-#### Key Capabilities:
++-```
++-MCP SERVERS COMPONENTS:
++-- Resources: Expose data (files, databases, APIs)
++-- Tools: Enable actions (search, CRUD operations)
++-- Prompts: Provide templates and workflows
++-
++-BEST PRACTICES:
++-- Stateless server design
++-- Proper error handling
++-- Rate limiting and caching
++-- Comprehensive logging
++-```
++-
++-**[📖 Full Documentation](free-skills/mcp-architecture/SKILL.md)** | **[⭐ See Examples](#examples)**
++-
++----
++-
++-### 🎨 UI/UX Design Expert
++-
++-**Master WCAG 2.2 compliance for the 2025 EAA deadline**
++-
++-#### What You Get:
++-- **WCAG 2.2 Complete Guide**: All success criteria explained
++-- **European Accessibility Act (EAA)**: June 28, 2025 compliance deadline
++-- **Design Systems**: Component libraries, design tokens, atomic design
++-- **User Research**: Qualitative and quantitative methodologies
++-- **Figma Workflows**: Best practices for design and handoff
++-- **2025 Design Trends**: AI integration, inclusive design
++-
++-#### Use Cases:
++-- Ensuring WCAG 2.2 / EAA compliance
++-- Building accessible design systems
++-- Conducting user research
++-- Creating inclusive interfaces
++-- Design-to-development handoff
++-
++-#### Critical Compliance Features:
++-```
++-WCAG 2.2 REQUIREMENTS:
++-- Contrast: 4.5:1 for text, 3:1 for UI components
++-- Keyboard Navigation: All interactive elements accessible
++-- Touch Targets: 44×44px minimum (WCAG 2.2)
++-- Screen Readers: Proper ARIA labels and semantic HTML
++-- Forms: Visible labels, clear errors, autocomplete
++-
++-EAA DEADLINE: June 28, 2025
++-Non-compliance = legal consequences
++-```
+++<p align="center">
+++  <a href="#the-skills-thesis">The Thesis</a> ·
+++  <a href="#architecture-standard">Architecture</a> ·
+++  <a href="#curated-skills">Skill Catalog</a> ·
+++  <a href="#deployment">Deployment</a> ·
+++  <a href="CONTRIBUTING.md">Contribute</a>
+++</p>
++ 
++-**[📖 Full Documentation](free-skills/ui-ux-design-expert/SKILL.md)** | **[⭐ See Examples](#examples)**
+++<p align="center">
+++  <a href="https://awesome.re"><img alt="Awesome" src="https://awesome.re/badge.svg"></a>
+++  <img alt="Maintained: Weekly" src="https://img.shields.io/badge/maintained-weekly-blue.svg?style=flat-square">
+++  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-lightgrey.svg?style=flat-square"></a>
+++</p>
++ 
++ ---
++ 
++-### 📱 Social Media Strategy *(Coming Soon)*
+++## 🏛️ The Skills Thesis
++ 
++-**Platform-specific tactics for 2025 algorithms**
+++A powerful LLM is only as effective as the context and constraints it operates within. Generic system prompts result in generic outputs.
++ 
++-#### What You'll Get:
++-- **Platform Mastery**: LinkedIn, Twitter/X, Instagram, TikTok, YouTube
++-- **Content Calendars**: Planning and scheduling frameworks
++-- **Analytics & Optimization**: Metrics that matter, A/B testing
++-- **Engagement Strategies**: Community building, algorithm understanding
++-- **2025 Algorithm Updates**: Latest changes across platforms
++-
++-**[🔔 Get Notified When Available](#newsletter)**
+++This repository curates **expert-level agent skills**—dense, 3,000+ word cognitive architectures that transform Claude into a domain specialist. Rather than simple prompts, these skills define explicit workflows, strict quality gates, and specific reasoning models (e.g., Socratic questioning, WCAG 2.2 auditing, MCP server design) grounded in 2025 best practices.
++ 
++ ---
++ 
++-## 💎 Premium Skills
++-
++-### 🤖 AI Agent Development Suite - $149
++-**Master 6 AI agent frameworks**
+++## 🏗️ Architecture Standard
++ 
++-**Includes:**
++-- OpenAI AgentKit Expert ($39)
++-- Claude SDK Expert ($39)
++-- Oracle ADK Expert ($49)
++-- Oracle Agent Spec Expert ($39)
++-- LangGraph Patterns Expert ($39)
++-- MCP Architecture Expert (FREE - included)
+++*Every skill in this library must adhere to a strict structural standard.*
++ 
++-**Value:** $235 → **Save $86 (37% off)**
+++<details open>
+++<summary><strong>The Skill Blueprint</strong></summary>
+++<br>
++ 
++-**Perfect for:**
++-- AI engineers building production agents
++-- Consultants needing multi-framework expertise
++-- Teams standardizing on agentic workflows
+++All accepted skills must be provided as a `SKILL.md` file containing:
++ 
++-**[🛒 Purchase AI Agent Development Suite](#pricing)**
+++1. **YAML Frontmatter**: For agent-harness trigger detection.
+++2. **Cognitive Identity**: The explicit persona and constraints the agent must adopt.
+++3. **Workflow Rules**: Step-by-step operational instructions.
+++4. **Quality Gates**: The specific criteria an output must meet before the agent is allowed to finalize the task.
+++5. **Anti-Patterns**: Explicit instructions on what the agent must *never* do.
+++</details>
++ 
++ ---
++ 
++-### ☁️ Oracle Enterprise Suite - $179
++-**Complete Oracle Cloud & AI expertise**
++-
++-**Includes:**
++-- Oracle ADK Expert ($49)
++-- OCI Services Expert ($49)
++-- Oracle Database Expert ($49)
++-- Oracle Agent Spec Expert ($39)
+++## 📚 Curated Skill Catalog
++ 
++-**Value:** $186 → **Optimized Bundle Pricing**
+++*High-density cognitive overlays for Claude.*
++ 
++-**Perfect for:**
++-- Oracle Cloud architects
++-- DBAs and database developers
++-- Enterprises on OCI
++-- Oracle AI agent development
++-
++-**[🛒 Purchase Oracle Enterprise Suite](#pricing)**
++-
++----
+++<details open>
+++<summary><strong>Software & Systems Engineering</strong></summary>
+++<br>
++ 
++-### 🎬 Creative Production Bundle - $99
++-**Music, video, and social media mastery**
+++- **[MCP Architecture Expert](free-skills/mcp-architecture/SKILL.md)** — Transforms Claude into a Model Context Protocol (MCP) design specialist. Enforces stateless server design, proper tool definition, and rigorous security boundaries.
+++- **[UI/UX Design Expert](free-skills/ui-ux-design/SKILL.md)** — Grounds Claude in WCAG 2.2 compliance, atomic design principles, and modern design token architecture.
+++</details>
++ 
++-**Includes:**
++-- Suno AI Mastery ($29)
++-- Video Production Workflow ($29)
++-- Social Media Strategy (FREE - included)
+++<details open>
+++<summary><strong>Cognitive & Philosophical Frameworks</strong></summary>
+++<br>
++ 
++-**Perfect for:**
++-- Content creators and influencers
++-- Marketing professionals
++-- Video producers and editors
++-- Musicians using AI
+++- **[Greek Philosopher](free-skills/greek-philosopher/SKILL.md)** — Forces Claude to use Socratic questioning (Elenchus) and Stoic principles (Wisdom, Courage, Justice, Temperance) to help users examine complex decisions.
+++- **[Spartan Warrior](free-skills/spartan-warrior/SKILL.md)** — A strictly laconic, action-oriented overlay. Refuses to philosophize; demands immediate, disciplined execution.
+++</details>
++ 
++-**[🛒 Purchase Creative Production Bundle](#pricing)**
+++*(Note: The catalog is continuously expanding. Check the `free-skills/` directory for the latest additions.)*
++ 
++ ---
++ 
++-### 💪 Health & Wellness Mastery - $89
++-**Complete mind-body optimization**
++-
++-**Includes:**
++-- Gym & Training Expert ($29) - 2025 exercise science
++-- Health & Nutrition Expert ($29) - Longevity and metabolic health
++-- Greek Philosopher (FREE - included)
++-- Spartan Warrior (FREE - included)
++-
++-**Perfect for:**
++-- Fitness enthusiasts and athletes
++-- Health coaches and trainers
++-- Anyone optimizing performance
++-- Longevity and wellness focus
++-
++-**[🛒 Purchase Health & Wellness Mastery](#pricing)**
++-
++----
+++## ⚡ Deployment & Usage
++ 
++-### 🌟 Complete Library - $299
++-**All 22+ skills + lifetime updates**
+++### 1. Claude Code Integration
++ 
++-**Includes:**
++-- All current skills (17 created)
++-- All future skills (5 in development)
++-- 1 year of updates (latest research, new features)
++-- Priority support
++-- Commercial license
+++Skills are designed to be ingested by Claude Code or similar agentic CLI harnesses.
++ 
++-**Value if purchased separately:** $500+
++-**Savings:** $201+ (40% off)
++-
++-**Perfect for:**
++-- Consultants and agencies
++-- Power users across multiple domains
++-- Enterprises standardizing on Claude Code
++-- Anyone wanting the complete ecosystem
++-
++-**[🛒 Purchase Complete Library](#pricing)**
++-
++----
++-
++-## 🏆 Why This Library is Different
++-
++-### vs. Basic Examples
++-| Feature | Basic Examples | Our Skills |
++-|---------|---------------|------------|
++-| Depth | 500-1,000 words | 3,000-6,000 words |
++-| Research | Generic advice | 2025 best practices |
++-| Frameworks | None | Complete methodologies |
++-| Updates | Static | Quarterly updates |
++-| Support | Community | Priority support (premium) |
++-
++-### vs. obra/superpowers
++-| Domain | Superpowers | Our Library |
++-|--------|-------------|-------------|
++-| Development | ✅ Excellent | ⚠️ Not primary focus |
++-| AI Architecture | ❌ Not covered | ✅ 6 frameworks |
++-| Health & Wellness | ❌ Not covered | ✅ Complete system |
++-| Creative Production | ❌ Not covered | ✅ Music, video, social |
++-| Enterprise Oracle | ❌ Not covered | ✅ Full suite |
++-| Philosophy & Wisdom | ❌ Not covered | ✅ 2 unique skills |
++-
++-**Complementary, not competitive.** Use superpowers for development workflows, use our library for domain expertise.
++-
++----
++-
++-## 🎯 Use Cases
++-
++-### For Developers
++-```
++-Free: MCP Architecture, UI/UX Design
++-Premium: AI Agent Development Suite ($149)
++-→ Build production AI agents with MCP integration and accessible UIs
++-```
++-
++-### For Content Creators
++-```
++-Free: Social Media Strategy, Greek Philosopher, Spartan Warrior
++-Premium: Creative Production Bundle ($99)
++-→ Create music, videos, and optimized social content with discipline
++-```
++-
++-### For Consultants
++-```
++-Free: All 5 free skills (broad expertise demo)
++-Premium: Complete Library ($299)
++-→ Domain expertise across all client industries and use cases
++-```
++-
++-### For Enterprises (Oracle Stack)
++-```
++-Free: MCP Architecture, UI/UX Design
++-Premium: Oracle Enterprise Suite ($179) + AI Agent Development Suite ($149)
++-→ Complete Oracle Cloud + AI agent deployment solution
++-```
++-
++-### For Personal Optimization
++-```
++-Free: Greek Philosopher, Spartan Warrior
++-Premium: Health & Wellness Mastery ($89)
++-→ Philosophy + discipline + fitness + nutrition = complete life optimization
++-```
++-
++----
++-
++-## 📊 What You Get
++-
++-### Every Skill Includes:
++-
++-✅ **Core Competencies**: Comprehensive knowledge domain coverage
++-✅ **2025 Best Practices**: Latest research and methodologies
++-✅ **Frameworks & Templates**: Proven, actionable structures
++-✅ **Sample Interactions**: Real examples of skill in action
++-✅ **Integration Notes**: How skills work together
++-✅ **Communication Style**: Optimized for domain-appropriate responses
++-✅ **Response Frameworks**: Step-by-step guidance structures
++-
++-### Premium Skills Also Include:
++-
++-✅ **Quarterly Updates**: Latest research and best practices
++-✅ **Priority Support**: Email support with 24-48hr response
++-✅ **Commercial License**: Use in client work and products
++-✅ **Private Community**: Discord server with other premium users
++-
++----
++-
++-## 🛠️ Installation & Setup
++-
++-### System Requirements
++-- Claude Code or Claude AI (claude.ai)
++-- macOS, Linux, or WSL on Windows
++-- Git (for installation)
++-
++-### Detailed Installation
++-
++-1. **Clone the repository:**
++-```bash
++-git clone https://github.com/yourusername/claude-skills-library.git
++-cd claude-skills-library
++-```
++-
++-2. **Copy free skills:**
++ ```bash
++-# Create skills directory if it doesn't exist
++-mkdir -p ~/.claude/skills
+++# Clone the library
+++git clone https://github.com/frankxai/claude-skills-library.git
++ 
++-# Copy free skills
++-cp -r free-skills/* ~/.claude/skills/
+++# Symlink desired skills into your Claude Code config
+++ln -s ~/claude-skills-library/free-skills/mcp-architecture ~/.claude/skills/mcp-architecture
++ ```
++ 
++-3. **Verify installation:**
++-```bash
++-ls ~/.claude/skills/
++-# Should show: greek-philosopher, spartan-warrior, mcp-architecture, ui-ux-design-expert
++-```
++-
++-4. **Test a skill:**
++-Open Claude Code and try:
++-```
++-"Use the Greek Philosopher skill to examine my career goals"
++-```
+++### 2. Invocation
++ 
++-### Premium Skills Installation
+++Once installed, the skills activate via their defined trigger words or through explicit invocation:
++ 
++-After purchase, you'll receive:
++-1. Download link for premium skills
++-2. License key for updates
++-3. Installation instructions
++-4. Discord community invite
+++- *"Help me design a new data connector. Use the MCP Architecture Expert skill."*
+++- *"Review this React component using the UI/UX Design Expert."*
++ 
++ ---
++ 
++-## 🤝 Contributing
++-
++-We welcome contributions to the free skills!
++-
++-### How to Contribute:
++-
++-1. **Fork the repository**
++-2. **Create a feature branch** (`git checkout -b feature/improvement`)
++-3. **Make your changes** (improve documentation, fix typos, add examples)
++-4. **Commit your changes** (`git commit -m 'Add helpful example'`)
++-5. **Push to the branch** (`git push origin feature/improvement`)
++-6. **Open a Pull Request**
++-
++-### Contribution Guidelines:
++-
++-- Maintain the quality and depth of existing skills
++-- Include examples and use cases
++-- Update documentation
++-- Test with Claude Code before submitting
++-- Follow existing formatting and structure
++-
++-**Note:** Premium skills are not open for contributions (proprietary).
++-
++----
++-
++-## 📈 Roadmap
++-
++-### Q4 2025
++-- ✅ Launch free skill library (5 skills)
++-- ✅ Release premium bundles
++-- 🔄 Social Media Strategy skill (free) - In Progress
++-- 🔄 Oracle Database Expert (premium) - In Progress
++-- 🔄 Video Production Workflow (premium) - In Progress
+++## 🤖 The Architecture (Maintained by ACOS)
++ 
++-### Q1 2026
++-- Next.js/React Expert (premium)
++-- Product Management Expert (premium)
++-- Official Claude Code Plugin support
++-- Anthropic Marketplace listing (if available)
+++This repository is not a static list; it is a living, agent-managed node within the **Agentic Creator Operating System (ACOS)**. 
++ 
++-### Q2 2026
++-- 5 new domain-specific skills
++-- Enterprise custom skill development service
++-- Certification program launch
++-- Community skill submissions
+++### How We Drink Our Own Champagne
+++To ensure absolute quality and up-to-date information, this repo is maintained by our internal agent swarms via `.agent-harness.json`. Our agents are strictly constrained by:
+++1. **The Visual QA Gate**: Ensuring all generated heroes (`assets/hero.png`) meet high-end glassmorphism and tech-noir standards.
+++2. **Automated Link Audits**: Weekly lychee workflows and active ping scripts ensure 0% link rot.
+++3. **FrankX Design Constraints**: Code and formatting must align with `DESIGN_TASTE.md`.
++ 
++----
++-
++-## 💬 Support & Community
++-
++-### Free Support
++-- 📖 [Documentation](docs/)
++-- 💬 [GitHub Discussions](https://github.com/yourusername/claude-skills-library/discussions)
++-- 🐛 [Issue Tracker](https://github.com/yourusername/claude-skills-library/issues)
++-
++-### Premium Support
++-- ✉️ Email: support@claudeskillslibrary.com (24-48hr response)
++-- 💬 Private Discord server
++-- 📞 Priority issue resolution
++-- 🎯 Quarterly office hours
+++*If you are building an Agent OS, you must build the harnesses that manage it.*
++ 
++ ---
++ 
++-## 📜 License
++-
++-### Free Skills: MIT License
++-Free to use, modify, and distribute. See [LICENSE](LICENSE) file.
++-
++-### Premium Skills: Commercial License
++-Premium skills include commercial license for client work. See purchase agreement for details.
++-
++----
++-
++-## 🙏 Acknowledgments
++-
++-Built with insights from:
++-- Anthropic's Claude Code best practices
++-- obra's superpowers library (development workflow inspiration)
++-- 2025 research across all domains (WCAG, nutrition science, exercise science, etc.)
++-- Claude Code community feedback
++-
++----
++-
++-## 📧 Stay Updated
++-
++-- 🌟 [Star this repo](https://github.com/yourusername/claude-skills-library) for updates
++-- 📬 [Newsletter](#) - New skills, tips, and updates
++-- 🐦 [Twitter/X](#) - Daily tips and examples
++-- 💼 [LinkedIn](#) - Professional updates
++-
++----
++-
++-## ❓ FAQ
++-
++-**Q: Are these skills compatible with claude.ai (web version)?**
++-A: Yes! Skills work with both Claude Code and claude.ai. Some features are optimized for Claude Code but core functionality works everywhere.
++-
++-**Q: Can I use premium skills for client work?**
++-A: Yes, premium licenses include commercial use. You can use skills in client projects and products.
++-
++-**Q: Do you offer refunds?**
++-A: Yes, 30-day money-back guarantee on all premium purchases if skills don't meet your expectations.
++-
++-**Q: Will skills be updated?**
++-A: Free skills receive occasional updates. Premium skills receive quarterly updates with latest research and best practices.
++-
++-**Q: Can I request custom skills?**
++-A: Yes! Custom skill development starts at $2,500 per skill. Contact support@claudeskillslibrary.com
++-
++-**Q: How do skills compare to prompts?**
++-A: Skills are comprehensive expert systems (3,000-6,000 words) with frameworks, methodologies, and integration. Prompts are single-use instructions.
++-
++-**Q: Do I need all the AI framework skills?**
++-A: No. Choose based on your stack. If you only use OpenAI, just get OpenAI AgentKit Expert. The bundle is for multi-framework work.
++-
++----
++-
++-## 🚀 Get Started Now
++-
++-1. **Star this repository** to stay updated
++-2. **Install free skills** to test quality
++-3. **Join the community** in Discussions
++-4. **Consider premium** if free skills deliver value
++-5. **Share with others** who might benefit
++-
++----
++-
++-<div align="center">
+++## 🤝 Contributing
++ 
++-**Made with 💙 by developers, for developers**
+++We welcome high-density, rigorously tested skills that elevate Claude's capabilities. 
++ 
++-[⭐ Star](https://github.com/yourusername/claude-skills-library) | [🐛 Issues](https://github.com/yourusername/claude-skills-library/issues) | [💬 Discussions](https://github.com/yourusername/claude-skills-library/discussions) | [🛒 Premium](https://claudeskillslibrary.com)
+++We do **not** accept simple, one-paragraph prompts. Submissions must include complete workflows, constraints, and adherence to the Architecture Standard. Please review our [Contribution Guidelines](CONTRIBUTING.md) before opening a PR.
++ 
++-</div>
+++Released under the [MIT License](LICENSE).
++diff --git a/assets/hero.png b/assets/hero.png
++new file mode 100644
++index 0000000..1594391
++Binary files /dev/null and b/assets/hero.png differ
++diff --git a/free-skills/nextjs-react-expert/SKILL.md b/free-skills/nextjs-react-expert/SKILL.md
++index e69de29..e984750 100644
++--- a/free-skills/nextjs-react-expert/SKILL.md
+++++ b/free-skills/nextjs-react-expert/SKILL.md
++@@ -0,0 +1,30 @@
+++---
+++name: "Next.js & React Expert"
+++description: "Expert patterns for Next.js 16 (App Router), React 19, server components, client components, form actions, performance budgets, and Vercel deployments."
+++---
+++
+++# Next.js & React Expert
+++
+++This skill guides you through building production-ready, high-taste web applications using Next.js 16 and React 19.
+++
+++## Core Rules
+++
+++1. **Server Components by Default**: Keep components on the server (`RSC`) to reduce client-side bundle size. Only add `'use client'` when adding interactivity (states, hooks, event handlers).
+++2. **Data Fetching**: Use Server Actions or native `fetch` with React 19's caching mechanisms. Avoid legacy `getServerSideProps` or client-side `useEffect` fetching without a proper caching library.
+++3. **Form Actions**: Leverage React 19's `useActionState` and `useFormStatus` to handle pending states and form submissions naturally.
+++4. **Performance Budgets**: Maintain image optimization using Next.js `<Image>`, use font optimization via `next/font`, and minimize external JS libraries.
+++
+++## Workflow
+++
+++```mermaid
+++graph TD
+++    A["Design Specs (DESIGN.md)"] --> B["Component Scaffolding (RSCs)"]
+++    B --> C["State Choreography (use client)"]
+++    C --> D["Mock Data / API Bindings"]
+++    D --> E["Vercel Build & Deploy"]
+++```
+++
+++1. **Scaffold RSCs**: Create structural layout and static elements.
+++2. **Add Interactivity**: Isolate client logic into leaf components using `'use client'`.
+++3. **Handle State**: Use React 19 hook features for actions and transitions.
+++4. **Deploy**: Build local test bundles and deploy previews to Vercel.
++diff --git a/free-skills/oracle-database-expert/SKILL.md b/free-skills/oracle-database-expert/SKILL.md
++index e69de29..fa50227 100644
++--- a/free-skills/oracle-database-expert/SKILL.md
+++++ b/free-skills/oracle-database-expert/SKILL.md
++@@ -0,0 +1,22 @@
+++---
+++name: "Oracle Database Expert"
+++description: "Optimization, PL/SQL engineering, Vector Search (23ai), connection pooling, performance diagnostics, and OCI Database service integration."
+++---
+++
+++# Oracle Database Expert
+++
+++This skill guides you through database schema design, query optimization, vector database implementation (Oracle Database 23ai), and PL/SQL procedures.
+++
+++## Core Rules
+++
+++1. **Vector Search (23ai)**: Use native `VECTOR` datatypes for storing embeddings. Leverage `VECTOR_DISTANCE` for similarity search inside queries.
+++2. **PL/SQL Engineering**: Keep database logic close to data. Write compiled PL/SQL packages, use bind variables to prevent SQL injection, and use bulk operations (`FORALL`, `BULK COLLECT`).
+++3. **OCI Integration**: Wire connection pools via Oracle UCP (Universal Connection Pool) or Oracle Wallet for secure cloud database access.
+++4. **Performance Tuning**: Always inspect execution plans. Leverage indexes, partitions, and materialized views to minimize table scans.
+++
+++## Workflow
+++
+++1. **Schema Design**: Establish tables, indexes, and primary/foreign key relations.
+++2. **Vector Indexing**: Populate high-dimensional vectors and create HNSW indexes for fast approximate search.
+++3. **Logic Compilation**: Compile PL/SQL wrappers for core transactional sequences.
+++4. **Diagnostic Review**: Run SQL Trace and ADDM reports to identify bottlenecks.
++diff --git a/free-skills/product-management-expert/SKILL.md b/free-skills/product-management-expert/SKILL.md
++index e69de29..7bc9469 100644
++--- a/free-skills/product-management-expert/SKILL.md
+++++ b/free-skills/product-management-expert/SKILL.md
++@@ -0,0 +1,22 @@
+++---
+++name: "Product Management Expert"
+++description: "System-level product definition, PRD drafting, feature mapping, value proposition validation, and pricing strategy."
+++---
+++
+++# Product Management Expert
+++
+++This skill guides you through structural product development, drafting PRDs, scoping MVP features, and designing monetization architectures.
+++
+++## Core Rules
+++
+++1. **Value-Proposition First**: Ground every feature in user value. Never build technology looking for a problem.
+++2. **Scoping MVP**: Keep scope small. Define the absolute minimum set of features that delivers the core value proposition.
+++3. **PRD Standard**: Write concise, unambiguous specifications containing goals, user personas, functional specs, out-of-scope lists, and success metrics.
+++4. **Pricing Architecture**: Align pricing with value metrics (seats, consumption, monthly subscription tiers).
+++
+++## Workflow
+++
+++1. **Discovery Loop**: Validate user demand and map competitive landscapes.
+++2. **PRD Drafting**: Create the Product Requirements Document with clear alignment.
+++3. **Feature Scoping**: Categorize features into P0 (Must Have), P1 (Should Have), and P2 (Nice to Have).
+++4. **Feedback Loop**: Compile user telemetry and iterate designs.
++diff --git a/free-skills/video-production-workflow/SKILL.md b/free-skills/video-production-workflow/SKILL.md
++index e69de29..aa9ba7d 100644
++--- a/free-skills/video-production-workflow/SKILL.md
+++++ b/free-skills/video-production-workflow/SKILL.md
++@@ -0,0 +1,27 @@
+++---
+++name: "Video Production Workflow"
+++description: "Multi-format video production pipeline — video generation (Higgsfield/Luma/fal), video scriptwriting, dynamic editing (Remotion), automated audio dubbing, and platform publishing."
+++---
+++
+++# Video Production Workflow
+++
+++This skill guides you through automated and programmatic video production.
+++
+++## Core Rules
+++
+++1. **3-Layer Production Stack**:
+++   - **Keyframe Layer**: Establish visual seeds using image generators (Flux/Midjourney).
+++   - **Motion Layer**: Turn keyframes into cinematic B-roll using video generators (Higgsfield/fal).
+++   - **Assembly Layer**: Stitch clips, audio tracks, and transitions dynamically using Remotion or FFmpeg.
+++2. **Audio & Narration**: Integrate clean Whisper-based transcripts, elevenlabs voice overs, and royalty-free audio backdrops.
+++3. **Platform Formatting**: Output multiple formats concurrently (9:16 vertical shorts, 16:9 landscape explainers, Spotify canvases).
+++
+++## Workflow
+++
+++```mermaid
+++graph TD
+++    A["Visual Curation (Keyframes)"] --> B["Video Generation (Motion)"]
+++    B --> C["Audio Track Assembly"]
+++    C --> D["Remotion Rendering (Compilation)"]
+++    D --> E["Platform Formats Distribution"]
+++```
++diff --git a/scripts/commit-repos.ps1 b/scripts/commit-repos.ps1
++new file mode 100644
++index 0000000..23a5127
++--- /dev/null
+++++ b/scripts/commit-repos.ps1
++@@ -0,0 +1,84 @@
+++# Commit helper script for awesome list repositories
+++$repos = @(
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-agent-operating-systems"; Type = "os" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-agentic-income"; Type = "income" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-ai-coe"; Type = "coe" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-automation-agent-skills"; Type = "automation" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-cosmos-ai-agents"; Type = "cosmos" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-design-agent-skills"; Type = "design" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-gamification-agent-skills"; Type = "gamification" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-hermes-agents"; Type = "hermes" },
+++    @{ Path = "C:/Users/frank/awesome-hermes-agents"; Type = "hermes-root" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-investor-agent-skills"; Type = "investor" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-motion-design-agent-skills"; Type = "motion" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-sustainability-agent-skills"; Type = "sustainability" },
+++    @{ Path = "C:/Users/frank/starlight/repos/awesome-wealth-agent-skills"; Type = "wealth" },
+++    @{ Path = "C:/Users/frank/repos/awesome-suno-agent-skills"; Type = "suno" },
+++    @{ Path = "C:/Users/frank/mind-intelligence-swarm/awesome-mind-agent-skills"; Type = "mind" }
+++)
+++
+++foreach ($repo in $repos) {
+++    $dir = $repo.Path
+++    if (-not (Test-Path $dir)) {
+++        Write-Host "Directory not found: $dir" -ForegroundColor Yellow
+++        continue
+++    }
+++
+++    Write-Host "Processing repo: $dir" -ForegroundColor Cyan
+++
+++    # Stage standard assets
+++    if (Test-Path "$dir/README.md") {
+++        git -C $dir add README.md
+++    }
+++    if (Test-Path "$dir/assets") {
+++        git -C $dir add "$dir/assets/*"
+++    }
+++    if (Test-Path "$dir/.gitignore") {
+++        git -C $dir add .gitignore
+++    }
+++
+++    # Stage specific folders for hermes
+++    if ($repo.Type -match "hermes") {
+++        if (Test-Path "$dir/docs") {
+++            git -C $dir add "$dir/docs/*"
+++        }
+++        if (Test-Path "$dir/skills") {
+++            git -C $dir add "$dir/skills/*"
+++        }
+++    }
+++
+++    # Stage specific folders for design, motion, mind
+++    if ($repo.Type -eq "design" -or $repo.Type -eq "motion" -or $repo.Type -eq "mind") {
+++        if (Test-Path "$dir/rankings") {
+++            git -C $dir add "$dir/rankings/*"
+++        }
+++        if (Test-Path "$dir/playbooks") {
+++            git -C $dir add "$dir/playbooks/*"
+++        }
+++        if (Test-Path "$dir/rubrics") {
+++            git -C $dir add "$dir/rubrics/*"
+++        }
+++        if (Test-Path "$dir/experiences") {
+++            git -C $dir add "$dir/experiences/*"
+++        }
+++        # Add design-specific lists
+++        if (Test-Path "$dir/RESOURCES-AGGREGATED.md") {
+++            git -C $dir add "$dir/RESOURCES-AGGREGATED.md"
+++        }
+++        if (Test-Path "$dir/RESOURCES-AGGREGATED-2026.md") {
+++            git -C $dir add "$dir/RESOURCES-AGGREGATED-2026.md"
+++        }
+++    }
+++
+++    # Check if there are staged changes
+++    git -C $dir diff --cached --quiet
+++    $hasChanges = $LASTEXITCODE -ne 0
+++
+++    if ($hasChanges) {
+++        Write-Host "Staged changes found, committing..." -ForegroundColor Green
+++        git -C $dir commit -m "docs: enrich curation lists, resolve broken links, and update visual assets"
+++    } else {
+++        Write-Host "No changes staged for commit." -ForegroundColor DarkGray
+++    }
+++    Write-Host ""
+++}
++diff --git a/scripts/link-checker.mjs b/scripts/link-checker.mjs
++new file mode 100644
++index 0000000..246976f
++--- /dev/null
+++++ b/scripts/link-checker.mjs
++@@ -0,0 +1,155 @@
+++import fs from 'fs';
+++import path from 'path';
+++import https from 'https';
+++import http from 'http';
+++import { URL } from 'url';
+++
+++const repos = [
+++    "C:/Users/frank/starlight/repos/awesome-agent-operating-systems/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-agentic-income/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-ai-coe/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-automation-agent-skills/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-cosmos-ai-agents/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-design-agent-skills/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-gamification-agent-skills/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-hermes-agents/README.md",
+++    "C:/Users/frank/awesome-hermes-agents/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-investor-agent-skills/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-motion-design-agent-skills/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-sustainability-agent-skills/README.md",
+++    "C:/Users/frank/starlight/repos/awesome-wealth-agent-skills/README.md",
+++    "C:/Users/frank/repos/awesome-suno-agent-skills/README.md",
+++    "C:/Users/frank/mind-intelligence-swarm/awesome-mind-agent-skills/README.md"
+++];
+++
+++const urlRegex = /https?:\/\/[^\s)\]"';,]+/g;
+++
+++function checkUrl(targetUrl) {
+++    return new Promise((resolve) => {
+++        let parsedUrl;
+++        try {
+++            parsedUrl = new URL(targetUrl);
+++        } catch (e) {
+++            resolve({ url: targetUrl, status: 'INVALID_URL', error: e.message });
+++            return;
+++        }
+++
+++        const client = parsedUrl.protocol === 'https:' ? https : http;
+++        const options = {
+++            method: 'HEAD',
+++            headers: {
+++                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+++            },
+++            timeout: 5000
+++        };
+++
+++        const request = client.request(targetUrl, options, (res) => {
+++            if (res.statusCode >= 200 && res.statusCode < 400) {
+++                resolve({ url: targetUrl, status: 'OK', code: res.statusCode });
+++            } else if (res.statusCode === 405 || res.statusCode === 403) {
+++                // If HEAD method is not allowed or forbidden, retry with GET
+++                options.method = 'GET';
+++                const getReq = client.request(targetUrl, options, (getRes) => {
+++                    if (getRes.statusCode >= 200 && getRes.statusCode < 400) {
+++                        resolve({ url: targetUrl, status: 'OK', code: getRes.statusCode });
+++                    } else {
+++                        resolve({ url: targetUrl, status: 'FAIL', code: getRes.statusCode });
+++                    }
+++                });
+++                getReq.on('error', (err) => resolve({ url: targetUrl, status: 'ERROR', error: err.message }));
+++                getReq.on('timeout', () => {
+++                    getReq.destroy();
+++                    resolve({ url: targetUrl, status: 'TIMEOUT' });
+++                });
+++                getReq.end();
+++            } else {
+++                resolve({ url: targetUrl, status: 'FAIL', code: res.statusCode });
+++            }
+++        });
+++
+++        request.on('error', (err) => {
+++            resolve({ url: targetUrl, status: 'ERROR', error: err.message });
+++        });
+++
+++        request.on('timeout', () => {
+++            request.destroy();
+++            resolve({ url: targetUrl, status: 'TIMEOUT' });
+++        });
+++
+++        request.end();
+++    });
+++}
+++
+++async function run() {
+++    console.log("Starting Link Checker across awesome repositories...\n");
+++    const allUrls = new Set();
+++    const repoUrls = {};
+++
+++    repos.forEach(repoPath => {
+++        if (!fs.existsSync(repoPath)) {
+++            console.warn(`[WARNING] Repository file not found: ${repoPath}`);
+++            return;
+++        }
+++        const content = fs.readFileSync(repoPath, 'utf-8');
+++        let match;
+++        repoUrls[repoPath] = [];
+++        while ((match = urlRegex.exec(content)) !== null) {
+++            let cleanUrl = match[0];
+++            // Remove trailing dot if it's a punctuation
+++            if (cleanUrl.endsWith('.')) {
+++                cleanUrl = cleanUrl.slice(0, -1);
+++            }
+++            allUrls.add(cleanUrl);
+++            repoUrls[repoPath].push(cleanUrl);
+++        }
+++    });
+++
+++    console.log(`Found ${allUrls.size} unique URLs to verify.\n`);
+++
+++    const urlArray = Array.from(allUrls);
+++    const urlResults = {};
+++    
+++    // Process URLs in batches of 10 to avoid socket resource exhaustion
+++    const batchSize = 10;
+++    for (let i = 0; i < urlArray.length; i += batchSize) {
+++        const batch = urlArray.slice(i, i + batchSize);
+++        console.log(`Checking URLs ${i + 1} to ${Math.min(i + batchSize, urlArray.length)}...`);
+++        const promises = batch.map(url => checkUrl(url).then(res => {
+++            urlResults[url] = res;
+++        }));
+++        await Promise.all(promises);
+++    }
+++
+++    console.log("\n========================================");
+++    console.log("Broken or Suspicious Links Report:");
+++    console.log("========================================\n");
+++
+++    let brokenCount = 0;
+++    
+++    repos.forEach(repoPath => {
+++        if (!repoUrls[repoPath] || repoUrls[repoPath].length === 0) return;
+++        const filename = path.basename(repoPath);
+++        const dirname = path.basename(path.dirname(repoPath));
+++        const displayName = `${dirname}/${filename}`;
+++        
+++        let repoHasIssues = false;
+++        
+++        repoUrls[repoPath].forEach(url => {
+++            const res = urlResults[url];
+++            if (res && res.status !== 'OK') {
+++                if (!repoHasIssues) {
+++                    console.log(`Repo: ${displayName}`);
+++                    repoHasIssues = true;
+++                }
+++                console.log(`  - [${res.status}] ${url} (Code: ${res.code || 'N/A'}, Error: ${res.error || 'None'})`);
+++                brokenCount++;
+++            }
+++        });
+++    });
+++
+++    console.log("\n========================================");
+++    console.log(`Link Verification Complete. Total Issues Found: ${brokenCount}`);
+++    console.log("========================================");
+++}
+++
+++run();
++diff --git a/scripts/update-all-repos.ps1 b/scripts/update-all-repos.ps1
++new file mode 100644
++index 0000000..88874e7
++--- /dev/null
+++++ b/scripts/update-all-repos.ps1
++@@ -0,0 +1,56 @@
+++# Update All Repositories Master Orchestrator
+++Write-Host "==========================================" -ForegroundColor Green
+++Write-Host "STARTING ENTERPRISE REPOSITORY MAINTENANCE" -ForegroundColor Green
+++Write-Host "==========================================" -ForegroundColor Green
+++
+++$scriptsDir = "C:\Users\frank\starlight\repos\claude-skills-library\scripts"
+++
+++# Step 1: Run Link Checker Sweep
+++Write-Host "`n[STEP 1/4] Running link health audits..." -ForegroundColor Cyan
+++node "$scriptsDir\link-checker.mjs"
+++
+++# Step 2: Validate Custom Skills Library
+++Write-Host "`n[STEP 2/4] Validating skills schema & security rules..." -ForegroundColor Cyan
+++node "$scriptsDir\validate-skills.mjs"
+++
+++# Step 3: Align workspaces and run local commit sweep
+++Write-Host "`n[STEP 3/4] Aligning workspace files and creating Git commits..." -ForegroundColor Cyan
+++powershell -File "$scriptsDir\commit-repos.ps1"
+++
+++# Step 4: Push to Upstream Remotes
+++Write-Host "`n[STEP 4/4] Pushing changes to GitHub remotes..." -ForegroundColor Cyan
+++$repos = @(
+++    "C:/Users/frank/starlight/repos/awesome-agent-operating-systems",
+++    "C:/Users/frank/starlight/repos/awesome-agentic-income",
+++    "C:/Users/frank/starlight/repos/awesome-ai-coe",
+++    "C:/Users/frank/starlight/repos/awesome-automation-agent-skills",
+++    "C:/Users/frank/starlight/repos/awesome-cosmos-ai-agents",
+++    "C:/Users/frank/starlight/repos/awesome-design-agent-skills",
+++    "C:/Users/frank/starlight/repos/awesome-gamification-agent-skills",
+++    "C:/Users/frank/starlight/repos/awesome-hermes-agents",
+++    "C:/Users/frank/awesome-hermes-agents",
+++    "C:/Users/frank/starlight/repos/awesome-investor-agent-skills",
+++    "C:/Users/frank/starlight/repos/awesome-motion-design-agent-skills",
+++    "C:/Users/frank/starlight/repos/awesome-sustainability-agent-skills",
+++    "C:/Users/frank/starlight/repos/awesome-wealth-agent-skills",
+++    "C:/Users/frank/repos/awesome-suno-agent-skills",
+++    "C:/Users/frank/mind-intelligence-swarm/awesome-mind-agent-skills"
+++)
+++
+++foreach ($dir in $repos) {
+++    if (Test-Path $dir) {
+++        # Check if remote exists
+++        $hasRemote = git -C $dir remote
+++        if ($hasRemote) {
+++            Write-Host "Pushing $dir to GitHub remote..." -ForegroundColor Green
+++            # Redirect stderr to stdout so we can capture git output clearly
+++            git -C $dir push origin main 2>&1
+++        } else {
+++            Write-Host "No remote configured for $dir - skipping push." -ForegroundColor DarkGray
+++        }
+++    }
+++}
+++
+++Write-Host "`n==========================================" -ForegroundColor Green
+++Write-Host "REPOSITORY MAINTENANCE RUN COMPLETED" -ForegroundColor Green
+++Write-Host "==========================================" -ForegroundColor Green
++diff --git a/scripts/validate-skills.mjs b/scripts/validate-skills.mjs
++new file mode 100644
++index 0000000..7339301
++--- /dev/null
+++++ b/scripts/validate-skills.mjs
++@@ -0,0 +1,134 @@
+++import fs from 'fs';
+++import path from 'path';
+++
+++const skillsDir = 'C:/Users/frank/starlight/repos/claude-skills-library/free-skills';
+++
+++if (!fs.existsSync(skillsDir)) {
+++    console.error(`Error: Skills directory not found at ${skillsDir}`);
+++    process.exit(1);
+++}
+++
+++const folders = fs.readdirSync(skillsDir).filter(name => {
+++    return fs.statSync(path.join(skillsDir, name)).isDirectory();
+++});
+++
+++console.log(`Found ${folders.length} skills to validate under free-skills/...\n`);
+++
+++let passedCount = 0;
+++let failedCount = 0;
+++const results = [];
+++
+++folders.forEach(folder => {
+++    const skillPath = path.join(skillsDir, folder, 'SKILL.md');
+++    if (!fs.existsSync(skillPath)) {
+++        console.warn(`[WARNING] Skill ${folder} has no SKILL.md`);
+++        results.push({ name: folder, status: 'MISSING_SKILL_MD', errors: ['SKILL.md file not found'] });
+++        failedCount++;
+++        return;
+++    }
+++
+++    const content = fs.readFileSync(skillPath, 'utf-8');
+++    const lines = content.split(/\r?\n/);
+++    const errors = [];
+++    const warnings = [];
+++
+++    // 1. Validate YAML Frontmatter
+++    let hasFrontmatter = false;
+++    let frontmatterData = {};
+++    if (lines[0] && lines[0].trim() === '---') {
+++        let closingIndex = -1;
+++        for (let i = 1; i < lines.length; i++) {
+++            if (lines[i] && lines[i].trim() === '---') {
+++                closingIndex = i;
+++                break;
+++            }
+++        }
+++        if (closingIndex > -1) {
+++            hasFrontmatter = true;
+++            const frontmatterLines = lines.slice(1, closingIndex);
+++            frontmatterLines.forEach(line => {
+++                const colonIdx = line.indexOf(':');
+++                if (colonIdx > -1) {
+++                    const key = line.substring(0, colonIdx).trim();
+++                    const value = line.substring(colonIdx + 1).trim().replace(/^["']|["']$/g, '');
+++                    frontmatterData[key] = value;
+++                }
+++            });
+++        }
+++    }
+++
+++    if (!hasFrontmatter) {
+++        errors.push('Missing valid YAML frontmatter (starts/ends with ---)');
+++    } else {
+++        if (!frontmatterData.name) {
+++            errors.push('Frontmatter missing required field: name');
+++        }
+++        if (!frontmatterData.description) {
+++            errors.push('Frontmatter missing required field: description');
+++        }
+++    }
+++
+++    // 2. Validate File Length (Progressive Disclosure warning)
+++    if (lines.length > 800) {
+++        warnings.push(`File is long (${lines.length} lines). Recommend splitting or truncating below 800 lines to preserve context.`);
+++    }
+++
+++    // 3. Scan for potential hardcoded credentials / secrets
+++    const secretRegexes = [
+++        /sk-[a-zA-Z0-9]{32,}/i,               // OpenAI API Keys
+++        /AIzaSy[a-zA-Z0-9_-]{33}/i,           // Google API Keys
+++        /ghp_[a-zA-Z0-9]{36,}/i,              // GitHub Tokens
+++        /password\s*[:=]\s*['"][^\s'"]{6,}['"]/i, // Plain password assignment
+++        /api[-_]?key\s*[:=]\s*['"][a-zA-Z0-9_-]{16,}['"]/i // Generic API Key assignment
+++    ];
+++
+++    lines.forEach((line, idx) => {
+++        secretRegexes.forEach(regex => {
+++            if (regex.test(line)) {
+++                errors.push(`Potential credential/secret detected on line ${idx + 1}: "${line.trim()}"`);
+++            }
+++        });
+++    });
+++
+++    // 4. Verify no broken code blocks
+++    let insideCodeBlock = false;
+++    lines.forEach((line, idx) => {
+++        if (line.trim().startsWith('```')) {
+++            insideCodeBlock = !insideCodeBlock;
+++        }
+++    });
+++    if (insideCodeBlock) {
+++        errors.push('Unclosed code block (```) detected at the end of the file.');
+++    }
+++
+++    // 5. Output results
+++    if (errors.length === 0) {
+++        console.log(`[PASS] ${folder} (${frontmatterData.name || 'Unnamed'})`);
+++        if (warnings.length > 0) {
+++            warnings.forEach(w => console.log(`       - [WARN] ${w}`));
+++        }
+++        passedCount++;
+++        results.push({ name: folder, status: 'PASS', warnings });
+++    } else {
+++        console.log(`[FAIL] ${folder}`);
+++        errors.forEach(e => console.log(`       - [ERROR] ${e}`));
+++        if (warnings.length > 0) {
+++            warnings.forEach(w => console.log(`       - [WARN] ${w}`));
+++        }
+++        failedCount++;
+++        results.push({ name: folder, status: 'FAIL', errors, warnings });
+++    }
+++});
+++
+++console.log(`\n========================================`);
+++console.log(`Validation Summary:`);
+++console.log(`- Total Checked: ${folders.length}`);
+++console.log(`- Passed: ${passedCount}`);
+++console.log(`- Failed: ${failedCount}`);
+++console.log(`========================================`);
+++
+++if (failedCount > 0) {
+++    process.exit(1);
+++} else {
+++    process.exit(0);
+++}

@@ -1,0 +1,6 @@
+ASPH WIP
+Branch: agent/cleanup-sync
+Objective: N/A
+Touched: ?? .asph-wip/
+Resume with: git reset HEAD~1 --mixed
+Full prompt + visual console in agentic-ops/lifecycle/asph-genius-recovery.html
