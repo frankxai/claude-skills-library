@@ -1,0 +1,65 @@
+name: Web excellence
+
+# The session hooks cover a working session. This covers everything else:
+# every PR that touches a UI file, whoever or whatever opened it.
+#
+# Runs the mechanical subset of the Web Interface Guidelines — no model, no
+# network, ~2 seconds. The judgment half stays in the `web-design-guidelines`
+# skill, which a session runs against the same files.
+#
+# Installed by packs/web-excellence/install.sh. Safe to edit the paths list.
+
+# Filter by EXTENSION, mirroring the linter's own UI_EXT — not by directory.
+# A `paths:` entry like `app/**` is root-anchored, so in a monorepo (arcanea:
+# apps/web/app, arcanea.ai/app; none of app|src|components|styles|layouts exist
+# at the root) it matches nothing and the job silently never runs. Only the
+# `**/`-led CSS globs fired, so a PR touching just .tsx skipped the gate
+# entirely. Extensions are layout-independent; which directories count is the
+# linter's NOT_UI to decide, and it short-circuits cheaply when nothing is in
+# scope.
+on:
+  pull_request:
+    paths:
+      - '**/*.tsx'
+      - '**/*.jsx'
+      - '**/*.vue'
+      - '**/*.svelte'
+      - '**/*.astro'
+      - '**/*.css'
+      - '**/*.scss'
+      - '**/*.sass'
+      - '.github/workflows/web-excellence.yml'
+      - '.claude/ci/web-guidelines-lint.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  guidelines:
+    name: Web Interface Guidelines (mechanical)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Smoke-test the hooks
+        # The hooks' real tests live with the pack upstream and are deliberately
+        # not vendored. This is the floor: prove each vendored file still parses
+        # and exits clean on an empty payload, so a local hand-edit that breaks
+        # one is caught here rather than by a silently dead gate in a session.
+        run: |
+          for h in .claude/hooks/web-excellence-*.py; do
+            [ -e "$h" ] || continue
+            echo '{}' | python3 "$h" >/dev/null || { echo "FAIL: $h"; exit 1; }
+            echo "ok $h"
+          done
+          node --check .claude/ci/web-guidelines-lint.mjs && echo "ok lint script parses"
+
+      - name: Lint changed UI files
+        # checkout above used fetch-depth: 0, so the base ref is already local.
+        run: node .claude/ci/web-guidelines-lint.mjs --changed --base "origin/${{ github.base_ref }}"

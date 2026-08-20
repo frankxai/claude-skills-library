@@ -1,0 +1,40 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-skills-library",
+  "description": "Production-grade Agent Skills for Claude Code and every major agentic runtime.",
+  "owner": {
+    "name": "FrankX",
+    "url": "https://github.com/frankxai"
+  },
+  "plugins": [
+    {
+      "name": "claude-skills-library",
+      "description": "The complete library of Agent Skills — AI agents & orchestration, MCP & SDKs, Oracle & cloud, frontend & animation, engineering workflow, content & brand, and creative production. Skills auto-activate when relevant.",
+      "source": "./",
+      "strict": false,
+      "category": "productivity",
+      "homepage": "https://github.com/frankxai/claude-skills-library",
+      "keywords": [
+        "agent-skills",
+        "skills",
+        "claude-code",
+        "mcp",
+        "ai-agents",
+        "orchestration",
+        "oracle",
+        "oci",
+        "nextjs",
+        "frontend",
+        "content",
+        "creative",
+        "suno"
+      ],
+      "skills": [
+        "free-skills",
+        "free-skills/anthropic",
+        "free-skills/creative",
+        "free-skills/technical"
+      ]
+    }
+  ]
+}

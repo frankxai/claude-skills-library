@@ -1,6 +1,6 @@
 ---
-name: LangGraph Patterns Expert
-description: Build production-grade agentic workflows with LangGraph using graph-based orchestration, state machines, human-in-the-loop, and advanced control flow
+name: langgraph-patterns
+description: Production-grade agentic workflows with LangGraph — graph orchestration, state machines, human-in-the-loop, and advanced control flow. Use when building or debugging a LangGraph app, modeling agent state, or adding checkpoints and human approval steps.
 version: 1.0.0
 ---
 
@@ -250,7 +250,7 @@ app.invoke(input)
 ```python
 from langchain_anthropic import ChatAnthropic
 
-llm = ChatAnthropic(model="claude-sonnet-4-5")
+llm = ChatAnthropic(model="claude-sonnet-4-6")
 agent = create_react_agent(llm, tools)
 ```
 

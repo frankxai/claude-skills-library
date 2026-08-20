@@ -1,0 +1,91 @@
+# Agentic Orchestration Skill
+# Multi-agent coordination patterns
+# Part of Agentic Creator OS
+
+name: agentic-orchestration
+version: 1.0.0
+description: Multi-agent orchestration patterns, handoff protocols, and workflow coordination
+author: FrankX
+license: MIT
+
+# Dependencies
+requires:
+  skills:
+    - creator-intelligence@^1.0.0
+  mcp:
+    - filesystem-mcp
+
+# Auto-activation triggers
+triggers:
+  keywords:
+    - orchestration
+    - multi-agent
+    - agent coordination
+    - handoff
+    - workflow automation
+    - agent swarm
+    - parallel agents
+  files:
+    - "**/orchestration/**"
+    - "**/agents/**"
+    - "**/workflows/**"
+  commands:
+    - /agentic-orchestration
+    - /multi-agent
+
+# MCP tool bindings
+tools:
+  filesystem:
+    - read: "Read agent configurations"
+    - write: "Create workflow definitions"
+    - glob: "Find agent patterns"
+
+# What this skill exports
+exports:
+  - orchestration_patterns
+  - handoff_protocols
+  - state_machines
+  - parallel_execution
+  - error_recovery
+
+# Capabilities
+capabilities:
+  - Design multi-agent workflows
+  - Implement agent handoffs
+  - Create state machine orchestrators
+  - Handle parallel execution
+  - Error recovery and fallbacks
+  - Context preservation across agents
+
+# External sources for cutting-edge patterns
+externalSources:
+  - repo: langchain-ai/langgraph
+    patterns:
+      - graph-orchestration
+      - state-machines
+      - multi-agent-systems
+  - repo: openai/swarm
+    patterns:
+      - agent-handoffs
+      - function-calling
+  - repo: anthropics/anthropic-cookbook
+    patterns:
+      - multi-turn
+      - tool-orchestration
+
+# Example usage
+examples:
+  - prompt: "Design a content pipeline with multiple agents"
+    description: "Create orchestrated multi-agent workflow"
+  - prompt: "How do I pass context between agents?"
+    description: "Implement agent handoff protocols"
+  - prompt: "Build a parallel processing workflow"
+    description: "Execute multiple agents concurrently"
+
+# Tags
+tags:
+  - orchestration
+  - multi-agent
+  - workflows
+  - state-machines
+  - coordination

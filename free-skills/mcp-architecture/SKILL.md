@@ -1,6 +1,6 @@
 ---
-name: MCP Architecture Expert
-description: Design and implement Model Context Protocol servers for standardized AI-to-data integration with resources, tools, prompts, and security best practices
+name: mcp-architecture
+description: Design and implement Model Context Protocol servers with resources, tools, prompts, and security best practices. Use when architecting an MCP server, modeling its resources/tools/prompts, or integrating a service as an MCP endpoint.
 version: 1.0.0
 ---
 
@@ -274,7 +274,7 @@ from anthropic import Anthropic
 client = Anthropic()
 
 response = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",
     mcp_servers={
         "github": {
             "command": "npx",
