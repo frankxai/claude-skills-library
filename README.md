@@ -4,7 +4,7 @@
 
 # 🧠 Claude Skills Library
 
-### 107 production-grade Agent Skills for Claude Code, Claude.ai, and every major agentic runtime
+### 111 production-grade Agent Skills for Claude Code, Claude.ai, and every major agentic runtime
 
 A free, MIT-licensed catalog of self-contained `SKILL.md` files. Each one teaches your AI agent a
 domain — MCP architecture, Next.js, Oracle Cloud, Suno music, code review, and more — with real
@@ -12,11 +12,11 @@ frameworks and current best practices, not 500 words of filler.
 
 **For** anyone running Claude Code or another skills-aware agent who wants expert behavior on tap.
 **Why not just copy skills by hand?** These are spec-validated, version-tracked, install in one
-command, auto-update via the plugin, and load only when relevant — so a library of 107 costs almost
+command, auto-update via the plugin, and load only when relevant — so a library of 111 costs almost
 nothing in context until a skill actually fires.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-107-blue.svg)](docs/CATALOG.md)
+[![Skills](https://img.shields.io/badge/skills-111-blue.svg)](docs/CATALOG.md)
 [![Frontmatter validated](https://img.shields.io/badge/frontmatter-validated-success.svg)](scripts/validate_skills.py)
 [![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#-works-with-six-runtimes)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -85,7 +85,7 @@ Every skill here:
 - ✅ Is **progressive-disclosure friendly**: a tight description for routing, deep guidance loaded only on use.
 - ✅ Carries a **trigger-rich description** so the right skill activates from a library this large.
 
-**107 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
+**111 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
 engineering workflow, and personal performance. **All free. MIT-licensed.**
 
 ---
@@ -237,7 +237,7 @@ In short: **Starlight is the substrate, ACOS is the canonical skill source, and 
 
 ## ❓ FAQ
 
-**Does loading 107 skills bloat my context?**
+**Does loading 111 skills bloat my context?**
 No. Only each skill's `name` + `description` is preloaded for routing; the full body loads **only when
 a skill triggers**, and `references/` load only when read. That's the whole point of progressive disclosure.
 

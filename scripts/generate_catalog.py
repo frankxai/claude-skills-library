@@ -28,7 +28,7 @@ OUT = os.path.join(REPO, "docs", "CATALOG.md")
 
 # Ordered (first match wins). Each entry: (category title, name-regex).
 CATEGORIES = [
-    ("AI Agents & Orchestration", r"agentic|swarm|hive-mind|stream-chain|model-routing|reasoningbank|memory-prune|opus-extended|sparc|pair-programming|nextjs-agent-team"),
+    ("AI Agents & Orchestration", r"agentic|swarm|hive-mind|stream-chain|model-routing|reasoningbank|memory-prune|opus-extended|sparc|pair-programming|nextjs-agent-team|ai-architect-review"),
     ("AI Frameworks, MCP & SDKs", r"^mcp|mcp-|openai-agentkit|claude-sdk|langgraph|oracle-adk|oracle-agent-spec|partner-"),
     ("Oracle & Cloud", r"oracle|^oci|^si$|ai-architecture"),
     ("Web, Frontend & Animation", r"nextjs|tailwind|^three$|framer|web-design|ui-ux|css-animations|animejs|gsap|lottie|waapi|defuddle"),
