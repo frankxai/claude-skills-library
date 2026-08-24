@@ -1,5 +1,5 @@
 # 📚 Skills Catalog
-The complete index of all **111 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **113 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
@@ -172,10 +172,12 @@ _1 skill_
 | [`contribute-catalog`](../free-skills/contribute-catalog/SKILL.md) | Author a new HyperFrames registry block (caption style, VFX block, transition, lower third) or component (text effect, overlay, snippet) and ship it as an upstream PR to the hyp... |
 
 ## Other
-_3 skills_
+_5 skills_
 
 | Skill | Description |
 |---|---|
+| [`feynman-thinking`](../free-skills/feynman-thinking/SKILL.md) | Transform Claude into a Feynman mentor. Focuses on simple explanations, architectural models, Socratic questioning, and stripping away unnecessary complexity. Triggers on: feynm... |
 | [`loop-designer`](../free-skills/loop-designer/SKILL.md) | Compile a goal into a durable, file-backed agent loop — a .loop/<name>/ charter any coding agent (Claude Code, Codex, Gemini, Grok) can execute unattended. Use when the user wan... |
 | [`loop-orchestrator`](../free-skills/loop-orchestrator/SKILL.md) | Operate a fleet of durable agent loops under .loop/ — schedule which loop runs next, assign agents to roles (maker vs checker), enforce promotion gates from propose-only to writ... |
 | [`loop-runner`](../free-skills/loop-runner/SKILL.md) | Execute exactly one disciplined iteration of a designed loop from .loop/<name>/ (LOOP.md charter + state.json + journal.md). Use when asked to "run the loop", "run one iteration... |
+| [`todo-discipline`](../free-skills/todo-discipline/SKILL.md) | Use when starting any complex task (3+ steps) or before declaring work complete. Enforces todo/task state to match reality — merge updates + read verification. Prevents false co... |

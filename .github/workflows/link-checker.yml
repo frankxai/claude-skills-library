@@ -1,0 +1,20 @@
+name: Link Checker
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Run every Sunday at midnight
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v1.9.3
+        with:
+          args: --accept=200,204,429 --timeout=10 --max-retries=3 --exclude-mail '*.md' '**/*.md'
+          fail: true # Fail the workflow if broken links are found
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
