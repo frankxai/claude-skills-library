@@ -6,7 +6,8 @@ embedded as JSON and client-side search + category filtering. Reuses the skill
 collection and categorisation from generate_catalog.py so the site, the
 Markdown catalog, and the validator never disagree. Run:
 
-    python3 scripts/generate_site.py
+    python3 scripts/generate_site.py            # write docs/index.html
+    python3 scripts/generate_site.py --check    # exit 1 if it would change
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
+from _skillmeta import read_text  # noqa: E402
 from generate_catalog import CATEGORIES, categorize, collect  # noqa: E402
 
 HERE = os.path.dirname(__file__)
@@ -163,6 +165,15 @@ def main() -> int:
 </body>
 </html>
 """
+    if "--check" in sys.argv:
+        current = read_text(OUT) if os.path.exists(OUT) else ""
+        if current != page:
+            print("DRIFT: docs/index.html is out of date. "
+                  "Run scripts/generate_site.py.")
+            return 1
+        print(f"OK: docs/index.html is up to date "
+              f"({len(data)} skills, {len(cats)} categories).")
+        return 0
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(page)

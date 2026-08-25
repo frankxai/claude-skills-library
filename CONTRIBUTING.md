@@ -43,11 +43,17 @@ Run the validator before opening a PR:
 python3 scripts/validate_skills.py
 ```
 
-If you add, rename, or remove a skill, regenerate the catalog so `docs/CATALOG.md` stays in sync:
+If you add, rename, or remove a skill, regenerate both generated indexes so they stay in sync,
+and update the skill counts in `README.md`:
 
 ```bash
-python3 scripts/generate_catalog.py
+python3 scripts/generate_catalog.py   # docs/CATALOG.md
+python3 scripts/generate_site.py      # docs/index.html
+python3 scripts/check_counts.py       # tells you if README.md's counts are now wrong
 ```
+
+CI runs the `--check` form of the first two and `check_counts.py` as-is, so a forgotten
+regeneration or a stale README count fails the build rather than landing quietly.
 
 ## How to Contribute
 

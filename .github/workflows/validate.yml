@@ -24,3 +24,9 @@ jobs:
 
       - name: Check internal links
         run: python3 scripts/check_links.py
+
+      - name: Check catalog site is in sync
+        run: python3 scripts/generate_site.py --check
+
+      - name: Check README counts match reality
+        run: python3 scripts/check_counts.py
