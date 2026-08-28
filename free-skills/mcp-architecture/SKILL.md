@@ -274,7 +274,7 @@ from anthropic import Anthropic
 client = Anthropic()
 
 response = client.messages.create(
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5",
     mcp_servers={
         "github": {
             "command": "npx",
