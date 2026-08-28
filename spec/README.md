@@ -6,6 +6,11 @@ specification lives at **[agentskills.io/specification](https://agentskills.io/s
 the official best-practices guide at
 **[platform.claude.com/docs/agents-and-tools/agent-skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)**.
 
+> **Going further than L1.** The Agent Skills format defines a documented skill — what the
+> [Agent Skill Standard](../standard/) calls Level 1. To take a skill to evaluation, governance,
+> and composition, see the standard and its [six-level maturity model](../standard/MATURITY-MODEL.md).
+> Run `node standard/validate-skill.mjs <skill-folder>` to report any skill's maturity level.
+
 ## What a skill is
 
 A skill is a self-contained folder with a `SKILL.md` at its root:
