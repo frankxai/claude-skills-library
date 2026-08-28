@@ -1,0 +1,21 @@
+# manifest.txt — the skills this pack installs, one per line.
+#
+# Each entry is a path relative to the repository root. The skill's canonical
+# copy lives THERE (free-skills/ is the single source of truth); this pack
+# carries no second copy, so there is nothing in packs/ to drift against it.
+# install.sh reads this file; tests/test_install.py pins it to reality.
+#
+# Coordination
+free-skills/swarm-orchestration
+free-skills/swarm-advanced
+free-skills/hive-mind-advanced
+# Memory
+free-skills/reasoningbank-intelligence
+free-skills/reasoningbank-agentdb
+# Lifecycle and pipelines
+free-skills/hooks-automation
+free-skills/stream-chain
+# Quality
+free-skills/verification-quality
+# Skill tooling
+free-skills/skill-builder
