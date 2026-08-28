@@ -1,5 +1,5 @@
 # 📚 Skills Catalog
-The complete index of all **113 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **114 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
@@ -79,7 +79,7 @@ _14 skills_
 | [`web-design-expert`](../free-skills/web-design-expert/SKILL.md) | Web design and UX guidance for visual systems, accessibility, interaction patterns, and performance-aware interfaces. Use when designing a website's look and feel, improving UX/... |
 
 ## Engineering Workflow & GitHub
-_9 skills_
+_10 skills_
 
 | Skill | Description |
 |---|---|
@@ -89,6 +89,7 @@ _9 skills_
 | [`github-release-management`](../free-skills/github-release-management/SKILL.md) | GitHub release orchestration — automated versioning, testing, deployment, and rollback. Use when cutting a release, tagging a version, drafting release notes, or coordinating a... |
 | [`hooks-automation`](../free-skills/hooks-automation/SKILL.md) | Automated coordination, formatting, and learning from Claude Code operations using intelligent hooks with MCP integration. Includes pre/post task hooks, session management, Git... |
 | [`performance-analysis`](../free-skills/performance-analysis/SKILL.md) | Performance analysis, bottleneck detection, and optimization recommendations. Use when profiling slow code or systems, hunting a performance regression, or producing an optimiza... |
+| [`skill-builder`](../free-skills/skill-builder/SKILL.md) | Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for s... |
 | [`verification-quality`](../free-skills/verification-quality/SKILL.md) | Truth scoring, code-quality verification, and automatic rollback with a high accuracy threshold. Use when validating agent output before it ships, gating changes on quality, or... |
 | [`worker-benchmarks`](../free-skills/worker-benchmarks/SKILL.md) | Run comprehensive worker-system benchmarks and performance analysis. Use when benchmarking worker throughput/latency, comparing worker configurations, or diagnosing worker perfo... |
 | [`worker-integration`](../free-skills/worker-integration/SKILL.md) | Worker–agent integration for intelligent task dispatch and performance tracking. Use when wiring agents to a worker pool, routing tasks to workers, or instrumenting worker perfo... |
