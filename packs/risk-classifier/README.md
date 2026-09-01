@@ -54,12 +54,37 @@ Per library doctrine, tests live here with the pack. Repos vendor copies via
 `.claude/ci/risk-classifier/`) and upgrade by re-running it — never by hand-editing
 the vendored copy.
 
+## Security posture (v1.1, per the PR #27 review)
+
+- `--root` is resolved to the **git top-level** (realpath); a root outside any checkout
+  is an error (exit 2).
+- Every candidate path must be relative and traversal-free and must resolve inside that
+  root; absolute paths, `..`, and empty segments are rejected as `unsafe_path` (gating).
+- **Symlinks are never followed.** Every ancestor and the file itself are `lstat`ed; any
+  symlink gates as `unsafe_path`, so a malformed or hostile `--files` list cannot make
+  the secret scanner read outside the repository.
+- Secret scanning **streams** the whole file in 1 MiB chunks with a 4 KiB overlap, so
+  secrets past the first chunk or spanning a boundary are found. Files over 64 MiB gate
+  as `unscanned` — never a silent clear.
+- `prose_docs` is an **explicit bounded allowlist** of internal-notes roots, not an
+  extension rule. `docs/launch.md`, `docs/customer/**`, policy variants and any other
+  prose outside the list are unclassified and gate. Repos widen the list only through
+  `.claude/ci/risk-classifier/overrides.json`, which may add `paths` to non-gating
+  classes and is rejected if it touches anything else.
+- Running with neither `--files` nor `--base` is **missing input** and exits 2; an empty
+  diff under `--base` is a legitimate clear.
+- The installer verifies the target via `git rev-parse --show-toplevel`, so it works for
+  both normal checkouts and worktrees.
+
 ## Tests
 
 ```bash
 node --test tests/risk-classify.test.mjs
 ```
 
-11 cases: prose clears; `data/`, lockfiles, public assets, content claims, secrets in
-prose, unknown extensions, migrations, governing docs, deletions, and mixed sets all
-gate.
+24 cases over real temporary git repos: classification semantics (bounded prose
+clears; launch/customer docs, `data/`, lockfiles, assets, claims, migrations, governing
+docs, deletions, mixed sets gate; override widening and override rejection), path
+safety (traversal, absolute, symlinked file, symlinked ancestor), size boundaries
+(secret past 1 MiB, secret across the chunk boundary, over-limit → `unscanned`), and the
+CLI contract (missing input → 2, empty diff → 0, non-git root → 2).

@@ -64,8 +64,8 @@
     },
     "prose_docs": {
       "gating": false,
-      "why": "Plain prose documentation with no runtime, claims, or governing role. The only class that clears on its own.",
-      "extensions": [".md", ".mdx", ".txt"]
+      "why": "The only class that clears on its own, so it is an explicit bounded allowlist of internal-notes roots — never an extension rule. Any prose outside these roots (public docs, launch copy, customer docs, policy variants) is unclassified and gates. Repos widen this list only via .claude/ci/risk-classifier/overrides.json, which may add paths to non-gating classes and nothing else.",
+      "paths": ["docs/notes/**/*.md", "docs/notes/**/*.mdx", "docs/notes/**/*.txt", "notes/**/*.md", "notes/**/*.txt", "docs/handovers/**/*.md", "docs/ops/HANDOVER-*.md", "docs/ops/EOD-*.md"]
     }
   }
 }
