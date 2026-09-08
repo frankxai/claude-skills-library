@@ -27,3 +27,25 @@ jobs:
           git config --global user.email ci@example.invalid
           git config --global user.name ci
           node --test "${files[@]}"
+
+  python-pack-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      # web-excellence ships 18 tests that nothing ran — including the one
+      # proving its Stop hook cannot be satisfied by its own reminder text. A
+      # written test that never executes is worse than no test: it reads as
+      # covered. Verified passing before this step was added.
+      - name: Run every pack's python test suite
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(packs/*/tests/test_*.py)
+          if [ ${#files[@]} -eq 0 ]; then echo "no python pack tests found"; exit 0; fi
+          for f in "${files[@]}"; do
+            echo "── $f"
+            python3 "$f"
+          done
