@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 // Tests for the routine-contract pack.
 //
-//   node packs/routine-contract/tests/test_routine_contract.mjs
+//   node --test packs/routine-contract/tests/routine-contract.test.mjs
 //
-// Zero dependencies, no test runner — this has to run anywhere the scripts do.
+// Named *.test.mjs on purpose: .github/workflows/pack-tests.yml globs
+// packs/*/tests/*.test.mjs, and a suite the glob misses is a suite CI silently
+// skips while reporting green — the same defect this pack exists to prevent.
+//
+// Only node:test and node:assert — no dependencies, so it runs anywhere the
+// scripts do.
 //
 // The load-bearing one is test_emit_fails_when_it_cannot_persist. The entire
 // pack rests on a single property: a routine that cannot save its output exits
@@ -12,6 +17,7 @@
 // built to end, restored silently and with a passing test suite. That test is
 // why it cannot come back.
 
+import { test } from 'node:test'
 import { execFileSync, execSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -23,13 +29,6 @@ const PACK = dirname(HERE)
 const DIGEST = join(PACK, 'scripts', 'routine-digest.mjs')
 const DRIFT = join(PACK, 'ci', 'routine-drift-check.mjs')
 
-let passed = 0
-const failures = []
-
-function test(name, fn) {
-  try { fn(); passed++; console.log(`✓ ${name}`) }
-  catch (err) { failures.push([name, err.message]); console.log(`✗ ${name}\n    ${err.message}`) }
-}
 function assert(cond, msg) { if (!cond) throw new Error(msg) }
 
 // Runs a script and returns {code, stdout, stderr} instead of throwing on non-zero.
@@ -204,6 +203,3 @@ test('drift check honours startsAfter', () => {
     assert(r.code === 0, 'a routine not yet enforced must not fail the check')
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
-
-console.log(`\n${passed} passed, ${failures.length} failed`)
-if (failures.length) process.exit(1)
