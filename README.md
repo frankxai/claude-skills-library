@@ -257,6 +257,29 @@ Yes — see [`runtimes/`](runtimes/) for Antigravity, OpenCode, Codex, Gemini CL
 
 ---
 
+## Would you pay for a skill that proves it works?
+
+Every skill here is free, MIT, and yours. That is not changing.
+
+But a skill is prose until something tests it. All 103 in this library read well. None of them ships
+evidence that it still behaves under pressure — and that is exactly how a skill quietly degrades an
+agent instead of improving it, in a way you notice three sessions later and blame on the model.
+
+**There is no paid product here today.** Before building one, the honest move is to find out whether
+it should exist. The idea on the table: a pack where every skill ships with its promptfoo eval suite,
+the cases it passes, and — the part nobody publishes — the cases it fails.
+
+If that is worth money to you, say so and name the band. If it is not, say that instead; it is the
+more useful answer, and it is the one that stops this from being built.
+
+**[Tell us what it is worth →](https://github.com/frankxai/claude-skills-library/discussions/new?category=ideas&title=Skills%20with%20evals)**
+
+The first fifty people to answer get one skill with its full eval suite and run output, free,
+whatever happens next. At fifty answers the eval harness is published open-source regardless of
+whether the pack is ever built.
+
+---
+
 ## 📜 License
 
 MIT — free to use, modify, and distribute. See [LICENSE](LICENSE). Skills under
