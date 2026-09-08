@@ -1,0 +1,40 @@
+# routine-contract pack — installed to .github/workflows/routine-contract.yml
+#
+# The digest's non-zero exit covers a single run. This covers the fleet: it
+# catches a routine that stopped reporting altogether, which no individual run
+# can detect because a routine that never fires never fails.
+name: routine-contract
+
+on:
+  schedule:
+    # Daily. Drift is a slow signal — a routine silent for a day matters, one
+    # silent for an hour usually does not.
+    - cron: '0 11 * * *'
+  pull_request:
+    paths:
+      - 'routines.config.json'
+      - 'data/routine-digests.jsonl'
+      - '.claude/ci/routine-drift-check.mjs'
+      - 'scripts/ops/routine-digest.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Proves the primitive still rejects what it must. If this regresses, a
+      # routine can report green while persisting nothing and the drift check
+      # below would have nothing to notice.
+      - name: routine-digest selftest
+        run: node scripts/ops/routine-digest.mjs selftest
+
+      - name: routine drift check
+        run: node .claude/ci/routine-drift-check.mjs
