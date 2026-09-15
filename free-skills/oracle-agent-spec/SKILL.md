@@ -42,7 +42,7 @@ Agent Spec defines **conceptual building blocks** (components) that make up agen
 ```yaml
 type: LLMNode
 name: "text_generator"
-model: "claude-sonnet-4-6"
+model: "claude-sonnet-5"
 system_prompt: "You are a helpful assistant"
 temperature: 0.7
 max_tokens: 2000
@@ -111,7 +111,7 @@ error_handling: retry
       },
       "technical_support": {
         "type": "AgentNode",
-        "model": "claude-sonnet-4-6",
+        "model": "claude-sonnet-5",
         "tools": ["diagnose_issue", "escalate_ticket"]
       },
       "billing_support": {
@@ -148,7 +148,7 @@ system:
   agents:
     researcher:
       type: AgentNode
-      model: claude-sonnet-4-6
+      model: claude-sonnet-5
       tools:
         - web_search
         - fetch_document
@@ -164,7 +164,7 @@ system:
 
     synthesizer:
       type: AgentNode
-      model: claude-sonnet-4-6
+      model: claude-sonnet-5
       system_prompt: "Synthesize findings into coherent report"
 
   workflow:

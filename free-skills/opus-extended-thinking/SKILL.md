@@ -1,10 +1,11 @@
 ---
 name: opus-extended-thinking
 description: Use Claude's extended/adaptive thinking for deep reasoning, complex analysis, and multi-step synthesis — both the prompt patterns that elicit deliberation and the current thinking API (adaptive thinking + the effort parameter). Use when a problem needs thorough deliberation before answering, or when configuring thinking on a Claude request.
-version: 2.0.0
-last_updated: 2026-06-22
-external_version: "Current Claude family — Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5 (June 2026)"
+version: 2.1.0
+last_updated: 2026-08-28
+external_version: "Current Claude family — Fable 5, Opus 5, Sonnet 5, Haiku 4.5 (August 2026)"
 changelog: |
+  - 2.1.0: Model family bump — Opus 5 and Sonnet 5 supersede Opus 4.8 and Sonnet 4.6 as current/default. The adaptive-thinking + effort API and budget_tokens removal are unchanged; patterns remain model-agnostic.
   - 2.0.0: Update to the current model family and the adaptive-thinking + effort API (budget_tokens is removed on current models). Patterns are model-agnostic.
   - 1.0.0: Initial skill for Opus 4.5 extended thinking patterns
 ---
@@ -14,7 +15,7 @@ changelog: |
 This skill covers Claude's ability to reason deeply before responding — both the **prompt patterns**
 that elicit genuine deliberation (model-agnostic, below) and the **current thinking API** (how to
 turn it on and tune its depth). It applies to the current Claude family: **Fable 5** (most capable),
-**Opus 4.8** (default), **Sonnet 4.6**, and **Haiku 4.5**.
+**Opus 5** (default), **Sonnet 5**, and **Haiku 4.5**.
 
 > Model IDs and API details move fast. This skill is dated; always confirm against
 > **[platform.claude.com](https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking)**.
@@ -28,9 +29,9 @@ budget. The older `thinking: {type: "enabled", budget_tokens: N}` is **deprecate
 removed (returns a 400) on Opus 4.7, Opus 4.8, and Fable 5** — do not use it on current models.
 
 ```python
-# Current pattern (Opus 4.8 / 4.7 / 4.6, Sonnet 4.6)
+# Current pattern (Opus 5, Sonnet 5, and the older Opus 4.8 / 4.7 / 4.6, Sonnet 4.6)
 response = client.messages.create(
-    model="claude-opus-4-8",
+    model="claude-opus-5",
     max_tokens=16000,
     thinking={"type": "adaptive", "display": "summarized"},  # default display is "omitted"
     output_config={"effort": "high"},  # low | medium | high | xhigh | max
@@ -325,8 +326,10 @@ For these, don't add complexity. Just ask directly.
 
 - **Fable 5** — Anthropic's most capable model for the hardest reasoning and long-horizon agentic
   work; thinking is always on. Reserve for genuinely demanding tasks (it is priced above Opus tier).
-- **Opus 4.8** — the default for strong reasoning and agentic work; adaptive thinking + `effort`.
-- **Sonnet 4.6** — best balance of speed and intelligence; supports adaptive thinking.
+- **Opus 5** — the default for strong reasoning and agentic work; adaptive thinking + `effort`.
+  Supersedes Opus 4.8 as current; unlike 4.8, thinking runs adaptive even if you omit the parameter.
+- **Sonnet 5** — best balance of speed and intelligence; supports adaptive thinking. Supersedes
+  Sonnet 4.6 as current.
 - **Haiku 4.5** — fastest/cheapest for simple, latency-sensitive tasks (no `xhigh`/`max` effort).
 
 All current models excel at sustained reasoning chains, self-correction when given space, nuanced

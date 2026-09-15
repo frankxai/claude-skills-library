@@ -10,7 +10,7 @@ triggers:
   - sonnet
   - opus
 priority: high
-version: 1.0.0
+version: 1.1.0
 source: claude-flow
 ---
 
@@ -18,10 +18,14 @@ source: claude-flow
 
 You have access to intelligent model routing. Before executing any task, analyze complexity and route to the appropriate model tier.
 
-> **Current model IDs (June 2026 — verify at [platform.claude.com](https://platform.claude.com/docs/en/about-claude/models/overview)):**
-> Haiku → `claude-haiku-4-5` · Sonnet → `claude-sonnet-4-6` · Opus → `claude-opus-4-8` (default).
-> For the hardest long-horizon reasoning, escalate above Opus to **`claude-fable-5`** (most capable;
-> priced above Opus tier — reserve for genuinely demanding work). The tiers below are model-agnostic.
+> **Current model IDs and pricing — Last verified: 2026-08-28. Re-verify at
+> [platform.claude.com](https://platform.claude.com/docs/en/about-claude/models/overview) before trusting
+> these again; they have moved more than once in 2026.**
+> Haiku → `claude-haiku-4-5` ($1.00 / $5.00 per 1M input/output) · Sonnet → `claude-sonnet-5`
+> ($2.00 / $10.00) · Opus → `claude-opus-5` ($5.00 / $25.00, default).
+> For the hardest long-horizon reasoning, escalate above Opus to **`claude-fable-5`** ($10.00 / $50.00 —
+> most capable; thinking is always on, no disabling it; reserve for genuinely demanding work).
+> Model IDs are complete as written — never append a date suffix. The tiers below are model-agnostic.
 
 ## Routing Decision Matrix
 
@@ -29,7 +33,7 @@ You have access to intelligent model routing. Before executing any task, analyze
 TASK COMPLEXITY ANALYSIS
 ────────────────────────────────────────────────────────────────
 
-HAIKU (Fast, Cheap) - Use for:
+HAIKU (Fast, Cheap) - claude-haiku-4-5 - Use for:
 ├── Simple file operations (read, list, navigate)
 ├── Scaffolding and boilerplate generation
 ├── Deterministic transformations (format, lint, compile)
@@ -39,11 +43,11 @@ HAIKU (Fast, Cheap) - Use for:
 ├── Documentation formatting
 ├── Simple search and replace
 │
-│   Token cost: ~$0.25/1M input, $1.25/1M output
+│   Token cost: $1.00/1M input, $5.00/1M output
 │   Latency: Fastest
 │   Use when: Task has clear, unambiguous steps
 
-SONNET (Balanced) - Use for:
+SONNET (Balanced) - claude-sonnet-5 - Use for:
 ├── Feature implementation (standard complexity)
 ├── Bug fixes requiring analysis
 ├── Content writing (articles, social posts)
@@ -53,11 +57,11 @@ SONNET (Balanced) - Use for:
 ├── API integration work
 ├── Database schema design
 │
-│   Token cost: ~$3/1M input, $15/1M output
+│   Token cost: $2.00/1M input, $10.00/1M output
 │   Latency: Medium
 │   Use when: Task requires reasoning but not deep strategy
 
-OPUS (Strategic, Complex) - Use for:
+OPUS (Strategic, Complex) - claude-opus-5 - Use for:
 ├── Architecture decisions (system design)
 ├── Multi-agent coordination (council, swarm)
 ├── Strategic planning (business, product)
@@ -68,9 +72,17 @@ OPUS (Strategic, Complex) - Use for:
 ├── Research synthesis (multiple sources)
 ├── Ambiguous requirements interpretation
 │
-│   Token cost: ~$15/1M input, $75/1M output
-│   Latency: Slowest but most capable
+│   Token cost: $5.00/1M input, $25.00/1M output
+│   Latency: Slower; most capable of the routine tiers
 │   Use when: Task requires deep reasoning, creativity, or strategy
+
+FABLE (Hardest, escalation only) - claude-fable-5 - Use for:
+├── Long-horizon agentic work where Opus already fell short
+├── The single hardest step in an otherwise-Opus-routed task
+│
+│   Token cost: $10.00/1M input, $50.00/1M output
+│   Latency: Slowest; thinking is always on (cannot be disabled)
+│   Use when: Opus-tier reasoning wasn't enough — this is a ceiling, not a starting point
 ```
 
 ## Automatic Routing Rules
@@ -92,18 +104,23 @@ When processing a request, apply these rules:
 - Keywords: "enterprise", "system", "multi-agent", "complex", "strategic"
 - Commands: `/starlight-architect`, `/council`, `/author-team`, `/research`
 
+### Escalate to FABLE when:
+- Opus already ran on the task and the result fell short
+- The task is genuinely the hardest tier — long-horizon agentic work, not routine strategy
+- Never route here first; Fable is a ceiling for escalation, not a default
+
 ## Cost Optimization
 
 ```
 BEFORE (No routing):
-  All tasks → Opus → $75/1M output tokens
+  All tasks → Opus → $25.00/1M output tokens
 
 AFTER (With routing):
-  Simple tasks (40%) → Haiku  → $1.25/1M  = $0.50
-  Medium tasks (45%) → Sonnet → $15/1M   = $6.75
-  Complex tasks (15%) → Opus  → $75/1M   = $11.25
+  Simple tasks (40%) → Haiku  → $5.00/1M   = $2.00
+  Medium tasks (45%) → Sonnet → $10.00/1M  = $4.50
+  Complex tasks (15%) → Opus  → $25.00/1M  = $3.75
   ──────────────────────────────────────────────
-  TOTAL: $18.50 vs $75 = 75% cost reduction
+  TOTAL: $10.25 vs $25.00 = 59% cost reduction
 ```
 
 ## Implementation in Task Tool
@@ -157,12 +174,31 @@ Task({
 If a haiku-routed task fails or produces poor results:
 1. Automatically escalate to sonnet
 2. If still failing, escalate to opus
-3. Log escalation for learning
+3. If opus itself falls short on a genuinely hard task, escalate to Fable — last resort, not a retry habit
+4. Log escalation for learning
 
 ```
-haiku (attempt) → fail → sonnet (retry) → fail → opus (final)
+haiku (attempt) → fail → sonnet (retry) → fail → opus (retry) → fail (rare) → fable (last resort)
 ```
+
+## Relationship to other routing configs
+
+This skill is the estate's **model-facts reference** — current model IDs, context windows, and
+per-token pricing. It is not the only routing config in the estate, and on task-class routing
+decisions it does not have the final word:
+
+- **`starlight-evals/routing-table.json`** is the **evidence-derived source of truth for task-class
+  routing** — which tier a task class should hit, backed by eval-round evidence and confidence
+  scores rather than the judgment calls in this file. Where its `route` for a task class disagrees
+  with the "Route to X when" rules above, the table wins.
+- **`agentic-ops-hub/fleet/model-routing.json`** and a referenced `~/.starlight/routing.toml` are
+  operational routing configs elsewhere in the estate. They route by abstract tier name (`opus`,
+  `sonnet`, ...) and should resolve those names against this skill (or the evals table) rather than
+  hardcoding their own model IDs or pricing.
+- This skill's job stays narrow: keep the model IDs, context windows, and pricing above correct and
+  current. It is not merged with the other three configs here — this section exists only so the next
+  agent knows which source to trust when they disagree.
 
 ---
 
-*Model Routing v1.0 - Implementing claude-flow's intelligent routing pattern*
+*Model Routing v1.1 - Implementing claude-flow's intelligent routing pattern. Last verified: 2026-08-28.*
