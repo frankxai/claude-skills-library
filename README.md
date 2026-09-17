@@ -1,121 +1,183 @@
 <p align="center">
-  <img src="assets/hero.png" alt="Claude Skills Library" width="100%">
+  <img src="assets/hero.png" alt="Agent Skills Library" width="100%">
 </p>
 
-<h1 align="center">Claude Skills Library</h1>
+<h1 align="center">Agent Skills Library</h1>
 
 <p align="center">
-  <strong>The definitive curation of professional-grade, research-backed agent skills for Claude Code and the Anthropic ecosystem.</strong>
+  <strong>The open, research-backed Agent Skills standard (<code>SKILL.md</code>) for Claude Code, OpenAI Codex, Grok Build, Google Antigravity, and Cursor.</strong>
 </p>
 
 <p align="center">
-  <a href="#the-skills-thesis">The Thesis</a> ·
-  <a href="#architecture-standard">Architecture</a> ·
-  <a href="#curated-skills">Skill Catalog</a> ·
-  <a href="#deployment">Deployment</a> ·
+  <a href="#the-agent-skills-thesis">The Thesis</a> ·
+  <a href="#universal-runtime-support">Runtimes</a> ·
+  <a href="#curated-skill-catalog">Skill Catalog (22)</a> ·
+  <a href="#quick-installation">Quick Install</a> ·
+  <a href="#specialized-starlight-plugins">Specialized Plugins</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
 <p align="center">
   <a href="https://awesome.re"><img alt="Awesome" src="https://awesome.re/badge.svg"></a>
-  <img alt="Maintained: Weekly" src="https://img.shields.io/badge/maintained-weekly-blue.svg?style=flat-square">
+  <img alt="Runtime: Claude Code" src="https://img.shields.io/badge/runtime-Claude%20Code-D97706.svg?style=flat-square">
+  <img alt="Runtime: OpenAI Codex" src="https://img.shields.io/badge/runtime-OpenAI%20Codex-10A37F.svg?style=flat-square">
+  <img alt="Runtime: Grok Build" src="https://img.shields.io/badge/runtime-Grok%20Build-000000.svg?style=flat-square">
+  <img alt="Runtime: Google Antigravity" src="https://img.shields.io/badge/runtime-Antigravity-4285F4.svg?style=flat-square">
+  <img alt="Standard: Agent Plugins 1.0" src="https://img.shields.io/badge/standard-Agent%20Plugins%201.0-8B5CF6.svg?style=flat-square">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-lightgrey.svg?style=flat-square"></a>
 </p>
 
 ---
 
-## 🏛️ The Skills Thesis
+## 🏛️ The Agent Skills Thesis
 
-A powerful LLM is only as effective as the context and constraints it operates within. Generic system prompts result in generic outputs.
+A frontier LLM is only as effective as the context and constraints it operates within. Generic system prompts yield generic outputs.
 
-This repository curates **expert-level agent skills**—dense, 3,000+ word cognitive architectures that transform Claude into a domain specialist. Rather than simple prompts, these skills define explicit workflows, strict quality gates, and specific reasoning models (e.g., Socratic questioning, WCAG 2.2 auditing, MCP server design) grounded in 2025 best practices.
+When Anthropic introduced the folder-based skill structure (`SKILL.md` with YAML frontmatter), the industry recognized an enduring insight: **one portable folder format can define cognitive architectures across every agent harness.**
+
+This repository curates **22 expert-level agent skills**—dense, production-proven cognitive overlays that transform any autonomous coding agent into a domain specialist. Rather than shallow prompts, these skills define explicit multi-step workflows, strict quality gates, and structured reasoning models grounded in 2025–2026 engineering standards.
 
 ---
 
-## 🏗️ Architecture Standard
+## 🌐 Universal Runtime Support
 
-*Every skill in this library must adhere to a strict structural standard.*
+Every skill in this repository is 100% vendor-neutral and loads out of the box in:
 
-<details open>
-<summary><strong>The Skill Blueprint</strong></summary>
-<br>
+| Runtime / Harness | Discovery Mechanism | Config Location |
+| :--- | :--- | :--- |
+| **Claude Code** | Native Agent Skills | `~/.claude/skills/` or `npx skills add` |
+| **OpenAI Codex** | Native Agent Skills & Plugins | `~/.codex/skills/` or `/plugin install` |
+| **Grok Build (xAI)** | Progressive Skills | `~/.grok/skills/` or `extra_skill_dirs` |
+| **Google Antigravity**| Workspace & Plugins | `~/.gemini/antigravity/skills/` |
+| **Cursor & Windsurf** | Agent Rules & Toolpacks | `.cursor/rules/` or local junctions |
 
-All accepted skills must be provided as a `SKILL.md` file containing:
+---
 
-1. **YAML Frontmatter**: For agent-harness trigger detection.
-2. **Cognitive Identity**: The explicit persona and constraints the agent must adopt.
-3. **Workflow Rules**: Step-by-step operational instructions.
-4. **Quality Gates**: The specific criteria an output must meet before the agent is allowed to finalize the task.
-5. **Anti-Patterns**: Explicit instructions on what the agent must *never* do.
-</details>
+## ⚡ Quick Installation
+
+### Option 1: Using the Universal Skills CLI (`npx skills`)
+
+```bash
+# Add a single skill to Claude, Codex, or Cursor
+npx skills add frankxai/claude-skills-library --skill mcp-architecture
+
+# Install directly into Grok Build
+npx skills add frankxai/claude-skills-library --skill langgraph-patterns --dest ~/.grok/skills
+```
+
+### Option 2: Install as an Agent Plugin (Codex & Claude)
+
+This repository includes a native [`plugin.json`](plugin.json), `.codex-plugin/`, and `.claude-plugin/`:
+
+```bash
+# In OpenAI Codex
+codex /plugin install frankxai/claude-skills-library
+
+# In Claude Code
+claude plugin install frankxai/claude-skills-library
+```
+
+### Option 3: Direct Git Symlink / Junction
+
+```bash
+# Clone the library
+git clone https://github.com/frankxai/claude-skills-library.git ~/claude-skills-library
+
+# Link into Claude Code
+ln -s ~/claude-skills-library/free-skills/mcp-architecture ~/.claude/skills/mcp-architecture
+
+# Link into OpenAI Codex
+ln -s ~/claude-skills-library/free-skills/mcp-architecture ~/.codex/skills/mcp-architecture
+```
 
 ---
 
 ## 📚 Curated Skill Catalog
 
-*High-density cognitive overlays for Claude.*
+All 22 production-grade skills are located in [`free-skills/`](free-skills/):
 
-<details open>
-<summary><strong>Software & Systems Engineering</strong></summary>
-<br>
+### 1. AI Agents & Multi-Agent Systems
 
-- **[MCP Architecture Expert](free-skills/mcp-architecture/SKILL.md)** — Transforms Claude into a Model Context Protocol (MCP) design specialist. Enforces stateless server design, proper tool definition, and rigorous security boundaries.
-- **[UI/UX Design Expert](free-skills/ui-ux-design-expert/SKILL.md)** — Grounds Claude in WCAG 2.2 compliance, atomic design principles, and modern design token architecture.
-</details>
+- **[Claude SDK](free-skills/claude-sdk/SKILL.md)** — Build autonomous AI agents using Claude Agent SDK with computer use, tool calling, MCP integration, and production Anthropic patterns.
+- **[OpenAI AgentKit](free-skills/openai-agentkit/SKILL.md)** — Build production-ready multi-agent systems using OpenAI AgentKit and Agents SDK with handoffs and routines.
+- **[LangGraph Patterns](free-skills/langgraph-patterns/SKILL.md)** — Build production agentic workflows with LangGraph using graph orchestration, state machines, and human-in-the-loop gates.
+- **[Oracle ADK](free-skills/oracle-adk/SKILL.md)** — Build enterprise agentic applications on OCI using Oracle Agent Development Kit and multi-agent coordination.
+- **[Oracle Agent Spec](free-skills/oracle-agent-spec/SKILL.md)** — Design framework-agnostic AI agents using Oracle Open Agent Specification (JSON/YAML) for maximum portability.
 
-<details open>
-<summary><strong>Cognitive & Philosophical Frameworks</strong></summary>
-<br>
+### 2. Architecture & Cloud Systems
 
-- **[Greek Philosopher](free-skills/greek-philosopher/SKILL.md)** — Forces Claude to use Socratic questioning (Elenchus) and Stoic principles (Wisdom, Courage, Justice, Temperance) to help users examine complex decisions.
-- **[Spartan Warrior](free-skills/spartan-warrior/SKILL.md)** — A strictly laconic, action-oriented overlay. Refuses to philosophize; demands immediate, disciplined execution.
-</details>
+- **[MCP Architecture Expert](free-skills/mcp-architecture/SKILL.md)** — Master the Model Context Protocol (MCP). Stateless server design, resources, tools, prompts, and security boundaries.
+- **[OCI Services Expert](free-skills/oci-services-expert/SKILL.md)** — Enterprise Oracle Cloud Infrastructure architectures, cost optimization, and deployment patterns.
+- **[Oracle Database Expert](free-skills/oracle-database-expert/SKILL.md)** — 23ai AI Vector Search, PL/SQL optimization, connection pooling, and performance diagnostics.
+- **[Product Management Expert](free-skills/product-management-expert/SKILL.md)** — System-level product definition, PRD drafting, feature mapping, value proposition validation, and pricing strategy.
 
-*(Note: The catalog is continuously expanding. Check the `free-skills/` directory for the latest additions.)*
+### 3. Frontend & Design Systems
+
+- **[Next.js & React Expert](free-skills/nextjs-react-expert/SKILL.md)** — Production patterns for Next.js 16 (App Router), React 19, server actions, and Vercel performance budgets.
+- **[UI/UX Design Expert](free-skills/ui-ux-design-expert/SKILL.md)** — Design systems, WCAG 2.2 accessibility, atomic design principles, and modern token architecture.
+- **[Framer Expert](free-skills/framer-expert/SKILL.md)** — Interactive prototypes to production Framer sites with Framer Motion, CMS integration, and MCP servers.
+
+### 4. Media, Creative & Audio
+
+- **[Video Production Workflow](free-skills/video-production-workflow/SKILL.md)** — Programmatic 3-layer video pipeline: Keyframe generation, cinematic motion (Veo/Luma/fal), dynamic Remotion assembly.
+- **[Suno AI Mastery](free-skills/suno-ai-mastery/SKILL.md)** — Prompt engineering and music generation with Suno AI v4/v4.5 across all genres with structure tags.
+- **[Social Media Strategy](free-skills/social-media-strategy/SKILL.md)** — Platform-specific distribution, algorithmic reach, audience growth, and analytics-driven content execution.
+
+### 5. Mindset, Cognition & Discipline
+
+- **[Feynman Thinking](free-skills/feynman-thinking/SKILL.md)** — Simple first-principles explanations, architectural mental models, and relentless reduction of unnecessary complexity.
+- **[Todo Discipline](free-skills/todo-discipline/SKILL.md)** — Read-verification checklist protocol. Ensures task state strictly mirrors reality and stops hallucinated completion.
+- **[Greek Philosopher](free-skills/greek-philosopher/SKILL.md)** — Socratic inquiry (Elenchus) and Stoic principles (Wisdom, Courage, Justice, Temperance) for high-stakes decisions.
+- **[Spartan Warrior](free-skills/spartan-warrior/SKILL.md)** — Laconic, action-oriented discipline. Cuts hesitation, executes relentlessly, and focuses on output.
+- **[FrankX Daily Execution](free-skills/frankx-daily-execution/SKILL.md)** — Conscious creation workflow using Starlight meta-intelligence and high-output operating routines.
+- **[Health & Nutrition Expert](free-skills/health-nutrition-expert/SKILL.md)** — Longevity, metabolic health, gut microbiome science, and evidence-based nutrition protocols.
+- **[Gym Training Expert](free-skills/gym-training-expert/SKILL.md)** — Evidence-based exercise science, hypertrophy biomechanics, and progressive overload protocols.
 
 ---
 
-## ⚡ Deployment & Usage
+## 🚀 Specialized Starlight Plugins
 
-### 1. Claude Code Integration
+For complete, end-to-end domain intelligence swarms, see our flagship compiled plugins:
 
-Skills are designed to be ingested by Claude Code or similar agentic CLI harnesses.
+- **[starlight-architect](https://github.com/frankxai/skills)** (`frankxai/skills`) — Enterprise AI systems design, multi-agent swarms, cloud infrastructure, and autonomous reliability.
+- **[starlight-creator](https://github.com/frankxai/creator-skills)** (`frankxai/creator-skills`) — High-end brand design, cinematic video production, Suno music orchestration, and multi-format publishing.
 
-```bash
-# Clone the library
-git clone https://github.com/frankxai/claude-skills-library.git
+---
 
-# Symlink desired skills into your Claude Code config
-ln -s ~/claude-skills-library/free-skills/mcp-architecture ~/.claude/skills/mcp-architecture
+## 🏗️ Architecture Standard
+
+Every skill in this library strictly adheres to the standard:
+
+```
+skill-name/
+├── SKILL.md          # YAML frontmatter + cognitive identity + workflows + quality gates
+├── scripts/           # (Optional) deterministic execution scripts
+└── references/        # (Optional) deep domain documentation & schemas
 ```
 
-### 2. Invocation
+### Frontmatter Schema
 
-Once installed, the skills activate via their defined trigger words or through explicit invocation:
-
-- *"Help me design a new data connector. Use the MCP Architecture Expert skill."*
-- *"Review this React component using the UI/UX Design Expert."*
-
+```yaml
 ---
-
-## 🤖 The Architecture (Maintained by ACOS)
-
-This repository is not a static list; it is a living, agent-managed node within the **Agentic Creator Operating System (ACOS)**. 
-
-### How We Drink Our Own Champagne
-To ensure absolute quality and up-to-date information, this repo is maintained by our internal agent swarms via `.agent-harness.json`. Our agents are strictly constrained by:
-1. **The Visual QA Gate**: Ensuring all generated heroes (`assets/hero.png`) meet high-end glassmorphism and tech-noir standards.
-2. **Automated Link Audits**: Weekly lychee workflows and active ping scripts ensure 0% link rot.
-3. **FrankX Design Constraints**: Code and formatting must align with `DESIGN_TASTE.md`.
-
-*If you are building an Agent OS, you must build the harnesses that manage it.*
+name: "Skill Display Name"
+description: "Precise summary of capabilities and trigger contexts (< 200 characters)."
+version: "1.0.0"
+---
+```
 
 ---
 
 ## 🤝 Contributing
 
-We welcome high-density, rigorously tested skills that elevate Claude's capabilities. 
-
-We do **not** accept simple, one-paragraph prompts. Submissions must include complete workflows, constraints, and adherence to the Architecture Standard. Please review our [Contribution Guidelines](CONTRIBUTING.md) before opening a PR.
+We welcome high-density, rigorously tested skills. Submissions must include complete workflows, explicit quality gates, and anti-patterns. Please review our [Contribution Guidelines](CONTRIBUTING.md) before opening a pull request.
 
 Released under the [MIT License](LICENSE).
+
+<!-- kernel:start v393ecb58 -->
+## Built on the Omotenashi Kernel
+
+段取り *prep* · おもてなし *serve* · 見立て *build with what you are given* · 場を読む *read the room*
+
+Every agent turn ends with a made thing, never a status report.  
+Free and MIT — [read the kernel](https://github.com/frankxai/omotenashi-kernel).
+<!-- kernel:end -->

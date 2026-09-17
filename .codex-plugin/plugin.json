@@ -1,0 +1,30 @@
+{
+  "name": "claude-skills-library",
+  "version": "1.1.0",
+  "description": "Definitive open collection of 22 battle-tested Agent Skills (SKILL.md) for Claude Code, OpenAI Codex, Grok Build, Google Antigravity, and Cursor.",
+  "author": "Frank Riemer",
+  "skills": [
+    "free-skills/claude-sdk",
+    "free-skills/feynman-thinking",
+    "free-skills/framer-expert",
+    "free-skills/frankx-daily-execution",
+    "free-skills/greek-philosopher",
+    "free-skills/gym-training-expert",
+    "free-skills/health-nutrition-expert",
+    "free-skills/langgraph-patterns",
+    "free-skills/mcp-architecture",
+    "free-skills/nextjs-react-expert",
+    "free-skills/oci-services-expert",
+    "free-skills/openai-agentkit",
+    "free-skills/oracle-adk",
+    "free-skills/oracle-agent-spec",
+    "free-skills/oracle-database-expert",
+    "free-skills/product-management-expert",
+    "free-skills/social-media-strategy",
+    "free-skills/spartan-warrior",
+    "free-skills/suno-ai-mastery",
+    "free-skills/todo-discipline",
+    "free-skills/ui-ux-design-expert",
+    "free-skills/video-production-workflow"
+  ]
+}

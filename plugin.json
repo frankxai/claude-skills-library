@@ -1,0 +1,53 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/plugin.v1.json",
+  "name": "claude-skills-library",
+  "version": "1.1.0",
+  "description": "Definitive open collection of 22 battle-tested Agent Skills (SKILL.md) for Claude Code, OpenAI Codex, Grok Build, Google Antigravity, and Cursor.",
+  "author": {
+    "name": "Frank Riemer",
+    "url": "https://frankx.ai",
+    "github": "frankxai"
+  },
+  "homepage": "https://github.com/frankxai/claude-skills-library",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frankxai/claude-skills-library.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "agent-plugins",
+    "claude-code",
+    "codex",
+    "grok",
+    "antigravity",
+    "cursor",
+    "mcp",
+    "langgraph",
+    "nextjs",
+    "oracle"
+  ],
+  "skills": "./free-skills",
+  "runtimes": {
+    "codex": {
+      "supported": true,
+      "skills_dir": "./free-skills"
+    },
+    "claude": {
+      "supported": true,
+      "skills_dir": "./free-skills"
+    },
+    "grok": {
+      "supported": true,
+      "skills_dir": "./free-skills"
+    },
+    "antigravity": {
+      "supported": true,
+      "skills_dir": "./free-skills"
+    },
+    "cursor": {
+      "supported": true,
+      "skills_dir": "./free-skills"
+    }
+  }
+}
