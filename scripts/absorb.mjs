@@ -164,7 +164,10 @@ Contract: [\`ABSORPTION.md\`](ABSORPTION.md). Notices: [\`THIRD_PARTY_NOTICES.md
 `);
 }
 const row = `| \`${as}\` | [${from.replace('https://github.com/', '')}](${from}) | \`${commit.slice(0, 10)}\` | ${license} | ${provenance.absorbed.date} | ${changed.replace(/\|/g, '\\|')} |\n`;
-writeFileSync(ledger, readFileSync(ledger, 'utf8').replace(/\n*$/, '\n') + row);
+const current = readFileSync(ledger, 'utf8')
+  .replace(/^_Nothing absorbed yet\..*$/m, '')   // drop the seeded placeholder on the first real row
+  .replace(/\n*$/, '\n');
+writeFileSync(ledger, current + row);
 
 console.log(`  landed  absorbed/${domain}/${name}/  (+ PROVENANCE.json, + ABSORBED.md row)`);
 console.log(`  next    remove absorbed/_staging/${domain}/${name}/ and run the skill validator`);
