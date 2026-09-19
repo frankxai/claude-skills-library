@@ -37,9 +37,40 @@ A name whose versions collapse to one after normalization is **mechanical**
 drift: same instructions, noisy bytes, fixed by any single re-copy. A name
 that still has multiple versions is **real** divergence: an agent gets
 different instructions depending on the repo. 108 of the 131
-drifted names are mechanical; 23 are real. The two mutation sources are
-worth knowing: whatever wrote CRLF into `arcanea` and whatever stamped version
-lines into `arcanea-ai-app` will keep manufacturing fake drift until retired.
+drifted names are mechanical; 23 are real.
+
+> **Correction, 2026-09-19.** This paragraph originally ended: *"The two mutation
+> sources are worth knowing: whatever wrote CRLF into `arcanea` and whatever
+> stamped version lines into `arcanea-ai-app` will keep manufacturing fake drift
+> until retired."* That was inferred from the pattern, never measured, and it is
+> wrong. It sent a follow-up task hunting for two scripts to retire; there are
+> none to retire.
+>
+> **The drift is static, not regenerating.** Every sampled skill file in both
+> repos has **exactly one commit** in its history — `git log --oneline -- <file>
+> | wc -l` returns 1 across 12 sampled skills in each. Both patterns entered in a
+> single historical bulk-sync commit (`arcanea` `66fbd45`, `arcanea-ai-app`
+> `94ab210`) and nothing has re-touched them since. No process is re-stamping
+> anything.
+>
+> **Neither mutation is uniform**, which is the tell that neither is a blanket
+> mechanical stamp. In `arcanea`, `animation-vocabulary` and `apple-design` are
+> LF, not CRLF. In `arcanea-ai-app`, `animation-vocabulary` carries no `version:`
+> at all, and `license:` / `tier:` vary by skill family — the Gate skills carry
+> all three, the AgentDB skills carry `version:` only.
+>
+> That last point matters for remediation. `version:` sits beside `license:` and
+> `tier:` in a per-family pattern, which reads as **deliberate packaging metadata
+> for that repo**, not an accidental stamp. Normalizing it away would delete real
+> metadata while claiming to fix drift.
+>
+> The 108/23 split itself is unaffected — the normalization test measures content
+> identity, and files without CRLF or a version line simply pass through. What
+> changes is the remediation: not "retire two scripts", but (a) a one-time
+> `.gitattributes` / line-ending normalization for `arcanea`, and (b) a decision
+> from Frank on whether `arcanea-ai-app`'s extra frontmatter is canon for that
+> repo — if it is, those names are not drifted and should be excluded from the
+> count by rule rather than normalized on each measurement.
 
 ## What the agent-infrastructure pack resolves
 
