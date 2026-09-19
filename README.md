@@ -34,6 +34,13 @@ nothing in context until a skill actually fires.
 > Install with `npx skills add frankxai/skills` or `npx skills add frankxai/creator-skills`.
 > This library remains the full catalog.
 
+> [!IMPORTANT]
+> **Skills that ship with their evals.** The first skill from this library is being packaged with its
+> full promptfoo eval suite and the run output that shows exactly where it fails. If you would pay
+> for skills that arrive proven, say which one should be first and what that is worth to you:
+> **[join the eval-pack list](https://www.frankx.ai/waitlist?intent=claude-skills-library)** — two
+> steps, every question skippable. Founding members name the next skill to be evaluated.
+
 ## ⚡ Quick start
 
 **Option A — install as a Claude Code plugin (recommended).** One command, auto-updating:
@@ -289,6 +296,6 @@ MIT — free to use, modify, and distribute. See [LICENSE](LICENSE). Skills unde
 
 <div align="center">
 
-**[⭐ Star the repo](https://github.com/frankxai/claude-skills-library)** · **[📚 Catalog](docs/CATALOG.md)** · **[🐛 Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[💬 Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
+**[Join the eval-pack list](https://www.frankx.ai/waitlist?intent=claude-skills-library)** · **[📚 Catalog](docs/CATALOG.md)** · **[🐛 Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[💬 Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
 
 </div>
