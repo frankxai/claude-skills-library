@@ -34,6 +34,9 @@ function git(argv, opts = {}) {
 }
 
 const UI_EXT = /\.(tsx|jsx|vue|svelte|astro|css|scss|sass)$/;
+// The web manifest is a .ts file that ships to the browser as JSON; it is the one non-UI_EXT
+// file whose contents decide whether the site installs correctly on a phone.
+const MANIFEST = /(^|\/)app\/manifest\.(ts|js)$/;
 // Deliberately NARROWER than the PreToolUse hook's NOT_UI, which also skips
 // lib/, utils/, hooks/ and server/. The hook is deciding "is this change worth
 // interrupting a human about"; this is deciding "does this file contain markup
@@ -91,7 +94,7 @@ const candidates = useChanged
   : args.filter(a => !a.startsWith('--') && a !== base);
 
 const files = candidates.filter(f => {
-  if (!UI_EXT.test(f) || NOT_UI.test(f)) return false;
+  if (!(UI_EXT.test(f) || MANIFEST.test(f)) || NOT_UI.test(f)) return false;
   try { return statSync(f).isFile(); } catch { return false; }
 });
 
@@ -128,7 +131,31 @@ const RULES = [
   ['keyframes-no-reduced-motion', 'warn', /@keyframes\b/,
     '@keyframes in a file with no prefers-reduced-motion block',
     /prefers-reduced-motion/],
+
+  // ---- mobile-native (AGENTS.md §11.3). Errors only where the defect is unambiguous;
+  // everything judgment-shaped stays warn so the ratchet cannot be gamed into muting the linter.
+
+  ['manifest-css-var', 'error', /\b(?:background_color|theme_color)\s*:\s*['"`]var\(/,
+    'manifest color is a CSS custom property — browsers drop it; use a resolved hex value'],
+
+  ['vh-not-dvh', 'warn', /\b100vh\b|(?:^|["'\s:])(?:min-)?h-screen(?:[\s"'/]|$)/,
+    '100vh / h-screen hides the bottom of the screen behind the mobile URL bar — use 100dvh for app shells, 100svh for heroes',
+    /\b100dvh\b|\b100svh\b|\bh-dvh\b|\bh-svh\b/],
+
+  ['input-zoom', 'warn', /<(?:input|textarea|select)\b[^>]*\btext-(?:xs|sm)\b/,
+    'input under 16px — iOS zooms the page on focus; use text-base or set font-size: 16px'],
+
+  ['theme-color-single', 'warn', /themeColor:\s*['"]#/,
+    'single themeColor string — a surface that supports both colour schemes needs a per-scheme array; dark-only surfaces may ignore this'],
+
+  ['hover-ungated', 'warn', /:hover\b/,
+    ':hover in a stylesheet with no (hover: hover) media query — sticky hover after tap on touch devices',
+    /hover:\s*hover/],
 ];
+
+// hover-ungated is a stylesheet rule: JSX hover: utilities are already capability-gated by
+// Tailwind 4, and Tailwind 3 sites set future.hoverOnlyWhenSupported. Keep it off .tsx/.jsx.
+const CSS_ONLY = new Set(['hover-ungated']);
 
 // Rules that match a whole JSX tag rather than a bare pattern. Prettier breaks
 // a tag with several props across lines, so testing one physical line at a time
@@ -167,6 +194,7 @@ for (const file of files) {
 
   for (const [id, severity, re, message, guard] of RULES) {
     if (guard && guard.test(text)) continue;
+    if (CSS_ONLY.has(id) && !/\.(css|scss|sass)$/.test(file)) continue;
     lines.forEach((line, i) => {
       if (added && !added.has(i + 1)) return;
       // skip obvious comment lines to cut noise
