@@ -18,6 +18,7 @@ Each case in `cases.json` works like this:
 | 50% or more | REVISE |
 | Below 50% | STOP |
 | Nothing graded (no credentials) | UNAVAILABLE |
+| Any missing, skipped, or errored case | INCOMPLETE |
 
 The format is the `starlight-evals` scorecard contract.
 
@@ -35,7 +36,9 @@ The format is the `starlight-evals` scorecard contract.
 cd evals/skill-eval && pnpm install && node run.mjs
 ```
 
-**In CI:** run the `skill-eval` workflow by hand, with `max_usd` capping the run (default $2). At list prices a full run is expected to cost about $1; the scorecard records what it actually spent.
+**In CI:** run the `skill-eval` workflow by hand, with `max_usd` setting a local metered-call allocation (default and maximum $2). Before each gateway call, the runner reserves a conservative amount using current model prices, prompt bytes, and the 2,000-token output setting. Unknown prices prevent calls; unknown usage stops later calls and makes the scorecard's total spend unknown. A lane can say `PROCEED` only when all ten cases are graded. The scorecard records known metered spend and flags incomplete metering.
+
+This allocation is not a hard provider billing cap. Vercel Gateway budgets also check before a request and can be crossed by the final request. Use a dedicated budgeted key and inspect Gateway billing for the authoritative charge before repeating or expanding the pilot.
 
 **Monthly schedule:** set the repository variable `SKILL_EVAL_SCHEDULE_ENABLED=true` to switch it on.
 
