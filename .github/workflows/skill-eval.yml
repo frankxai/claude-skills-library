@@ -1,7 +1,8 @@
 name: skill-eval
 
-# Cross-model skill evaluation. Runs on free public-repo minutes; model spend is capped per
-# run by MAX_USD. The monthly schedule is inert until the repository variable
+# Cross-model skill evaluation. Runs on free public-repo minutes; MAX_USD is a
+# conservative local call-reservation limit, not a provider-enforced hard cap.
+# The monthly schedule is inert until the repository variable
 # SKILL_EVAL_SCHEDULE_ENABLED is set to "true" (estate rule: crons stay off until approved).
 
 on:
@@ -12,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       max_usd:
-        description: 'Hard cap on metered model spend for this run, in USD'
+        description: 'Local metered-call allocation in USD (maximum 2; not a hard billing cap)'
         default: '2'
   schedule:
     - cron: '0 6 1 * *'
