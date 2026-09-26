@@ -37,6 +37,30 @@ description: What this skill does and the situations in which the agent should l
 
 Keep the body under ~500 lines and push depth into `references/` (the validator warns past 500).
 
+## Contribute an eval case
+
+You can help test whether a skill improves a real task. A useful case starts with a failure you
+observed or a task you need to complete. You do not need model credentials or a paid run to propose
+one. Check `evals/skill-eval/cases.json` for the current case format and existing coverage.
+
+Open a [Discussion in Ideas](https://github.com/frankxai/claude-skills-library/discussions/new?category=ideas)
+to propose the case, or send a PR adding it to `evals/skill-eval/cases.json`. Include:
+
+1. The skill path and a concrete task that another person can understand without your private context.
+2. Three to five observable criteria for a useful answer, including a failure you want the skill to catch.
+3. A small number of case-insensitive `must` patterns only for essential facts. Keep style preferences in
+   the rubric so a valid answer is not rejected for wording alone.
+4. The source of any factual or technical criterion that may change, and the date you checked it.
+
+Use fictional or public examples. Remove customer names, credentials, private prompts, personal
+information, and unpublished work. Do not submit a model's answer as the expected answer; describe
+the result a person needs. Maintainers may revise a case before running it to avoid rewarding one
+phrase or one model family. A submitted case is a proposal, not a passing score or a promise of a run.
+
+For a local format check, run `node --test evals/skill-eval/run.test.mjs`. This uses no model keys.
+Only a completed, dated scorecard can support a claim about model behavior; partial runs remain
+incomplete, and a single case does not establish broad skill quality.
+
 Run the validator before opening a PR:
 
 ```bash

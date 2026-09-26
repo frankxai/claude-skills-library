@@ -261,7 +261,7 @@ Yes — see [`runtimes/`](runtimes/) for Antigravity, OpenCode, Codex, Gemini CL
 
 Every skill here is free, MIT, and yours. That is not changing.
 
-But a skill is prose until something tests it. All 103 in this library read well. None of them ships
+But a skill needs behavioral evidence beyond its prose. None of the current skills ships
 evidence that it still behaves under pressure — and that is exactly how a skill quietly degrades an
 agent instead of improving it, in a way you notice three sessions later and blame on the model.
 
@@ -273,6 +273,9 @@ If that is worth money to you, say so and name the band. If it is not, say that 
 more useful answer, and it is the one that stops this from being built.
 
 **[Tell us what it is worth →](https://github.com/frankxai/claude-skills-library/discussions/new?category=ideas&title=Skills%20with%20evals)**
+
+Have a task where a skill helped or failed? [Contribute a reproducible eval case](CONTRIBUTING.md#contribute-an-eval-case).
+You can propose one without running a paid model; cases and scores are reviewed separately.
 
 The first fifty people to answer get one skill with its full eval suite and run output, free,
 whatever happens next. At fifty answers the eval harness is published open-source regardless of
