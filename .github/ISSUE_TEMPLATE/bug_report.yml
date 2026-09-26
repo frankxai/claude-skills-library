@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a reproducible problem in a skill or this library
+title: "Bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "For vulnerabilities, use Security → Report a vulnerability instead of this public form. Remove secrets and personal data from examples."
+  - type: input
+    id: skill
+    attributes:
+      label: Skill and agent
+      description: Name the skill and the agent or runtime you used.
+      placeholder: "mcp-architecture on Claude Code"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and reproduction steps
+      description: Include a small, shareable example and any relevant version information.
+    validations:
+      required: true
