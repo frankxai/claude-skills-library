@@ -153,8 +153,8 @@ fi
 ```
 
 **References**:
-- [OWASP Guide](link)
-- [Security Best Practices](link)
+- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)
+- [GitHub code security docs](https://docs.github.com/en/code-security)
 ```
 
 </details>

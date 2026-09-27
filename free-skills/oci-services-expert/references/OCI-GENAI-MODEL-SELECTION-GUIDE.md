@@ -441,7 +441,7 @@ Document Processing Pipeline:
 
 - [OCI Pretrained Models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm)
 - [OCI GenAI Concepts](https://docs.oracle.com/en-us/iaas/Content/generative-ai/concepts.htm)
-- [Cohere Partnership](https://www.oracle.com/artificial-intelligence/generative-ai/generative-ai-service/cohere/)
+- [Cohere Partnership](https://www.oracle.com/artificial-intelligence/generative-ai/generative-ai-service/)
 - [OCI Fine-tuning](https://docs.oracle.com/en-us/iaas/Content/generative-ai/fine-tune-models.htm)
 - [Dedicated AI Clusters](https://docs.oracle.com/en-us/iaas/Content/generative-ai/ai-cluster.htm)
 - [oracle-devrel/oci-genai-finetuning](https://github.com/oracle-devrel/oci-genai-finetuning)

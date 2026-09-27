@@ -185,5 +185,5 @@ npx ruv-swarm github board-recover --backup-id "2024-01-15" --restore-cards --pr
 
 - [GitHub CLI Documentation](https://cli.github.com/manual/)
 - [GitHub Projects Documentation](https://docs.github.com/en/issues/planning-and-tracking-with-projects)
-- [Swarm Coordination Guide](https://github.com/ruvnet/ruv-swarm)
+- [Swarm Coordination Guide](https://github.com/ruvnet/ruv-FANN)
 - [Claude Flow Documentation](https://github.com/ruvnet/claude-flow)
