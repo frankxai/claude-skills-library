@@ -290,7 +290,7 @@ agent = create_react_agent(llm, tools)
 
 - Docs: https://langchain-ai.github.io/langgraph/
 - GitHub: https://github.com/langchain-ai/langgraph
-- Tutorials: https://langchain-ai.github.io/langgraph/tutorials/
+- Tutorials: https://langchain-ai.github.io/langgraph/
 
 ---
 

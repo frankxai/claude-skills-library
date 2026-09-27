@@ -309,7 +309,7 @@ npx claude-flow bottleneck detect --fix
 - [Performance Report Guide](/workspaces/claude-code-flow/.claude/commands/analysis/performance-report.md)
 - [Performance Bottlenecks Overview](/workspaces/claude-code-flow/.claude/commands/analysis/performance-bottlenecks.md)
 - [Swarm Monitoring Documentation](../swarm-orchestration/SKILL.md)
-- [Memory Management Documentation](../memory-management/SKILL.md)
+- Memory Management Documentation (see the `memory-management` skill)
 
 ---
 

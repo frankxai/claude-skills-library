@@ -421,9 +421,9 @@ AgentKit agents can consume MCP servers as tools, standardizing data source conn
 ## Resources
 
 **Official Documentation:**
-- AgentKit Platform: https://platform.openai.com/docs/agents
-- Agents SDK: https://github.com/openai/agents-sdk
-- Best Practices: https://platform.openai.com/docs/guides/agents-best-practices
+- AgentKit Platform: https://platform.openai.com/docs/guides/agents
+- Agents SDK: https://github.com/openai/openai-agents-python
+- Best Practices: https://platform.openai.com/docs/guides/agents
 
 **Community:**
 - OpenAI Developer Forum

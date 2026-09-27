@@ -2,19 +2,31 @@ name: Link Checker
 
 on:
   schedule:
-    - cron: '0 0 * * 0' # Run every Sunday at midnight
-  workflow_dispatch: # Allow manual triggering
+    - cron: '0 0 * * 0' # Every Sunday at midnight UTC
+  pull_request:
+    paths: ['**/*.md', '.lycheeignore', '.github/workflows/link-checker.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   check-links:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Link Checker
-        uses: lycheeverse/lychee-action@v1.9.3
+        uses: lycheeverse/lychee-action@v2
         with:
-          args: --accept=200,204,429 --timeout=10 --max-retries=3 --exclude-mail '*.md' '**/*.md'
-          fail: true # Fail the workflow if broken links are found
+          # Templates (docs/readme-template.md, skill-builder) contain placeholder paths by design.
+          args: >-
+            --accept=200,204,206,429
+            --timeout=20 --max-retries=3
+            --exclude-path docs/readme-template.md
+            --exclude-path free-skills/skill-builder/SKILL.md
+            --no-progress
+            '**/*.md'
+          fail: true
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

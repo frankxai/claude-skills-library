@@ -439,7 +439,7 @@ def log_agent_action(agent_id: str, action: str, result: str):
 
 **Tutorials:**
 - [Getting Started with OCI GenAI](https://docs.oracle.com/en-us/iaas/Content/generative-ai/getting-started.htm)
-- [Vector Search Quick Start](https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/get-started-oracle-ai-vector-search.html)
+- [Vector Search Quick Start](https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/)
 
 ---
 

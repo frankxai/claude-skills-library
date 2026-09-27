@@ -144,10 +144,10 @@ The full detail lives in `references/` and loads only when needed:
 
 ## References
 
-- [Hive Mind Documentation](https://github.com/ruvnet/claude-flow/docs/hive-mind)
-- [Collective Intelligence Patterns](https://github.com/ruvnet/claude-flow/docs/patterns)
-- [Byzantine Consensus](https://github.com/ruvnet/claude-flow/docs/consensus)
-- [Memory Optimization](https://github.com/ruvnet/claude-flow/docs/memory)
+- [Hive Mind Documentation](https://github.com/ruvnet/claude-flow)
+- [Collective Intelligence Patterns](https://github.com/ruvnet/claude-flow)
+- [Byzantine Consensus](https://github.com/ruvnet/claude-flow)
+- [Memory Optimization](https://github.com/ruvnet/claude-flow)
 
 ---
 

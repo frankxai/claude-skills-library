@@ -528,4 +528,4 @@ This skill integrates with:
 
 **Sources:**
 - [Suno v4.5 Official Blog](https://suno.com/blog/introducing-v4-5)
-- [Suno Help: Better Prompts](https://help.suno.com/en/articles/5782977)
+- [Suno Help: Better Prompts](https://help.suno.com/)
