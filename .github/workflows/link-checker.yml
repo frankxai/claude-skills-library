@@ -20,11 +20,13 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           # Templates (docs/readme-template.md, skill-builder) contain placeholder paths by design.
+          # free-skills/anthropic/ is vendored verbatim from Anthropic; its site-relative links are upstream's.
           args: >-
             --accept=200,204,206,429
             --timeout=20 --max-retries=3
             --exclude-path docs/readme-template.md
             --exclude-path free-skills/skill-builder/SKILL.md
+            --exclude-path free-skills/anthropic
             --no-progress
             '**/*.md'
           fail: true

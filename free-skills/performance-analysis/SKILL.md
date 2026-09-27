@@ -305,9 +305,9 @@ npx claude-flow bottleneck detect --fix
 
 ## See Also
 
-- [Bottleneck Detection Guide](/workspaces/claude-code-flow/.claude/commands/analysis/bottleneck-detect.md)
-- [Performance Report Guide](/workspaces/claude-code-flow/.claude/commands/analysis/performance-report.md)
-- [Performance Bottlenecks Overview](/workspaces/claude-code-flow/.claude/commands/analysis/performance-bottlenecks.md)
+- Bottleneck Detection Guide: claude-flow command `analysis/bottleneck-detect` ([claude-flow](https://github.com/ruvnet/claude-flow))
+- Performance Report Guide: claude-flow command `analysis/performance-report` ([claude-flow](https://github.com/ruvnet/claude-flow))
+- Performance Bottlenecks Overview: claude-flow command `analysis/performance-bottlenecks` ([claude-flow](https://github.com/ruvnet/claude-flow))
 - [Swarm Monitoring Documentation](../swarm-orchestration/SKILL.md)
 - Memory Management Documentation (see the `memory-management` skill)
 
