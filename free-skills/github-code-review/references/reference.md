@@ -136,7 +136,7 @@ fi
 <details>
 <summary><strong>Comment Template: Security Issue</strong></summary>
 
-```markdown
+````markdown
 🔒 **Security Issue: [Type]**
 
 **Severity**: 🔴 Critical / 🟡 High / 🟢 Low
@@ -155,7 +155,7 @@ fi
 **References**:
 - [OWASP Top Ten](https://owasp.org/www-project-top-ten/)
 - [GitHub code security docs](https://docs.github.com/en/code-security)
-```
+````
 
 </details>
 
