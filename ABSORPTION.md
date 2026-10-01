@@ -69,12 +69,23 @@ The absorbed skill is checked against every existing skill with the same 5-word-
 estate graph uses. **≥85% similarity is a refusal.** If it is that close to something we have, we already
 have it — improve the existing skill instead and credit the upstream there.
 
+A short artifact yields too few 5-word shingles for Jaccard to mean anything, so the gate narrows the window
+to 3 words rather than skipping the comparison, and says in its verdict when it did. Below 20 shingles even
+at that width — roughly 22 words of body — it **refuses**: an artifact that cannot be compared cannot be
+shown distinct. Reporting "unchecked" and passing is not a gate, which is what this one did until
+`scripts/tests/absorb.test.mjs` pinned it.
+
 This gate is the direct answer to the 61-card finding. It makes the duplicate class un-creatable.
 
 ### Gate 4 — Attestation
 
-Carries the `Built on SIP` footer, and passes the skill format validator. Same bar as anything written here.
-Absorbed is not a lower tier.
+Carries the `Built on SIP` footer, **and** passes `scripts/validate_skills.py` — the same validator CI runs
+over `free-skills/`, invoked on the staged directory before anything is copied. One definition of the format,
+or the gate and CI disagree about what valid means. Same bar as anything written here; absorbed is not a
+lower tier, and `absorbed/` is in the validator's default roots so the bar holds after landing too.
+
+The gate **fails closed**: if the validator is missing or no Python interpreter is on `PATH`, it refuses
+rather than waving the artifact through. A gate whose tool is absent is not a gate that passes.
 
 ---
 

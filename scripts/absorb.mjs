@@ -14,13 +14,14 @@
  * Gates:
  *   1 LICENSE      SPDX must be on the allowlist. Copyleft, -NC, and unlicensed are refused.
  *   2 PROVENANCE   repo + full commit SHA + upstream path + license + a real change statement.
- *   3 DISTINCTNESS >=85% 5-word-shingle Jaccard against any existing skill is a refusal.
- *   4 ATTESTATION  carries the "Built on SIP" footer.
+ *   3 DISTINCTNESS >=85% shingle Jaccard against any existing skill is a refusal.
+ *   4 ATTESTATION  carries the "Built on SIP" footer AND passes the skill format validator.
  *
  * Exits non-zero on any failed gate.
  */
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync } from 'node:fs';
-import { join, dirname, relative, sep } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -83,12 +84,21 @@ if (!existsSync(stagedSkill)) {
 const body = readFileSync(stagedSkill, 'utf8');
 
 // ---------------------------------------------------------------- gate 3: distinctness
-const SHINGLE = 5;
-const shingles = (t) => {
-  const w = t.replace(/^---[\s\S]*?---/, '').toLowerCase().replace(/[`*_>#|\[\]()]/g, ' ')
+// A gate that reports "unchecked" and then passes is not a gate. The 5-word
+// shingle is the estate default, but a short artifact yields too few of them for
+// Jaccard to mean anything — so narrow the window instead of skipping the
+// comparison, and refuse what is too small to compare at all. Both sides are
+// always shingled at the same width, or the similarity is meaningless.
+const WIDE = 5;
+const NARROW = 3;
+const MIN_SHINGLES = 20;
+const words = (t) =>
+  t.replace(/^---[\s\S]*?---/, '').toLowerCase().replace(/[`*_>#|\[\]()]/g, ' ')
     .replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean);
+const shingles = (t, n) => {
+  const w = words(t);
   const s = new Set();
-  for (let i = 0; i + SHINGLE <= w.length; i++) s.add(w.slice(i, i + SHINGLE).join(' '));
+  for (let i = 0; i + n <= w.length; i++) s.add(w.slice(i, i + n).join(' '));
   return s;
 };
 const jaccard = (a, b) => { if (!a.size || !b.size) return 0; let i = 0; for (const x of a) if (b.has(x)) i++; return i / (a.size + b.size - i); };
@@ -111,21 +121,49 @@ function existingSkills() {
   }
   return out;
 }
-const mine = shingles(body);
+const width = shingles(body, WIDE).size >= MIN_SHINGLES ? WIDE : NARROW;
+const mine = shingles(body, width);
 let nearest = { path: null, score: 0 };
-if (mine.size >= 40) {
+if (mine.size >= MIN_SHINGLES) {
   for (const p of existingSkills()) {
-    const s = jaccard(mine, shingles(readFileSync(p, 'utf8')));
+    const s = jaccard(mine, shingles(readFileSync(p, 'utf8'), width));
     if (s > nearest.score) nearest = { path: relative(REPO, p), score: s };
   }
 }
-gate(3, nearest.score < 0.85,
-  nearest.score >= 0.85
-    ? `${Math.round(nearest.score * 100)}% identical to ${nearest.path} — we already have this. Improve that skill and credit the upstream there.`
-    : mine.size < 40 ? 'skill too short to compare — distinctness unchecked' : `most similar existing skill: ${nearest.path || 'none'} at ${Math.round(nearest.score * 100)}%`);
+const comparable = mine.size >= MIN_SHINGLES;
+const note = width === WIDE ? '' : ` (compared on ${NARROW}-word shingles — short artifact)`;
+gate(3, comparable && nearest.score < 0.85,
+  !comparable
+    ? `only ${mine.size} ${width}-word shingles in ${words(body).length} words — too small to compare against the library, so it cannot be shown distinct. Write the skill out.`
+    : nearest.score >= 0.85
+      ? `${Math.round(nearest.score * 100)}% identical to ${nearest.path} — we already have this. Improve that skill and credit the upstream there.`
+      : `most similar existing skill: ${nearest.path || 'none'} at ${Math.round(nearest.score * 100)}%${note}`);
 
 // ---------------------------------------------------------------- gate 4: attestation
-gate(4, /Built on SIP/.test(body), /Built on SIP/.test(body) ? 'attestation present' : 'missing the "Built on SIP" footer — absorbed is not a lower tier');
+// ABSORPTION.md gate 4 is two conditions, not one: the footer AND the skill
+// format validator. Checking only the footer let a malformed SKILL.md land while
+// the report said every gate passed. The validator is the same one CI runs — one
+// definition of the format, or the gate and CI disagree about what valid means.
+function formatValidator(dir) {
+  const script = join(REPO, 'scripts', 'validate_skills.py');
+  if (!existsSync(script)) return { ok: false, detail: 'scripts/validate_skills.py is missing — the format gate cannot run' };
+  for (const bin of ['python3', 'python']) {
+    const r = spawnSync(bin, [script, dir], { encoding: 'utf8' });
+    if (r.error?.code === 'ENOENT') continue;
+    if (r.error) return { ok: false, detail: `${bin} ${script}: ${r.error.message}` };
+    if (r.status === 0) return { ok: true, detail: 'format validator passed' };
+    const first = `${r.stdout || ''}`.split('\n').find((l) => l.trim().startsWith('- ')) || `validator exit ${r.status}`;
+    return { ok: false, detail: `format validator refused: ${first.trim().replace(/^- /, '')}` };
+  }
+  // Fail closed. A gate whose tool is absent refuses; it never waves things through.
+  return { ok: false, detail: 'no python3 on PATH — the format gate cannot run, so it refuses' };
+}
+const attested = /Built on SIP/.test(body);
+const fmt = formatValidator(stagedDir);
+gate(4, attested && fmt.ok,
+  !attested
+    ? 'missing the "Built on SIP" footer — absorbed is not a lower tier'
+    : fmt.ok ? 'attestation present, format validator passed' : fmt.detail);
 
 // ---------------------------------------------------------------- report
 const NAMES = { 1: 'LICENSE', 2: 'PROVENANCE', 3: 'DISTINCTNESS', 4: 'ATTESTATION' };
@@ -170,4 +208,4 @@ const current = readFileSync(ledger, 'utf8')
 writeFileSync(ledger, current + row);
 
 console.log(`  landed  absorbed/${domain}/${name}/  (+ PROVENANCE.json, + ABSORBED.md row)`);
-console.log(`  next    remove absorbed/_staging/${domain}/${name}/ and run the skill validator`);
+console.log(`  next    remove absorbed/_staging/${domain}/${name}/ and commit`);
