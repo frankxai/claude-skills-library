@@ -3,6 +3,8 @@
 Thank you for your interest in contributing! This is an open, MIT-licensed library and we welcome
 contributions to **any** skill, as well as brand-new skills.
 
+For scope questions, use [Discussions](https://github.com/frankxai/claude-skills-library/discussions). For a concrete bug or request, use the [issue forms](https://github.com/frankxai/claude-skills-library/issues/new/choose). Follow the [code of conduct](CODE_OF_CONDUCT.md); send vulnerabilities through the [private security route](SECURITY.md). Do not include secrets, private prompts, personal data, or unlicensed material in public examples.
+
 ## What Can You Contribute?
 
 - **New skills**: A new `free-skills/<skill-name>/SKILL.md` for a domain not yet covered.
@@ -102,13 +104,13 @@ Before submitting:
    cp -r free-skills/[skill-name] ~/.claude/skills/
    ```
 
-2. Test with Claude Code:
+3. Test with Claude Code:
    - Ask relevant questions
    - Verify skill activates correctly
    - Check that responses are accurate
    - Test edge cases
 
-3. Review formatting:
+4. Review formatting:
    - Markdown renders correctly
    - Code blocks are properly formatted
    - Links work
@@ -118,7 +120,7 @@ Before submitting:
 Write clear, descriptive commit messages:
 
 ```bash
-git add .
+git add <files-you-changed>
 git commit -m "Fix: Correct WCAG 2.2 contrast ratio in UI/UX skill"
 ```
 
@@ -215,44 +217,22 @@ Any other information that would be helpful for reviewers.
 ## Review Process
 
 1. **Automated Checks**: CI validates frontmatter, catalog sync, and internal links on every PR
-2. **Maintainer Review**: A maintainer will review your PR within 3-5 business days
+2. **Maintainer Review**: A maintainer reviews contributions as capacity allows; there is no guaranteed response time
 3. **Feedback**: You may receive requests for changes or clarifications
 4. **Merge**: Once approved, your PR will be merged!
 
 ## Recognition
 
-Contributors will be:
-- Listed in `CONTRIBUTORS.md`
-- Mentioned in release notes (for significant contributions)
-- Credited in skill documentation (for major improvements)
+Merged contributions remain attributed in Git history. Significant work may also be credited in documentation or release notes when those are published.
 
 ## Questions?
 
 - 💬 Open a [Discussion](https://github.com/frankxai/claude-skills-library/discussions)
 - 🐛 Report bugs via [Issues](https://github.com/frankxai/claude-skills-library/issues)
 
-## Code of Conduct
+## Code of conduct
 
-### Our Standards
-
-We are committed to providing a welcoming and inspiring community for all.
-
-**Expected Behavior:**
-- ✅ Be respectful and inclusive
-- ✅ Welcome newcomers and help them learn
-- ✅ Accept constructive criticism gracefully
-- ✅ Focus on what's best for the community
-- ✅ Show empathy towards others
-
-**Unacceptable Behavior:**
-- ❌ Harassment, discrimination, or hostile behavior
-- ❌ Trolling, insulting, or derogatory comments
-- ❌ Personal or political attacks
-- ❌ Publishing others' private information
-- ❌ Spam or self-promotion
-
-**Enforcement:**
-Violations may result in temporary or permanent ban from the project.
+The [code of conduct](CODE_OF_CONDUCT.md) explains participation standards and how to report a concern privately.
 
 ## License
 

@@ -34,6 +34,15 @@ nothing in context until a skill actually fires.
 > Install with `npx skills add frankxai/skills` or `npx skills add frankxai/creator-skills`.
 > This library remains the full catalog.
 
+## Join the skills community
+
+- [Ask a question](https://github.com/frankxai/claude-skills-library/discussions/categories/q-a), [share a working example](https://github.com/frankxai/claude-skills-library/discussions/categories/show-and-tell), or [suggest an idea](https://github.com/frankxai/claude-skills-library/discussions/categories/ideas). The discussion space is open; start the conversation that would help you build.
+- [Report a bug or request a skill](https://github.com/frankxai/claude-skills-library/issues/new/choose) with the affected skill and a small, shareable example.
+- [Contribute a fix or skill](CONTRIBUTING.md). We welcome evidence from real use and clear source attribution.
+- [Report a vulnerability privately](SECURITY.md). Keep exploit details out of public threads.
+
+See the [support guide](SUPPORT.md) for routing and the [code of conduct](CODE_OF_CONDUCT.md) for participation expectations. Remove credentials and private material before posting.
+
 ## ⚡ Quick start
 
 **Option A — install as a Claude Code plugin (recommended).** One command, auto-updating:

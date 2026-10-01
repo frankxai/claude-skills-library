@@ -1,0 +1,24 @@
+name: Skill request
+description: Propose a new skill or an improvement to an existing one
+title: "Skill request: "
+labels: [enhancement]
+body:
+  - type: input
+    id: problem
+    attributes:
+      label: User problem
+      description: What decision or task needs better guidance?
+    validations:
+      required: true
+  - type: textarea
+    id: trigger
+    attributes:
+      label: When should it activate?
+      description: Give a realistic user request and the expected outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Existing skills and sources
+      description: Note similar skills, primary sources, required tools, and paid services.
