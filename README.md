@@ -21,7 +21,7 @@ nothing in context until a skill actually fires.
 [![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#-works-with-six-runtimes)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[**⚡ Quick start**](#-quick-start) · [**📚 Full catalog**](docs/CATALOG.md) · [**🗂️ Categories**](#-skill-categories) · [**🤝 Contribute**](#-contributing) · [**❓ FAQ**](#-faq)
+[**⚡ Quick start**](#-quick-start) · [**📚 Full catalog**](docs/CATALOG.md) · [**🗂️ Categories**](#%EF%B8%8F-skill-categories) · [**🤝 Contribute**](#-contributing) · [**❓ FAQ**](#-faq)
 
 </div>
 

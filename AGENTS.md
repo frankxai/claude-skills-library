@@ -6,7 +6,7 @@ This repo is part of the FrankX / Starlight / Arcanea agent estate.
 
 - Repo: claude-skills-library
 - Class: public skills catalog (Claude Code / Anthropic ecosystem)
-- Default health command: `node scripts/validate-skills.mjs`
+- Default health command: `python3 scripts/validate_skills.py` (the same check CI runs; `scripts/validate-skills.mjs` hardcodes a Windows path and fails on the grouped `free-skills/` directories)
 - Remote: https://github.com/frankxai/claude-skills-library.git
 
 ## Agent Rules

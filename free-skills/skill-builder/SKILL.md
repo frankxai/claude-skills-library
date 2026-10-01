@@ -242,7 +242,7 @@ Use template: `resources/templates/api-template.js`
 
 #### Recommended 4-Level Structure
 
-```markdown
+````markdown
 ---
 name: "Your Skill Name"
 description: "What it does and when to use it"
@@ -341,7 +341,7 @@ See [examples/](resources/examples/)
 ### Resources
 - [External Link 1](https://example.com)
 - [Documentation](https://docs.example.com)
-```
+````
 
 ---
 
@@ -385,13 +385,13 @@ Creates production-ready React components with TypeScript, hooks, and tests in 3
 ```
 
 **Level 2 for Common Paths** (Quick Start):
-```markdown
+````markdown
 ## Quick Start
 ```bash
 # Most common use case (80% of users)
 generate-component MyComponent
 ```
-```
+````
 
 **Level 3 for Details** (Step-by-Step):
 ```markdown
@@ -431,7 +431,7 @@ scripts/
 ```
 
 Reference from SKILL.md:
-```markdown
+````markdown
 ## Setup
 Run the setup script:
 ```bash
@@ -443,7 +443,7 @@ Validate your configuration:
 ```bash
 node scripts/validate.js config.json
 ```
-```
+````
 
 #### Resources Directory
 
@@ -468,7 +468,7 @@ resources/
 ```
 
 Reference from SKILL.md:
-```markdown
+````markdown
 ## Templates
 Use the component template:
 ```bash
@@ -479,7 +479,7 @@ cp resources/templates/component.tsx.template src/components/MyComponent.tsx
 See working examples in `resources/examples/`:
 - `basic-example/` - Simple component
 - `advanced-example/` - With hooks and context
-```
+````
 
 ---
 
@@ -500,7 +500,7 @@ See examples in `resources/examples/basic-usage/`
 ```
 
 #### Inline File Content
-```markdown
+````markdown
 ## Example Configuration
 See `resources/examples/config.json`:
 ```json
@@ -508,7 +508,7 @@ See `resources/examples/config.json`:
   "option": "value"
 }
 ```
-```
+````
 
 **Best Practice**: Keep SKILL.md lean (~2-5KB). Move lengthy content to separate files and reference them. Claude will load only what's needed.
 
@@ -559,7 +559,7 @@ Before publishing a skill, verify:
 
 ### Template 1: Basic Skill (Minimal)
 
-```markdown
+````markdown
 ---
 name: "My Basic Skill"
 description: "One sentence what. One sentence when to use."
@@ -589,11 +589,11 @@ description: "One sentence what. One sentence when to use."
 ## Troubleshooting
 - **Issue**: Problem description
   - **Solution**: Fix description
-```
+````
 
 ### Template 2: Intermediate Skill (With Scripts)
 
-```markdown
+````markdown
 ---
 name: "My Intermediate Skill"
 description: "Detailed what with key features. When to use with specific triggers: scaffolding, generating, building."
@@ -644,11 +644,11 @@ Edit `config.json`:
 
 ## Troubleshooting
 [Common issues and solutions]
-```
+````
 
 ### Template 3: Advanced Skill (Full-Featured)
 
-```markdown
+````markdown
 ---
 name: "My Advanced Skill"
 description: "Comprehensive what with all features and integrations. Use when [trigger 1], [trigger 2], or [trigger 3]. Supports [technology stack]."
@@ -802,7 +802,7 @@ Complete API documentation: [API_REFERENCE.md](docs/API_REFERENCE.md)
 **Category**: Advanced
 **Difficulty**: Intermediate
 **Estimated Time**: 15-30 minutes
-```
+````
 
 ---
 
@@ -810,7 +810,7 @@ Complete API documentation: [API_REFERENCE.md](docs/API_REFERENCE.md)
 
 ### Example 1: Simple Documentation Skill
 
-```markdown
+````markdown
 ---
 name: "README Generator"
 description: "Generate comprehensive README.md files for GitHub repositories. Use when starting new projects, documenting code, or improving existing READMEs."
@@ -835,11 +835,11 @@ Creates well-structured README.md files with badges, installation, usage, and co
 
 ## Customization
 Edit sections in `resources/templates/sections/` before generating.
-```
+````
 
 ### Example 2: Code Generation Skill
 
-```markdown
+````markdown
 ---
 name: "React Component Generator"
 description: "Generate React functional components with TypeScript, hooks, tests, and Storybook stories. Use when creating new components, scaffolding UI, or following component architecture patterns."
@@ -881,7 +881,7 @@ Edit generated files in `src/components/ComponentName/`
 
 ## Templates
 See `resources/templates/` for available component templates.
-```
+````
 
 ---
 

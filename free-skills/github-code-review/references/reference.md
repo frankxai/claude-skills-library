@@ -8,10 +8,10 @@
 <summary><strong>Core Features</strong></summary>
 
 - [Multi-Agent Review System](#multi-agent-review-system)
-- [Specialized Review Agents](#specialized-review-agents)
-- [PR-Based Swarm Management](#pr-based-swarm-management)
-- [Automated Workflows](#automated-workflows)
-- [Quality Gates & Checks](#quality-gates--checks)
+- [Specialized Review Agents](#-specialized-review-agents)
+- [PR-Based Swarm Management](#-pr-based-swarm-management)
+- [Automated Workflows](#-automated-workflows)
+- [Quality Gates & Checks](#-quality-gates--checks)
 
 </details>
 
@@ -22,7 +22,6 @@
 - [Performance Review Agent](#performance-review-agent)
 - [Architecture Review Agent](#architecture-review-agent)
 - [Style & Convention Agent](#style--convention-agent)
-- [Accessibility Agent](#accessibility-agent)
 
 </details>
 
@@ -32,17 +31,17 @@
 - [Context-Aware Reviews](#context-aware-reviews)
 - [Learning from History](#learning-from-history)
 - [Cross-PR Analysis](#cross-pr-analysis)
-- [Custom Review Agents](#custom-review-agents)
+- [Custom Review Agents](#%EF%B8%8F-custom-review-agents)
 
 </details>
 
 <details>
 <summary><strong>Integration & Automation</strong></summary>
 
-- [CI/CD Integration](#cicd-integration)
-- [Webhook Handlers](#webhook-handlers)
-- [PR Comment Commands](#pr-comment-commands)
-- [Automated Fixes](#automated-fixes)
+- [CI/CD Integration](#-cicd-integration)
+- [Webhook Handlers](#-pr-comment-commands)
+- [PR Comment Commands](#-pr-comment-commands)
+- [Automated Fixes](#automated-pr-fixes)
 
 </details>
 
@@ -136,7 +135,7 @@ fi
 <details>
 <summary><strong>Comment Template: Security Issue</strong></summary>
 
-```markdown
+````markdown
 🔒 **Security Issue: [Type]**
 
 **Severity**: 🔴 Critical / 🟡 High / 🟢 Low
@@ -155,7 +154,7 @@ fi
 **References**:
 - [OWASP Top Ten](https://owasp.org/www-project-top-ten/)
 - [GitHub code security docs](https://docs.github.com/en/code-security)
-```
+````
 
 </details>
 

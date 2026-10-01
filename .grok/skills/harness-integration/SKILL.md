@@ -1,6 +1,6 @@
 ---
 name: harness-integration
-description: ACOS Grok bridge. SessionStart loads repo-mastery + excellence gates. PreToolUse enforces rules read + suggests harness (claude for plans). Uses gstack for QA, verification-loop/santa-method. Full .claude/ compat + native .grok/. Delegate via terminal when needed. Trigger: setup, harness, grok, excellence.
+description: "ACOS Grok bridge. SessionStart loads repo-mastery + excellence gates. PreToolUse enforces rules read + suggests harness (claude for plans). Uses gstack for QA, verification-loop/santa-method. Full .claude/ compat + native .grok/. Delegate via terminal when needed. Trigger: setup, harness, grok, excellence."
 ---
 
 # Grok Harness Integration (ACOS v10+)
