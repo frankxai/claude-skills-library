@@ -608,13 +608,13 @@
         },
         {
           "name": "suno-ai-mastery",
-          "description": "Expert prompt engineering and music generation with Suno AI v4.5+ for professional-quality songs across all genres. Use when writing Suno prompts, designing song structure/styles, or producing commercial-quality AI music.",
+          "description": "Design professional song and instrumental direction for the newest stable Suno model using genre, harmony, rhythm, arrangement, vocal persona, production, dynamics, and controlled iteration. Use for Suno composition strategy, arrangement, production troubleshooting, covers, extensions, and remasters.",
           "path": "free-skills/suno-ai-mastery",
           "hasEvals": false
         },
         {
           "name": "suno-prompt-architect",
-          "description": "Expert Suno AI prompt engineering for professional music creation. Use this skill when creating Suno prompts for any AI-generated music that needs commercial quality.",
+          "description": "Convert a finished creative brief and lyrics into a precise Suno Custom Mode packet: title, style, exclusions, structure/performance tags, pronunciation notes, and one controlled alternate. Use before any Suno browser generation.",
           "path": "free-skills/suno-prompt-architect",
           "hasEvals": false
         },
