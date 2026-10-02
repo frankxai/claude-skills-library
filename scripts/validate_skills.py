@@ -24,8 +24,8 @@ from _skillmeta import FM_RE, parse_frontmatter, read_text  # noqa: E402
 
 import re  # noqa: E402
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "free-skills"))
-REPO = os.path.normpath(os.path.join(ROOT, ".."))
+REPO = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
+SKILL_ROOTS = ("free-skills", "packs", ".grok")
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 RESERVED = ("anthropic", "claude")
 MAX_BODY_LINES = 500
@@ -35,52 +35,56 @@ def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
     count = 0
-    for dirpath, _dirs, files in os.walk(ROOT):
-        for fn in files:
-            if fn.lower() != "skill.md":
-                continue
-            count += 1
-            full = os.path.join(dirpath, fn)
-            rel = os.path.relpath(full, REPO).replace(os.sep, "/")
+    for root_name in SKILL_ROOTS:
+        root = os.path.join(REPO, root_name)
+        if not os.path.isdir(root):
+            continue
+        for dirpath, _dirs, files in os.walk(root):
+            for fn in files:
+                if fn.lower() != "skill.md":
+                    continue
+                count += 1
+                full = os.path.join(dirpath, fn)
+                rel = os.path.relpath(full, REPO).replace(os.sep, "/")
 
-            if fn != "SKILL.md":
-                errors.append(f"{rel}: file must be named 'SKILL.md' (got {fn!r})")
+                if fn != "SKILL.md":
+                    errors.append(f"{rel}: file must be named 'SKILL.md' (got {fn!r})")
 
-            try:
-                text = read_text(full)
-            except UnicodeDecodeError as exc:
-                errors.append(f"{rel}: not valid UTF-8 ({exc})")
-                continue
-            if not text.strip():
-                errors.append(f"{rel}: file is empty")
-                continue
+                try:
+                    text = read_text(full)
+                except UnicodeDecodeError as exc:
+                    errors.append(f"{rel}: not valid UTF-8 ({exc})")
+                    continue
+                if not text.strip():
+                    errors.append(f"{rel}: file is empty")
+                    continue
 
-            fm = parse_frontmatter(text)
-            if fm is None:
-                errors.append(f"{rel}: missing or malformed YAML frontmatter")
-                continue
+                fm = parse_frontmatter(text)
+                if fm is None:
+                    errors.append(f"{rel}: missing or malformed YAML frontmatter")
+                    continue
 
-            name = fm.get("name", "")
-            if not name:
-                errors.append(f"{rel}: missing 'name'")
-            elif not NAME_RE.match(name):
-                errors.append(f"{rel}: 'name' must match ^[a-z0-9][a-z0-9-]*$ (got {name!r})")
-            elif len(name) > 64:
-                errors.append(f"{rel}: 'name' exceeds 64 characters")
-            elif name in RESERVED:
-                warnings.append(f"{rel}: 'name' is a reserved word ({name!r})")
+                name = fm.get("name", "")
+                if not name:
+                    errors.append(f"{rel}: missing 'name'")
+                elif not NAME_RE.match(name):
+                    errors.append(f"{rel}: 'name' must match ^[a-z0-9][a-z0-9-]*$ (got {name!r})")
+                elif len(name) > 64:
+                    errors.append(f"{rel}: 'name' exceeds 64 characters")
+                elif name in RESERVED:
+                    warnings.append(f"{rel}: 'name' is a reserved word ({name!r})")
 
-            desc = fm.get("description", "")
-            if not desc:
-                errors.append(f"{rel}: missing 'description'")
-            elif len(desc) > 1024:
-                errors.append(f"{rel}: 'description' exceeds 1024 characters ({len(desc)})")
+                desc = fm.get("description", "")
+                if not desc:
+                    errors.append(f"{rel}: missing 'description'")
+                elif len(desc) > 1024:
+                    errors.append(f"{rel}: 'description' exceeds 1024 characters ({len(desc)})")
 
-            fmm = FM_RE.match(text)
-            body_lines = len(text[fmm.end():].splitlines()) if fmm else len(text.splitlines())
-            if body_lines > MAX_BODY_LINES:
-                warnings.append(f"{rel}: body is {body_lines} lines (>{MAX_BODY_LINES}); "
-                                "consider splitting into references/")
+                fmm = FM_RE.match(text)
+                body_lines = len(text[fmm.end():].splitlines()) if fmm else len(text.splitlines())
+                if body_lines > MAX_BODY_LINES:
+                    warnings.append(f"{rel}: body is {body_lines} lines (>{MAX_BODY_LINES}); "
+                                    "consider splitting into references/")
 
     if warnings:
         print(f"{len(warnings)} warning(s):")

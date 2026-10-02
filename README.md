@@ -97,6 +97,9 @@ Every skill here:
 **114 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
 engineering workflow, and personal performance. **All free. MIT-licensed.**
 
+The 114 figure is the public installable catalog. Skills in `packs/` and the Grok-specific
+`.grok/skills/` harness are maintained separately and checked against the same frontmatter standard.
+
 ---
 
 ## 🗂️ Skill categories
@@ -270,9 +273,9 @@ Yes — see [`runtimes/`](runtimes/) for Antigravity, OpenCode, Codex, Gemini CL
 
 Every skill here is free, MIT, and yours. That is not changing.
 
-But a skill is prose until something tests it. All 103 in this library read well. None of them ships
-evidence that it still behaves under pressure — and that is exactly how a skill quietly degrades an
-agent instead of improving it, in a way you notice three sessions later and blame on the model.
+But a skill is prose until something tests it. The catalog has grown to 114 skills; reading a skill
+is not evidence that it still behaves well under pressure. Evaluation coverage is still emerging —
+and without evidence, a skill can quietly degrade an agent instead of improving it.
 
 **There is no paid product here today.** Before building one, the honest move is to find out whether
 it should exist. The idea on the table: a pack where every skill ships with its promptfoo eval suite,

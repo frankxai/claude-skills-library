@@ -6,6 +6,11 @@ specification lives at **[agentskills.io/specification](https://agentskills.io/s
 the official best-practices guide at
 **[platform.claude.com/docs/agents-and-tools/agent-skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)**.
 
+This shared frontmatter contract applies to `SKILL.md` files under `free-skills/`, `packs/`, and
+`.grok/`. These locations have different distribution and runtime roles: the public catalog is
+generated from the configured plugin skill roots, while pack and Grok harness skills are not
+automatically part of that catalog. Keep those boundaries explicit when moving or publishing skills.
+
 ## What a skill is
 
 A skill is a self-contained folder with a `SKILL.md` at its root:
