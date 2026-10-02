@@ -29,6 +29,13 @@ SKILL_ROOTS = ("free-skills", "packs", ".grok")
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 RESERVED = ("anthropic", "claude")
 MAX_BODY_LINES = 500
+SECRET_PATTERNS = (
+    re.compile(r"sk-[a-zA-Z0-9]{32,}", re.I),
+    re.compile(r"AIzaSy[a-zA-Z0-9_-]{33}", re.I),
+    re.compile(r"ghp_[a-zA-Z0-9]{36,}", re.I),
+    re.compile(r"""password\s*[:=]\s*['"][^\s'"]{6,}['"]""", re.I),
+    re.compile(r"""api[-_]?key\s*[:=]\s*['"][a-zA-Z0-9_-]{16,}['"]""", re.I),
+)
 
 
 def main() -> int:
@@ -58,6 +65,18 @@ def main() -> int:
                 if not text.strip():
                     errors.append(f"{rel}: file is empty")
                     continue
+
+                lines = text.splitlines()
+                for line_number, line in enumerate(lines, start=1):
+                    if any(pattern.search(line) for pattern in SECRET_PATTERNS):
+                        errors.append(f"{rel}: potential credential-like value on line {line_number}")
+
+                inside_code_block = False
+                for line in lines:
+                    if line.strip().startswith("```"):
+                        inside_code_block = not inside_code_block
+                if inside_code_block:
+                    warnings.append(f"{rel}: unclosed code block (```)")
 
                 fm = parse_frontmatter(text)
                 if fm is None:
