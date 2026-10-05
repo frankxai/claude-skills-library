@@ -219,7 +219,6 @@ const AUTONOMY_DIRECTIVES = [
 ];
 // Negation / quotation context that turns a directive into a discussion of one.
 const DEFENSIVE_CONTEXT = /(never|do not|don't|cannot|can't|must not|refuse|reject|ignore any|treat|detect|flag|block|against|such as|like|e\.g\.|for example|example|pattern|attack|injection|malicious|tries to|attempt|checkable|"|“|'|`|\(|<|if a file|if (?:the )?(?:content|text|input)|warn)/i;
-const HIDDEN_UNICODE = /[​‌‍⁠﻿‪-‮⁦-⁩]/;
 const HTML_COMMENT_IMPERATIVE = /<!--(?![^>]*(?:\be\.g\.|generated|Regenerate|prettier|eslint|markdownlint|toc\b))[^>]*\b(?:(?:claude|assistant|agent|ai|model|llm)[,:]?\s+(?:you\s+)?(?:must|should|always|never|do not|don't|ignore)|you must|you should|ignore (?:previous|all|the|prior)|override (?:the|all|previous)|secretly|do not tell|don't tell|exfil|system prompt)\b[^>]*-->/i;
 const BASE64_BLOB = /[A-Za-z0-9+/]{240,}={0,2}/;
 const REMOTE_EXEC = /\b(?:npx -y|pnpm dlx|bunx|uvx|pipx run)\s+[^\s@]+(?:@latest)?\b|\b[^\s]+@latest\b|curl\s[^|\n]*\|\s*(?:ba|z)?sh\b|wget\s[^|\n]*\|\s*(?:ba|z)?sh\b|iwr\s[^|\n]*\|\s*iex\b/i;
