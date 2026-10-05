@@ -1,0 +1,12 @@
+{
+  "$comment": "Copy to .claude/ci/estate-guard/config.json. `ignore` globs are skipped entirely; `discussion` globs are scanned for secrets only (findings there are examples, not directives); `allow` suppresses rule ids repo-wide; `public` overrides the visibility guess (unknown = public, fail-closed).",
+  "public": true,
+  "ignore": [
+    ".claude/skills/.replaced/**",
+    "archive/**"
+  ],
+  "discussion": [
+    ".claude/skills/gstack/**"
+  ],
+  "allow": []
+}
