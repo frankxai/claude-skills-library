@@ -1,303 +1,92 @@
-<p align="center"><img src=".github/assets/hero.svg" width="100%" alt="Claude Skills Library hero banner"/></p>
+<p align="center"><img src=".github/assets/hero.svg" width="100%" alt="Three original skill mascots for build, design, and connect" /></p>
 
-<div align="center">
+# Claude Skills Library
 
-# 🧠 Claude Skills Library
+### 115 Agent Skills for Claude Code and other skills-aware runtimes
 
-### 114 production-grade Agent Skills for Claude Code, Claude.ai, and every major agentic runtime
+Practical `SKILL.md` workflows for building agent systems, designing interfaces, connecting MCP tools, reviewing code, and creating media. Start with one skill for the job at hand; the [full catalog](docs/CATALOG.md) is available when you need more.
 
-A free, MIT-licensed catalog of self-contained `SKILL.md` files. Each one teaches your AI agent a
-domain — MCP architecture, Next.js, Oracle Cloud, Suno music, code review, and more — with real
-frameworks and current best practices, not 500 words of filler.
+[![Skills](https://img.shields.io/badge/skills-115-blue.svg)](docs/CATALOG.md) [![License](https://img.shields.io/badge/license-MIT%20%2B%20upstream%20terms-555.svg)](THIRD_PARTY_NOTICES.md) [![Validation](https://img.shields.io/badge/frontmatter-validated-success.svg)](scripts/validate_skills.py)
 
-**For** anyone running Claude Code or another skills-aware agent who wants expert behavior on tap.
-**Why not just copy skills by hand?** These are spec-validated, version-tracked, install in one
-command, auto-update via the plugin, and load only when relevant — so a library of 114 costs almost
-nothing in context until a skill actually fires.
+[Get started](#get-started) · [Pick a skill](#pick-a-skill) · [How the pieces fit](#how-the-pieces-fit) · [Sources and standards](docs/ECOSYSTEM.md) · [Contribute](CONTRIBUTING.md)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-114-blue.svg)](docs/CATALOG.md)
-[![Frontmatter validated](https://img.shields.io/badge/frontmatter-validated-success.svg)](scripts/validate_skills.py)
-[![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#-works-with-six-runtimes)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+> This is an independent FrankX catalog. It is not an Anthropic or OpenClaw product. Original contributions use the [MIT license](LICENSE); imported skills retain their own [upstream terms](THIRD_PARTY_NOTICES.md).
 
-[**⚡ Quick start**](#-quick-start) · [**📚 Full catalog**](docs/CATALOG.md) · [**🗂️ Categories**](#-skill-categories) · [**🤝 Contribute**](#-contributing) · [**❓ FAQ**](#-faq)
+## Get started
 
-</div>
-
----
-
-> [!TIP]
-> **New — curated lanes.** The best of this library, curated and actively maintained as two installable flagships:
-> [`frankxai/skills`](https://github.com/frankxai/skills) for AI architects (MCP, orchestration, model routing, context engineering) and
-> [`frankxai/creator-skills`](https://github.com/frankxai/creator-skills) for creators (video routing, music, images, brand voice).
-> Install with `npx skills add frankxai/skills` or `npx skills add frankxai/creator-skills`.
-> This library remains the full catalog.
-
-## Join the skills community
-
-- [Ask a question](https://github.com/frankxai/claude-skills-library/discussions/categories/q-a), [share a working example](https://github.com/frankxai/claude-skills-library/discussions/categories/show-and-tell), or [suggest an idea](https://github.com/frankxai/claude-skills-library/discussions/categories/ideas). The discussion space is open; start the conversation that would help you build.
-- [Report a bug or request a skill](https://github.com/frankxai/claude-skills-library/issues/new/choose) with the affected skill and a small, shareable example.
-- [Contribute a fix or skill](CONTRIBUTING.md). We welcome evidence from real use and clear source attribution.
-- [Report a vulnerability privately](SECURITY.md). Keep exploit details out of public threads.
-
-See the [support guide](SUPPORT.md) for routing and the [code of conduct](CODE_OF_CONDUCT.md) for participation expectations. Remove credentials and private material before posting.
-
-## ⚡ Quick start
-
-**Option A — install as a Claude Code plugin (recommended).** One command, auto-updating:
+Install the catalog as a Claude Code plugin:
 
 ```text
 /plugin marketplace add frankxai/claude-skills-library
 /plugin install claude-skills-library@claude-skills-library
 ```
 
-Skills are now discovered automatically and activate when relevant.
-
-**Option B — clone and copy the skills you want:**
+Or copy only the skill you need:
 
 ```bash
-git clone https://github.com/frankxai/claude-skills-library.git ~/claude-skills-library
+git clone https://github.com/frankxai/claude-skills-library.git
 mkdir -p ~/.claude/skills
-
-# one skill…
-cp -r ~/claude-skills-library/free-skills/mcp-architecture ~/.claude/skills/
-# …or all of them
-cp -r ~/claude-skills-library/free-skills/* ~/.claude/skills/
+cp -r claude-skills-library/free-skills/mcp-architecture ~/.claude/skills/
 ```
 
-> Some skills are namespaced (e.g. `free-skills/anthropic/pdf`). Copy the folder that directly
-> contains the `SKILL.md` you want. Restart Claude Code and the skills are discovered.
+For a nested skill, copy the folder that directly contains its `SKILL.md`. Claude Code can select relevant skills or you can invoke one by name. Other runtimes need their own discovery path; see the [runtime guides](runtimes/) before installing. Plugin and skill updates depend on the installation method; check your plugin manager for available updates.
 
-**Then just work.** Skills trigger on their own, or invoke one explicitly:
+## Pick a skill
 
-```text
-"Use the greek-philosopher skill to examine my career decision."
-"Design an MCP server with the mcp-architecture skill."
-"Review this PR with the github-code-review skill."
-"Write a Suno prompt for a cinematic trailer track."
-```
+| Your job | Start here | What it helps you do |
+| --- | --- | --- |
+| Design an agent system | [Agent design review](free-skills/agent-design-review/SKILL.md) | Test failure paths, context, integrations, and cost before implementation. |
+| Connect tools | [MCP architecture](free-skills/mcp-architecture/SKILL.md) | Choose tool, resource, and prompt boundaries with authentication and failure handling. |
+| Build a web app | [Next.js expert](free-skills/nextjs-expert/SKILL.md) | Work through App Router boundaries and production concerns. |
+| Review code | [GitHub code review](free-skills/github-code-review/SKILL.md) | Turn a diff into specific correctness and security findings. |
+| Improve design | [UI/UX design expert](free-skills/ui-ux-design-expert/SKILL.md) | Review layout, interaction, and accessibility. |
+| Plan agent workflows | [Agentic orchestration](free-skills/agentic-orchestration/SKILL.md) | Define ownership, handoffs, and recovery for multi-step work. |
+| Manage model context | [Memory prune](free-skills/memory-prune/SKILL.md) | Remove stale context while retaining decisions that matter. |
+| Diagnose an agent workflow | [Performance analysis](free-skills/performance-analysis/SKILL.md) | Inspect task timing and coordination bottlenecks in a Claude Flow workflow. |
 
----
+**115 skills** across engineering, MCP, design, content, and specialist domains. The [generated catalog](docs/CATALOG.md) lists every skill and its description. Specialist Oracle skills remain there for people who need them; they do not define the library's direction.
 
-## 🚀 What is this?
+For focused packs, see [FrankX skills](https://github.com/frankxai/skills) for AI architecture and [Creator Skills](https://github.com/frankxai/creator-skills) for creative workflows. The [source and review map](docs/ECOSYSTEM.md) links to more of the FrankX estate and to official and community skills. A link is a discovery route, not a claim that the source is bundled or endorsed here.
 
-A curated, open-source library of **[Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)** —
-the portable, model-invoked capability format from Anthropic. Drop a skill into your agent and it
-gains expert knowledge in a domain: it loads automatically when relevant and stays out of the way
-when it isn't.
+For local machine readiness, see the [FrankX Peak Performance source skill](https://github.com/frankxai/claude-code-config/blob/main/skills/pp/SKILL.md). It depends on a machine-specific package and is not bundled here.
 
-Every skill here:
+## How the pieces fit
 
-- ✅ Is a **self-contained folder** with a `SKILL.md` and optional `references/`, `scripts/`, `assets/`.
-- ✅ Has **spec-compliant frontmatter** (`name` + `description`) — enforced by [`scripts/validate_skills.py`](scripts/validate_skills.py).
-- ✅ Is **progressive-disclosure friendly**: a tight description for routing, deep guidance loaded only on use.
-- ✅ Carries a **trigger-rich description** so the right skill activates from a library this large.
+| File or service | Job | When it loads |
+| --- | --- | --- |
+| `SKILL.md` | A reusable procedure with optional scripts and references | When the runtime selects or invokes the skill |
+| `CLAUDE.md` or `AGENTS.md` | Standing repository instructions | According to the runtime's own instruction discovery rules |
+| MCP server | Authenticated access to tools or external data | When configured and connected |
+| Test or eval | Evidence that a procedure or implementation behaves as intended | When run |
 
-**114 skills** across AI agents, MCP & SDKs, frontend, Oracle/cloud, content & creative production,
-engineering workflow, and personal performance. **All free. MIT-licensed.**
+A skill can teach an agent **when and how** to use an MCP tool; it does not supply the connection, credentials, or permissions. Repository instructions should point to the right workflows without copying whole skill bodies. Read the [current conventions and source links](docs/ECOSYSTEM.md) for runtime differences.
 
----
+## Make and check a skill
 
-## 🗂️ Skill categories
-
-Counts below are the source-of-truth groupings from [`docs/CATALOG.md`](docs/CATALOG.md), regenerated
-from the repo by [`scripts/generate_catalog.py`](scripts/generate_catalog.py).
-
-| Category | Count | Examples |
-|---|---:|---|
-| 🤖 **AI Agents & Orchestration** | 15 | `agentic-orchestration`, `swarm-orchestration`, `model-routing`, `reasoningbank-intelligence` |
-| 🔌 **AI Frameworks, MCP & SDKs** | 13 | `mcp-architecture`, `mcp-builder`, `openai-agentkit`, `claude-sdk`, `langgraph-patterns` |
-| ☁️ **Oracle & Cloud** | 8 | `oracle-ai-architect`, `oracle-database-expert`, `oci-services-expert`, `ai-architecture` |
-| 🎨 **Web, Frontend & Animation** | 14 | `nextjs-expert`, `ui-ux-design-expert`, `tailwind`, `gsap`, `three`, `framer-expert` |
-| 🛠️ **Engineering Workflow & GitHub** | 10 | `github-code-review`, `performance-analysis`, `verification-quality`, `hooks-automation` |
-| ✍️ **Content, Writing & Brand** | 14 | `brand-voice`, `book-publishing`, `social-media-strategy`, `creator-productivity` |
-| 🎬 **Creative & Media Production** | 22 | `suno-ai-mastery`, `video-production-workflow`, `hyperframes-media`, `higgsfield-soul-id` |
-| 🧭 **Mind, Body & Philosophy** | 5 | `greek-philosopher`, `spartan-warrior`, `gym-training-expert`, `health-nutrition-expert` |
-| 📄 **Documents & Productivity** | 6 | `pdf`, `docx`, `pptx`, `xlsx`, `product-management-expert`, `webapp-testing` |
-| 🧩 **Meta & Library** | 1 | `contribute-catalog` |
-
-See the **[full catalog](docs/CATALOG.md)** for every skill with its description.
-
----
-
-## ⭐ A few to start with
-
-| Skill | Why you'd reach for it | Category |
-|---|---|---|
-| [`nextjs-expert`](free-skills/nextjs-expert/SKILL.md) | App Router, server/client boundaries, caching, and the production gotchas that bite | 🎨 Web, Frontend & Animation |
-| [`mcp-architecture`](free-skills/mcp-architecture/SKILL.md) | Design an MCP server's resources, tools, prompts, and security from first principles | 🔌 AI Frameworks, MCP & SDKs |
-| [`oracle-database-expert`](free-skills/oracle-database-expert/SKILL.md) | Oracle 23ai, Autonomous DB, AI Vector Search, SQL/PLSQL tuning, HA | ☁️ Oracle & Cloud |
-| [`github-code-review`](free-skills/github-code-review/SKILL.md) | Turn a raw diff into a correctness/security/style review with actionable comments | 🛠️ Engineering Workflow & GitHub |
-| [`suno-ai-mastery`](free-skills/suno-ai-mastery/SKILL.md) | Prompt-engineer commercial-quality music with Suno v4.5+ | 🎬 Creative & Media Production |
-| [`ui-ux-design-expert`](free-skills/ui-ux-design-expert/SKILL.md) | Design systems, interaction patterns, and WCAG 2.2 accessibility audits | 🎨 Web, Frontend & Animation |
-| [`langgraph-patterns`](free-skills/langgraph-patterns/SKILL.md) | Graph orchestration, state machines, and human-in-the-loop for agent workflows | 🔌 AI Frameworks, MCP & SDKs |
-| [`greek-philosopher`](free-skills/greek-philosopher/SKILL.md) | Socratic questioning and Stoic perspective on a hard decision | 🧭 Mind, Body & Philosophy |
-
----
-
-## 🆚 Skills vs. MCP vs. prompts
-
-They solve different problems and compose well together.
-
-| | A prompt | An MCP server | An Agent Skill |
-|---|---|---|---|
-| **What it is** | Text you paste | A connection to tools/data | A model-invoked capability |
-| **Gives the agent** | Instructions, once | New actions (APIs, files, DBs) | Expert knowledge + workflow |
-| **Activation** | Manual, every time | Always on once connected | Auto-loads when relevant |
-| **Token cost** | Pays every turn | Tool schemas always present | ~Free until triggered (progressive disclosure) |
-| **Portability** | Locked to one chat | Server you run | A versioned folder, shared across runtimes |
-
-Use a **skill** to teach the agent *how* to do something well; use **MCP** to give it *access* to a
-system; use a **prompt** for a one-off. Many skills here pair naturally with an MCP server.
-
----
-
-## 🌐 Works with six runtimes
-
-Agent Skills are a portable format. This library documents an import path for each major agentic
-runtime, with one adapter guide per runtime in [`runtimes/`](runtimes/):
-
-| Runtime | Maturity | Guide |
-|---|---|---|
-| Claude Code | ✅ Native | [`runtimes/claude-code.md`](runtimes/claude-code.md) |
-| Antigravity (`agy`) | ✅ Substrate-compatible | [`runtimes/antigravity.md`](runtimes/antigravity.md) |
-| OpenCode | ✅ Adapter pattern | [`runtimes/opencode.md`](runtimes/opencode.md) |
-| Codex CLI | 🟡 Per-skill MCP wrap | [`runtimes/codex.md`](runtimes/codex.md) |
-| Gemini CLI | 🟡 Per-skill template | [`runtimes/gemini-cli.md`](runtimes/gemini-cli.md) |
-| Cursor | 🟡 Per-skill convert | [`runtimes/cursor.md`](runtimes/cursor.md) |
-
-See [`MULTI_RUNTIME.md`](MULTI_RUNTIME.md) for the universal-MCP rationale and the full strategy.
-
----
-
-## 🧱 Anatomy of a skill
-
-```
-free-skills/<skill-name>/
-├── SKILL.md          # required — frontmatter + instructions
-├── references/       # optional — deep docs loaded on demand
-├── scripts/          # optional — executable helpers the agent runs
-└── assets/           # optional — templates, fonts, icons used in output
-```
-
-Every `SKILL.md` opens with two-field frontmatter:
-
-```yaml
----
-name: mcp-architecture          # lowercase, hyphenated, ≤ 64 chars
-description: Design and implement MCP servers... Use when architecting an MCP server...
----
-```
-
-The `description` is the most important line you'll write — it's what the model uses to decide
-**when** to load the skill. State **what it does and when to use it**, with trigger keywords.
-
-📐 **Authoring standard:** [`spec/README.md`](spec/README.md) · **Start here:** [`template/SKILL.md`](template/SKILL.md)
-
----
-
-## ✅ Quality & validation
-
-Three zero-dependency scripts enforce the standard across every `SKILL.md`:
+Each skill is a folder with `SKILL.md` and optional `references/`, `scripts/`, or `assets/`. Start from the [template](template/SKILL.md) and [authoring standard](spec/README.md). Give it a narrow job, a description that says when to use it, observable steps, and at least one real use case. Keep examples and executable code accurate; frontmatter validation alone does not establish behavior or safety.
 
 ```bash
-python3 scripts/validate_skills.py          # frontmatter + structure (exits non-zero on failure)
-python3 scripts/generate_catalog.py         # regenerate docs/CATALOG.md
-python3 scripts/generate_catalog.py --check  # CI-friendly drift check
-python3 scripts/check_links.py              # verify no broken internal links
+python scripts/validate_skills.py
+python scripts/generate_catalog.py --check
+python scripts/generate_site.py --check
+python scripts/check_links.py
+python scripts/check_counts.py
 ```
 
-All three run automatically on every push and pull request via
-[GitHub Actions](.github/workflows/validate.yml). `validate_skills.py` checks that every skill has
-well-formed UTF-8 frontmatter, a spec-valid `name`, a non-empty `description` (≤ 1024 chars), and the
-exact filename `SKILL.md`; it also warns (without failing) on bodies over 500 lines and on
-reserved-word names. Run it before opening a PR.
+These checks run in [CI](.github/workflows/validate.yml). Read [CONTRIBUTING.md](CONTRIBUTING.md) for the import and review path. External skills should be linked until their license, provenance, portability, commands, and actual outputs have been reviewed.
 
-A browsable catalog is generated by `scripts/generate_site.py` into [`docs/index.html`](docs/index.html)
-for serving via GitHub Pages.
+## FAQ
 
----
+**Does loading 115 skills bloat my context?** A skills-aware runtime normally discovers metadata first and reads a skill body when invoked or selected. Exact discovery and context costs vary by runtime and configuration; install a focused pack if you want a smaller menu. See [Claude Code's current skill behavior](https://code.claude.com/docs/en/skills).
 
-## 🤝 Contributing
+**Are all skills equally reviewed?** No. The catalog checks structure and links. It does not prove every workflow's accuracy against current APIs or evaluate its output. The [ecosystem guide](docs/ECOSYSTEM.md) distinguishes bundled, linked, and candidates for deeper review.
 
-New skills, deeper examples, fixes, and better docs are all welcome.
+**Can I use this outside Claude Code?** Many skills use the open `SKILL.md` format. Claude-specific fields and tool instructions may need adaptation. Start with the [runtime guides](runtimes/).
 
-1. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [authoring standard](spec/README.md).
-2. Copy [`template/`](template/) to `free-skills/<skill-name>/` and write your `SKILL.md`.
-3. Run `python3 scripts/validate_skills.py` and `python3 scripts/generate_catalog.py` until both are clean.
-4. Open a pull request.
+## Community and license
 
----
+[Ask a question](https://github.com/frankxai/claude-skills-library/discussions/categories/q-a), [request a skill](https://github.com/frankxai/claude-skills-library/issues/new/choose), or [contribute a fix](CONTRIBUTING.md). Keep credentials and private material out of public examples; use [private vulnerability reporting](SECURITY.md) for security issues.
 
-## 🔗 Related repositories
+Would reproducible skill evals help you choose what to install? [Tell us which skill and failure case matter](https://github.com/frankxai/claude-skills-library/discussions/new?category=ideas&title=Skills%20with%20evals). This feedback informs the open [README capture work](https://github.com/frankxai/claude-skills-library/issues/41).
 
-This library is the public, install-from storefront. Two sibling repos sit behind it:
-
-- **[frankxai/agentic-creator-os](https://github.com/frankxai/agentic-creator-os)** — the canonical,
-  larger internal source for skills, agents, and commands. New skills are authored and battle-tested
-  in ACOS first; the strongest, most broadly useful ones are mirrored out to this public library.
-- **[frankxai/Starlight-Intelligence-System](https://github.com/frankxai/Starlight-Intelligence-System)** —
-  the substrate: the persistent context, memory, and multi-agent layer the skills run on top of.
-
-In short: **Starlight is the substrate, ACOS is the canonical skill source, and this repo is the free public catalog.**
-
----
-
-## ❓ FAQ
-
-**Does loading 114 skills bloat my context?**
-No. Only each skill's `name` + `description` is preloaded for routing; the full body loads **only when
-a skill triggers**, and `references/` load only when read. That's the whole point of progressive disclosure.
-
-**How do skills get picked from a library this large?**
-By the `description`. Every skill here states *what it does and when to use it* with explicit trigger
-keywords, so the model selects the right one. If a skill mis-triggers, sharpen its description — PRs welcome.
-
-**Do I have to install all of them?**
-No. Install the plugin for everything, or copy just the folders you want into `~/.claude/skills/`.
-
-**Is this affiliated with Anthropic?**
-No. It's an independent, MIT-licensed community library built on Anthropic's open Agent Skills format.
-Some skills under `free-skills/anthropic/` are upstream reference skills that retain their original licenses.
-
-**Can I use these outside Claude Code?**
-Yes — see [`runtimes/`](runtimes/) for Antigravity, OpenCode, Codex, Gemini CLI, and Cursor.
-
----
-
-## Would you pay for a skill that proves it works?
-
-Every skill here is free, MIT, and yours. That is not changing.
-
-But a skill is prose until something tests it. All 103 in this library read well. None of them ships
-evidence that it still behaves under pressure — and that is exactly how a skill quietly degrades an
-agent instead of improving it, in a way you notice three sessions later and blame on the model.
-
-**There is no paid product here today.** Before building one, the honest move is to find out whether
-it should exist. The idea on the table: a pack where every skill ships with its promptfoo eval suite,
-the cases it passes, and — the part nobody publishes — the cases it fails.
-
-If that is worth money to you, say so and name the band. If it is not, say that instead; it is the
-more useful answer, and it is the one that stops this from being built.
-
-**[Tell us what it is worth →](https://github.com/frankxai/claude-skills-library/discussions/new?category=ideas&title=Skills%20with%20evals)**
-
-The first fifty people to answer get one skill with its full eval suite and run output, free,
-whatever happens next. At fifty answers the eval harness is published open-source regardless of
-whether the pack is ever built.
-
----
-
-## 📜 License
-
-MIT — free to use, modify, and distribute. See [LICENSE](LICENSE). Skills under
-`free-skills/anthropic/` retain their original upstream licenses (check the folder for a `LICENSE.txt`).
-
----
-
-<div align="center">
-
-**[⭐ Star the repo](https://github.com/frankxai/claude-skills-library)** · **[📚 Catalog](docs/CATALOG.md)** · **[🐛 Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[💬 Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
-
-</div>
+The repository's original work is [MIT licensed](LICENSE). Check [third-party notices](THIRD_PARTY_NOTICES.md) and nested license files for imported material.
