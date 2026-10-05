@@ -16,23 +16,23 @@ Every plan written by `improve-animations` follows this structure. The executor 
 What is wrong, where, and why it matters to how the product feels. Cite every
 location as `path/to/file.tsx:123` and include the current code verbatim:
 
-​```css
+```css
 /* src/components/dropdown.css:14 — current */
 .dropdown { transition: all 400ms ease-in; }
-​```
+```
 
 ## Target
 
 The exact end state. Every value spelled out — curves, durations, spring
 configs, media queries. Never "use a nicer easing":
 
-​```css
+```css
 /* target */
 .dropdown {
   transition: transform 200ms var(--ease-out), opacity 200ms var(--ease-out);
   transform-origin: var(--transform-origin);
 }
-​```
+```
 
 ## Repo conventions to follow
 

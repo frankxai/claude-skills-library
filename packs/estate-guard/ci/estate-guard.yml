@@ -1,0 +1,55 @@
+name: estate-guard
+
+# Scans the agentic surface of this repo — workflows, Claude hooks and settings,
+# MCP configs, skills/agents/commands, secrets, Next.js privileged routes — for
+# the ways an autonomous agent can be hijacked through it. Installed from
+# frankxai/claude-skills-library packs/estate-guard; edit it there.
+#
+# Runs on every PR and push to main, and weekly so a repo nobody touched still
+# gets re-checked against the current rules. A high or critical finding fails
+# the check. The full report is uploaded as an artifact either way.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 6 * * 1" # Mondays 06:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: estate-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: estate-guard scan
+        id: scan
+        env:
+          # Set to "private" on a private repo to soften the public-only severities.
+          REPO_VISIBILITY: ${{ github.event.repository.private && 'private' || 'public' }}
+        run: |
+          set -euo pipefail
+          mkdir -p .claude/ci/estate-guard
+          flag="--public"; [ "$REPO_VISIBILITY" = "private" ] && flag="--private"
+          node .claude/ci/estate-guard-scan.mjs --root . $flag --format json --fail-on never --out .claude/ci/estate-guard/last-scan.json
+          node .claude/ci/estate-guard-scan.mjs --root . $flag --format md --fail-on never --out estate-guard-report.md
+          cat estate-guard-report.md >> "$GITHUB_STEP_SUMMARY"
+          node .claude/ci/estate-guard-scan.mjs --root . $flag --fail-on high > /dev/null
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: estate-guard-report
+          path: |
+            estate-guard-report.md
+            .claude/ci/estate-guard/last-scan.json
+          retention-days: 30
