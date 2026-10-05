@@ -126,6 +126,26 @@ else
   say "  ignore .claude/settings.local.json .claude/ci/estate-guard/last-scan.json"
 fi
 
+# ------------------------------------------------------ prettierignore
+# A repo that runs Prettier on changed files would rewrite the vendored pack
+# files to its own style and the next install.sh would put them back: a
+# permanent diff. They are formatted and tested upstream; ignore them here.
+PI="$TARGET/.prettierignore"
+if [ -f "$PI" ] && ! grep -q 'estate-guard-scan.mjs' "$PI"; then
+  if [ $DRY -eq 1 ]; then
+    say "  would: add the pack's vendored files to .prettierignore"
+  else
+    {
+      echo ""
+      echo "# estate-guard pack — vendored from claude-skills-library, formatted and tested upstream"
+      echo ".claude/ci/estate-guard-scan.mjs"
+      echo ".claude/ci/estate-guard/"
+      echo ".claude/skills/estate-guard/"
+    } >>"$PI"
+    say "  ignore pack files added to .prettierignore"
+  fi
+fi
+
 # ------------------------------------------------ gitignore negations
 # Some repos ignore .claude/hooks/* or .claude/skills/* wholesale (local-only
 # tooling). The pack's files must be tracked or CI and other machines never
