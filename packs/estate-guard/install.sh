@@ -126,6 +126,30 @@ else
   say "  ignore .claude/settings.local.json .claude/ci/estate-guard/last-scan.json"
 fi
 
+# ------------------------------------------------ gitignore negations
+# Some repos ignore .claude/hooks/* or .claude/skills/* wholesale (local-only
+# tooling). The pack's files must be tracked or CI and other machines never
+# see them, so add explicit negations for exactly these paths.
+if [ $DRY -eq 0 ] && git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  ignored=()
+  for f in .claude/ci/estate-guard-scan.mjs .claude/ci/estate-guard/config.json .claude/skills/estate-guard/SKILL.md \
+           .claude/hooks/estate-guard-gate.py .claude/hooks/estate-guard-session.py .claude/hooks/estate-guard-taint.py \
+           .github/workflows/estate-guard.yml .claude/settings.json; do
+    [ -e "$TARGET/$f" ] || continue
+    if git -C "$TARGET" check-ignore -q "$f"; then ignored+=("$f"); fi
+  done
+  if [ ${#ignored[@]} -gt 0 ]; then
+    {
+      echo ""
+      echo "# estate-guard pack — these must be tracked (an ignored hook is a gate that only exists on one machine)"
+      for f in "${ignored[@]}"; do echo "!$f"; done
+      # a negation cannot re-include a file whose parent directory is ignored; un-ignore the parents too
+      for f in "${ignored[@]}"; do d="$(dirname "$f")"; while [ "$d" != "." ]; do echo "!$d/"; d="$(dirname "$d")"; done; done | sort -u
+    } >>"$GI"
+    say "  ignore un-ignored ${#ignored[@]} pack file(s) in .gitignore (they were matched by a wholesale rule)"
+  fi
+fi
+
 say ""
 say "Installed. Verify with:"
 say "  node $TARGET/.claude/ci/estate-guard-scan.mjs --root $TARGET --fail-on never | head -40"
