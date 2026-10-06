@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Claude Skills Library mark</title>
+  <desc id="desc">Seven-point constellation on a deep field, the public mark for the FrankX skills catalog.</desc>
+  <rect width="128" height="128" rx="28" fill="#0B1020"/>
+  <g fill="none" stroke="#C9D4F2" stroke-width="1.25" opacity="0.55">
+    <path d="M28 78 L46 46 L64 62 L86 34 L100 58"/>
+    <path d="M46 46 L64 86 L86 34"/>
+    <path d="M28 78 L64 86 L100 58"/>
+  </g>
+  <g fill="#F4F7FF">
+    <circle cx="28" cy="78" r="3.2"/>
+    <circle cx="46" cy="46" r="3.6"/>
+    <circle cx="64" cy="62" r="2.6"/>
+    <circle cx="64" cy="86" r="3.2"/>
+    <circle cx="86" cy="34" r="4.2"/>
+    <circle cx="100" cy="58" r="3"/>
+    <circle cx="78" cy="74" r="2.2"/>
+  </g>
+  <circle cx="86" cy="34" r="7" fill="none" stroke="#7C9CFF" stroke-width="1.5"/>
+</svg>
