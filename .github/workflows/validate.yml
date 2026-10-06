@@ -16,8 +16,20 @@ jobs:
         with:
           python-version: "3.11"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Validate skill frontmatter & structure
         run: python3 scripts/validate_skills.py
+
+      # The four absorption gates are the only thing between an external
+      # artifact and this library, and nothing proved they refuse. Two of them
+      # did not: gate 4 skipped the format validator it promises, and gate 3
+      # passed short artifacts "unchecked". Verified failing against the
+      # pre-fix script before this step was added.
+      - name: Run the absorption gate tests
+        run: node --test scripts/tests/absorb.test.mjs
 
       - name: Check catalog is in sync
         run: python3 scripts/generate_catalog.py --check
