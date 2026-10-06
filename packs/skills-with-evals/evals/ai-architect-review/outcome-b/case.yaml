@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: ai-architect-review--outcome-b
+description: "Should trigger ai-architect-review; outcome graded."
+tags: [ai-architect-review, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Pressure-test this architecture before we go to production: a RAG chatbot, one wrapper module that is the only place the Anthropic SDK is imported, a fixed 3-step workflow, no tools, and the longest run we have seen is 40 seconds on a platform with a 300 second ceiling. Is it sound?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ai-architect-review\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if the answer works through explicit architecture decisions (model seam, loop shape, trust boundary, long-run home) with a verdict per decision, says which are made versus open, and names one fix-first priority. FAIL if it is a generic list of tips with no per-decision verdicts."

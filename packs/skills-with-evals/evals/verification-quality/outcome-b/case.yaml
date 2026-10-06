@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: verification-quality--outcome-b
+description: "Should trigger verification-quality; outcome graded."
+tags: [verification-quality, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Gate agent output on quality before it ships to production. What checks and thresholds?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-quality\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it names concrete verification checks, a pass threshold, and what happens on failure (block or roll back)."

@@ -1,0 +1,8 @@
+{
+  "name": "skills-with-evals",
+  "version": "0.1.0",
+  "description": "Ten agent-architecture skills from claude-skills-library, each with trigger and outcome evals and a no-plugin baseline.",
+  "author": { "name": "FrankX", "url": "https://github.com/frankxai" },
+  "license": "MIT",
+  "skills": "./skills"
+}

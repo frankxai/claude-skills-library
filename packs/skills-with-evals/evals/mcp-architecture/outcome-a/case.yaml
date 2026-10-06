@@ -1,0 +1,30 @@
+schema_version: "1.1"
+name: mcp-architecture--outcome-a
+description: "Should trigger mcp-architecture; outcome graded."
+tags: [mcp-architecture, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Design an MCP server for our internal ticket database. What should be resources, what tools, and what prompts? Include security."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?mcp-architecture\""
+  - name: rx-0
+    type: regex
+    pattern: "resources"
+    flags: i
+  - name: rx-1
+    type: regex
+    pattern: "tools"
+    flags: i
+  - name: rx-2
+    type: regex
+    pattern: "prompts"
+    flags: i
+  - name: judged-3
+    type: llm
+    criteria: "PASS only if it puts read-only data under resources, actions under tools, reusable templates under prompts, and covers at least two security measures (such as input validation, scoped auth, read-only defaults, rate limits)."

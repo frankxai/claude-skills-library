@@ -1,0 +1,27 @@
+schema_version: "1.1"
+name: model-routing--outcome-a
+description: "Should trigger model-routing; outcome graded."
+tags: [model-routing, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Give me the exact current Claude model IDs and per-million-token prices I should use for a haiku, sonnet and opus routing tier. Short answer."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""
+  - name: rx-0
+    type: regex
+    pattern: "claude-sonnet-5"
+    flags: i
+  - name: rx-1
+    type: regex
+    pattern: "claude-opus-5"
+    flags: i
+  - name: rx-2
+    type: regex
+    pattern: "claude-haiku-4-5"
+    flags: i
