@@ -32,7 +32,7 @@ nothing in context until a skill actually fires.
 > [`frankxai/skills`](https://github.com/frankxai/skills) for AI architects (MCP, orchestration, model routing, context engineering) and
 > [`frankxai/creator-skills`](https://github.com/frankxai/creator-skills) for creators (video routing, music, images, brand voice).
 > Install with `npx skills add frankxai/skills` or `npx skills add frankxai/creator-skills`.
-> This library remains the full catalog.
+> This library remains the full catalog: `npx skills add frankxai/claude-skills-library`.
 
 ## Join the skills community
 
