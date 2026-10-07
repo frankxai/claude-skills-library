@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const skillsDir = 'C:/Users/frank/starlight/repos/claude-skills-library/free-skills';
+const skillsDir = path.resolve(process.argv[2] ?? 'free-skills');
 
 if (!fs.existsSync(skillsDir)) {
     console.error(`Error: Skills directory not found at ${skillsDir}`);
