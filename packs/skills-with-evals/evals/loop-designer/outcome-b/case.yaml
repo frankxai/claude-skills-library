@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: loop-designer--outcome-b
+description: "Should trigger loop-designer; outcome graded."
+tags: [loop-designer, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Make an agent keep working on getting our CI green, around the clock, without me watching. Give me the setup."
+  max_turns: 6
+  allowed_tools: [Skill, Read, Write]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?loop-designer\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it produces a durable, file-backed loop design with a stated goal, a checkable done-when, guardrails, an iteration contract and a way to start it. FAIL if it is one prompt with no state, verification or limits."
