@@ -1,5 +1,5 @@
 # 📚 Skills Catalog
-The complete index of all **114 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **115 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
@@ -26,11 +26,12 @@ _16 skills_
 | [`v-swarm`](../free-skills/v-swarm/SKILL.md) | Vercel/Next.js excellence swarm orchestration. Use when /v fires, or any time the user asks to build, deploy, audit, research, or fix something on a Next.js+Vercel stack. Routes... |
 
 ## AI Frameworks, MCP & SDKs
-_13 skills_
+_14 skills_
 
 | Skill | Description |
 |---|---|
 | [`claude-sdk`](../free-skills/claude-sdk/SKILL.md) | Build autonomous AI agents with the Claude Agent SDK — computer use, tool calling, MCP integration, and production best practices for Anthropic models. Use when writing agent co... |
+| [`firecrawl-alexandria`](../free-skills/firecrawl-alexandria/SKILL.md) | Retrieves typed, sourced records from Firecrawl Alexandria, a catalogue of paid data providers (company firmographics and funding, financial statements and filings, people, pack... |
 | [`langgraph-patterns`](../free-skills/langgraph-patterns/SKILL.md) | Production-grade agentic workflows with LangGraph — graph orchestration, state machines, human-in-the-loop, and advanced control flow. Use when building or debugging a LangGraph... |
 | [`mcp-2025-patterns`](../free-skills/mcp-2025-patterns/SKILL.md) | Current best practices for Model Context Protocol server design, implementation, and integration, including multi-server orchestration, security, and performance. Use when desig... |
 | [`mcp-architecture`](../free-skills/mcp-architecture/SKILL.md) | Design and implement Model Context Protocol servers with resources, tools, prompts, and security best practices. Use when architecting an MCP server, modeling its resources/tool... |
