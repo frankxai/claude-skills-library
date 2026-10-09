@@ -28,20 +28,85 @@ README = os.path.join(REPO, "README.md")
 
 # (human label, pattern with exactly one numeric group)
 SKILL_COUNT_CLAIMS = [
-    ("headline", re.compile(r"^### (\d+) production-grade Agent Skills", re.M)),
+    ("headline", re.compile(r"^### (\d+) Agent Skills", re.M)),
     ("context-cost line", re.compile(r"library of (\d+) costs")),
+    ("evals ask", re.compile(r"All (\d+) in this library")),
     ("shields.io badge", re.compile(r"badge/skills-(\d+)-blue\.svg")),
     ("category summary", re.compile(r"\*\*(\d+) skills\*\* across")),
     ("FAQ", re.compile(r"loading (\d+) skills bloat")),
 ]
 
 
+PACKS = os.path.join(REPO, "packs")
+PACK_COUNT_CLAIMS = [
+    ("headline packs", re.compile(r"^### .*?and (\d+) enforcement packs", re.M)),
+    ("packs badge", re.compile(r"badge/packs-(\d+)-")),
+    ("what-is-here table", re.compile(r"\*\*Packs\*\* \| (\d+) installable contracts")),
+]
+
+
+CATEGORY_ROW = re.compile(r"^\| \*\*(.+?)\*\* \| (\d+) \|", re.M)
+
+
+def norm(name: str) -> str:
+    """README writes categories in sentence case with 'and'; CATEGORIES uses '&'."""
+    return name.replace("&", "and").lower().strip()
+
+
+def check_categories(text: str, skills, failures: list[str]) -> int:
+    truth: dict[str, int] = {}
+    for n in skills:
+        c = categorize(n)
+        truth[norm(c)] = truth.get(norm(c), 0) + 1
+    rows = {norm(name): int(count) for name, count in CATEGORY_ROW.findall(text)}
+    if not rows:
+        failures.append("README.md: no category table rows matched — the table was "
+                        "reworded (update CATEGORY_ROW) or removed (drop this check).")
+        return 0
+    for name, count in rows.items():
+        if name not in truth:
+            failures.append(f"README.md: category row '{name}' matches no catalog category.")
+        elif truth[name] != count:
+            failures.append(f"README.md: category '{name}' says {count}; there are {truth[name]}.")
+    for name, count in truth.items():
+        if name not in rows:
+            failures.append(f"README.md: category '{name}' ({count} skills) has no table row.")
+    return len(rows)
+
+
+def count_packs() -> int:
+    """A pack is a directory under packs/ that ships an install.sh."""
+    return sum(
+        1
+        for name in os.listdir(PACKS)
+        if os.path.isfile(os.path.join(PACKS, name, "install.sh"))
+    )
+
+
 def main() -> int:
     skills = collect()
     truth = len(skills)
+    pack_truth = count_packs()
 
     text = read_text(README)
     failures: list[str] = []
+
+    category_rows = check_categories(text, skills, failures)
+
+    for label, rx in PACK_COUNT_CLAIMS:
+        found = rx.findall(text)
+        if not found:
+            failures.append(
+                f"README.md: the {label} claim no longer matches /{rx.pattern}/ — "
+                "either the line was reworded (update this pattern) or it was "
+                "removed (drop the claim). An unmatched pattern checks nothing."
+            )
+            continue
+        for value in found:
+            if int(value) != pack_truth:
+                failures.append(
+                    f"README.md: the {label} says {value} packs; there are {pack_truth}."
+                )
 
     for label, rx in SKILL_COUNT_CLAIMS:
         found = rx.findall(text)
@@ -71,8 +136,10 @@ def main() -> int:
         if any(categorize(n) == c for n in skills)
     )
     claims = sum(len(rx.findall(text)) for _, rx in SKILL_COUNT_CLAIMS)
+    pack_claims = sum(len(rx.findall(text)) for _, rx in PACK_COUNT_CLAIMS)
     print(f"OK: {claims} README count claim(s) agree with {truth} skills "
-          f"across {cats} categories.")
+          f"across {cats} categories; {category_rows} category row(s) agree; "
+          f"{pack_claims} claim(s) agree with {pack_truth} packs.")
     return 0
 
 
