@@ -59,7 +59,7 @@ passes, the outcome cases it passes, and the cases it fails, becomes the one peo
 
 - Ship the harness open-source: trigger evals (does the description fire on the right ask and stay
   quiet on the wrong one) and outcome evals (does the agent's output clear a rubric).
-- Start with the ten skills in `agent-infrastructure` plus `web-release-gate`, `estate-guard`,
+- Start with the nine skills in `agent-infrastructure` plus `web-release-gate`, `estate-guard`,
   `mcp-architecture`, `github-code-review`, `nextjs-expert`.
 - `catalog/skills.json` already carries `hasEvals` per skill and `skillsWithEvals` in totals. The
   README badge for it appears the day the number is non-zero.
@@ -98,7 +98,8 @@ more repos are the mirror queue, in order:
 | `security-auditor`, `search-first`, `verification-loop`, `planning-with-files`, `safety-guard`, `memory-guardian`, `rules-distill`, `strategic-compact`, `santa-method`, `skill-stocktake` | 3 | Estate-native. Validate frontmatter, mirror, then install back from here. |
 | `prompt-optimizer`, `product-engine`, `hook`, `frankx-brand`, `library-os`, `vis`, `xpoz-intelligence`, `template-monetization` | 3 to 4 | Estate-native, brand-adjacent. Mirror the generic ones; keep brand-locked ones in ACOS. |
 | `skill-creator`, `frontend-design`, `doc-coauthoring`, `web-artifacts-builder`, `github-workflow-automation` | 3 to 5 | Anthropic or upstream. See bet 3: vendor with pins. |
-| `gstack`, `grok-harness`, `higgsfield-operator`, `descript-operator`, `obs-recording` | 3 | Adapters to systems we run. Keep in ACOS unless the public needs them. |
+
+Adapters to systems we run stay in ACOS; they are not catalog material.
 
 Rule: a skill lives in exactly one place. Repos install it; they do not fork it. The
 `agent-infrastructure` pack's content-hash drift check is the template.
@@ -112,7 +113,7 @@ Ordered by leverage per hour.
 1. **GitHub repository settings.** Description: "114 Agent Skills and 6 enforcement packs for Claude Code and every skills-aware runtime. Pinned provenance, hooks with tests, self-checking counts." Homepage: the catalog site. Topics to add: `agent-skills`, `skills-sh`, `cursor`, `codex`, `gemini-cli`, `opencode`, `claude-plugins`. Enable GitHub Pages from `docs/` or connect the repo to Vercel; `vercel.json` is committed.
 2. **Social preview image.** Upload `assets/logo-wordmark.svg` rendered at 1280 x 640 as the repository social preview. The hero PNG in `assets/` is 893 KB and unreferenced; replace it with the rendered wordmark.
 3. **Be listed.** One PR each to `VoltAgent/awesome-agent-skills`, `hesreallyhim/awesome-claude-code`, `BehiSecc/awesome-claude-skills` with the `npx skills add` line and the packs sentence.
-4. **skills.sh.** Confirm all three lanes resolve: `frankxai/claude-skills-library`, `frankxai/skills`, `frankxai/creator-skills`. Installs are the ranking signal there.
+4. **skills.sh.** Confirm all three lanes resolve: `frankxai/claude-skills-library`, `frankxai/skills`, `frankxai/creator-skills`. Installs are the ranking signal there. Known gap: the CLI walks manifest-declared directories one level deep, so the skills nested under `anthropic/`, `creative/` and `technical/` are not installed by the bare command. Decide between flattening the three namespaces and declaring explicit per-skill entries in `marketplace.json`; either way the Claude Code plugin path must keep finding all 114.
 5. **Release cadence.** Tag a release when the count or a pack changes. A `CHANGELOG.md` and GitHub Releases give the README a "what's new" that search engines and aggregators pick up.
 6. **Close the PR queue.** Ten open drafts read as abandonment. Land #48 (already absorbed into this README), reconcile #43 with this README, then land or close the eval PRs under bet 1.
 7. **Author identity.** The landscape shows the author's name is the channel. The frankx.ai pages for skills and the newsletter should link here with the install line, and each new pack ships with one post.

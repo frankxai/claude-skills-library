@@ -37,12 +37,45 @@ SKILL_COUNT_CLAIMS = [
 ]
 
 
+PACKS = os.path.join(REPO, "packs")
+PACK_COUNT_CLAIMS = [
+    ("headline packs", re.compile(r"^### .*?and (\d+) enforcement packs", re.M)),
+    ("packs badge", re.compile(r"badge/packs-(\d+)-")),
+    ("what-is-here table", re.compile(r"\*\*Packs\*\* \| (\d+) installable contracts")),
+]
+
+
+def count_packs() -> int:
+    """A pack is a directory under packs/ that ships an install.sh."""
+    return sum(
+        1
+        for name in os.listdir(PACKS)
+        if os.path.isfile(os.path.join(PACKS, name, "install.sh"))
+    )
+
+
 def main() -> int:
     skills = collect()
     truth = len(skills)
+    pack_truth = count_packs()
 
     text = read_text(README)
     failures: list[str] = []
+
+    for label, rx in PACK_COUNT_CLAIMS:
+        found = rx.findall(text)
+        if not found:
+            failures.append(
+                f"README.md: the {label} claim no longer matches /{rx.pattern}/ — "
+                "either the line was reworded (update this pattern) or it was "
+                "removed (drop the claim). An unmatched pattern checks nothing."
+            )
+            continue
+        for value in found:
+            if int(value) != pack_truth:
+                failures.append(
+                    f"README.md: the {label} says {value} packs; there are {pack_truth}."
+                )
 
     for label, rx in SKILL_COUNT_CLAIMS:
         found = rx.findall(text)
@@ -72,8 +105,10 @@ def main() -> int:
         if any(categorize(n) == c for n in skills)
     )
     claims = sum(len(rx.findall(text)) for _, rx in SKILL_COUNT_CLAIMS)
+    pack_claims = sum(len(rx.findall(text)) for _, rx in PACK_COUNT_CLAIMS)
     print(f"OK: {claims} README count claim(s) agree with {truth} skills "
-          f"across {cats} categories.")
+          f"across {cats} categories; {pack_claims} claim(s) agree with "
+          f"{pack_truth} packs.")
     return 0
 
 

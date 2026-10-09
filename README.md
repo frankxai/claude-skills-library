@@ -4,7 +4,7 @@
 
 # Claude Skills Library
 
-### 114 Agent Skills and 6 enforcement packs for Claude Code and every skills-aware runtime
+### 114 Agent Skills for every skills-aware runtime, and 6 enforcement packs for Claude Code
 
 Skills teach an agent a domain. Packs make the agent go through the gate. This is the only public
 library that ships both, with provenance pinned to commits, counts that check themselves in CI, and
@@ -35,7 +35,8 @@ Three ways in. Pick one.
 ```
 
 ```bash
-# 2. skills.sh — the full catalog, or a curated lane
+# 2. skills.sh — the top-level skills, or a curated lane
+#    (the skills nested under anthropic/, creative/ and technical/ come via the plugin or a clone)
 npx skills add frankxai/claude-skills-library
 npx skills add frankxai/skills            # AI architects: MCP, orchestration, model routing
 npx skills add frankxai/creator-skills    # creators: video, music, images, brand voice
@@ -57,7 +58,7 @@ Some skills are namespaced (`free-skills/anthropic/pdf`). Copy the folder that d
 ```text
 "Design an MCP server with the mcp-architecture skill."
 "Review this PR with the github-code-review skill."
-"Run the web-release-gate before you call this page done."
+"Run the verification-quality skill before you call this done."
 ```
 
 ---
@@ -72,17 +73,19 @@ Two layers. The first is what every skills repo has. The second is what none of 
 | **Packs** | 6 installable contracts. Each bundles the skills for one kind of work with the hooks, CI scripts, and tests that make the sequence mandatory instead of available. | [`packs/`](packs) |
 
 A skill is loaded when the task matches its description. That makes it *available*, not *mandatory*.
-A pack adds the three things that turn a suggestion into a default: a `SessionStart` note, a
-`PreToolUse` reminder on the first relevant edit, and a `Stop` hook that blocks once if the work
-changed with no audit. Every hook ships with the test that proves it cannot be satisfied by its own
-reminder text.
+A pack adds what turns a suggestion into a default, and the mechanism differs by pack.
+`web-excellence` installs three hooks: a `SessionStart` note, a `PreToolUse` reminder on the first UI
+edit, and a `Stop` hook that blocks once if UI changed with no audit, each shipped with the test that
+proves it cannot be satisfied by its own reminder text. `estate-guard` installs a `PreToolUse` gate
+that denies the hard stops and a taint hook for fetched content. The other four enforce in CI with
+scripts that fail closed, each with its tests.
 
 ---
 
 ## Packs: skills that enforce
 
 Installed into 19 repositories across the FrankX, Starlight, and Arcanea estate as of 2026-10-09.
-Each `install.sh` is idempotent. Re-run it to upgrade. `--dry-run` shows the diff first.
+Each `install.sh` is idempotent. Re-run it to upgrade. All but `risk-classifier` accept `--dry-run` to show the diff first.
 
 | Pack | What it gates | Enforced by |
 |---|---|---|
@@ -113,7 +116,7 @@ whether it has moved upstream since. This library is built around those gaps.
 | | Most skills repos | This library |
 |---|---|---|
 | Skill format | `SKILL.md` | `SKILL.md`, validated in CI for frontmatter, name, description length, filename |
-| Provenance | Copied | Every third-party skill pinned to an upstream commit with its license beside it, re-syncable, drift-checked |
+| Provenance | Copied | Third-party skills in the packs are pinned to an upstream commit with the license beside them, re-syncable, drift-checked. The Anthropic reference skills under `free-skills/anthropic/` carry their licenses but not yet pins; closing that is bet 3 in the strategy |
 | Enforcement | Advisory | Hooks that block once without an audit, each with a test |
 | Counts | Hand-maintained | A README count that disagrees with the tree fails the build |
 | Inbound work | Paste it in | A four-gate absorption contract (license, provenance, distinctness, attestation) that refuses rather than warns |
