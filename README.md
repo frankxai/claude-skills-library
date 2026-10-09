@@ -70,22 +70,25 @@ Two layers. The first is what every skills repo has. The second is what none of 
 | Layer | What it is | Where |
 |---|---|---|
 | **Skills** | 114 self-contained `SKILL.md` folders. Spec-validated frontmatter, trigger-rich descriptions, deep guidance in `references/` loaded only on use. | [`free-skills/`](free-skills) · [catalog](docs/CATALOG.md) |
-| **Packs** | 6 installable contracts. Each bundles the skills for one kind of work with the hooks, CI scripts, and tests that make the sequence mandatory instead of available. | [`packs/`](packs) |
+| **Packs** | 6 installable contracts. Each bundles the skills for one kind of work with whatever enforcement it has: hooks, CI scripts, drift checks, or templates. The packs table below says which. | [`packs/`](packs) |
 
 A skill is loaded when the task matches its description. That makes it *available*, not *mandatory*.
 A pack adds what turns a suggestion into a default, and the mechanism differs by pack.
 `web-excellence` installs three hooks: a `SessionStart` note, a `PreToolUse` reminder on the first UI
 edit, and a `Stop` hook that blocks once if UI changed with no audit, each shipped with the test that
 proves it cannot be satisfied by its own reminder text. `estate-guard` installs a `PreToolUse` gate
-that denies the hard stops and a taint hook for fetched content. The other four enforce in CI with
-scripts that fail closed, each with its tests.
+that denies the hard stops and a taint hook for fetched content. `routine-contract` ships a CI
+workflow and a digest primitive that fails the run when nothing durable was written.
+`risk-classifier` ships a fail-closed classifier script for you to wire into CI. `agent-infrastructure`
+installs skills and checks installed copies against canon. `film-excellence` installs a skill and
+templates and is advisory.
 
 ---
 
 ## Packs: skills that enforce
 
 Installed into 19 repositories across the FrankX, Starlight, and Arcanea estate as of 2026-10-09.
-Each `install.sh` is idempotent. Re-run it to upgrade. All but `risk-classifier` accept `--dry-run` to show the diff first.
+Re-run an installer to upgrade. An installed skill that differs is moved to `.claude/skills/.replaced/<name>`, and only the most recent set-aside copy is kept, so commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
 
 | Pack | What it gates | Enforced by |
 |---|---|---|
@@ -118,7 +121,7 @@ whether it has moved upstream since. This library is built around those gaps.
 | Skill format | `SKILL.md` | `SKILL.md`, validated in CI for frontmatter, name, description length, filename |
 | Provenance | Copied | Third-party skills in the packs are pinned to an upstream commit with the license beside them, re-syncable, drift-checked. The Anthropic reference skills under `free-skills/anthropic/` carry their licenses but not yet pins; closing that is bet 3 in the strategy |
 | Enforcement | Advisory | Hooks that block once without an audit, each with a test |
-| Counts | Hand-maintained | A README count that disagrees with the tree fails the build |
+| Counts | Hand-maintained | The README's skill total, pack total, and per-category counts are checked against the tree; a mismatch fails the build |
 | Inbound work | Paste it in | A four-gate absorption contract (license, provenance, distinctness, attestation) that refuses rather than warns |
 | Scheduled agents | "Report your findings" | A digest primitive that fails the run if nothing durable was written |
 
@@ -336,7 +339,7 @@ Yes. See [`runtimes/`](runtimes/) for Antigravity, OpenCode, Codex, Gemini CLI, 
 
 ## Would you pay for a skill that proves it works?
 
-Every skill here is free and MIT. That is not changing.
+Every first-party skill here is free and MIT. That is not changing. Skills under `free-skills/anthropic/` keep Anthropic's own terms.
 
 A skill is prose until something tests it. The idea on the table: a pack where every skill ships
 with its eval suite, the cases it passes, and the cases it fails. There is no paid product today.

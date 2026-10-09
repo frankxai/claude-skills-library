@@ -45,6 +45,35 @@ PACK_COUNT_CLAIMS = [
 ]
 
 
+CATEGORY_ROW = re.compile(r"^\| \*\*(.+?)\*\* \| (\d+) \|", re.M)
+
+
+def norm(name: str) -> str:
+    """README writes categories in sentence case with 'and'; CATEGORIES uses '&'."""
+    return name.replace("&", "and").lower().strip()
+
+
+def check_categories(text: str, skills, failures: list[str]) -> int:
+    truth: dict[str, int] = {}
+    for n in skills:
+        c = categorize(n)
+        truth[norm(c)] = truth.get(norm(c), 0) + 1
+    rows = {norm(name): int(count) for name, count in CATEGORY_ROW.findall(text)}
+    if not rows:
+        failures.append("README.md: no category table rows matched — the table was "
+                        "reworded (update CATEGORY_ROW) or removed (drop this check).")
+        return 0
+    for name, count in rows.items():
+        if name not in truth:
+            failures.append(f"README.md: category row '{name}' matches no catalog category.")
+        elif truth[name] != count:
+            failures.append(f"README.md: category '{name}' says {count}; there are {truth[name]}.")
+    for name, count in truth.items():
+        if name not in rows:
+            failures.append(f"README.md: category '{name}' ({count} skills) has no table row.")
+    return len(rows)
+
+
 def count_packs() -> int:
     """A pack is a directory under packs/ that ships an install.sh."""
     return sum(
@@ -61,6 +90,8 @@ def main() -> int:
 
     text = read_text(README)
     failures: list[str] = []
+
+    category_rows = check_categories(text, skills, failures)
 
     for label, rx in PACK_COUNT_CLAIMS:
         found = rx.findall(text)
@@ -107,8 +138,8 @@ def main() -> int:
     claims = sum(len(rx.findall(text)) for _, rx in SKILL_COUNT_CLAIMS)
     pack_claims = sum(len(rx.findall(text)) for _, rx in PACK_COUNT_CLAIMS)
     print(f"OK: {claims} README count claim(s) agree with {truth} skills "
-          f"across {cats} categories; {pack_claims} claim(s) agree with "
-          f"{pack_truth} packs.")
+          f"across {cats} categories; {category_rows} category row(s) agree; "
+          f"{pack_claims} claim(s) agree with {pack_truth} packs.")
     return 0
 
 

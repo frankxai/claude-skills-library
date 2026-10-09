@@ -70,7 +70,8 @@ passes, the outcome cases it passes, and the cases it fails, becomes the one peo
 A pack is what a directory cannot sell: the sequence, the hook that blocks, the test that proves the
 hook, the provenance table. Six exist and nineteen repos run them.
 
-- Give every pack a one-line install, a `--dry-run`, and a `--check` for drift. Four of six have all three.
+- Give every pack a one-line install, a `--dry-run`, and a `--check` for drift. Two of six have all three.
+- Installers keep one set-aside copy under `.claude/skills/.replaced/`; a second run overwrites it. Make the set-aside versioned before calling re-runs safe.
 - Publish each pack as its own entry in `.claude-plugin/marketplace.json` so `/plugin install` works per pack, not only for the whole library.
 - Candidate seventh pack: `agent-hygiene`, the Band A guardrails and Karpathy-distilled rules as one installable skill plus a `Stop` hook that asks for the verification line. It is the single-file lesson from the landscape table.
 
