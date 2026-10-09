@@ -28,8 +28,9 @@ README = os.path.join(REPO, "README.md")
 
 # (human label, pattern with exactly one numeric group)
 SKILL_COUNT_CLAIMS = [
-    ("headline", re.compile(r"^### (\d+) production-grade Agent Skills", re.M)),
+    ("headline", re.compile(r"^### (\d+) Agent Skills", re.M)),
     ("context-cost line", re.compile(r"library of (\d+) costs")),
+    ("evals ask", re.compile(r"All (\d+) in this library")),
     ("shields.io badge", re.compile(r"badge/skills-(\d+)-blue\.svg")),
     ("category summary", re.compile(r"\*\*(\d+) skills\*\* across")),
     ("FAQ", re.compile(r"loading (\d+) skills bloat")),

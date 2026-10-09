@@ -1,6 +1,6 @@
 # Third-party and contributor notices
 
-The root MIT license applies to original contributions by Frank Riemer and contributors. Individual skills, examples, references, or bundled assets derived from another project remain governed by their original copyright and license notices.
+The root MIT license applies to everything in this repository that is an original contribution by Frank Riemer and contributors: the skills under `free-skills/`, the packs under `packs/`, the scripts, and the documentation. There are no proprietary skills in this repository. (An earlier LICENSE file carried a trailer reserving "premium skills outside free-skills"; it was removed on 2026-10-09 because nothing it described exists here, and the non-standard text stopped GitHub from classifying the repository as MIT.) Individual skills, examples, references, or bundled assets derived from another project remain governed by their original copyright and license notices.
 
 Do not remove nested LICENSE or attribution files. Adding a skill to this catalog does not transfer its copyright to Frank Riemer or the Claude Skills Library.
 
