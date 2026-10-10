@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "harness/verification-loop",
+  "source": {
+    "repository": "https://github.com/affaan-m/ECC",
+    "commit": "4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2",
+    "path": "skills/verification-loop/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-10-10",
+    "by": "grok"
+  },
+  "changed": "Rewrote the six checks for pnpm, uv, and pwsh, made coverage a target, and split the author from the PR signer.",
+  "distinctness": {
+    "nearest": null,
+    "similarity": 0
+  }
+}
