@@ -1,0 +1,83 @@
+name: skill-eval
+
+# Cross-model skill evaluation. Runs on free public-repo minutes; model spend is capped per
+# run by MAX_USD. The monthly schedule is inert until the repository variable
+# SKILL_EVAL_SCHEDULE_ENABLED is set to "true" (estate rule: crons stay off until approved).
+
+on:
+  pull_request:
+    paths:
+      - 'evals/skill-eval/**'
+      - '.github/workflows/skill-eval.yml'
+  workflow_dispatch:
+    inputs:
+      max_usd:
+        description: 'Hard cap on metered model spend for this run, in USD'
+        default: '2'
+  schedule:
+    - cron: '0 6 1 * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skill-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit tests (no network, no keys)
+        working-directory: evals/skill-eval
+        run: node --test run.test.mjs
+
+  eval:
+    needs: test
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && vars.SKILL_EVAL_SCHEDULE_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      MAX_USD: ${{ github.event.inputs.max_usd || '2' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - name: Install
+        working-directory: evals/skill-eval
+        run: pnpm install --frozen-lockfile
+      - name: Install Claude Code (own-login lane)
+        if: env.CLAUDE_CODE_OAUTH_TOKEN != ''
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Run
+        working-directory: evals/skill-eval
+        run: node run.mjs | tee run.log
+      - name: Summary
+        if: always()
+        working-directory: evals/skill-eval
+        run: |
+          {
+            echo '## Skill eval'
+            echo '```'
+            cat run.log 2>/dev/null || echo 'no run log'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skill-eval-scorecard
+          path: evals/skill-eval/scorecards/
+          if-no-files-found: warn
