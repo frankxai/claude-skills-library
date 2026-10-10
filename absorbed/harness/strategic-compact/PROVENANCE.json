@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "harness/strategic-compact",
+  "source": {
+    "repository": "https://github.com/affaan-m/ECC",
+    "commit": "4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2",
+    "path": "skills/strategic-compact/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-10-10",
+    "by": "grok"
+  },
+  "changed": "Replaced the hook-install guide with a three-bucket session file and a ban on a second compact hook.",
+  "distinctness": {
+    "nearest": "absorbed\\harness\\verification-loop\\SKILL.md",
+    "similarity": 0.002
+  }
+}

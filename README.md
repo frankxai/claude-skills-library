@@ -34,6 +34,9 @@ nothing in context until a skill actually fires.
 > Install with `npx skills add frankxai/skills` or `npx skills add frankxai/creator-skills`.
 > This library remains the full catalog.
 
+> [!NOTE]
+> **Pinned upstream, 2026-10-10.** [affaan-m/ECC](https://github.com/affaan-m/ECC) at `4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2` (MIT) is a dependency of the Claude config repo, not a prose dump in `free-skills/`. Patterns that cleared the four gates are listed in [`ABSORBED.md`](ABSORBED.md). The port receipt is [`docs/ecc-port-report.md`](docs/ecc-port-report.md). Watching a repo is not the same as absorbing it.
+
 ## Join the skills community
 
 - [Ask a question](https://github.com/frankxai/claude-skills-library/discussions/categories/q-a), [share a working example](https://github.com/frankxai/claude-skills-library/discussions/categories/show-and-tell), or [suggest an idea](https://github.com/frankxai/claude-skills-library/discussions/categories/ideas). The discussion space is open; start the conversation that would help you build.

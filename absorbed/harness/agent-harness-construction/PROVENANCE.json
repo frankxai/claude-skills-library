@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "harness/agent-harness-construction",
+  "source": {
+    "repository": "https://github.com/affaan-m/ECC",
+    "commit": "4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2",
+    "path": "skills/agent-harness-construction/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-10-10",
+    "by": "grok"
+  },
+  "changed": "Replaced generic tool design with one chair, one worktree writer, and the banned coordinator list.",
+  "distinctness": {
+    "nearest": "absorbed\\harness\\cost-aware-llm-pipeline\\SKILL.md",
+    "similarity": 0.007
+  }
+}
