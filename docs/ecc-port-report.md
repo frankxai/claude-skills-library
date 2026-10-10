@@ -25,3 +25,9 @@ Full ECC profile, plugin hook bootstrap, tmux, continuous-learning observer, Hig
 ## Live machine
 
 The same vendor folders were copied into `~/.claude` without replacing existing hooks or skills. Deny rules cover reads and edits under `~/.ssh` and `~/.aws`, plus `ssh` and `scp` in Bash and PowerShell. Every `curl` is still allowed. Two fail-open hooks were added beside the hooks already there.
+
+On 2026-10-11 the live 79 upstream skill texts moved from `~/.claude/skills/ecc-upstream` to `~/.claude/ecc-reference/ecc-upstream`. The git copy in `frankxai/claude-code-config` stays. That shelf is not an auto-load path.
+
+## Eval
+
+`node absorbed/harness/eval-estate.mjs` checks that the eight absorbed skills still name the pin, the MIT license, `Built on SIP`, and the estate rule written into each file. A pass means the files still carry that law. It does not score a model on a task. These skills stay out of the default prompt until Frank promotes them.
