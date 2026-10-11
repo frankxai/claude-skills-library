@@ -46,20 +46,21 @@ function notRun(reason) {
   return { status: 'NOT RUN', detail: reason };
 }
 
-function fromTool(result, command) {
+function fromTool(result, command, args) {
+  const shown = [command, ...args].join(' ');
   if (result.error && result.error.code === 'ENOENT') {
-    return notRun(`${command} is not on PATH`);
+    return notRun(`${shown} is not on PATH`);
   }
-  if (result.status === 0) return { status: 'PASS', detail: '' };
+  if (result.status === 0) return { status: 'PASS', detail: shown };
   const tail = `${result.stdout || ''}${result.stderr || ''}`.trim().split(/\r?\n/).at(-1) || 'non-zero exit';
-  return { status: 'FAIL', detail: tail };
+  return { status: 'FAIL', detail: `${shown}: ${tail}` };
 }
 
 function classifyBuild(repo) {
   const scripts = readJson(repo, 'package.json')?.scripts ?? {};
   if (has(repo, 'pnpm-lock.yaml')) {
     if (!scripts.build) return notRun('no build script');
-    return fromTool(tool(repo, 'pnpm', ['run', 'build']), 'pnpm');
+    return fromTool(tool(repo, 'pnpm', ['run', 'build']), 'pnpm', ['run', 'build']);
   }
   if (has(repo, 'uv.lock') || has(repo, 'pyproject.toml')) {
     return notRun('no Python build step is configured');
@@ -70,10 +71,10 @@ function classifyBuild(repo) {
 function classifyTypes(repo) {
   if (has(repo, 'tsconfig.json')) {
     if (!has(repo, 'pnpm-lock.yaml')) return notRun('tsconfig.json is present and pnpm-lock.yaml is not');
-    return fromTool(tool(repo, 'pnpm', ['exec', 'tsc', '--noEmit']), 'pnpm');
+    return fromTool(tool(repo, 'pnpm', ['exec', 'tsc', '--noEmit']), 'pnpm', ['exec', 'tsc', '--noEmit']);
   }
   if (has(repo, 'pyproject.toml') && readFileSync(join(repo, 'pyproject.toml'), 'utf8').includes('pyright')) {
-    return fromTool(tool(repo, 'uv', ['run', 'pyright']), 'uv');
+    return fromTool(tool(repo, 'uv', ['run', 'pyright']), 'uv', ['run', 'pyright']);
   }
   return notRun('no typecheck config');
 }
@@ -83,7 +84,7 @@ function classifyLint(repo) {
   if (!configured) return notRun('no linter config');
   if (!has(repo, 'pnpm-lock.yaml')) return notRun('linter config is present and pnpm-lock.yaml is not');
   const scripts = readJson(repo, 'package.json')?.scripts ?? {};
-  if (scripts.lint) return fromTool(tool(repo, 'pnpm', ['run', 'lint']), 'pnpm');
+  if (scripts.lint) return fromTool(tool(repo, 'pnpm', ['run', 'lint']), 'pnpm', ['run', 'lint']);
   return notRun('linter config is present and package.json has no lint script');
 }
 
@@ -91,10 +92,10 @@ function classifyTests(repo) {
   const scripts = readJson(repo, 'package.json')?.scripts ?? {};
   if (has(repo, 'pnpm-lock.yaml')) {
     if (!scripts.test) return notRun('no test script');
-    return fromTool(tool(repo, 'pnpm', ['test']), 'pnpm');
+    return fromTool(tool(repo, 'pnpm', ['test']), 'pnpm', ['test']);
   }
   if (has(repo, 'pyproject.toml') && readFileSync(join(repo, 'pyproject.toml'), 'utf8').includes('[tool.pytest')) {
-    return fromTool(tool(repo, 'uv', ['run', 'pytest']), 'uv');
+    return fromTool(tool(repo, 'uv', ['run', 'pytest']), 'uv', ['run', 'pytest']);
   }
   return notRun('no pnpm-lock.yaml or pytest config');
 }

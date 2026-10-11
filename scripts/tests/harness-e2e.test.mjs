@@ -60,8 +60,9 @@ function fakePnpm(code) {
     chmodSync(pnpm, 0o755);
     chmodSync(npm, 0o755);
   }
-  const pathKey = process.platform === 'win32' ? 'Path' : 'PATH';
-  const env = { ...process.env, [pathKey]: `${dir}${process.platform === 'win32' ? ';' : ':'}${process.env[pathKey] || process.env.PATH || ''}` };
+  const current = process.env.Path || process.env.PATH || '';
+  const prefixed = `${dir}${process.platform === 'win32' ? ';' : ':'}${current}`;
+  const env = { ...process.env, Path: prefixed, PATH: prefixed };
   return { dir, log, env };
 }
 
@@ -136,7 +137,8 @@ test('a pnpm lockfile runs pnpm test and does not call npm', () => {
     git(repo, ['commit', '-m', 'add test']);
     const result = runVerify(repo, { root: true, env: fake.env });
     assert.equal(result.code, 1);
-    assert.match(field(result.out, 'tests:'), /^FAIL/);
+    assert.match(field(result.out, 'tests:'), /pnpm test/);
+    assert.doesNotMatch(field(result.out, 'tests:'), /(^|\s)npm(\s|$)/);
     assert.equal(field(result.out, 'ready:'), 'NO');
     const calls = readFileSync(fake.log, 'utf8');
     assert.match(calls, /test/);
