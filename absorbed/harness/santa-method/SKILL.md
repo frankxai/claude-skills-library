@@ -13,7 +13,7 @@ The author does not grade the work. Two other readers use the same rubric. Neith
 1. Run the deterministic checks first: build, types, tests. This pass is for behavior, claims, and omissions.
 2. Give both reviewers the spec and the diff. Ask for a pass or a fail per criterion, with a file or a line. A pass that cites nothing is not a pass.
 3. Ship only when both pass. If either fails, fix the cited items and ask again with fresh readers.
-4. Stop after three rounds. The remaining list goes to a person.
+4. Stop after three rounds. The remaining list goes to a person. A pass with an empty citation is a fail. The round counter is `node absorbed/harness/santa-round.mjs`.
 
 ## Estate gates that sit on top
 

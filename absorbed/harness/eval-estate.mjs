@@ -33,6 +33,8 @@ const marks = {
   'santa-method': [
     'Stop after three rounds',
     'The author harness does not sign',
+    'santa-round.mjs',
+    'empty citation',
   ],
   'search-first': [
     'route_work.py guard',
@@ -51,6 +53,8 @@ const marks = {
   'verification-loop': [
     'Prefer `pnpm`',
     'The person who writes this report does not sign the pull request',
+    'verification-run.mjs',
+    'Any untracked file makes ready NO',
   ],
 };
 

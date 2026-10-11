@@ -31,3 +31,5 @@ On 2026-10-11 the live 79 upstream skill texts moved from `~/.claude/skills/ecc-
 ## Eval
 
 `node absorbed/harness/eval-estate.mjs` checks that the eight absorbed skills still name the pin, the MIT license, `Built on SIP`, and the estate rule written into each file. A pass means the files still carry that law. It does not score a model on a task. These skills stay out of the default prompt until Frank promotes them.
+
+`node --test scripts/tests/harness-e2e.test.mjs` runs the verification loop on throwaway repos and the Santa round counter. The loop records NOT RUN when a tool is absent, fails a live token, refuses an untracked file, and calls `pnpm` when a lockfile is present. Santa ships only when both passes cite a line, and it stops on round three.

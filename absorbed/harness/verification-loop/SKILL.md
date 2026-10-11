@@ -32,10 +32,17 @@ lint:     PASS | FAIL | NOT RUN
 tests:    PASS | FAIL | NOT RUN
 secrets:  PASS | FAIL | NOT RUN
 diff:     <n files>
+untracked: <n files>
 ready:    YES | NO
 ```
 
+Any untracked file makes ready NO. The runner also scans the text of those files. They belong to another session until someone names them in the change.
+
 The person who writes this report does not sign the pull request. Open a draft. A different harness reviews the exact SHA.
+
+## Executable
+
+`node absorbed/harness/verification-run.mjs --repo=<path>` prints this report for the uncommitted diff. Add `--root` to diff the current commit against the empty tree. A missing lockfile, typecheck config, linter config, or test script is NOT RUN. The runner records every line. A FAIL still leaves the later lines filled in. It calls `pnpm` when `pnpm-lock.yaml` is present, and `uv` when the Python project already uses pyright or pytest. It does not call npm.
 
 ## Where this came from
 
