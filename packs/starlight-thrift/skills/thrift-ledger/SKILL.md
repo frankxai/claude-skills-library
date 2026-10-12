@@ -23,9 +23,14 @@ Anything else is written down as `unmeasured`.
 For shell-output compressors, compare raw and compressed output on real commands in a real repo:
 
 ```
-node packs/starlight-thrift/scripts/thrift.mjs bench
-node packs/starlight-thrift/scripts/thrift.mjs bench --json
+node <pack>/scripts/thrift.mjs bench          # table
+node <pack>/scripts/thrift.mjs bench --md     # markdown, for docs
+node <pack>/scripts/thrift.mjs bench --json   # with RTK version, platform and repo commit
 ```
+
+`<pack>` is the plugin root, or `.claude/thrift` after `install.mjs`. Run it from the repo you care about. Its `git diff HEAD~5` needs at least six commits.
+
+The bench only compares commands whose filtered output is meant to carry the same information. A row is skipped, not counted as a saving, when the filter fails or exits differently from the raw command.
 
 This measures bytes only. It proves the filter shrinks the output. It does not prove the agent still has what it needs, so spot-check one compressed output by hand for each command class before trusting it.
 
@@ -44,7 +49,7 @@ Three tasks is a sanity check, not a benchmark. Say so in the write-up.
 
 ## Record
 
-Append one block per result to the pack's results log, or to the PR description:
+Save bench output under the pack's `results/` folder (see `results/2026-10-12-rtk-bench.json`) and put session results in the PR description or a file beside it:
 
 ```
 date: 2026-10-12
@@ -59,21 +64,11 @@ quality: pass | fail | not-checked
 notes: <what was filtered, what was lost, surprises>
 ```
 
-## Reference baseline (command output, bytes)
+## Reference baseline
 
-Measured 2026-10-12 on this repository with RTK 0.50.0, Windows 11, Git Bash. One repo, one machine, bytes not tokens.
+The pack's own bench results live in `results/` and are summarised in the README. The README table is copied from the JSON, never typed by hand. Do the same with yours: generate the table with `bench --md`, so a document and its source cannot disagree.
 
-| Command | Raw | RTK | Saved |
-|---|---|---|---|
-| `git log -n 40` | 52,767 | 10,065 | 80% |
-| `git diff HEAD~5` | 99,882 | 27,221 | 72% |
-| `ls -la .` | 1,842 | 321 | 82% |
-| `find free-skills -maxdepth 3 -type f` | 12,261 | 1,331 | 89% |
-| `grep -rn name: free-skills` | 28,229 | 15,179 | 46% |
-| `git status` | 68 | 50 | 26% |
-| file read, test-runner output on a passing run | unchanged | unchanged | 0% |
-
-File reads and a passing validator run came out unchanged: the filters help where output is long and repetitive and do nothing where it is already small. Do not expect a flat percentage across a session.
+Short outputs and file reads come out unchanged: the filters help where output is long and repetitive and do nothing where it is already small. Do not expect a flat percentage across a session.
 
 ## Failure modes to check for
 

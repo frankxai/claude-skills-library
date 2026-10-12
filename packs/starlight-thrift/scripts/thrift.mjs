@@ -1,21 +1,19 @@
 #!/usr/bin/env node
 // thrift.mjs: doctor (what is wired) and bench (raw vs RTK-filtered output, in bytes).
 //   node thrift.mjs doctor
-//   node thrift.mjs bench [--json]
+//   node thrift.mjs bench [--json | --md]
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const RTK = process.env.THRIFT_RTK || 'rtk';
-
-export const BENCH_CASES = [
-  { label: 'git log -n 40', raw: ['git', 'log', '-n', '40'], rtk: [RTK, 'git', 'log', '-n', '40'] },
-  { label: 'git diff HEAD~5', raw: ['git', 'diff', 'HEAD~5'], rtk: [RTK, 'git', 'diff', 'HEAD~5'] },
-  { label: 'git status', raw: ['git', 'status'], rtk: [RTK, 'git', 'status'] },
-  { label: 'ls -la .', raw: ['ls', '-la', '.'], rtk: [RTK, 'ls', '.'] },
-  { label: 'grep -rn TODO .', raw: ['grep', '-rn', 'TODO', '.'], rtk: [RTK, 'grep', '-rn', 'TODO', '.'] },
+// Same output either side of the filter: no lossy listing commands in this table.
+export const BENCH_CASES = (rtk) => [
+  { label: 'git log -n 40', raw: ['git', 'log', '-n', '40'], rtk: [rtk, 'git', 'log', '-n', '40'] },
+  { label: 'git diff HEAD~5', raw: ['git', 'diff', 'HEAD~5'], rtk: [rtk, 'git', 'diff', 'HEAD~5'] },
+  { label: 'git status', raw: ['git', 'status'], rtk: [rtk, 'git', 'status'] },
+  { label: 'grep -rn name: free-skills', raw: ['grep', '-rn', 'name:', 'free-skills'], rtk: [rtk, 'grep', '-rn', 'name:', 'free-skills'] },
 ];
 
 export function savedPercent(raw, compressed) {
@@ -34,6 +32,13 @@ export function formatTable(rows) {
   return [head, ...lines].join('\n');
 }
 
+export function formatMarkdown(rows) {
+  const body = rows.map((r) =>
+    r.skipped ? `| \`${r.label}\` | skipped | ${r.skipped} | |` : `| \`${r.label}\` | ${r.raw.toLocaleString('en-US')} | ${r.rtk.toLocaleString('en-US')} | ${r.saved}% |`,
+  );
+  return ['| Command | Raw bytes | RTK bytes | Saved |', '|---|---|---|---|', ...body].join('\n');
+}
+
 function capture(argv, options = {}) {
   const [cmd, ...args] = argv;
   const res = spawnSync(cmd, args, { encoding: 'buffer', maxBuffer: 256 * 1024 * 1024, ...options });
@@ -41,62 +46,103 @@ function capture(argv, options = {}) {
   return { ok: true, bytes: res.stdout.length + res.stderr.length, status: res.status };
 }
 
-export function bench(cases = BENCH_CASES) {
+export function bench(cases) {
   return cases.map(({ label, raw, rtk }) => {
     const base = capture(raw);
     if (!base.ok) return { label, skipped: `${raw[0]} ${base.error}` };
+    // grep exits 1 on no match, which is a valid empty result; only a failure with no output is skipped.
     if (base.status !== 0 && base.bytes === 0) return { label, skipped: `${raw[0]} exited ${base.status}` };
     const filtered = capture(rtk);
     if (!filtered.ok) return { label, skipped: `${rtk[0]} ${filtered.error}` };
+    if (filtered.status !== base.status) {
+      return { label, skipped: `exit codes differ (raw ${base.status}, filtered ${filtered.status}); a failed filter is not a saving` };
+    }
     return { label, raw: base.bytes, rtk: filtered.bytes, saved: savedPercent(base.bytes, filtered.bytes) };
   });
 }
 
-function version(command) {
-  const res = spawnSync(command, ['--version'], { encoding: 'utf8', shell: process.platform === 'win32' });
+// Run a fixed binary with no shell. Returns first line of --version output, or null.
+function probeDirect(command) {
+  const res = spawnSync(command, ['--version'], { encoding: 'utf8' });
   if (res.error || res.status !== 0) return null;
-  return (res.stdout || res.stderr).trim().split(/\r?\n/)[0];
+  return (res.stdout || res.stderr).trim().split(/\r?\n/)[0] || null;
 }
 
-function readText(path) {
+// npm and uv install .cmd shims on Windows, which need a shell. Only the literal names headroom and ccusage reach it.
+function probeShim(command) {
+  const direct = probeDirect(command);
+  if (direct || process.platform !== 'win32') return direct;
+  const res = spawnSync(command, ['--version'], { encoding: 'utf8', shell: true });
+  if (res.error || res.status !== 0) return null;
+  return (res.stdout || res.stderr).trim().split(/\r?\n/)[0] || null;
+}
+
+// winget on Windows updates PATH only for new shells, so also look in its package folder.
+export function resolveRtk(env = process.env, probe = probeDirect) {
+  const candidates = [env.THRIFT_RTK, 'rtk'].filter(Boolean);
+  const winget = env.LOCALAPPDATA && join(env.LOCALAPPDATA, 'Microsoft', 'WinGet', 'Packages');
+  if (winget && existsSync(winget)) {
+    for (const dir of readdirSync(winget).filter((d) => d.startsWith('rtk-ai.rtk'))) candidates.push(join(winget, dir, 'rtk.exe'));
+  }
+  for (const command of candidates) {
+    const found = probe(command);
+    if (found) return { command, version: found };
+  }
+  return null;
+}
+
+function readJson(path) {
   try {
-    return existsSync(path) ? readFileSync(path, 'utf8') : '';
+    return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
   } catch {
-    return '';
+    return null;
   }
 }
 
-export function doctor(home = homedir()) {
-  const settings = readText(join(home, '.claude', 'settings.json'));
-  const plugins = readText(join(home, '.claude', 'plugins', 'installed_plugins.json'));
-  const cavemanSkill = existsSync(join(home, '.claude', 'skills', 'caveman'));
-  const [rtk, headroom, ccusage] = [version(RTK), version('headroom'), version('ccusage')];
+// True when any hook command in the file invokes rtk. A stray mention of "rtk" elsewhere does not count.
+export function hasRtkHook(settings) {
+  const events = settings?.hooks;
+  if (!events || typeof events !== 'object') return false;
+  return Object.values(events).flat().some((entry) => (entry?.hooks ?? []).some((h) => /\brtk\b/i.test(h?.command ?? '')));
+}
+
+export function doctor(home = homedir(), probes = { rtk: () => resolveRtk(), shim: probeShim }) {
+  const dir = join(home, '.claude');
+  const hookWired = ['settings.json', 'settings.local.json'].some((f) => hasRtkHook(readJson(join(dir, f))));
+  const plugins = existsSync(join(dir, 'plugins', 'installed_plugins.json')) ? readFileSync(join(dir, 'plugins', 'installed_plugins.json'), 'utf8') : '';
+  const cavemanOn = existsSync(join(dir, 'skills', 'caveman')) || /caveman/i.test(plugins);
+  const rtk = probes.rtk();
+  const [headroom, ccusage] = [probes.shim('headroom'), probes.shim('ccusage')];
   return [
     { name: 'node', detail: process.version, ok: true },
-    { name: 'rtk', detail: rtk ?? 'not on PATH (winget install rtk-ai.rtk)', ok: Boolean(rtk) },
-    { name: 'rtk hook', detail: /rtk/i.test(settings) ? 'present in settings.json' : 'missing (rtk init -g)', ok: /rtk/i.test(settings) },
-    { name: 'headroom', detail: headroom ?? 'not on PATH (uv tool install "headroom-ai[all]")', ok: Boolean(headroom) },
-    { name: 'ccusage', detail: ccusage ?? 'not on PATH (npm i -g ccusage)', ok: Boolean(ccusage) },
-    {
-      name: 'caveman (upstream)',
-      detail: cavemanSkill || /caveman/i.test(plugins) ? 'installed' : 'not installed (optional, terse profile)',
-      ok: cavemanSkill || /caveman/i.test(plugins),
-    },
+    { name: 'rtk', detail: rtk ? `${rtk.version} (${rtk.command})` : 'not found. Install: winget install rtk-ai.rtk | brew install rtk | cargo install --git https://github.com/rtk-ai/rtk', ok: Boolean(rtk) },
+    { name: 'rtk hook', detail: hookWired ? 'a hook command invokes rtk' : 'none in settings.json or settings.local.json (the thrift plugin ships one)', ok: hookWired },
+    { name: 'headroom', detail: headroom ?? 'not found. Install: uv tool install "headroom-ai[all]"', ok: Boolean(headroom) },
+    { name: 'ccusage', detail: ccusage ?? 'not found. Install: npm install -g ccusage', ok: Boolean(ccusage) },
+    { name: 'caveman (upstream)', detail: cavemanOn ? 'installed' : 'not installed (optional terse profile)', ok: cavemanOn },
   ];
 }
 
 function main(argv) {
   const [command = 'doctor', ...flags] = argv;
   if (command === 'bench') {
-    const rows = bench();
-    console.log(flags.includes('--json') ? JSON.stringify({ date: new Date().toISOString(), unit: 'bytes', rows }, null, 2) : formatTable(rows));
+    const rtk = resolveRtk();
+    if (!rtk) {
+      console.error('rtk not found; run `doctor` for install commands');
+      return 1;
+    }
+    const rows = bench(BENCH_CASES(rtk.command));
+    if (flags.includes('--json')) {
+      const git = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' });
+      console.log(JSON.stringify({ date: new Date().toISOString(), unit: 'bytes', rtk: rtk.version, platform: process.platform, repoHead: git.stdout.trim(), rows }, null, 2));
+    } else console.log(flags.includes('--md') ? formatMarkdown(rows) : formatTable(rows));
     return 0;
   }
   if (command === 'doctor') {
     for (const row of doctor()) console.log(`${row.ok ? 'ok     ' : 'missing'}  ${row.name.padEnd(20)} ${row.detail}`);
     return 0;
   }
-  console.error('usage: thrift.mjs doctor | bench [--json]');
+  console.error('usage: thrift.mjs doctor | bench [--json | --md]');
   return 2;
 }
 
