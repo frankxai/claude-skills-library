@@ -69,6 +69,7 @@ ccusage   npm install -g ccusage
 
 - **Do not compress what is persisted.** Code, commits, docs, memory files and messages to other people stay in plain prose.
 - **Do not compress the user's prompt.** Neutron tightens it. Caveman's own write-up cites work finding that compressing the prompt makes answers longer and worse.
+- **Permission rules still apply to what you wrote.** Claude Code checks permission rules against the command a hook returns, so a rewrite of `git commit` to `rtk git commit` would skip an `ask` rule written for `git commit`. The hook therefore leaves any command untouched when it, or a segment of it, matches an `ask` or `deny` rule in your user or project settings. RTK itself also passes denied commands through.
 - **One input-side compressor per stream.** Do not run two proxies in a chain until a measured result shows it helps.
 - **Not bundled.** `context-mode` (sandboxes tool output; Elastic License 2.0, so depend on it, do not vendor it). `ast-grep`, `difftastic` and `scc` ship inside headroom as `headroom sg`, `headroom diff`, `headroom loc`.
 
