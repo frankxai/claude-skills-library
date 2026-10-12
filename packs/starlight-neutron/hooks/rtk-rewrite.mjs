@@ -6,9 +6,10 @@
 //
 // Claude Code evaluates permission rules against the input a hook returns, so a rewrite of `git commit` to
 // `rtk git commit` would no longer match an ask or deny rule written for `git commit`. This shim therefore leaves a
-// command alone when any ask or deny rule it can read could apply to it. Matching is by tokens, not by shell parsing:
-// a rule applies when every word of the rule appears somewhere in the command. That over-matches (a skipped rewrite)
-// and cannot be fooled by quoting, wrappers, env prefixes, subshells or options placed between the words.
+// command alone when any ask or deny rule it can read could apply to it. It does not emulate Claude Code's matcher.
+// It tests two necessary conditions (see commandHitsRule): every word of a plain rule appears in the command, and every
+// literal piece of a glob rule appears in the command text. Both over-match, which costs a skipped rewrite, and neither
+// can be fooled by quoting, wrappers, env prefixes, subshells, options between words or a `*` touching other text.
 //
 // Limit: server-managed settings, MDM policy and the --settings flag cannot be read from a hook. Rules that live only
 // there are not seen. RTK also passes denied commands through, from the settings it can read.
@@ -96,16 +97,34 @@ export function loadGuardRules({ home = homedir(), cwd = process.cwd(), env = pr
 
 const tokens = (text) => String(text).toLowerCase().split(/[^a-z0-9_./-]+/).filter(Boolean);
 
-// True when every word of some rule appears in the command. A rule with no words (such as "*") matches everything.
+// For the containment test below: Unicode compatibility form, lower case, and no whitespace, quotes or backslashes,
+// so spacing, quoting and case cannot hide a match.
+const squash = (text) => String(text).normalize('NFKC').toLowerCase().replace(/[\s"'`\\]+/g, '');
+
+// True when some ask or deny rule could apply to the command. Two necessary conditions, so each is a superset of what
+// Claude Code's own matcher accepts:
+//  - A rule without a wildcard in its body (`git commit:*`, `git status`) applies to a command only if every word of the
+//    rule appears in it.
+//  - A glob rule (`cat .env*`, `git log -*`) applies only if every literal piece between its `*` wildcards appears in
+//    the command text as a substring. A wildcard can stand for any text, including the rest of a word.
+// A rule with no literal text (`*`) matches everything. Over-matching costs a skipped rewrite; under-matching would
+// drop a prompt, so ties go to skipping.
 export function commandHitsRule(command, patterns) {
   const present = new Set(tokens(command));
-  return patterns.some((pattern) => tokens(String(pattern).replace(/:\*$/, '')).every((word) => present.has(word)));
+  const haystack = squash(command);
+  return patterns.some((raw) => {
+    const body = String(raw).replace(/:\*$/, '');
+    const wordsHit = tokens(body).every((word) => present.has(word));
+    if (!body.includes('*')) return wordsHit;
+    return wordsHit || body.split('*').map(squash).filter(Boolean).every((piece) => haystack.includes(piece));
+  });
 }
 
-// The shim rewrites commands. It never grants authorization. RTK adds permissionDecision "allow" when its own reading
-// of your allow rules matches, and that would auto-approve a command on the strength of a third-party parser. Only the
-// rewritten command and RTK's reason pass through; anything else, or output that is not valid, is dropped.
-export function sanitizeHookOutput(stdout) {
+// The shim rewrites commands. It never grants authorization and never lets RTK add fields. RTK adds
+// permissionDecision "allow" when its own reading of your allow rules matches, and a rewrite could carry other fields
+// (a sandbox override, a decision nested in updatedInput). So the output is rebuilt from scratch: Claude Code's original
+// tool input with only `command` replaced by RTK's rewrite, plus RTK's reason text. Output that is not valid is dropped.
+export function sanitizeHookOutput(stdout, toolInput) {
   let parsed;
   try {
     parsed = JSON.parse(stdout);
@@ -114,17 +133,19 @@ export function sanitizeHookOutput(stdout) {
   }
   const out = parsed?.hookSpecificOutput;
   const command = out?.updatedInput?.command;
-  if (typeof command !== 'string' || !command) return '';
+  if (typeof command !== 'string' || !command || typeof toolInput !== 'object' || toolInput === null) return '';
   return JSON.stringify({
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
       permissionDecisionReason: typeof out.permissionDecisionReason === 'string' ? out.permissionDecisionReason : 'Neutron rewrite',
-      updatedInput: { ...out.updatedInput },
+      updatedInput: { ...toolInput, command },
     },
   });
 }
 
-export function run(stdin, env = process.env, { home = homedir(), cwd = process.cwd(), managed = managedSettingsFiles(process.platform, env), stopAt } = {}) {
+// `cwd` comes from the hook input. The `cwd` option exists for tests only; without either, nothing is rewritten, because
+// project settings cannot be located.
+export function run(stdin, env = process.env, { home = homedir(), cwd, managed = managedSettingsFiles(process.platform, env), stopAt } = {}) {
   const pass = { stdout: '', status: 0 };
   let input;
   try {
@@ -134,13 +155,15 @@ export function run(stdin, env = process.env, { home = homedir(), cwd = process.
   }
   const command = input?.tool_input?.command;
   if (typeof command !== 'string') return pass;
-  const policy = loadGuardRules({ home, cwd: typeof input.cwd === 'string' && input.cwd ? input.cwd : cwd, env, managed, stopAt });
+  const workingDir = typeof input.cwd === 'string' && input.cwd ? input.cwd : cwd;
+  if (!workingDir) return pass;
+  const policy = loadGuardRules({ home, cwd: workingDir, env, managed, stopAt });
   if (policy.unreadable || commandHitsRule(command, policy.patterns)) return pass;
   const rtk = resolveRtk(env);
   if (!rtk) return pass;
   const res = spawnSync(rtk.command, ['hook', 'claude'], { input: stdin, encoding: 'utf8', timeout: 5000 });
   if (res.error || res.status !== 0) return pass;
-  return { stdout: sanitizeHookOutput(res.stdout), status: 0 };
+  return { stdout: sanitizeHookOutput(res.stdout, input.tool_input), status: 0 };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -17,7 +17,7 @@ export function planInstall(targetRoot, packDir = PACK_DIR) {
   const claude = join(targetRoot, '.claude');
   const skillsSrc = join(packDir, 'skills');
   const steps = readdirSync(skillsSrc)
-    .filter((name) => statSync(join(skillsSrc, name)).isDirectory())
+    .filter((name) => /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(name) && statSync(join(skillsSrc, name)).isDirectory())
     .map((name) => ({ name, from: join(skillsSrc, name), to: join(claude, 'skills', name) }));
   steps.push({ name: 'scripts', from: join(packDir, 'scripts'), to: join(claude, 'neutron', 'scripts') });
   return steps.map((s) => ({ ...s, exists: existsSync(s.to), backupDir: join(claude, 'neutron', 'backup') }));

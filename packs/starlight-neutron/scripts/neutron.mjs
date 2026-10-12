@@ -3,7 +3,7 @@
 //   node neutron.mjs doctor
 //   node neutron.mjs bench [--json | --md]
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -68,13 +68,26 @@ const WINDOWS_EXTENSIONS = ['.exe', '.cmd'];
 // Resolve a bare tool name to an absolute path. A bare name handed to spawn can pick up a planted binary from the
 // current directory on Windows, and this code runs inside hooks in repositories the user did not write. So only
 // absolute PATH entries count, and the working directory itself is skipped even when PATH lists it.
+// Compare folders as the file system does: follow links and 8.3 short names, and ignore case where the OS does.
+export function samePath(a, b) {
+  const real = (p) => {
+    let full = resolve(p);
+    try {
+      full = realpathSync.native(full);
+    } catch {
+      // folder does not exist; compare the spelled path
+    }
+    return process.platform === 'win32' || process.platform === 'darwin' ? full.toLowerCase() : full;
+  };
+  return real(a) === real(b);
+}
+
 export function findOnPath(name, env = process.env, cwd = process.cwd()) {
   const extensions = process.platform === 'win32' ? WINDOWS_EXTENSIONS : [''];
-  const here = resolve(cwd);
   for (const entry of (env.PATH ?? env.Path ?? '').split(delimiter)) {
     if (!entry || !isAbsolute(entry)) continue;
     const dir = resolve(entry);
-    if (dir === here) continue;
+    if (samePath(dir, cwd)) continue;
     for (const ext of extensions) {
       const candidate = join(dir, name + ext);
       if (existsSync(candidate)) return candidate;
@@ -107,7 +120,7 @@ export function resolveRtk(env = process.env, probe = probeDirect) {
   const candidates = [env.NEUTRON_RTK, findOnPath('rtk', env)].filter((c) => c && isAbsolute(c));
   const winget = env.LOCALAPPDATA && isAbsolute(env.LOCALAPPDATA) && join(env.LOCALAPPDATA, 'Microsoft', 'WinGet', 'Packages');
   if (winget && existsSync(winget)) {
-    for (const dir of readdirSync(winget).filter((d) => d.startsWith('rtk-ai.rtk'))) candidates.push(join(winget, dir, 'rtk.exe'));
+    for (const dir of readdirSync(winget).filter((d) => /^rtk-ai\.rtk(_|$)/i.test(d)).sort()) candidates.push(join(winget, dir, 'rtk.exe'));
   }
   for (const command of candidates) {
     const found = probe(command);
@@ -131,18 +144,31 @@ export function hasRtkHook(settings) {
   return Object.values(events).flat().some((entry) => (entry?.hooks ?? []).some((h) => /\brtk\b/i.test(h?.command ?? '')));
 }
 
-export function doctor(home = homedir(), probes = { rtk: () => resolveRtk(), shim: probeShim }) {
+// Managed Claude Code policy can also live in the Windows registry. A hook cannot read it, so report when it exists.
+function registryPolicyHives() {
+  if (process.platform !== 'win32') return [];
+  const reg = join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'reg.exe');
+  return ['HKLM', 'HKCU'].filter((hive) => spawnSync(reg, ['query', `${hive}\\SOFTWARE\\Policies\\ClaudeCode`], { encoding: 'utf8' }).status === 0);
+}
+
+export function doctor(home = homedir(), probes = { rtk: () => resolveRtk(), shim: probeShim, registry: registryPolicyHives }) {
   const dir = join(home, '.claude');
   const hookWired = ['settings.json', 'settings.local.json'].some((f) => hasRtkHook(readJson(join(dir, f))));
   const plugins = existsSync(join(dir, 'plugins', 'installed_plugins.json')) ? readFileSync(join(dir, 'plugins', 'installed_plugins.json'), 'utf8') : '';
   const cavemanOn = existsSync(join(dir, 'skills', 'caveman')) || /caveman/i.test(plugins);
   const rtk = probes.rtk();
   const [headroom, ccusage] = [probes.shim('headroom'), probes.shim('ccusage')];
+  const policyHives = probes.registry?.() ?? [];
   return [
     { name: 'node', detail: process.version, ok: true },
     { name: 'rtk', detail: rtk ? `${rtk.version} (${rtk.command})` : 'not found. Install: winget install rtk-ai.rtk | brew install rtk | cargo install --git https://github.com/rtk-ai/rtk', ok: Boolean(rtk) },
     { name: 'rtk hook', detail: hookWired ? 'a hook command invokes rtk' : 'none in settings.json or settings.local.json (the neutron plugin ships one)', ok: hookWired },
-    { name: 'headroom', detail: headroom ?? 'not found. Install: uv tool install "headroom-ai[all]"', ok: Boolean(headroom) },
+    {
+      name: 'registry policy',
+      detail: policyHives.length ? `${policyHives.join(' and ')} ClaudeCode policy exists. The hook cannot read it, so rules held only there are not seen` : 'none found',
+      ok: policyHives.length === 0,
+    },
+    { name: 'headroom', detail: headroom ??'not found. Install: uv tool install "headroom-ai[all]"', ok: Boolean(headroom) },
     { name: 'ccusage', detail: ccusage ?? 'not found. Install: npm install -g ccusage', ok: Boolean(ccusage) },
     { name: 'caveman (upstream)', detail: cavemanOn ? 'installed' : 'not installed (optional terse profile)', ok: cavemanOn },
   ];
