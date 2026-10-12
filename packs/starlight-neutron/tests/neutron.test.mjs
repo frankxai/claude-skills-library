@@ -119,57 +119,95 @@ test('hook fails open: no rtk means no output and exit 0, garbage in is also har
   assert.equal(res.stdout, '');
 });
 
-const hookInput = (command, tool = 'Bash') => JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: tool, tool_input: { command } });
+const hookInput = (command, { tool = 'Bash', cwd } = {}) =>
+  JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: tool, tool_input: { command }, ...(cwd ? { cwd } : {}) });
 
-test('hook rewrites a git command when rtk is installed', { skip: !resolveRtk() }, () => {
+const hermetic = (home, cwd, stopAt = cwd) => ({ home, cwd, managed: [], stopAt });
+
+test('hook rewrites a git command when rtk is installed, for Bash and PowerShell', { skip: !resolveRtk() }, () => {
   const home = tmp('hookhome');
   try {
-    const out = runHook(hookInput('git log -n 5'), process.env, { home, cwd: home });
-    assert.match(out.stdout, /"command":"rtk git log -n 5"/);
-    assert.match(runHook(hookInput('git log -n 5', 'PowerShell'), process.env, { home, cwd: home }).stdout, /"command":"rtk git log -n 5"/);
+    assert.match(runHook(hookInput('git log -n 5'), process.env, hermetic(home, home)).stdout, /"command":"rtk git log -n 5"/);
+    assert.match(runHook(hookInput('git log -n 5', { tool: 'PowerShell' }), process.env, hermetic(home, home)).stdout, /"command":"rtk git log -n 5"/);
   } finally {
     rmSync(home, { recursive: true, force: true });
   }
 });
 
-test('commandHitsRule matches prefix, glob and exact rules, and every segment of a compound command', () => {
-  assert.equal(commandHitsRule('git commit -m x', ['git commit:*']), true);
-  assert.equal(commandHitsRule('git commit', ['git commit:*']), true);
-  assert.equal(commandHitsRule('git log -n 1 && git commit -m x', ['git commit:*']), true);
+test('commandHitsRule is token based: it survives options, wrappers, env prefixes, subshells and compounds', () => {
+  const ask = ['git commit:*'];
+  for (const command of [
+    'git commit -m x',
+    'git commit',
+    'git -C repo commit -m x',
+    'bash -c "git commit -m x"',
+    'FOO=1 git commit -m x',
+    'echo $(git commit -m x)',
+    'git log -n 1 && git commit -m x',
+    'git log\ngit commit -m x',
+    'GIT COMMIT -m x',
+  ]) assert.equal(commandHitsRule(command, ask), true, command);
   assert.equal(commandHitsRule('echo hi | git push origin main', ['git push *']), true);
   assert.equal(commandHitsRule('git status', ['git status']), true);
+  assert.equal(commandHitsRule('anything at all', ['*']), true);
   assert.equal(commandHitsRule('git log -n 5', ['git commit:*', 'git push *']), false);
   assert.equal(commandHitsRule('git committed', ['git commit:*']), false);
   assert.equal(commandHitsRule('git log', []), false);
 });
 
-test('loadGuardRules reads ask and deny for Bash and PowerShell from user and project settings, not allow', () => {
+test('loadGuardRules reads ask and deny for Bash and PowerShell from user, project ancestors and managed files, not allow', () => {
   const home = tmp('rules-home');
   const proj = tmp('rules-proj');
+  const managedDir = tmp('rules-managed');
   try {
     mkdirSync(join(home, '.claude'), { recursive: true });
     mkdirSync(join(proj, '.claude'), { recursive: true });
+    mkdirSync(join(proj, 'deep', 'er'), { recursive: true });
     writeFileSync(join(home, '.claude', 'settings.json'), JSON.stringify({ permissions: { deny: ['Bash(git push:*)'], allow: ['Bash(git log:*)'] } }));
     writeFileSync(join(proj, '.claude', 'settings.local.json'), JSON.stringify({ permissions: { ask: ['PowerShell(git commit:*)', 'Read(secrets/**)'] } }));
-    assert.deepEqual(loadGuardRules(home, proj).sort(), ['git commit:*', 'git push:*']);
-    assert.deepEqual(loadGuardRules(tmp('empty'), tmp('empty2')), []);
+    const managed = join(managedDir, 'managed-settings.json');
+    writeFileSync(managed, JSON.stringify({ permissions: { deny: ['Bash(rm -rf:*)'] } }));
+    const policy = loadGuardRules({ home, cwd: join(proj, 'deep', 'er'), env: {}, managed: [managed], stopAt: proj });
+    assert.deepEqual(policy.patterns.sort(), ['git commit:*', 'git push:*', 'rm -rf:*']);
+    assert.equal(policy.unreadable, false);
+    assert.deepEqual(loadGuardRules({ home: managedDir, cwd: managedDir, env: {}, managed: [], stopAt: managedDir }), { patterns: [], unreadable: false });
   } finally {
-    rmSync(home, { recursive: true, force: true });
-    rmSync(proj, { recursive: true, force: true });
+    for (const dir of [home, proj, managedDir]) rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('hook leaves a command untouched when an ask or deny rule matches it', { skip: !resolveRtk() }, () => {
+test('loadGuardRules honours CLAUDE_CONFIG_DIR and fails closed on malformed or misshapen settings', () => {
+  const home = tmp('cfg-home');
+  const cfg = tmp('cfg-dir');
+  const proj = tmp('cfg-proj');
+  try {
+    writeFileSync(join(cfg, 'settings.json'), JSON.stringify({ permissions: { ask: ['Bash(git commit:*)'] } }));
+    assert.deepEqual(loadGuardRules({ home, cwd: proj, env: { CLAUDE_CONFIG_DIR: cfg }, managed: [], stopAt: proj }).patterns, ['git commit:*']);
+    mkdirSync(join(proj, '.claude'), { recursive: true });
+    writeFileSync(join(proj, '.claude', 'settings.json'), '{ not json');
+    assert.equal(loadGuardRules({ home, cwd: proj, env: {}, managed: [], stopAt: proj }).unreadable, true);
+    writeFileSync(join(proj, '.claude', 'settings.json'), JSON.stringify({ permissions: { deny: 'Bash(git push:*)' } }));
+    assert.equal(loadGuardRules({ home, cwd: proj, env: {}, managed: [], stopAt: proj }).unreadable, true);
+  } finally {
+    for (const dir of [home, cfg, proj]) rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('hook leaves a command untouched when an ask or deny rule applies, and when policy is unreadable', { skip: !resolveRtk() }, () => {
   const home = tmp('guard-home');
   const proj = tmp('guard-proj');
   try {
     mkdirSync(join(proj, '.claude'), { recursive: true });
+    mkdirSync(join(proj, 'sub'), { recursive: true });
     writeFileSync(join(proj, '.claude', 'settings.json'), JSON.stringify({ permissions: { ask: ['Bash(git commit:*)'], deny: ['Bash(git push:*)'] } }));
-    const at = { home, cwd: proj };
-    assert.equal(runHook(hookInput('git commit -m x'), process.env, at).stdout, '');
-    assert.equal(runHook(hookInput('git push origin main'), process.env, at).stdout, '');
-    assert.equal(runHook(hookInput('git log -n 1 && git commit -m x'), process.env, at).stdout, '');
+    const at = hermetic(home, join(proj, 'sub'), proj);
+    for (const command of ['git commit -m x', 'git push origin main', 'git log -n 1 && git commit -m x', 'git -C . commit -m x', 'bash -c "git push"']) {
+      assert.equal(runHook(hookInput(command), process.env, at).stdout, '', command);
+    }
     assert.match(runHook(hookInput('git log -n 5'), process.env, at).stdout, /rtk git log -n 5/);
+    assert.equal(runHook(hookInput('git commit -m x', { cwd: join(proj, 'sub') }), process.env, hermetic(home, home, proj)).stdout, '');
+    writeFileSync(join(proj, '.claude', 'settings.local.json'), '{ broken');
+    assert.equal(runHook(hookInput('git log -n 5'), process.env, at).stdout, '');
   } finally {
     rmSync(home, { recursive: true, force: true });
     rmSync(proj, { recursive: true, force: true });
