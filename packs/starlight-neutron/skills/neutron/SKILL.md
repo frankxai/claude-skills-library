@@ -1,11 +1,11 @@
 ---
-name: thrift
+name: neutron
 description: Spend fewer tokens without lowering the ceiling. Use when a task will take more than about ten tool calls, before spawning subagents or choosing a model for delegated work, when context is filling up, or on "save tokens", "token budget", "cheaper way", "which model", "optimise this prompt", "this is burning context". Tightens a multi-part ask, picks model tier, reasoning effort, execution shape and output profile, and states the choice in one line.
 ---
 
-# Thrift
+# Neutron
 
-Cut waste, never reasoning. Thrift decides how a task runs. It does not decide what the answer is, and it never trades correctness for a smaller bill.
+Cut waste, never reasoning. Neutron decides how a task runs. It does not decide what the answer is, and it never trades correctness for a smaller bill.
 
 Run the five steps in order. Skip a step when it clearly does not apply: a one-line question needs none of them. Total overhead is one short message.
 
@@ -61,8 +61,8 @@ Most of a long session's cost is what the model reads, not what it writes.
 
 - Search before reading. Read a range, not a file, unless the whole file is the task.
 - Read a file once. Quote the lines that matter instead of re-reading.
-- Shell output: RTK rewrites `git`, `grep`, test runs and similar to filtered forms through the plugin's hook. It changes nothing when it is not installed. Other compressors (headroom for logs and JSON) are opt-in and unproven until `thrift-ledger` shows they hold quality.
-- To see what is wired, run the pack's `scripts/thrift.mjs doctor` (plugin root, or `.claude/thrift/scripts/` after `install.mjs`).
+- Shell output: RTK rewrites `git`, `grep`, test runs and similar to filtered forms through the plugin's hook. It changes nothing when it is not installed. Other compressors (headroom for logs and JSON) are opt-in and unproven until `neutron-log` shows they hold quality.
+- To see what is wired, run the pack's `scripts/neutron.mjs doctor` (plugin root, or `.claude/neutron/scripts/` after `install.mjs`).
 - Pass errors as the failing line plus the two lines around it, not the whole log.
 - Keep the stable part of the context stable: system prompt, tool list and project instructions first, volatile material last. Editing instructions or tools mid-session breaks prompt caching and re-bills the prefix.
 - Compact at a task boundary, not in the middle of an edit.
@@ -72,14 +72,14 @@ Most of a long session's cost is what the model reads, not what it writes.
 
 One line, then proceed:
 
-`thrift: <shape> on <tier> at <effort> effort, <profile> output, input via <compressor or plain>.`
+`neutron: <shape> on <tier> at <effort> effort, <profile> output, input via <compressor or plain>.`
 
-Example: `thrift: search subagent on smallest tier at low effort, lean output, input via RTK.`
+Example: `neutron: search subagent on smallest tier at low effort, lean output, input via RTK.`
 
 ## Do not
 
 - Do not compress code, commands, paths, numbers or quoted errors. They are the payload.
 - Do not drop a negation, a unit or a version to save a token.
-- Do not claim a saving you did not measure. Use `thrift-ledger`.
+- Do not claim a saving you did not measure. Use `neutron-log`.
 - Do not spawn agents to look busy. Depth of delegation is an outcome, not a plan.
 - Do not apply Terse to the final answer of a consequential task.

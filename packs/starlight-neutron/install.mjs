@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// install.mjs: copy the thrift skills and scripts into a repo's .claude, or into ~/.claude with --user.
+// install.mjs: copy the neutron skills and scripts into a repo's .claude, or into ~/.claude with --user.
 //   node install.mjs <repo-path>            dry run, prints the plan
 //   node install.mjs <repo-path> --apply    copy
 //   node install.mjs --user [--apply]       target ~/.claude
-// Skills go to .claude/skills/<name>, scripts to .claude/thrift/scripts. An existing skill is moved to
-// .claude/thrift/backup first. It never edits settings.json and never installs RTK, headroom or caveman.
+// Skills go to .claude/skills/<name>, scripts to .claude/neutron/scripts. An existing skill is moved to
+// .claude/neutron/backup first. It never edits settings.json and never installs RTK, headroom or caveman.
 // For the RTK hook, install the pack as a plugin instead (it ships hooks/hooks.json).
 import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -19,8 +19,8 @@ export function planInstall(targetRoot, packDir = PACK_DIR) {
   const steps = readdirSync(skillsSrc)
     .filter((name) => statSync(join(skillsSrc, name)).isDirectory())
     .map((name) => ({ name, from: join(skillsSrc, name), to: join(claude, 'skills', name) }));
-  steps.push({ name: 'scripts', from: join(packDir, 'scripts'), to: join(claude, 'thrift', 'scripts') });
-  return steps.map((s) => ({ ...s, exists: existsSync(s.to), backupDir: join(claude, 'thrift', 'backup') }));
+  steps.push({ name: 'scripts', from: join(packDir, 'scripts'), to: join(claude, 'neutron', 'scripts') });
+  return steps.map((s) => ({ ...s, exists: existsSync(s.to), backupDir: join(claude, 'neutron', 'backup') }));
 }
 
 export function applyPlan(plan, stamp = Date.now()) {
@@ -37,10 +37,10 @@ export function applyPlan(plan, stamp = Date.now()) {
 const NEXT_STEPS = `
 This script does not install the compressors. Pick what you want:
   rtk       winget install rtk-ai.rtk | brew install rtk | cargo install --git https://github.com/rtk-ai/rtk
-  headroom  uv tool install --python 3.13 "headroom-ai[all]"     (measure first, see thrift-ledger)
+  headroom  uv tool install --python 3.13 "headroom-ai[all]"     (measure first, see neutron-log)
   ccusage   npm install -g ccusage
   caveman   /plugin marketplace add JuliusBrussee/caveman         (optional terse profile)
-Check what is wired:  node .claude/thrift/scripts/thrift.mjs doctor`;
+Check what is wired:  node .claude/neutron/scripts/neutron.mjs doctor`;
 
 export function main(argv) {
   const apply = argv.includes('--apply');
@@ -58,7 +58,7 @@ export function main(argv) {
   const plan = planInstall(targetRoot);
   for (const step of plan) {
     const verb = apply ? 'copy' : 'would copy';
-    console.log(`${verb} ${step.name} -> ${step.to}${step.exists ? ' (existing copy moves to .claude/thrift/backup)' : ''}`);
+    console.log(`${verb} ${step.name} -> ${step.to}${step.exists ? ' (existing copy moves to .claude/neutron/backup)' : ''}`);
   }
   if (apply) applyPlan(plan);
   else console.log('\ndry run, nothing written. Re-run with --apply.');

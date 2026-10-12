@@ -2,16 +2,16 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { bench, doctor, formatMarkdown, formatTable, hasRtkHook, resolveRtk, savedPercent } from '../scripts/thrift.mjs';
+import { bench, doctor, findOnPath, formatMarkdown, formatTable, hasRtkHook, resolveRtk, savedPercent } from '../scripts/neutron.mjs';
 import { run as runHook } from '../hooks/rtk-rewrite.mjs';
 import { applyPlan, main as installMain, planInstall } from '../install.mjs';
 
 const PACK = join(dirname(fileURLToPath(import.meta.url)), '..');
 const node = process.execPath;
-const tmp = (name) => mkdtempSync(join(tmpdir(), `thrift-${name}-`));
+const tmp = (name) => mkdtempSync(join(tmpdir(), `neutron-${name}-`));
 
 test('savedPercent rounds and guards a zero baseline', () => {
   assert.equal(savedPercent(1000, 200), 80);
@@ -82,15 +82,37 @@ test('doctor is hermetic and reads settings.local.json as well as settings.json'
   }
 });
 
-test('resolveRtk prefers THRIFT_RTK and returns null when nothing answers', () => {
+test('resolveRtk prefers NEUTRON_RTK and returns null when nothing answers', () => {
   const seen = [];
   const probe = (c) => (seen.push(c), c === '/custom/rtk' ? 'rtk 1.0' : null);
-  assert.deepEqual(resolveRtk({ THRIFT_RTK: '/custom/rtk' }, probe), { command: '/custom/rtk', version: 'rtk 1.0' });
+  assert.deepEqual(resolveRtk({ NEUTRON_RTK: '/custom/rtk' }, probe), { command: '/custom/rtk', version: 'rtk 1.0' });
   assert.equal(resolveRtk({}, () => null), null);
 });
 
+test('findOnPath ignores a binary planted in the working directory and relative PATH entries', () => {
+  const ext = process.platform === 'win32' ? '.exe' : '';
+  const planted = tmp('planted');
+  const trusted = tmp('trusted');
+  try {
+    writeFileSync(join(planted, `rtk${ext}`), 'evil');
+    writeFileSync(join(trusted, `rtk${ext}`), 'real');
+    const both = { PATH: ['.', 'relative', planted, trusted].join(delimiter) };
+    assert.equal(findOnPath('rtk', both, planted), join(trusted, `rtk${ext}`));
+    assert.equal(findOnPath('rtk', { PATH: ['.', planted].join(delimiter) }, planted), null);
+    assert.equal(findOnPath('rtk', {}, planted), null);
+  } finally {
+    rmSync(planted, { recursive: true, force: true });
+    rmSync(trusted, { recursive: true, force: true });
+  }
+});
+
+test('resolveRtk never returns a relative NEUTRON_RTK', () => {
+  assert.equal(resolveRtk({ NEUTRON_RTK: 'rtk' }, () => 'rtk 1.0'), null);
+  assert.equal(resolveRtk({ NEUTRON_RTK: './rtk' }, () => 'rtk 1.0'), null);
+});
+
 test('hook fails open: no rtk means no output and exit 0, garbage in is also harmless', () => {
-  const dead = { THRIFT_RTK: join(tmpdir(), 'no-such-rtk-binary'), LOCALAPPDATA: '', PATH: '' };
+  const dead = { NEUTRON_RTK: join(tmpdir(), 'no-such-rtk-binary'), LOCALAPPDATA: '', PATH: '' };
   assert.deepEqual(runHook('{"tool_name":"Bash"}', dead), { stdout: '', status: 0 });
   const res = spawnSync(node, [join(PACK, 'hooks', 'rtk-rewrite.mjs')], { input: 'not json', encoding: 'utf8', env: { ...dead } });
   assert.equal(res.status, 0);
@@ -106,7 +128,7 @@ test('planInstall lists skills and scripts and writes nothing', () => {
   const target = tmp('target');
   try {
     const plan = planInstall(target, PACK);
-    assert.deepEqual(plan.map((s) => s.name).sort(), ['scripts', 'thrift', 'thrift-ledger']);
+    assert.deepEqual(plan.map((s) => s.name).sort(), ['neutron', 'neutron-log', 'scripts']);
     assert.equal(existsSync(join(target, '.claude')), false);
   } finally {
     rmSync(target, { recursive: true, force: true });
@@ -117,15 +139,15 @@ test('applyPlan installs skills and scripts, and moves an edited skill to backup
   const target = tmp('apply');
   try {
     applyPlan(planInstall(target, PACK), 1);
-    const skill = join(target, '.claude', 'skills', 'thrift', 'SKILL.md');
-    assert.match(readFileSync(skill, 'utf8'), /^---\nname: thrift\n/);
-    assert.ok(existsSync(join(target, '.claude', 'thrift', 'scripts', 'thrift.mjs')));
+    const skill = join(target, '.claude', 'skills', 'neutron', 'SKILL.md');
+    assert.match(readFileSync(skill, 'utf8'), /^---\nname: neutron\n/);
+    assert.ok(existsSync(join(target, '.claude', 'neutron', 'scripts', 'neutron.mjs')));
     writeFileSync(skill, 'MY LOCAL EDIT');
-    writeFileSync(join(target, '.claude', 'skills', 'thrift', 'stale.txt'), 'old');
+    writeFileSync(join(target, '.claude', 'skills', 'neutron', 'stale.txt'), 'old');
     applyPlan(planInstall(target, PACK), 2);
-    assert.equal(readFileSync(join(target, '.claude', 'thrift', 'backup', 'thrift-2', 'SKILL.md'), 'utf8'), 'MY LOCAL EDIT');
-    assert.equal(existsSync(join(target, '.claude', 'skills', 'thrift', 'stale.txt')), false);
-    assert.deepEqual(readdirSync(join(target, '.claude', 'skills')).sort(), ['thrift', 'thrift-ledger']);
+    assert.equal(readFileSync(join(target, '.claude', 'neutron', 'backup', 'neutron-2', 'SKILL.md'), 'utf8'), 'MY LOCAL EDIT');
+    assert.equal(existsSync(join(target, '.claude', 'skills', 'neutron', 'stale.txt')), false);
+    assert.deepEqual(readdirSync(join(target, '.claude', 'skills')).sort(), ['neutron', 'neutron-log']);
   } finally {
     rmSync(target, { recursive: true, force: true });
   }
@@ -145,8 +167,9 @@ test('install refuses --user together with a path and a missing target', () => {
 
 test('plugin manifest, hook config and skills agree', () => {
   const manifest = JSON.parse(readFileSync(join(PACK, '.claude-plugin', 'plugin.json'), 'utf8'));
-  assert.equal(manifest.name, 'starlight-thrift');
+  assert.equal(manifest.name, 'starlight-neutron');
   const hooks = JSON.parse(readFileSync(join(PACK, 'hooks', 'hooks.json'), 'utf8'));
+  assert.equal(hooks.hooks.PreToolUse[0].matcher, 'Bash|PowerShell');
   const command = hooks.hooks.PreToolUse[0].hooks[0].command;
   assert.match(command, /\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/rtk-rewrite\.mjs/);
   assert.ok(existsSync(join(PACK, 'hooks', 'rtk-rewrite.mjs')));

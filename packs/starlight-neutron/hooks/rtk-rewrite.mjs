@@ -4,7 +4,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { resolveRtk } from '../scripts/thrift.mjs';
+import { resolveRtk } from '../scripts/neutron.mjs';
 
 export function run(stdin, env = process.env) {
   const rtk = resolveRtk(env);

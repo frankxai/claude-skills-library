@@ -1,9 +1,9 @@
 ---
-name: thrift-ledger
+name: neutron-log
 description: Measure whether a token-saving tool actually saves tokens and keeps answers correct. Use before adopting or recommending RTK, headroom, caveman or any compressor, after changing a hook or instruction file, and when someone quotes a savings percentage. Runs a same-task before and after protocol and records only measured numbers.
 ---
 
-# Thrift ledger
+# Neutron log
 
 A savings figure from a README is a claim. A figure from your own session is a result. This skill produces results.
 
@@ -23,12 +23,12 @@ Anything else is written down as `unmeasured`.
 For shell-output compressors, compare raw and compressed output on real commands in a real repo:
 
 ```
-node <pack>/scripts/thrift.mjs bench          # table
-node <pack>/scripts/thrift.mjs bench --md     # markdown, for docs
-node <pack>/scripts/thrift.mjs bench --json   # with RTK version, platform and repo commit
+node <pack>/scripts/neutron.mjs bench          # table
+node <pack>/scripts/neutron.mjs bench --md     # markdown, for docs
+node <pack>/scripts/neutron.mjs bench --json   # with RTK version, platform and repo commit
 ```
 
-`<pack>` is the plugin root, or `.claude/thrift` after `install.mjs`. Run it from the repo you care about. Its `git diff HEAD~5` needs at least six commits.
+`<pack>` is the plugin root, or `.claude/neutron` after `install.mjs`. Run it from the repo you care about. Its `git diff HEAD~5` needs at least six commits.
 
 The bench only compares commands whose filtered output is meant to carry the same information. A row is skipped, not counted as a saving, when the filter fails or exits differently from the raw command.
 

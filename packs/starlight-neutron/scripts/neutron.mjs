@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// thrift.mjs: doctor (what is wired) and bench (raw vs RTK-filtered output, in bytes).
-//   node thrift.mjs doctor
-//   node thrift.mjs bench [--json | --md]
+// neutron.mjs: doctor (what is wired) and bench (raw vs RTK-filtered output, in bytes).
+//   node neutron.mjs doctor
+//   node neutron.mjs bench [--json | --md]
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 // Same output either side of the filter: no lossy listing commands in this table.
@@ -40,7 +40,9 @@ export function formatMarkdown(rows) {
 }
 
 function capture(argv, options = {}) {
-  const [cmd, ...args] = argv;
+  const [name, ...args] = argv;
+  const cmd = isAbsolute(name) ? name : findOnPath(name);
+  if (!cmd) return { ok: false, error: 'ENOENT' };
   const res = spawnSync(cmd, args, { encoding: 'buffer', maxBuffer: 256 * 1024 * 1024, ...options });
   if (res.error) return { ok: false, error: res.error.code || res.error.message };
   return { ok: true, bytes: res.stdout.length + res.stderr.length, status: res.status };
@@ -61,26 +63,49 @@ export function bench(cases) {
   });
 }
 
-// Run a fixed binary with no shell. Returns first line of --version output, or null.
-function probeDirect(command) {
-  const res = spawnSync(command, ['--version'], { encoding: 'utf8' });
+const WINDOWS_EXTENSIONS = ['.exe', '.cmd'];
+
+// Resolve a bare tool name to an absolute path. A bare name handed to spawn can pick up a planted binary from the
+// current directory on Windows, and this code runs inside hooks in repositories the user did not write. So only
+// absolute PATH entries count, and the working directory itself is skipped even when PATH lists it.
+export function findOnPath(name, env = process.env, cwd = process.cwd()) {
+  const extensions = process.platform === 'win32' ? WINDOWS_EXTENSIONS : [''];
+  const here = resolve(cwd);
+  for (const entry of (env.PATH ?? env.Path ?? '').split(delimiter)) {
+    if (!entry || !isAbsolute(entry)) continue;
+    const dir = resolve(entry);
+    if (dir === here) continue;
+    for (const ext of extensions) {
+      const candidate = join(dir, name + ext);
+      if (existsSync(candidate)) return candidate;
+    }
+  }
+  return null;
+}
+
+function versionLine(res) {
   if (res.error || res.status !== 0) return null;
   return (res.stdout || res.stderr).trim().split(/\r?\n/)[0] || null;
 }
 
-// npm and uv install .cmd shims on Windows, which need a shell. Only the literal names headroom and ccusage reach it.
-function probeShim(command) {
-  const direct = probeDirect(command);
-  if (direct || process.platform !== 'win32') return direct;
-  const res = spawnSync(command, ['--version'], { encoding: 'utf8', shell: true });
-  if (res.error || res.status !== 0) return null;
-  return (res.stdout || res.stderr).trim().split(/\r?\n/)[0] || null;
+// Takes an absolute path only. Returns the first line of --version output, or null.
+function probeDirect(command) {
+  if (!isAbsolute(command)) return null;
+  return versionLine(spawnSync(command, ['--version'], { encoding: 'utf8' }));
+}
+
+// npm and uv install .cmd shims on Windows, which need a shell. The shell only ever sees an absolute path found on PATH.
+function probeShim(name, env = process.env) {
+  const found = findOnPath(name, env);
+  if (!found) return null;
+  const needsShell = /\.(cmd|bat)$/i.test(found);
+  return versionLine(spawnSync(needsShell ? `"${found}"` : found, ['--version'], { encoding: 'utf8', shell: needsShell }));
 }
 
 // winget on Windows updates PATH only for new shells, so also look in its package folder.
 export function resolveRtk(env = process.env, probe = probeDirect) {
-  const candidates = [env.THRIFT_RTK, 'rtk'].filter(Boolean);
-  const winget = env.LOCALAPPDATA && join(env.LOCALAPPDATA, 'Microsoft', 'WinGet', 'Packages');
+  const candidates = [env.NEUTRON_RTK, findOnPath('rtk', env)].filter((c) => c && isAbsolute(c));
+  const winget = env.LOCALAPPDATA && isAbsolute(env.LOCALAPPDATA) && join(env.LOCALAPPDATA, 'Microsoft', 'WinGet', 'Packages');
   if (winget && existsSync(winget)) {
     for (const dir of readdirSync(winget).filter((d) => d.startsWith('rtk-ai.rtk'))) candidates.push(join(winget, dir, 'rtk.exe'));
   }
@@ -116,7 +141,7 @@ export function doctor(home = homedir(), probes = { rtk: () => resolveRtk(), shi
   return [
     { name: 'node', detail: process.version, ok: true },
     { name: 'rtk', detail: rtk ? `${rtk.version} (${rtk.command})` : 'not found. Install: winget install rtk-ai.rtk | brew install rtk | cargo install --git https://github.com/rtk-ai/rtk', ok: Boolean(rtk) },
-    { name: 'rtk hook', detail: hookWired ? 'a hook command invokes rtk' : 'none in settings.json or settings.local.json (the thrift plugin ships one)', ok: hookWired },
+    { name: 'rtk hook', detail: hookWired ? 'a hook command invokes rtk' : 'none in settings.json or settings.local.json (the neutron plugin ships one)', ok: hookWired },
     { name: 'headroom', detail: headroom ?? 'not found. Install: uv tool install "headroom-ai[all]"', ok: Boolean(headroom) },
     { name: 'ccusage', detail: ccusage ?? 'not found. Install: npm install -g ccusage', ok: Boolean(ccusage) },
     { name: 'caveman (upstream)', detail: cavemanOn ? 'installed' : 'not installed (optional terse profile)', ok: cavemanOn },
@@ -142,7 +167,7 @@ function main(argv) {
     for (const row of doctor()) console.log(`${row.ok ? 'ok     ' : 'missing'}  ${row.name.padEnd(20)} ${row.detail}`);
     return 0;
   }
-  console.error('usage: thrift.mjs doctor | bench [--json | --md]');
+  console.error('usage: neutron.mjs doctor | bench [--json | --md]');
   return 2;
 }
 
