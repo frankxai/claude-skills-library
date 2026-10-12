@@ -2,6 +2,7 @@
 // PreToolUse hook: hand a Bash or PowerShell tool call to `rtk hook claude`, which rewrites it to a filtered form.
 // Fails open on the rewrite itself: no rtk, a crash or a timeout leaves the command untouched and exits 0.
 // Fails closed on policy: if permission settings cannot be read, nothing is rewritten.
+// Never grants authorization: RTK's own allow decision is stripped, so Claude Code decides on the rewritten command.
 //
 // Claude Code evaluates permission rules against the input a hook returns, so a rewrite of `git commit` to
 // `rtk git commit` would no longer match an ask or deny rule written for `git commit`. This shim therefore leaves a
@@ -33,35 +34,40 @@ export function managedSettingsFiles(platform = process.platform, env = process.
   return files;
 }
 
-// Every directory from `start` up to the filesystem root, or up to and including `stopAt` when given.
+// Every directory from `start` up to the filesystem root, or up to and including the first of `stopAt` (a path or a
+// list of paths) that it reaches. Tests use stopAt to keep a temporary folder from inheriting the real user's settings.
 function ancestors(start, stopAt) {
   const dirs = [];
-  const stop = stopAt ? resolve(stopAt) : null;
+  const stops = new Set([].concat(stopAt ?? []).map((dir) => resolve(dir)));
   let current = resolve(start);
   for (;;) {
     dirs.push(current);
     const parent = dirname(current);
-    if (parent === current || current === stop) return dirs;
+    if (parent === current || stops.has(current)) return dirs;
     current = parent;
   }
 }
 
-export function settingsFiles({ home, cwd, env, managed, stopAt }) {
-  const userDir = env.CLAUDE_CONFIG_DIR && resolve(env.CLAUDE_CONFIG_DIR) ? resolve(env.CLAUDE_CONFIG_DIR) : join(home, '.claude');
+export function settingsFiles({ home, roots, env, managed, stopAt }) {
+  const userDir = env.CLAUDE_CONFIG_DIR ? resolve(env.CLAUDE_CONFIG_DIR) : join(home, '.claude');
+  const projectDirs = roots.flatMap((root) => ancestors(root, stopAt));
   return [
     ...managed,
     join(userDir, 'settings.json'),
     join(userDir, 'settings.local.json'),
-    ...ancestors(cwd, stopAt).flatMap((dir) => [join(dir, '.claude', 'settings.json'), join(dir, '.claude', 'settings.local.json')]),
+    ...projectDirs.flatMap((dir) => [join(dir, '.claude', 'settings.json'), join(dir, '.claude', 'settings.local.json')]),
   ];
 }
 
 // Returns the Bash and PowerShell patterns from every ask and deny list that can be read. `unreadable` is true when a
 // settings file exists but cannot be read or parsed, or holds a permissions list of the wrong shape.
+// Project settings are read from the working directory and from CLAUDE_PROJECT_DIR (the folder Claude Code reports as
+// the project, which can differ from the working directory), each with all of its parent folders.
 export function loadGuardRules({ home = homedir(), cwd = process.cwd(), env = process.env, managed = managedSettingsFiles(), stopAt } = {}) {
+  const roots = [...new Set([cwd, env.CLAUDE_PROJECT_DIR].filter((dir) => typeof dir === 'string' && dir))];
   const patterns = [];
   let unreadable = false;
-  for (const file of new Set(settingsFiles({ home, cwd, env, managed, stopAt }))) {
+  for (const file of new Set(settingsFiles({ home, roots, env, managed, stopAt }))) {
     if (!existsSync(file)) continue;
     let settings;
     try {
@@ -96,6 +102,28 @@ export function commandHitsRule(command, patterns) {
   return patterns.some((pattern) => tokens(String(pattern).replace(/:\*$/, '')).every((word) => present.has(word)));
 }
 
+// The shim rewrites commands. It never grants authorization. RTK adds permissionDecision "allow" when its own reading
+// of your allow rules matches, and that would auto-approve a command on the strength of a third-party parser. Only the
+// rewritten command and RTK's reason pass through; anything else, or output that is not valid, is dropped.
+export function sanitizeHookOutput(stdout) {
+  let parsed;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    return '';
+  }
+  const out = parsed?.hookSpecificOutput;
+  const command = out?.updatedInput?.command;
+  if (typeof command !== 'string' || !command) return '';
+  return JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      permissionDecisionReason: typeof out.permissionDecisionReason === 'string' ? out.permissionDecisionReason : 'Neutron rewrite',
+      updatedInput: { ...out.updatedInput },
+    },
+  });
+}
+
 export function run(stdin, env = process.env, { home = homedir(), cwd = process.cwd(), managed = managedSettingsFiles(process.platform, env), stopAt } = {}) {
   const pass = { stdout: '', status: 0 };
   let input;
@@ -112,7 +140,7 @@ export function run(stdin, env = process.env, { home = homedir(), cwd = process.
   if (!rtk) return pass;
   const res = spawnSync(rtk.command, ['hook', 'claude'], { input: stdin, encoding: 'utf8', timeout: 5000 });
   if (res.error || res.status !== 0) return pass;
-  return { stdout: res.stdout, status: 0 };
+  return { stdout: sanitizeHookOutput(res.stdout), status: 0 };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

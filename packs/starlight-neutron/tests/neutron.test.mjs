@@ -6,7 +6,7 @@ import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { bench, doctor, findOnPath, formatMarkdown, formatTable, hasRtkHook, resolveRtk, savedPercent } from '../scripts/neutron.mjs';
-import { commandHitsRule, loadGuardRules, run as runHook } from '../hooks/rtk-rewrite.mjs';
+import { commandHitsRule, loadGuardRules, run as runHook, sanitizeHookOutput } from '../hooks/rtk-rewrite.mjs';
 import { applyPlan, main as installMain, planInstall } from '../install.mjs';
 
 const PACK = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -211,6 +211,52 @@ test('hook leaves a command untouched when an ask or deny rule applies, and when
   } finally {
     rmSync(home, { recursive: true, force: true });
     rmSync(proj, { recursive: true, force: true });
+  }
+});
+
+test('sanitizeHookOutput keeps the rewrite and drops every authorization decision', () => {
+  const rtkOutput = (decision) => JSON.stringify({
+    hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecisionReason: 'RTK auto-rewrite', updatedInput: { command: 'rtk git log -n 3' }, ...(decision ? { permissionDecision: decision } : {}) },
+  });
+  for (const decision of ['allow', 'ask', 'deny', undefined]) {
+    const out = JSON.parse(sanitizeHookOutput(rtkOutput(decision)));
+    assert.equal(out.hookSpecificOutput.updatedInput.command, 'rtk git log -n 3');
+    assert.equal('permissionDecision' in out.hookSpecificOutput, false, String(decision));
+  }
+  assert.equal(sanitizeHookOutput('not json'), '');
+  assert.equal(sanitizeHookOutput('{"hookSpecificOutput":{}}'), '');
+  assert.equal(sanitizeHookOutput('{"hookSpecificOutput":{"updatedInput":{"command":""}}}'), '');
+  assert.equal(sanitizeHookOutput(''), '');
+});
+
+test('hook never relays RTK auto-allow, even when an allow rule matches', { skip: !resolveRtk() }, () => {
+  const home = tmp('allow-home');
+  const proj = tmp('allow-proj');
+  try {
+    mkdirSync(join(proj, '.claude'), { recursive: true });
+    writeFileSync(join(proj, '.claude', 'settings.json'), JSON.stringify({ permissions: { allow: ['Bash(git log:*)'] } }));
+    const out = runHook(hookInput('git log -n 3'), process.env, hermetic(home, proj));
+    assert.match(out.stdout, /"command":"rtk git log -n 3"/);
+    assert.doesNotMatch(out.stdout, /permissionDecision"/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+    rmSync(proj, { recursive: true, force: true });
+  }
+});
+
+test('loadGuardRules also reads the project folder named by CLAUDE_PROJECT_DIR', () => {
+  const home = tmp('pd-home');
+  const cwd = tmp('pd-cwd');
+  const project = tmp('pd-project');
+  try {
+    mkdirSync(join(project, '.claude'), { recursive: true });
+    writeFileSync(join(project, '.claude', 'settings.json'), JSON.stringify({ permissions: { deny: ['Bash(git push:*)'] } }));
+    const without = loadGuardRules({ home, cwd, env: {}, managed: [], stopAt: cwd });
+    assert.deepEqual(without.patterns, []);
+    const withDir = loadGuardRules({ home, cwd, env: { CLAUDE_PROJECT_DIR: project }, managed: [], stopAt: [cwd, project] });
+    assert.deepEqual(withDir.patterns, ['git push:*']);
+  } finally {
+    for (const dir of [home, cwd, project]) rmSync(dir, { recursive: true, force: true });
   }
 });
 
