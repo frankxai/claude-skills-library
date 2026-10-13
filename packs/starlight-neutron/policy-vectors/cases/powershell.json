@@ -39,9 +39,7 @@
         "deny": []
       },
       "command": "rm -r build",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "Aliases are canonicalized by Claude Code (rm is Remove-Item); the guard only compares words."
+      "expect": "passthrough"
     },
     {
       "id": "powershell-04",
@@ -54,9 +52,7 @@
         "deny": []
       },
       "command": "del build",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "Aliases are canonicalized by Claude Code (del is Remove-Item); the guard only compares words."
+      "expect": "passthrough"
     },
     {
       "id": "powershell-05",
@@ -69,9 +65,7 @@
         "deny": []
       },
       "command": "ri build",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "Aliases are canonicalized by Claude Code (ri is Remove-Item); the guard only compares words."
+      "expect": "passthrough"
     },
     {
       "id": "powershell-06",
@@ -84,9 +78,7 @@
         "deny": []
       },
       "command": "gci -Recurse",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "Aliases are canonicalized by Claude Code (gci is Get-ChildItem); the guard only compares words."
+      "expect": "passthrough"
     },
     {
       "id": "powershell-07",
@@ -99,9 +91,7 @@
         "deny": []
       },
       "command": "ls -Force",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "Aliases are canonicalized by Claude Code (ls is Get-ChildItem); the guard only compares words."
+      "expect": "passthrough"
     },
     {
       "id": "powershell-08",
@@ -114,9 +104,7 @@
         "deny": []
       },
       "command": "dir",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "Aliases are canonicalized by Claude Code (dir is Get-ChildItem); the guard only compares words."
+      "expect": "passthrough"
     },
     {
       "id": "powershell-09",
@@ -342,9 +330,7 @@
         "deny": []
       },
       "command": "Get-Date",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "A bare tool name has no parentheses; the guard reads only Tool(pattern) rules and drops it."
+      "expect": "passthrough"
     },
     {
       "id": "powershell-26",

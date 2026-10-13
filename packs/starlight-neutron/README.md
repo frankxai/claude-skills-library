@@ -41,7 +41,7 @@ This proves RTK shrinks command output. It does not prove an agent finishes a ta
 
 ## Policy vectors
 
-`policy-vectors/` holds a language-neutral spec of the permission guard: `schema.json` (JSON Schema 2020-12) and 189 golden cases in `cases/`, written with rules as Claude Code writes them. `tests/vectors.test.mjs` checks every case against `commandHitsRule` through the same settings reader the hook uses. A case marked `overmatch` is one where the guard is stricter than Claude Code; a case marked `knownGap` is one the guard currently gets wrong, with the reason in `gapReason`. Run `node --test packs/starlight-neutron/tests/vectors.test.mjs`.
+`policy-vectors/` holds a language-neutral spec of the permission guard: `schema.json` (JSON Schema 2020-12) and 189 golden cases in `cases/`, written with rules as Claude Code writes them. `tests/vectors.test.mjs` checks every case against `commandHitsRule` through the same settings reader the hook uses. A case marked `overmatch` is one where the guard is stricter than Claude Code; a case marked `knownGap` is one the guard currently gets wrong, with the reason in `gapReason`. No case is flagged `knownGap` now; the PowerShell alias and bare-tool-rule gaps were fixed in 4601a1e. Run `node --test packs/starlight-neutron/tests/vectors.test.mjs`.
 
 ## Install
 

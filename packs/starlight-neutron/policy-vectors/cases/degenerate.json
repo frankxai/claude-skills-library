@@ -74,9 +74,7 @@
         ]
       },
       "command": "git status",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "A bare tool name has no parentheses; the guard reads only Tool(pattern) rules and drops it."
+      "expect": "passthrough"
     },
     {
       "id": "degenerate-07",
@@ -89,9 +87,7 @@
         "deny": []
       },
       "command": "git status",
-      "expect": "passthrough",
-      "knownGap": true,
-      "gapReason": "A bare tool name has no parentheses; the guard reads only Tool(pattern) rules and drops it."
+      "expect": "passthrough"
     },
     {
       "id": "degenerate-08",
