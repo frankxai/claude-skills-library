@@ -7,6 +7,7 @@ import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { ledgerMain } from './ledger.mjs';
 
 // Same output either side of the filter: no lossy listing commands in this table.
 export const BENCH_CASES = (rtk) => [
@@ -189,11 +190,12 @@ function main(argv) {
     } else console.log(flags.includes('--md') ? formatMarkdown(rows) : formatTable(rows));
     return 0;
   }
+  if (command === 'ledger') return ledgerMain(flags);
   if (command === 'doctor') {
     for (const row of doctor()) console.log(`${row.ok ? 'ok     ' : 'missing'}  ${row.name.padEnd(20)} ${row.detail}`);
     return 0;
   }
-  console.error('usage: neutron.mjs doctor | bench [--json | --md]');
+  console.error('usage: neutron.mjs doctor | bench [--json | --md] | ledger <sub>');
   return 2;
 }
 

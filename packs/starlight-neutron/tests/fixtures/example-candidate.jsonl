@@ -1,0 +1,6 @@
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t0","arm":"candidate","uncachedInput":80,"cacheWrite":0,"cacheRead":800,"output":190,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t1","arm":"candidate","uncachedInput":100,"cacheWrite":0,"cacheRead":700,"output":200,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t2","arm":"candidate","uncachedInput":70,"cacheWrite":0,"cacheRead":900,"output":170,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t3","arm":"candidate","uncachedInput":90,"cacheWrite":0,"cacheRead":750,"output":190,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t4","arm":"candidate","uncachedInput":80,"cacheWrite":0,"cacheRead":800,"output":180,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t5","arm":"candidate","uncachedInput":10,"cacheWrite":0,"cacheRead":100,"output":20,"check":"fail","notes":"fixture data"}
