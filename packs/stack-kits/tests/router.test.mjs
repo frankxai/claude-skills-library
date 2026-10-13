@@ -253,3 +253,14 @@ test('compose unions triggers when two kits alias to the same skill', () => {
   assert.ok(r.promptTriggers.keywords.includes('app router'), 'nextjs triggers survive');
   assert.ok(r.promptTriggers.keywords.includes('useEffect'), 'react triggers added');
 });
+
+test('install.sh names the .gitignore lines a whitelisting repo is missing', () => {
+  const dir = repo([], [], {
+    'package.json': JSON.stringify({ dependencies: { tailwindcss: '4' } }),
+    '.gitignore': '.claude/*\n!.claude/skills/\n.claude/skills/*/\n',
+  });
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  const out = execFileSync('bash', [join(PACK, 'install.sh'), dir], { encoding: 'utf8' });
+  assert.match(out, /!!\.claude\/hooks\/skill-activation-prompt\.mjs|!\.claude\/hooks\/skill-activation-prompt\.mjs/);
+  assert.match(out, /!\.claude\/skills\/tailwindcss\//);
+});

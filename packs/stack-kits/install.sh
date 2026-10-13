@@ -170,6 +170,24 @@ if [ $DRY -eq 0 ] && { [ ! -f "$GI" ] || ! grep -q '^\.claude/skills/\.replaced/
   printf '\n# stack-kits / web-excellence — skills set aside on upgrade\n.claude/skills/.replaced/\n' >>"$GI"
 fi
 
+# A repo that whitelists .claude/ entries in .gitignore (".claude/skills/*/"
+# then "!.claude/skills/<name>/") would silently drop everything above from the
+# commit. Say exactly which lines are missing rather than editing its policy.
+if [ $DRY -eq 0 ] && git -C "$TARGET" rev-parse --git-dir >/dev/null 2>&1; then
+  ignored=""
+  for p in .claude/hooks/skill-activation-prompt.mjs .claude/skills/stack-kits.rules.json; do
+    git -C "$TARGET" check-ignore -q "$p" && ignored="$ignored $p"
+  done
+  for kit in "${KIT_LIST[@]}"; do
+    [ -f "$DEST_SKILLS/$kit/SKILL.md" ] && git -C "$TARGET" check-ignore -q ".claude/skills/$kit/SKILL.md" && ignored="$ignored .claude/skills/$kit/"
+  done
+  if [ -n "$ignored" ]; then
+    say ""
+    say "  !! .gitignore hides installed files; add these lines to it to commit them:"
+    for p in $ignored; do say "       !$p"; done
+  fi
+fi
+
 say ""
 say "Installed. Verify with:"
 say "  echo '{\"prompt\":\"redesign the hero for mobile\"}' | CLAUDE_PROJECT_DIR=$TARGET node $TARGET/.claude/hooks/skill-activation-prompt.mjs"
