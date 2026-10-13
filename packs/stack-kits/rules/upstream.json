@@ -1,0 +1,6 @@
+{
+  "_comment": "Written by sync-upstream.sh. The commit every file under skills/ and rules/kits/ was copied from.",
+  "source": "https://github.com/blencorp/claude-code-kit",
+  "commit": "d1b17ed60a7fa870ca4346dcbbac9a54602ca7af",
+  "synced": "2026-10-13"
+}

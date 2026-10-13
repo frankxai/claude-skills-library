@@ -1,0 +1,73 @@
+{
+  "react": {
+    "type": "domain",
+    "enforcement": "suggest",
+    "priority": "medium",
+    "promptTriggers": {
+      "keywords": [
+        "react",
+        "useState",
+        "useEffect",
+        "useCallback",
+        "useMemo",
+        "useRef",
+        "useContext",
+        "useReducer",
+        "useTransition",
+        "useDeferredValue",
+        "useId",
+        "useSyncExternalStore",
+        "useImperativeHandle",
+        "useLayoutEffect",
+        "React.lazy",
+        "React.memo",
+        "React.forwardRef",
+        "React.createContext",
+        "createContext",
+        "forwardRef",
+        "Suspense",
+        "ErrorBoundary",
+        "StrictMode",
+        "startTransition",
+        "flushSync",
+        "createPortal",
+        "cloneElement"
+      ],
+      "intentPatterns": [
+        "use.*react.*hook",
+        "implement.*(useState|useEffect|useCallback|useMemo|useContext|useReducer)",
+        "add.*react.*(lazy|suspense|memo)",
+        "create.*react.*context",
+        "optimize.*react.*component",
+        "memoize.*react.*component",
+        "use.*(useTransition|useDeferredValue)",
+        "create.*error.*boundary",
+        "implement.*react.*(forwardRef|memo)",
+        "add.*react.*portal"
+      ]
+    },
+    "fileTriggers": {
+      "pathPatterns": [
+        "**/*.tsx",
+        "**/*.jsx",
+        "**/components/**/*.ts",
+        "**/features/**/*.tsx",
+        "**/hooks/**/*.ts",
+        "**/hooks/**/*.tsx"
+      ],
+      "contentPatterns": [
+        "import.*from ['\"]react['\"]",
+        "import.*React.*from ['\"]react['\"]",
+        "useState\\(",
+        "useEffect\\(",
+        "useCallback\\(",
+        "useMemo\\(",
+        "useContext\\(",
+        "useReducer\\(",
+        "React\\.memo\\(",
+        "React\\.lazy\\(",
+        "forwardRef\\("
+      ]
+    }
+  }
+}

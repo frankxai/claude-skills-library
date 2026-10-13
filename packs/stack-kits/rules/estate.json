@@ -1,0 +1,176 @@
+{
+  "_comment": "Estate pairing rules for stack-kits. compose.mjs merges these with the vendored kit fragments in rules/kits/ and keeps only rules whose skill or agent is installed in the target repo — so a rule for web-release-gate is inert in a repo without the web-excellence pack. Priority decides reading order: the gate first, the framework kit second, specialists after.",
+  "equivalents": {
+    "_comment": "If a target already carries one of these skills, install.sh does not copy the kit; the kit's triggers route to the existing skill instead. First match wins.",
+    "nextjs": ["nextjs-react-expert", "nextjs-expert"],
+    "react": ["nextjs-react-expert"]
+  },
+  "precedence_files": [
+    "DESIGN.md",
+    "design.md",
+    "TASTE.md",
+    "taste.md",
+    "CREATOR.md",
+    ".starlight/voice/context.md",
+    "docs/experience-brief.md"
+  ],
+  "skills": {
+    "web-release-gate": {
+      "type": "guardrail",
+      "enforcement": "suggest",
+      "priority": "critical",
+      "description": "website work starts here; it sequences audit, motion, performance and visual proof, and defines done",
+      "promptTriggers": {
+        "keywords": [
+          "website",
+          "landing page",
+          "homepage",
+          "home page",
+          "hero section",
+          "hero",
+          "redesign",
+          "design overhaul",
+          "above the fold",
+          "call to action",
+          "cta",
+          "conversion",
+          "responsive",
+          "mobile layout",
+          "mobile design",
+          "navbar",
+          "pricing page",
+          "visual polish",
+          "premium feel"
+        ],
+        "intentPatterns": [
+          "\\b(design|redesign|build|improve|polish|overhaul|refresh|restyle|revamp)\\b.*\\b(page|site|website|section|hero|landing|ui|layout|header|footer|nav)\\b",
+          "\\b(mobile|responsive)\\b.*\\b(fix|design|layout|view|break|broken)",
+          "\\b(increase|improve|boost|raise)\\b.*\\b(conversions?|sign-?ups?|click-?through)"
+        ]
+      }
+    },
+    "web-design-guidelines": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "audit changed UI files against the live Vercel Web Interface Guidelines, file:line findings",
+      "promptTriggers": {
+        "keywords": ["accessibility", "a11y", "focus state", "contrast", "ui audit", "design review", "aria"],
+        "intentPatterns": ["\\b(audit|review|check)\\b.*\\b(ui|page|design|accessibility|interface)\\b"]
+      }
+    },
+    "core-web-vitals": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "measure LCP / INP / CLS and bundle cost before and after",
+      "promptTriggers": {
+        "keywords": ["lcp", "inp", "cls", "core web vitals", "lighthouse", "page speed", "bundle size", "performance budget"],
+        "intentPatterns": ["\\b(slow|speed up|faster|optimi[sz]e)\\b.*\\b(page|site|load|render|hero|image)"]
+      }
+    },
+    "canon-check": {
+      "type": "guardrail",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "copy that names Guardians, Gates, godbeasts or lore must match the locked canon",
+      "promptTriggers": {
+        "keywords": ["lore", "canon", "guardian", "guardians", "godbeast", "luminor", "gate names"]
+      }
+    },
+    "ui-ux-pro-max": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "searchable styles, palettes, font pairings and UX rules; query it, never import a whole aesthetic",
+      "promptTriggers": {
+        "keywords": ["palette", "font pairing", "typography", "color scheme", "ux pattern", "layout pattern", "visual hierarchy"]
+      }
+    },
+    "emil-design-eng": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "the invisible details: easing, interruptible motion, optical alignment",
+      "promptTriggers": {
+        "keywords": ["polish", "micro-interaction", "micro interaction", "easing", "smooth", "premium", "craft", "delight", "hover state"]
+      }
+    },
+    "motion-system": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "GSAP ScrollTrigger + Lenis scroll choreography with a reduced-motion fallback",
+      "promptTriggers": {
+        "keywords": ["gsap", "scrolltrigger", "lenis", "parallax", "scroll choreography", "pinned section", "smooth scroll"]
+      }
+    },
+    "review-animations": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "review motion in a diff: what to cut, what to tune",
+      "promptTriggers": {
+        "keywords": ["animation", "animations", "motion", "framer motion", "transition", "spring"]
+      }
+    },
+    "find-animation-opportunities": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "low",
+      "description": "where motion is missing and would carry meaning",
+      "promptTriggers": {
+        "intentPatterns": ["\\b(add|where|more)\\b.*\\b(animation|motion)\\b"]
+      }
+    },
+    "visual-proof": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "before/after captures at 375 / 768 / 1440 in both themes",
+      "promptTriggers": {
+        "keywords": ["screenshot", "screenshots", "before/after", "before and after", "visual regression", "breakpoint", "breakpoints"]
+      }
+    },
+    "frankx-brand": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "FrankX voice and identity for public copy",
+      "promptTriggers": {
+        "keywords": ["headline", "tagline", "copywriting", "messaging", "brand voice", "microcopy"]
+      }
+    },
+    "apple-design": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "low",
+      "description": "spring physics, gesture and depth conventions",
+      "promptTriggers": {
+        "keywords": ["apple", "ios feel", "haptic", "gesture", "spring physics"]
+      }
+    }
+  },
+  "agents": {
+    "design-architect": {
+      "type": "workflow",
+      "activation": "suggest",
+      "priority": "high",
+      "description": "locks the brief, aesthetic extreme and hierarchy before any page is generated",
+      "promptTriggers": {
+        "keywords": ["new page", "redesign", "design overhaul", "landing page"],
+        "intentPatterns": ["\\b(design|build|create)\\b.*\\b(new|whole)\\b.*\\b(page|section|site)\\b"]
+      }
+    },
+    "design-verifier": {
+      "type": "workflow",
+      "activation": "suggest",
+      "priority": "medium",
+      "description": "screenshots, Lighthouse and anti-pattern grep before design work is called done",
+      "promptTriggers": {
+        "keywords": ["verify design", "ready to ship", "visual qa"],
+        "intentPatterns": ["\\b(is|are)\\b.*\\b(ready|done)\\b.*\\b(ship|merge|release)"]
+      }
+    }
+  }
+}
