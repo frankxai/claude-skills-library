@@ -258,6 +258,33 @@ test('commandHitsRule catches glob rules whose wildcard touches other text', () 
   assert.equal(commandHitsRule('git log -n 5', ['git commit*', 'cat .env*']), false);
 });
 
+test('commandHitsRule treats PowerShell aliases and cmdlets as the same command', () => {
+  assert.equal(commandHitsRule('rm -r build', ['Remove-Item *']), true);
+  assert.equal(commandHitsRule('ri build', ['Remove-Item *']), true);
+  assert.equal(commandHitsRule('ls -Force', ['Get-ChildItem *']), true);
+  assert.equal(commandHitsRule('gci -Recurse', ['Get-ChildItem *']), true);
+  assert.equal(commandHitsRule('cat .env.local', ['Get-Content .env*']), true);
+  assert.equal(commandHitsRule('Remove-Item x', ['rm *']), true);
+  assert.equal(commandHitsRule('rmdir x', ['rmd*']), true);
+  assert.equal(commandHitsRule('Get-Date', ['Remove-Item *']), false);
+  assert.equal(commandHitsRule('git log', ['Get-ChildItem *']), false);
+});
+
+test('loadGuardRules turns a bare Bash or PowerShell rule into a match-all pattern', () => {
+  const home = tmp('bare-home');
+  const proj = tmp('bare-proj');
+  try {
+    mkdirSync(join(proj, '.claude'), { recursive: true });
+    writeFileSync(join(proj, '.claude', 'settings.json'), JSON.stringify({ permissions: { ask: ['PowerShell'], deny: ['Bash'] } }));
+    const policy = loadGuardRules({ home, cwd: proj, env: {}, managed: [], stopAt: proj });
+    assert.deepEqual(policy.patterns, ['*', '*']);
+    assert.equal(commandHitsRule('Get-Date', policy.patterns), true);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+    rmSync(proj, { recursive: true, force: true });
+  }
+});
+
 test('hook does not rewrite a command that a touching-wildcard rule covers (real RTK)', { skip: !resolveRtk() }, () => {
   const home = tmp('glob-home');
   const proj = tmp('glob-proj');
