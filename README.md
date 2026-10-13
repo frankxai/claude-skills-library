@@ -32,7 +32,7 @@ nothing in context until a skill actually fires.
 > [`frankxai/skills`](https://github.com/frankxai/skills) for AI architects (MCP, orchestration, model routing, context engineering) and
 > [`frankxai/creator-skills`](https://github.com/frankxai/creator-skills) for creators (video routing, music, images, brand voice).
 > Install with `npx skills add frankxai/skills` or `npx skills add frankxai/creator-skills`.
-> This library remains the full catalog.
+> This library remains the full catalog: `npx skills add frankxai/claude-skills-library`.
 
 > [!NOTE]
 > **Pinned upstream, 2026-10-10.** [affaan-m/ECC](https://github.com/affaan-m/ECC) at `4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2` (MIT) is a dependency of the Claude config repo, not a prose dump in `free-skills/`. Patterns that cleared the four gates are listed in [`ABSORBED.md`](ABSORBED.md). The port receipt is [`docs/ecc-port-report.md`](docs/ecc-port-report.md). Watching a repo is not the same as absorbing it.
