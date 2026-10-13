@@ -9,7 +9,7 @@
   },
   "totals": {
     "pluginsWithListedSkills": 1,
-    "skills": 114,
+    "skills": 115,
     "skillsWithEvals": 0,
     "pluginsFromOtherRepos": 3
   },
@@ -22,7 +22,7 @@
         "type": "local",
         "path": "./"
       },
-      "skillCount": 114,
+      "skillCount": 115,
       "skills": [
         {
           "name": "acos-meta",
@@ -238,6 +238,12 @@
           "name": "feynman-thinking",
           "description": "Transform Claude into a Feynman mentor. Focuses on simple explanations, architectural models, Socratic questioning, and stripping away unnecessary complexity. Triggers on: feynman, feynman alignment, explain simply, explain architecture, explain logic, explain concept, build mental model.",
           "path": "free-skills/feynman-thinking",
+          "hasEvals": false
+        },
+        {
+          "name": "firecrawl-alexandria",
+          "description": "Retrieves typed, sourced records from Firecrawl Alexandria, a catalogue of paid data providers (company firmographics and funding, financial statements and filings, people, package registries, app stores, government spending, real estate, podcasts, YC profiles and more), through a discover, inspect, execute loop that reports the credit cost of every call. Use when the ask is structured data about an entity rather than reading a page, when the user mentions Alexandria, Firecrawl data providers, firecrawl find-tools, or provider capabilities, or when building an SDK or HTTP integration against api.firecrawl.dev v2 search and scrape with an alexandria body.",
+          "path": "free-skills/firecrawl-alexandria",
           "hasEvals": false
         },
         {
