@@ -39,9 +39,23 @@ export function compose({ target, kits = [], aliases = {}, pack = PACK }) {
     const fragment = readJson(join(pack, 'rules', 'kits', `${kit}.json`));
     for (const [name, rule] of Object.entries(strip(fragment))) {
       const as = aliases[name] || name;
-      const desc = as === name ? rule.description : `framework patterns (stack-kits routes ${name} triggers here)`;
-      skills[as] = { ...rule, ...(desc ? { description: desc } : {}) };
-      delete skills[as].fileTriggers; // the router ignores path triggers; do not imply otherwise
+      const next = { ...rule };
+      delete next.fileTriggers; // the router ignores path triggers; do not imply otherwise
+      if (as !== name) next.description = `framework patterns (stack-kits routes ${name} triggers here)`;
+      const prev = skills[as];
+      if (prev) {
+        // Two kits aliased to one skill (nextjs and react → nextjs-react-expert):
+        // union the triggers and keep the stronger priority, so neither kit's
+        // prompts stop routing.
+        const union = (a = [], b = []) => [...new Set([...a, ...b])];
+        const rank = { critical: 0, high: 1, medium: 2, low: 3 };
+        next.priority = (rank[prev.priority] ?? 3) <= (rank[next.priority] ?? 3) ? prev.priority : next.priority;
+        next.promptTriggers = {
+          keywords: union(prev.promptTriggers?.keywords, next.promptTriggers?.keywords),
+          intentPatterns: union(prev.promptTriggers?.intentPatterns, next.promptTriggers?.intentPatterns),
+        };
+      }
+      skills[as] = next;
     }
   }
   Object.assign(skills, strip(estate.skills));

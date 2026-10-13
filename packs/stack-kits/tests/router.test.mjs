@@ -240,3 +240,16 @@ test('install.sh never writes a repo\'s own skill-rules.json', () => {
   assert.equal(readFileSync(join(dir, '.claude', 'skills', 'skill-rules.json'), 'utf8'), legacy);
   assert.ok(existsSync(join(dir, '.claude', 'skills', 'stack-kits.rules.json')));
 });
+
+test('compose unions triggers when two kits alias to the same skill', () => {
+  const dir = repo(['nextjs-react-expert']);
+  const rules = compose({
+    target: dir,
+    kits: ['nextjs', 'react'],
+    aliases: { nextjs: 'nextjs-react-expert', react: 'nextjs-react-expert' },
+  });
+  const r = rules.skills['nextjs-react-expert'];
+  assert.equal(r.priority, 'high', 'keeps the stronger of high (nextjs) and medium (react)');
+  assert.ok(r.promptTriggers.keywords.includes('app router'), 'nextjs triggers survive');
+  assert.ok(r.promptTriggers.keywords.includes('useEffect'), 'react triggers added');
+});
