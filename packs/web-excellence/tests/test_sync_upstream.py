@@ -351,6 +351,35 @@ def main() -> int:
             "LICENSE": MIT,
             "skills/kaph/SKILL.md": "---\nname: kaph\nlicense: 'MIT'\n---\nkaph\n",
         })
+        make_upstream(base, "acme", "unlicensed-readme", {
+            "README.md": "# u\n\n## License\n\nThis project is unlicensed.\n",
+            "skills/sampi/SKILL.md": "sampi\n",
+        })
+        make_upstream(base, "acme", "unlicense-readme", {
+            "README.md": "# u\n\n## License\n\nUnlicense\n\n## Credits\n\nnope\n",
+            "skills/koppa/SKILL.md": "koppa\n",
+        })
+        make_upstream(base, "acme", "fence-indented-close", {
+            "README.md": "# f\n\n````\n    `````\n## License\n\nMIT\n````\n",
+            "skills/digamma/SKILL.md": "digamma\n",
+        })
+        make_upstream(base, "acme", "commit-line-file", {
+            "LICENSE": MIT + "\nCommit: upstream-note\n",
+            "skills/heta/SKILL.md": "heta\n",
+        })
+        make_upstream(base, "acme", "crlf-frontmatter", {
+            "LICENSE": MIT,
+            "skills/san/SKILL.md": "---\r\nname: san\r\nlicense: GPL-3.0\r\n---\r\nsan\r\n",
+        })
+        make_upstream(base, "acme", "crlf-readme", {
+            "LICENSE": MIT,
+            "skills/sho/README.md": "# s\r\n\r\n## License\r\n\r\nGPL-3.0\r\n",
+            "skills/sho/SKILL.md": "sho\n",
+        })
+        make_upstream(base, "acme", "crlf-readme-only", {
+            "README.md": "# y\r\n\r\n## License\r\n\r\nMIT\r\n\r\nCredits\r\n-------\r\n\r\nnope\r\n",
+            "skills/yot/SKILL.md": "yot\n",
+        })
         make_upstream(base, "acme", "fenced-nested-decoy", {
             "README.md": "# a\n\n## License\n\nMIT\n\n## Example\n\n````markdown\nSay:\n```\n## License\n\nGPL-3.0\n```\n````\n\n~~~\n```\n## Licence\n\nGPL-3.0\n```\n~~~\n",
             "skills/ayin/SKILL.md": "ayin\n",
@@ -419,7 +448,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and (not gate or "ABSORPTION.md gate 1" in r.stderr), r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -461,6 +490,10 @@ def main() -> int:
         refused("a symlink nested inside the skill", good[:1] + ["acme/symlink-nested|MIT|skills/heth|heth"], "contains a symlink", gate=False)
         refused("SKILL.md frontmatter declaring GPL under an MIT root", good[:1] + ["acme/frontmatter-gpl|MIT|skills/teth|teth"], "skills/teth/SKILL.md frontmatter license reads as a refused licence")
         refused("nested SKILL.md frontmatter declaring Apache-2.0 under MIT", good[:1] + ["acme/frontmatter-nested|MIT|skills/yodh|yodh"], "skills/yodh/sub/SKILL.md frontmatter license does not read as MIT")
+        refused("'unlicensed' is not the Unlicense", good[:1] + ["acme/unlicensed-readme|Unlicense|skills/sampi|sampi"], "does not read as Unlicense")
+        refused("a closing fence indented four spaces is fence content, not a close", good[:1] + ["acme/fence-indented-close|MIT|skills/digamma|digamma"], "no README has a License section")
+        refused("CRLF SKILL.md frontmatter declaring GPL under an MIT root", good[:1] + ["acme/crlf-frontmatter|MIT|skills/san|san"], "skills/san/SKILL.md frontmatter license reads as a refused licence")
+        refused("CRLF skill README declaring GPL under an MIT root", good[:1] + ["acme/crlf-readme|MIT|skills/sho|sho"], "skills/sho/README.md License section reads as a refused licence")
 
         # ---- a refused run leaves nothing in TMPDIR -----------------------------
         tmpdir_probe = os.path.join(tmp, "probe-tmp")
@@ -496,6 +529,9 @@ def main() -> int:
             ("traversing src", "acme/with-file|MIT|../etc|alpha"),
             ("five fields", "acme/with-file|MIT|skills/alpha|alpha|extra"),
             ("native dest", "acme/with-file|MIT|skills/alpha|core-web-vitals"),
+            ("root src", "acme/with-file|MIT|.|rootskill"),
+            ("src under .git", "acme/with-file|MIT|.git/info|gitskill"),
+            ("src with a . component", "acme/with-file|MIT|skills/./alpha|dotskill"),
         ):
             r = run_sync(p3, base, [row])
             check(f"override row with {label} exits 2", r.returncode == 2, r.stderr)
@@ -560,6 +596,20 @@ def main() -> int:
         r = run_sync(pack, base, good[:1] + ["acme/commented-decoy|MIT|skills/tav|tav"])
         tav_lic = os.path.join(pack, "skills", "tav", "UPSTREAM-LICENSE")
         check("HTML comments inside and after the License section are neither headings nor declaration text", r.returncode == 0 and os.path.isfile(tav_lic) and "GPL" not in read(tav_lic) and "nope" not in read(tav_lic), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/unlicense-readme|Unlicense|skills/koppa|koppa"])
+        koppa_lic = os.path.join(pack, "skills", "koppa", "UPSTREAM-LICENSE")
+        check("a README declaring Unlicense vendors as Unlicense", r.returncode == 0 and os.path.isfile(koppa_lic) and "\n    Unlicense\n" in read(koppa_lic), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/crlf-readme-only|MIT|skills/yot|yot"])
+        yot_lic = os.path.join(pack, "skills", "yot", "UPSTREAM-LICENSE")
+        check("a CRLF README declaration is found, recorded and stops at the next heading", r.returncode == 0 and os.path.isfile(yot_lic) and "\n    MIT\n" in read(yot_lic) and "nope" not in read(yot_lic), r.stderr)
+        heta_entries = good[:1] + ["acme/commit-line-file|MIT|skills/heta|heta"]
+        r = run_sync(pack, base, heta_entries)
+        heta_lic = os.path.join(pack, "skills", "heta", "UPSTREAM-LICENSE")
+        check("a raw LICENSE containing a Commit: line vendors verbatim", r.returncode == 0 and os.path.isfile(heta_lic) and "Commit: upstream-note" in read(heta_lic), r.stderr)
+        with open(heta_lic, "w", encoding="utf-8") as fh:
+            fh.write(MIT + "\nCommit: tampered\n")
+        r = run_sync(pack, base, heta_entries, "--check")
+        check("a changed Commit: line in a raw LICENSE record is drift", r.returncode == 1 and "DRIFT  heta" in r.stdout, r.stdout)
         r = run_sync(pack, base, good[:1] + ["acme/frontmatter-ok|MIT|skills/kaph|kaph"])
         check("SKILL.md frontmatter declaring the same licence vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "kaph", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/fenced-nested-decoy|MIT|skills/ayin|ayin"])

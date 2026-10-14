@@ -100,7 +100,7 @@ for entry in "${UPSTREAM[@]}"; do
   fi
   SEEN_DEST["$e_dest"]=1
   case "/$e_src/" in
-    *"/../"*|*"//"*) echo "!! UPSTREAM entry has an unsafe src '$e_src' (relative, no .. or empty components): '$entry'" >&2; exit 2 ;;
+    *"/../"*|*"//"*|*"/./"*|*"/.git/"*) echo "!! UPSTREAM entry has an unsafe src '$e_src' (relative, below the repo root, no .., . or .git components): '$entry'" >&2; exit 2 ;;
   esac
 done
 unset e_repo e_license e_src e_dest e_extra SEEN_DEST
@@ -116,7 +116,7 @@ declare -A ALLOWED=(
   [ISC]='(^|[^[:alnum:]])ISC([^[:alnum:]]|$)|Permission to use, copy, modify, and/or distribute'
   [CC0-1.0]='CC0|Creative Commons Zero'
   [CC-BY-4.0]='CC-BY-4\.0|CC BY 4\.0|Attribution 4\.0 International'
-  [Unlicense]='Unlicense|This is free and unencumbered software'
+  [Unlicense]='(^|[^[:alnum:]])Unlicense([^[:alnum:]]|$)|This is free and unencumbered software'
 )
 # The BSD variants share their first two clauses, so each allowed one is also
 # refused when the text carries another's marker: the third clause names
@@ -196,36 +196,43 @@ check_license_text() {
 # An HTML comment block (a line opening with <!--, through the line that
 # carries -->) is not rendered, so nothing in it is a heading or part of a
 # declaration: a commented-out README template licenses nothing. An ATX
-# heading may be indented up to three spaces, as Markdown allows; four is
-# a code block.
+# heading or a fence delimiter may be indented up to three spaces, as
+# Markdown allows; four is a code block, or content of the open fence. The
+# indentation is counted outside the patterns: mawk's regex engine rejects
+# an interval such as {0,3} ahead of a group and mishandles a chain of
+# optional spaces, so every pattern anchors on the line with its leading
+# spaces removed, under a count of at most three.
+# A trailing carriage return is stripped first, so a CRLF README reads the
+# same as an LF one.
 extract_license_sections() {
   awk '
     function is_lic(t) { t = tolower(t); sub(/[ \t:]+$/, "", t); return (t == "license" || t == "licence" || t == "licensing") }
-    { L[NR] = $0 }
+    { sub(/\r$/, ""); L[NR] = $0 }
     END {
       fence = 0; comment = 0; f = 0; lvl = 0
       for (i = 1; i <= NR; i++) {
         line = L[i]
+        ind = line; sub(/^ */, "", ind); nsp = length(line) - length(ind)
         if (fence) {
-          if (match(line, /^[ \t]*(`+|~+)[ \t]*$/)) {
-            run = line; gsub(/[ \t]/, "", run)
+          if (nsp <= 3 && match(ind, /^(`+|~+)[ \t]*$/)) {
+            run = ind; gsub(/[ \t]/, "", run)
             if (substr(run, 1, 1) == fch && length(run) >= flen) fence = 0
           }
           if (f) print line; continue
         }
-        if (match(line, /^[ \t]*(```+|~~~+)/)) {
-          run = substr(line, RSTART, RLENGTH); gsub(/[ \t]/, "", run)
+        if (nsp <= 3 && match(ind, /^(```+|~~~+)/)) {
+          run = substr(ind, RSTART, RLENGTH)
           fch = substr(run, 1, 1); flen = length(run); fence = 1
           if (f) print line; continue
         }
         if (comment) { if (index(line, "-->")) comment = 0; continue }
-        if (line ~ /^ {0,3}<!--/) {
-          if (!index(substr(line, index(line, "<!--") + 4), "-->")) comment = 1
+        if (nsp <= 3 && index(ind, "<!--") == 1) {
+          if (!index(substr(ind, 5), "-->")) comment = 1
           continue
         }
         h = 0; skip = 0
-        if (line ~ /^ {0,3}#+[ \t]+/) {
-          text = line; sub(/^ {0,3}/, "", text)
+        if (nsp <= 3 && ind ~ /^#+[ \t]+/) {
+          text = ind
           match(text, /^#+/); h = RLENGTH
           sub(/^#+[ \t]+/, "", text); sub(/[ \t]+#+[ \t]*$/, "", text)
         } else if (i < NR && line ~ /[^ \t]/ && line !~ /^[ \t]*[-=*#>|]/ && (L[i+1] ~ /^[ \t]*=+[ \t]*$/ || L[i+1] ~ /^[ \t]*-+[ \t]*$/)) {
@@ -338,7 +345,8 @@ resolve_license() {
   # human read.
   local decl
   while IFS= read -r -d '' path; do
-    decl="$(awk 'NR == 1 { if ($0 != "---") exit; next }
+    decl="$(awk '{ sub(/\r$/, "") }
+                 NR == 1 { if ($0 != "---") exit; next }
                  $0 == "---" { exit }
                  /^license[ \t]*:/ { sub(/^license[ \t]*:[ \t]*/, ""); gsub(/^[\042\047]|[\042\047]$/, ""); print; exit }' "$path" 2>/dev/null)"
     [ -n "$decl" ] && check_license_text "$repo" "$license" "$decl" "${path#"$clone"/} frontmatter license"
@@ -355,7 +363,7 @@ resolve_license() {
     exit 1
   fi
   {
-    echo "UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not hand-edit"
+    echo "$RECORD_HEADER"
     echo
     echo "Upstream: https://github.com/$repo"
     echo "Commit:   ${SHAS[$repo]}"
@@ -371,15 +379,23 @@ resolve_license() {
   } >"$out"
 }
 
+# The first line of every record this script generates from a README
+# declaration. license_current tells a generated record from a raw upstream
+# LICENSE by this line, never by the presence of a Commit: line, which a raw
+# licence file is free to contain.
+RECORD_HEADER="UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not hand-edit"
+
 # license_current <expected> <actual>
-# The Commit line of a record moves with upstream HEAD even when the skill tree
-# does not, so its value is not drift. Its absence is: a record with no commit
-# has lost its provenance. Everything else must match byte for byte.
+# The Commit line of a generated record moves with upstream HEAD even when the
+# skill tree does not, so its value is not drift. Its absence is: a record with
+# no commit has lost its provenance. Everything else, and every byte of a raw
+# upstream LICENSE, must match.
 license_current() {
   # A symlink is not a self-contained record, whatever it points at.
   [ -L "$2" ] && return 1
   [ -f "$2" ] || return 1
-  if grep -q '^Commit:' "$1"; then
+  if [ "$(head -n 1 "$1")" = "$RECORD_HEADER" ]; then
+    [ "$(head -n 1 "$2")" = "$RECORD_HEADER" ] || return 1
     [ "$(grep -c '^Commit:' "$2")" = 1 ] || return 1
     diff -q <(grep -v '^Commit:' "$1") <(grep -v '^Commit:' "$2") >/dev/null 2>&1
   else
