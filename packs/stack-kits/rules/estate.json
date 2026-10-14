@@ -40,10 +40,14 @@
           "navbar",
           "pricing page",
           "visual polish",
-          "premium feel"
+          "premium feel",
+          "css",
+          "stylesheet",
+          "ui component"
         ],
         "intentPatterns": [
           "\\b(design|redesign|build|improve|polish|overhaul|refresh|restyle|revamp)\\b.*\\b(page|site|website|section|hero|landing|ui|layout|header|footer|nav)\\b",
+          "\\b(create|make|add|build|style|restyle|design)\\b.*\\b(components?|screens?|modals?|dialogs?|css|stylesheet|ui)\\b",
           "\\b(mobile|responsive)\\b.*\\b(fix|design|layout|view|break|broken)",
           "\\b(increase|improve|boost|raise)\\b.*\\b(conversions?|sign-?ups?|click-?through)"
         ]

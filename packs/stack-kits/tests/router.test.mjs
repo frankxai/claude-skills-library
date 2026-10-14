@@ -230,7 +230,7 @@ test('install.sh: detects the stack, preserves other hooks, aliases equivalents,
 });
 
 test('install.sh: a locally edited kit is set aside, never deleted', () => {
-  const dir = repo([], [], { 'package.json': JSON.stringify({ dependencies: { tailwindcss: '3' } }) });
+  const dir = repo([], [], { 'package.json': JSON.stringify({ dependencies: { tailwindcss: '4' } }) });
   const sh = join(PACK, 'install.sh');
   execFileSync('bash', [sh, dir], { encoding: 'utf8' });
   writeFileSync(join(dir, '.claude', 'skills', 'tailwindcss', 'LOCAL.md'), 'mine');
@@ -239,26 +239,34 @@ test('install.sh: a locally edited kit is set aside, never deleted', () => {
   assert.ok(existsSync(join(dir, '.claude', 'skills', '.replaced', 'tailwindcss', 'LOCAL.md')));
 });
 
-test('router reads a repo\'s own ACOS-schema skill-rules.json; composed rules win a name clash', () => {
+test('router merges a repo\'s own ACOS-schema rule with the composed rule of the same name', () => {
   const dir = repo(['frankx-brand', 'web-release-gate']);
   writeFileSync(
     join(dir, '.claude', 'skills', 'skill-rules.json'),
     JSON.stringify({
       version: '8.0.0',
       skills: {
-        'frankx-brand': { priority: 'critical', triggers: { keywords: ['headline'] } },
+        'frankx-brand': { priority: 'critical', triggers: { keywords: ['blog post', 'frankx'] } },
         'web-release-gate': { priority: 'low', triggers: { keywords: ['zzz'] } },
       },
     }),
   );
   writeFileSync(
     join(dir, '.claude', 'skills', 'stack-kits.rules.json'),
-    JSON.stringify({ skills: { 'web-release-gate': { priority: 'critical', promptTriggers: { keywords: ['hero'] } } } }),
+    JSON.stringify({
+      skills: {
+        'frankx-brand': { priority: 'medium', description: 'brand', promptTriggers: { keywords: ['headline'] } },
+        'web-release-gate': { priority: 'critical', promptTriggers: { keywords: ['hero'] } },
+      },
+    }),
   );
-  const ctx = JSON.parse(runHook(dir, 'rewrite the hero headline').stdout).hookSpecificOutput.additionalContext;
-  assert.match(ctx, /frankx-brand \[critical\]/);
-  assert.match(ctx, /web-release-gate \[critical\]/);
-  assert.equal(runHook(dir, 'zzz').stdout, '', 'the legacy definition of a clashing name is replaced, not merged');
+  const ctx = (prompt) => {
+    const out = runHook(dir, prompt).stdout;
+    return out ? JSON.parse(out).hookSpecificOutput.additionalContext : '';
+  };
+  assert.match(ctx('Write a FrankX blog post'), /frankx-brand \[critical\] — brand/, 'repo triggers and priority survive');
+  assert.match(ctx('rewrite the hero headline'), /frankx-brand \[critical\]/, 'composed triggers are added');
+  assert.match(ctx('zzz'), /web-release-gate \[critical\]/, 'the stronger priority wins either way');
 });
 
 test('install.sh never writes a repo\'s own skill-rules.json', () => {
@@ -291,6 +299,59 @@ test('compose tags kit rules, aliased or not, as the framework stage and nothing
   assert.equal(rules.skills.tailwindcss.stage, 'framework');
   assert.equal(rules.skills['nextjs-react-expert'].stage, 'framework', 'an aliased kit keeps its stage');
   assert.ok(!('stage' in rules.skills['web-release-gate']), 'estate rules are not framework kits');
+});
+
+test('an empty SKILL.md is treated as missing by the router, compose and the installer', () => {
+  const dir = repo(['web-release-gate'], [], {
+    '.claude/skills/nextjs-react-expert/SKILL.md': '',
+    'package.json': JSON.stringify({ dependencies: { next: '16', react: '19' } }),
+  });
+  const out = execFileSync('bash', [join(PACK, 'install.sh'), dir], { encoding: 'utf8' });
+  assert.doesNotMatch(out, /route\s+nextjs → existing nextjs-react-expert/, 'no alias to an empty skill');
+  assert.ok(existsSync(join(dir, '.claude', 'skills', 'nextjs', 'SKILL.md')), 'the kit is installed instead');
+  const rulesFile = JSON.parse(readFileSync(join(dir, '.claude', 'skills', 'stack-kits.rules.json'), 'utf8'));
+  assert.ok(!('nextjs-react-expert' in rulesFile.skills), 'compose drops the empty target');
+  const aliased = compose({ target: dir, kits: ['nextjs'], aliases: { nextjs: 'nextjs-react-expert' } });
+  assert.ok(!('nextjs-react-expert' in aliased.skills), 'compose drops a rule aimed at an empty skill');
+  writeFileSync(
+    join(dir, '.claude', 'skills', 'stack-kits.rules.json'),
+    JSON.stringify({ skills: { 'nextjs-react-expert': { priority: 'high', promptTriggers: { keywords: ['next.js'] } } } }),
+  );
+  assert.equal(runHook(dir, 'add a next.js route').stdout, '', 'the router refuses an empty skill');
+});
+
+test('install.sh: the v4 tailwindcss kit is skipped on Tailwind v3, and an unedited copy is retired', () => {
+  const dir = repo(['web-release-gate'], [], {
+    'package.json': JSON.stringify({ dependencies: { next: '16', react: '19' }, devDependencies: { tailwindcss: '^3.4.17' } }),
+  });
+  mkdirSync(join(dir, '.claude', 'skills'), { recursive: true });
+  execFileSync('cp', ['-R', join(PACK, 'skills', 'tailwindcss'), join(dir, '.claude', 'skills', 'tailwindcss')]);
+  const out = execFileSync('bash', [join(PACK, 'install.sh'), dir], { encoding: 'utf8' });
+  assert.match(out, /stack\s+nextjs,react\n/);
+  assert.match(out, /retire tailwindcss \(this repo is on Tailwind v3/);
+  assert.ok(!existsSync(join(dir, '.claude', 'skills', 'tailwindcss')), 'no v4 guidance left for the harness to offer');
+  assert.ok(existsSync(join(dir, '.claude', 'skills', '.replaced', 'tailwindcss', 'SKILL.md')), 'moved, never deleted');
+  const rules = JSON.parse(readFileSync(join(dir, '.claude', 'skills', 'stack-kits.rules.json'), 'utf8'));
+  assert.ok(!('tailwindcss' in rules.skills));
+
+  const edited = repo([], [], { 'package.json': JSON.stringify({ devDependencies: { tailwindcss: '3.4.1' } }) });
+  mkdirSync(join(edited, '.claude', 'skills', 'tailwindcss'), { recursive: true });
+  writeFileSync(join(edited, '.claude', 'skills', 'tailwindcss', 'SKILL.md'), '---\nname: tailwindcss\ndescription: ours\n---\n');
+  const out2 = execFileSync('bash', [join(PACK, 'install.sh'), edited], { encoding: 'utf8' });
+  assert.match(out2, /warn\s+tailwindcss is locally edited, so it stays/);
+  assert.ok(existsSync(join(edited, '.claude', 'skills', 'tailwindcss', 'SKILL.md')));
+
+  const v4 = repo([], [], { 'package.json': JSON.stringify({ devDependencies: { '@tailwindcss/postcss': '^4.1.0' } }) });
+  assert.match(execFileSync('bash', [join(PACK, 'install.sh'), v4], { encoding: 'utf8' }), /stack\s+tailwindcss/);
+});
+
+test('the release gate fires for UI creation and styling, not for book pages', () => {
+  const dir = repo(['web-release-gate']);
+  const rules = compose({ target: dir, kits: [], aliases: {} });
+  const names = (p) => route(p, rules, all).skills.map((s) => s.name);
+  assert.ok(names('Create a settings page component').includes('web-release-gate'));
+  assert.ok(names('Style this component with CSS').includes('web-release-gate'));
+  assert.ok(!names('add a page to chapter 3 of the book').includes('web-release-gate'));
 });
 
 test('install.sh names the .gitignore lines a whitelisting repo is missing', () => {

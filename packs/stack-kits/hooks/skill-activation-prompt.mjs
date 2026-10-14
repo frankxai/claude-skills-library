@@ -24,7 +24,7 @@
 //     Ranking by priority alone let high-priority audit rules push a framework
 //     kit the prompt named out of a broad request's list.
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -82,6 +82,36 @@ export function route(prompt, rules, exists) {
   return { skills, agents };
 }
 
+// A repo's own skill-rules.json and the composed rules can name the same skill.
+// Replacing one with the other silently drops the repo's triggers (and its
+// priority), so same-named rules are merged: triggers are unioned, the stronger
+// priority wins, and the composed rule's other fields (description, stage) apply.
+export function mergeRules(legacy = {}, composed = {}) {
+  const out = { ...(legacy || {}) };
+  for (const [name, c] of Object.entries(composed || {})) {
+    const l = out[name];
+    if (!l || typeof l !== 'object' || !c || typeof c !== 'object') {
+      out[name] = c;
+      continue;
+    }
+    const lt = l.promptTriggers || l.triggers || {};
+    const ct = c.promptTriggers || c.triggers || {};
+    const list = (v) => (Array.isArray(v) ? v : []);
+    const union = (a, b) => [...new Set([...list(a), ...list(b)])];
+    const rank = (r) => RANK[r.priority] ?? RANK.low;
+    out[name] = {
+      ...l,
+      ...c,
+      priority: rank(l) <= rank(c) ? l.priority : c.priority,
+      promptTriggers: {
+        keywords: union(lt.keywords, ct.keywords),
+        intentPatterns: union(lt.intentPatterns, ct.intentPatterns),
+      },
+    };
+  }
+  return out;
+}
+
 export function render({ skills, agents }, rules) {
   if (!skills.length && !agents.length) return '';
   const lines = [];
@@ -126,15 +156,21 @@ function main() {
   const legacy = load('skill-rules.json') || {};
   const rules = {
     _precedence: composed._precedence,
-    skills: { ...(legacy.skills || {}), ...(composed.skills || {}) },
-    agents: { ...(legacy.agents || {}), ...(composed.agents || {}) },
+    skills: mergeRules(legacy.skills, composed.skills),
+    agents: mergeRules(legacy.agents, composed.agents),
   };
 
   const exists = (kind, name) => {
     if (!/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(name)) return false; // no path segments
-    return kind === 'skill'
-      ? existsSync(join(projectDir, '.claude', 'skills', name, 'SKILL.md'))
-      : existsSync(join(projectDir, '.claude', 'agents', `${name}.md`));
+    const file =
+      kind === 'skill'
+        ? join(projectDir, '.claude', 'skills', name, 'SKILL.md')
+        : join(projectDir, '.claude', 'agents', `${name}.md`);
+    try {
+      return statSync(file).size > 0; // an empty SKILL.md gives the reader nothing to follow
+    } catch {
+      return false;
+    }
   };
 
   const context = render(route(input.prompt, rules, exists), rules);

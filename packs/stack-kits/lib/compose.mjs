@@ -17,7 +17,7 @@
 // generated file never names something that is not there. A repo's own
 // skill-rules.json (ACOS schema) is never written; the router reads it alongside.
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -76,10 +76,17 @@ export function compose({ target, kits = [], aliases = {}, pack = PACK }) {
     if (typeof local._precedence === 'string') localPrecedence = local._precedence;
   }
 
+  const nonEmpty = (file) => {
+    try {
+      return statSync(file).size > 0; // an empty SKILL.md is not a skill to route to
+    } catch {
+      return false;
+    }
+  };
   const has = (kind, name) =>
     kind === 'skill'
-      ? existsSync(join(target, '.claude', 'skills', name, 'SKILL.md'))
-      : existsSync(join(target, '.claude', 'agents', `${name}.md`));
+      ? nonEmpty(join(target, '.claude', 'skills', name, 'SKILL.md'))
+      : nonEmpty(join(target, '.claude', 'agents', `${name}.md`));
   const keep = (map, kind) =>
     Object.fromEntries(Object.entries(map).filter(([name]) => has(kind, name)));
 

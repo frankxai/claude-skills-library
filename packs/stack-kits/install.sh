@@ -54,27 +54,41 @@ const root = process.argv[2];
 const files = [path.join(root, 'package.json')];
 const apps = path.join(root, 'apps');
 if (fs.existsSync(apps)) for (const d of fs.readdirSync(apps)) files.push(path.join(apps, d, 'package.json'));
-const deps = new Set();
+const deps = new Map(); // name → version specs seen
 for (const f of files) {
   try {
     const p = JSON.parse(fs.readFileSync(f, 'utf8'));
-    for (const k of ['dependencies', 'devDependencies', 'peerDependencies']) Object.keys(p[k] || {}).forEach((d) => deps.add(d));
+    for (const k of ['dependencies', 'devDependencies', 'peerDependencies'])
+      for (const [d, v] of Object.entries(p[k] || {})) deps.set(d, [...(deps.get(d) || []), String(v)]);
   } catch {}
 }
-const kits = [];
+const kits = [], retire = [];
 if (deps.has('next')) kits.push('nextjs');
 if (deps.has('react')) kits.push('react');
-if (deps.has('tailwindcss') || deps.has('@tailwindcss/postcss') || deps.has('@tailwindcss/vite')) kits.push('tailwindcss');
+// The tailwindcss kit is written for v4 (@import "tailwindcss", @theme, automatic
+// content detection). On a v3 repo that guidance breaks tailwind.config.js, so the
+// kit is installed only when every declared major is 4+ or a v4-only package is present.
+const v4Only = deps.has('@tailwindcss/postcss') || deps.has('@tailwindcss/vite');
+const majors = (deps.get('tailwindcss') || []).map((v) => (/(\d+)/.exec(v) || [])[1]).filter(Boolean).map(Number);
+if (v4Only || (majors.length && majors.every((m) => m >= 4)) || (deps.has('tailwindcss') && !majors.length)) kits.push('tailwindcss');
+else if (deps.has('tailwindcss')) retire.push('tailwindcss');
 const hasComponentsJson = [root, ...fs.existsSync(apps) ? fs.readdirSync(apps).map((d) => path.join(apps, d)) : []]
   .some((d) => { try { return /shadcn/.test(fs.readFileSync(path.join(d, 'components.json'), 'utf8')); } catch { return false; } });
 if (hasComponentsJson) kits.push('shadcn');
-process.stdout.write(kits.join(','));
+process.stdout.write(`kits=${kits.join(',')}\nretire=${retire.join(',')}\n`);
 JS
 }
 
-if [ -n "$KITS_OVERRIDE" ]; then KITS="$KITS_OVERRIDE"; else KITS="$(detect)"; fi
+RETIRE=""
+if [ -n "$KITS_OVERRIDE" ]; then
+  KITS="$KITS_OVERRIDE"
+else
+  DETECTED="$(detect)"
+  KITS="$(sed -n 's/^kits=//p' <<<"$DETECTED")"
+  RETIRE="$(sed -n 's/^retire=//p' <<<"$DETECTED")"
+fi
 say "  stack  ${KITS:-none detected}"
-[ -z "$KITS" ] && { say "nothing to install"; exit 0; }
+[ -z "$KITS" ] && [ -z "$RETIRE" ] && { say "nothing to install"; exit 0; }
 
 # --------------------------------------------------------------- kits
 DEST_SKILLS="$TARGET/.claude/skills"
@@ -85,15 +99,18 @@ equivalent_for() {
     const e = require(process.argv[1]).equivalents || {};
     const fs = require("fs"), path = require("path");
     for (const s of e[process.argv[2]] || []) {
-      if (fs.existsSync(path.join(process.argv[3], s, "SKILL.md"))) { process.stdout.write(s); break; }
+      // An empty SKILL.md is not an equivalent: routing to it would hand the reader nothing.
+      const f = path.join(process.argv[3], s, "SKILL.md");
+      if (fs.existsSync(f) && fs.statSync(f).size > 0) { process.stdout.write(s); break; }
     }' "$PACK_DIR/rules/estate.json" "$1" "$DEST_SKILLS"
 }
 add_alias() {
   ALIASES="$(node -e 'const a=JSON.parse(process.argv[1]); a[process.argv[2]]=process.argv[3]; process.stdout.write(JSON.stringify(a))' "$ALIASES" "$1" "$2")"
 }
 
-IFS=',' read -ra KIT_LIST <<<"$KITS"
-for kit in "${KIT_LIST[@]}"; do
+KIT_LIST=()
+[ -n "$KITS" ] && IFS=',' read -ra KIT_LIST <<<"$KITS"
+for kit in "${KIT_LIST[@]+"${KIT_LIST[@]}"}"; do
   [ -d "$PACK_DIR/skills/$kit" ] || { say "  skip   $kit (no such kit in this pack)"; continue; }
   eq=""
   [ $FORCE -eq 0 ] && eq="$(equivalent_for "$kit")"
@@ -118,6 +135,26 @@ for kit in "${KIT_LIST[@]}"; do
   fi
   INSTALLED="${INSTALLED:+$INSTALLED,}$kit"
 done
+
+# A kit that does not fit this repo's stack version is moved out of the skills
+# directory when it is an unedited copy of ours, so the harness stops offering it.
+# A locally edited copy is left in place with a warning.
+if [ -n "$RETIRE" ]; then
+  IFS=',' read -ra RETIRE_LIST <<<"$RETIRE"
+  for kit in "${RETIRE_LIST[@]}"; do
+    case "$kit" in tailwindcss) why="this repo is on Tailwind v3; the kit is written for v4" ;; *) why="it does not fit this repo's stack" ;; esac
+    if [ ! -d "$DEST_SKILLS/$kit" ]; then
+      say "  skip   $kit ($why)"
+    elif diff -rq "$DEST_SKILLS/$kit" "$PACK_DIR/skills/$kit" >/dev/null 2>&1; then
+      say "  retire $kit ($why) → .claude/skills/.replaced/$kit"
+      run mkdir -p "$DEST_SKILLS/.replaced"
+      run rm -rf "$DEST_SKILLS/.replaced/$kit"
+      run mv "$DEST_SKILLS/$kit" "$DEST_SKILLS/.replaced/$kit"
+    else
+      say "  warn   $kit is locally edited, so it stays, but $why"
+    fi
+  done
+fi
 
 # ------------------------------------------------------------- router
 DEST_HOOKS="$TARGET/.claude/hooks"
