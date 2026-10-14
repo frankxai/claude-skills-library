@@ -14,16 +14,20 @@ was read from.
 `sync-upstream.sh` applies ABSORPTION.md gate 1 before it touches `skills/`:
 the licence declared in the table below must be on the allowlist, and the
 upstream's licence inputs must agree with it. Every licence-looking file and
-every README section headed exactly "License" between the skill and the repo
-root, and every one nested anywhere inside the skill, is read; the nearest
+every README section headed exactly "License" (README in any case, heading in
+ATX or Setext form, fenced code ignored, a fence closing only on its own
+delimiter) between the skill and the repo root, and every one nested anywhere
+inside the skill, a nested `UPSTREAM-LICENSE` included, is read; the nearest
 licence file on the path to the root is recorded, else the nearest README
-declaration. A
-recognised licence text is identified by its grant clause. Anything without
-one is a bare declaration and may say nothing but the licence: all-rights-
-reserved, negations and qualifiers are refused, as are copyleft and `-NC`
-texts, symlinked inputs, and an upstream that ships `UPSTREAM-LICENSE` at
-the skill root. One failing entry aborts the whole run with the vendored
-tree unchanged.
+declaration. A recognised licence text is identified by its grant clause and
+checked against the exact declared variant, so BSD-4's advertising clause
+fails a BSD-3 declaration. Anything without a grant clause is a bare
+declaration and may say nothing but the licence: all-rights-reserved,
+negations and qualifiers are refused, as are copyleft and `-NC` texts,
+symlinked inputs, and an upstream that ships `UPSTREAM-LICENSE` at the skill
+root. Before any clone, every table row is checked for shape: a destination
+that names a native skill, or one listed twice, is refused. One failing entry
+aborts the whole run with the vendored tree unchanged.
 
 The gate is pattern matching, not licence identification. It catches the
 mistakes an honest pin can make and the known riders bolted onto permissive

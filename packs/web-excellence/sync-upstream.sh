@@ -73,7 +73,10 @@ UPSTREAM_BASE="${WEB_EXCELLENCE_UPSTREAM_BASE:-https://github.com}"
 
 # Every entry is validated before a clone, let alone a removal. Pass 2 runs
 # rm -rf on "$SKILLS_DIR/$dest", so an empty or traversing dest would reach
-# far beyond one skill; a bad row is refused here with exit 2.
+# far beyond one skill, a native dest would delete a skill authored here, and
+# a dest listed twice would have the second row silently replace the first
+# and leave a tree --check can never pass. A bad row is refused with exit 2.
+declare -A SEEN_DEST
 for entry in "${UPSTREAM[@]}"; do
   IFS='|' read -r e_repo e_license e_src e_dest e_extra <<<"$entry"
   if [ -n "${e_extra:-}" ] || [ -z "$e_repo" ] || [ -z "$e_license" ] || [ -z "$e_src" ] || [ -z "$e_dest" ]; then
@@ -88,11 +91,19 @@ for entry in "${UPSTREAM[@]}"; do
     echo "!! UPSTREAM entry has an unsafe dest '$e_dest' (one plain directory name, no slashes): '$entry'" >&2
     exit 2
   fi
+  case " $NATIVE " in
+    *" $e_dest "*) echo "!! UPSTREAM entry targets '$e_dest', a skill native to this pack that a sync never overwrites: '$entry'" >&2; exit 2 ;;
+  esac
+  if [ -n "${SEEN_DEST[$e_dest]+x}" ]; then
+    echo "!! UPSTREAM lists dest '$e_dest' twice; the second row would silently replace the first: '$entry'" >&2
+    exit 2
+  fi
+  SEEN_DEST["$e_dest"]=1
   case "/$e_src/" in
     *"/../"*|*"//"*) echo "!! UPSTREAM entry has an unsafe src '$e_src' (relative, no .. or empty components): '$entry'" >&2; exit 2 ;;
   esac
 done
-unset e_repo e_license e_src e_dest e_extra
+unset e_repo e_license e_src e_dest e_extra SEEN_DEST
 
 # ABSORPTION.md gate 1. Key: the licence SOURCES.md may declare. Value: what the
 # upstream's LICENSE file, or its README declaration, must contain to count as
@@ -107,11 +118,13 @@ declare -A ALLOWED=(
   [CC-BY-4.0]='CC-BY-4\.0|CC BY 4\.0|Attribution 4\.0 International'
   [Unlicense]='Unlicense|This is free and unencumbered software'
 )
-# The two BSD variants share their first two clauses, so each is also refused
-# when the text carries the other's marker: the third clause names it.
+# The BSD variants share their first two clauses, so each allowed one is also
+# refused when the text carries another's marker: the third clause names
+# BSD-3, and the advertising clause names BSD-4, which is not on the allowlist
+# and would otherwise pass as BSD-3 since it carries the same third clause.
 declare -A EXCLUDES=(
-  [BSD-2-Clause]='BSD[- ]3|3-Clause|Neither the name of'
-  [BSD-3-Clause]='BSD[- ]2|2-Clause|Simplified BSD'
+  [BSD-2-Clause]='BSD[- ]3|3-Clause|Neither the name of|BSD[- ]4|4-Clause|advertising materials'
+  [BSD-3-Clause]='BSD[- ]2|2-Clause|Simplified BSD|BSD[- ]4|4-Clause|advertising materials'
   [MIT]='MIT-0|No Attribution'
   [Apache-2.0]='Version 1\.[01]|Apache-1\.|Apache License 1\.'
 )
@@ -177,7 +190,9 @@ check_license_text() {
 # "### Exceptions" under "## License" is part of the declaration. A heading
 # that merely starts with the word, such as "License compatibility", is prose.
 # Lines inside fenced code blocks are never headings: an example README
-# template in a fence cannot license the upstream.
+# template in a fence cannot license the upstream. A fence closes only on a
+# run of its own character at least as long as the opener, as Markdown has
+# it, so a three-backtick example inside a four-backtick fence stays inside.
 extract_license_sections() {
   awk '
     function is_lic(t) { t = tolower(t); sub(/[ \t:]+$/, "", t); return (t == "license" || t == "licence" || t == "licensing") }
@@ -186,8 +201,18 @@ extract_license_sections() {
       fence = 0; f = 0; lvl = 0
       for (i = 1; i <= NR; i++) {
         line = L[i]
-        if (line ~ /^[ \t]*(```|~~~)/) { fence = !fence; if (f) print line; continue }
-        if (fence) { if (f) print line; continue }
+        if (fence) {
+          if (match(line, /^[ \t]*(`+|~+)[ \t]*$/)) {
+            run = line; gsub(/[ \t]/, "", run)
+            if (substr(run, 1, 1) == fch && length(run) >= flen) fence = 0
+          }
+          if (f) print line; continue
+        }
+        if (match(line, /^[ \t]*(```+|~~~+)/)) {
+          run = substr(line, RSTART, RLENGTH); gsub(/[ \t]/, "", run)
+          fch = substr(run, 1, 1); flen = length(run); fence = 1
+          if (f) print line; continue
+        }
         h = 0; skip = 0
         if (line ~ /^#+[ \t]+/) {
           match(line, /^#+/); h = RLENGTH
@@ -235,8 +260,10 @@ resolve_license() {
   # that, the nearest README declaration. Then the whole skill subtree is
   # scanned the same way, since cp -R publishes every nested file: a
   # vendor/LICENSE-GPL three levels down is checked and refused too, but
-  # never recorded. Symlinks are refused everywhere: a file operator follows
-  # them, and a hostile upstream could point one at any readable local file.
+  # never recorded. A nested UPSTREAM-LICENSE is a licence input like any
+  # other there; only the skill-root name is reserved. Symlinks are refused
+  # everywhere: a file operator follows them, and a hostile upstream could
+  # point one at any readable local file.
   check_candidate() {  # <path> <relative label> <may-record 0|1>
     local path="$1" label="$2" record="$3" lic section cur
     lic="$(basename "$path")"
@@ -250,7 +277,7 @@ resolve_license() {
     fi
     [ -f "$path" ] || return 0
     case "$lic" in
-      [Rr][Ee][Aa][Dd][Mm][Ee].md)
+      [Rr][Ee][Aa][Dd][Mm][Ee].[Mm][Dd])
         cur=""
         while IFS= read -r line; do
           if [ "$line" = "----8<----" ]; then
@@ -277,8 +304,11 @@ resolve_license() {
     rel="${dir#"$clone"}"; rel="${rel#/}"
     # Anything that looks like a licence file counts, whatever its suffix or
     # case: LICENSE, LICENSE.md, LICENSE-MIT, LICENCE.txt, COPYING, UNLICENSE.
+    # The README is spelled with a bracket so it is a pattern too: nocaseglob
+    # only applies to a word that contains a glob character, and a literal
+    # README.md would miss README.MD on a case-sensitive checkout.
     shopt -s nullglob nocaseglob
-    candidates=("$dir"/LICENSE* "$dir"/LICENCE* "$dir"/COPYING* "$dir"/UNLICENSE* "$dir"/README.md)
+    candidates=("$dir"/LICENSE* "$dir"/LICENCE* "$dir"/COPYING* "$dir"/UNLICENSE* "$dir"/README.[Mm][Dd])
     shopt -u nullglob nocaseglob
     for path in "${candidates[@]}"; do
       check_candidate "$path" "${rel:+$rel/}$(basename "$path")" 1
@@ -288,7 +318,7 @@ resolve_license() {
   done
   while IFS= read -r -d '' path; do
     check_candidate "$path" "${path#"$clone"/}" 0
-  done < <(find "$clone/$src" -mindepth 2 \( -iname 'LICENSE*' -o -iname 'LICENCE*' -o -iname 'COPYING*' -o -iname 'UNLICENSE*' -o -iname 'README.md' \) -print0 2>/dev/null)
+  done < <(find "$clone/$src" -mindepth 2 \( -iname 'LICENSE*' -o -iname 'LICENCE*' -o -iname 'COPYING*' -o -iname 'UNLICENSE*' -o -iname 'UPSTREAM-LICENSE' -o -iname 'README.md' \) -print0 2>/dev/null)
   if [ -n "$nearest_file" ]; then
     cp "$nearest_file" "$out"
     return 0
@@ -334,41 +364,47 @@ license_current() {
   fi
 }
 
-declare -A SHAS
+declare -A SHAS CLONES
+n_clones=0
 drift=0
-mkdir -p "$WORK/license"
+mkdir -p "$WORK/license" "$WORK/clone"
 
 # ---- pass 1: clone and validate every entry before touching skills/ ----
 # A refusal here leaves the vendored tree exactly as it was; a half-synced pack
 # with one skill deleted and nothing in its place is worse than a stale one.
 for entry in "${UPSTREAM[@]}"; do
   IFS='|' read -r repo license src dest <<<"$entry"
-  slug="${repo//\//_}"
-  if [ ! -d "$WORK/$slug" ]; then
+  # One clone per repo, in a numbered directory, never a flattening of the
+  # repo name: a/b_c and a_b/c would flatten to the same name and the second
+  # would read the first's clone.
+  if [ -z "${CLONES[$repo]+x}" ]; then
+    CLONES["$repo"]="$WORK/clone/$n_clones"
+    n_clones=$((n_clones + 1))
     echo "→ cloning $repo"
-    git clone --depth 1 -q "$UPSTREAM_BASE/$repo.git" "$WORK/$slug"
-    SHAS["$repo"]="$(git -C "$WORK/$slug" rev-parse HEAD)"
+    git clone --depth 1 -q "$UPSTREAM_BASE/$repo.git" "${CLONES[$repo]}"
+    SHAS["$repo"]="$(git -C "${CLONES[$repo]}" rev-parse HEAD)"
   fi
+  clone="${CLONES[$repo]}"
 
-  if [ ! -d "$WORK/$slug/$src" ]; then
+  if [ ! -d "$clone/$src" ]; then
     echo "!! $repo: upstream path '$src' no longer exists — upstream restructured, fix UPSTREAM[] above" >&2
     exit 1
   fi
 
-  resolve_license "$WORK/$slug" "$repo" "$license" "$src" "$WORK/license/$dest"
+  resolve_license "$clone" "$repo" "$license" "$src" "$WORK/license/$dest"
 done
 
 # ---- pass 2: report drift, or vendor ----
 for entry in "${UPSTREAM[@]}"; do
   IFS='|' read -r repo license src dest <<<"$entry"
-  slug="${repo//\//_}"
+  clone="${CLONES[$repo]}"
 
   if [ $CHECK_ONLY -eq 1 ]; then
     # The root UPSTREAM-LICENSE is written by this script, not by upstream, so
     # that one path is dropped from the tree comparison and checked on its
     # own below. Only the root: a nested file of the same name is upstream
     # content and drifts like any other.
-    tree_drift="$(diff -rq "$WORK/$slug/$src" "$SKILLS_DIR/$dest" 2>&1 \
+    tree_drift="$(diff -rq "$clone/$src" "$SKILLS_DIR/$dest" 2>&1 \
       | grep -vxF -e "Only in $SKILLS_DIR/$dest: UPSTREAM-LICENSE" || true)"
     if [ -n "$tree_drift" ]; then
       echo "DRIFT  $dest  (upstream $repo @ ${SHAS[$repo]:0:8})"
@@ -385,7 +421,7 @@ for entry in "${UPSTREAM[@]}"; do
   echo "→ vendoring $dest from $repo/$src"
   rm -rf "${SKILLS_DIR:?}/$dest"
   mkdir -p "$SKILLS_DIR/$dest"
-  cp -R "$WORK/$slug/$src/." "$SKILLS_DIR/$dest/"
+  cp -R "$clone/$src/." "$SKILLS_DIR/$dest/"
   # The upstream licence travels with the skill so attribution survives a copy.
   # Pass 1 refused any upstream that ships this name itself, so nothing is
   # here to be overwritten or written through.
