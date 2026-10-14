@@ -34,6 +34,10 @@ SKILLS_DIR="$PACK_DIR/skills"
 # instead of reusing, and creates 0700, which also closes the window where a
 # second entry's copy could read a tree mutated after the first copy.
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/web-excellence-sync.XXXXXXXX")"
+# Registered before anything can exit, so a refused override or entry leaves
+# nothing behind in $TMPDIR.
+cleanup() { rm -rf "$WORK"; }
+trap cleanup EXIT
 CHECK_ONLY=0
 [ "${1:-}" = "--check" ] && CHECK_ONLY=1
 
@@ -168,18 +172,41 @@ check_license_text() {
 # The body of every heading that reads exactly "License", "Licence" or
 # "Licensing" (any case, optional trailing colon), each running to the next
 # heading of the same or a higher level and terminated by a line reading
-# ----8<----. Sub-headings stay in: a "### Exceptions" under "## License" is
-# part of the declaration. A heading that merely starts with the word, such
-# as "License compatibility", is not a declaration and is skipped.
+# ----8<----. Both heading forms count: ATX ("## License") and Setext
+# ("License" underlined with === or ---). Sub-headings stay in: a
+# "### Exceptions" under "## License" is part of the declaration. A heading
+# that merely starts with the word, such as "License compatibility", is prose.
+# Lines inside fenced code blocks are never headings: an example README
+# template in a fence cannot license the upstream.
 extract_license_sections() {
   awk '
-    function is_lic(h) { h = tolower(h); sub(/^#+[ \t]+/, "", h); sub(/[ \t:]+$/, "", h); return (h == "license" || h == "licence" || h == "licensing") }
-    /^#+[[:space:]]+/ {
-      if (f) { match($0, /^#+/); if (RLENGTH <= lvl) { f = 0; print "----8<----" } }
-      if (!f && is_lic($0)) { f = 1; match($0, /^#+/); lvl = RLENGTH; next }
-    }
-    f
-    END { if (f) print "----8<----" }' "$1" 2>/dev/null | sed '/^[[:space:]]*$/d'
+    function is_lic(t) { t = tolower(t); sub(/[ \t:]+$/, "", t); return (t == "license" || t == "licence" || t == "licensing") }
+    { L[NR] = $0 }
+    END {
+      fence = 0; f = 0; lvl = 0
+      for (i = 1; i <= NR; i++) {
+        line = L[i]
+        if (line ~ /^[ \t]*(```|~~~)/) { fence = !fence; if (f) print line; continue }
+        if (fence) { if (f) print line; continue }
+        h = 0; skip = 0
+        if (line ~ /^#+[ \t]+/) {
+          match(line, /^#+/); h = RLENGTH
+          text = line; sub(/^#+[ \t]+/, "", text); sub(/[ \t]+#+[ \t]*$/, "", text)
+        } else if (i < NR && line ~ /[^ \t]/ && line !~ /^[ \t]*[-=*#>|]/ && (L[i+1] ~ /^[ \t]*=+[ \t]*$/ || L[i+1] ~ /^[ \t]*-+[ \t]*$/)) {
+          h = (L[i+1] ~ /^[ \t]*=+[ \t]*$/) ? 1 : 2
+          text = line; sub(/^[ \t]+/, "", text); sub(/[ \t]+$/, "", text); skip = 1
+        }
+        if (h) {
+          if (f && h <= lvl) { f = 0; print "----8<----" }
+          if (!f && is_lic(text)) { f = 1; lvl = h }
+          else if (f) print line
+          if (skip) i++
+          continue
+        }
+        if (f) print line
+      }
+      if (f) print "----8<----"
+    }' "$1" 2>/dev/null | sed '/^[[:space:]]*$/d'
 }
 
 # resolve_license <clone> <repo> <license> <src> <out>
@@ -306,9 +333,6 @@ license_current() {
     cmp -s "$1" "$2"
   fi
 }
-
-cleanup() { rm -rf "$WORK"; }
-trap cleanup EXIT
 
 declare -A SHAS
 drift=0

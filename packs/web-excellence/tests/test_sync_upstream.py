@@ -233,6 +233,23 @@ def main() -> int:
             "skills/he/vendor/thing/LICENSE": MIT.replace("Example", "Nested Example"),
             "skills/he/docs/README.md": "# docs\n\n## License\n\nMIT\n",
         })
+        make_upstream(base, "acme", "fenced-only", {
+            "README.md": "# f\n\nTemplate for your own README:\n\n```markdown\n## License\n\nMIT\n```\n",
+            "skills/vav/SKILL.md": "vav\n",
+        })
+        make_upstream(base, "acme", "fenced-decoy", {
+            "README.md": "# g\n\n## License\n\nMIT\n\n## Example\n\n```markdown\n## License\n\nGPL-3.0\n```\n",
+            "skills/zayin/SKILL.md": "zayin\n",
+        })
+        make_upstream(base, "acme", "setext-conflict", {
+            "LICENSE": MIT,
+            "skills/chet/README.md": "chet\n====\n\nLicense\n=======\n\nGPL-3.0 only\n",
+            "skills/chet/SKILL.md": "chet\n",
+        })
+        make_upstream(base, "acme", "setext-only", {
+            "README.md": "tet\n===\n\nIntro.\n\nLicense\n-------\n\nMIT\n\nCredits\n-------\n\nnope\n",
+            "skills/tet/SKILL.md": "tet\n",
+        })
         make_upstream(base, "acme", "licenses-dir", {
             "LICENSE": MIT,
             "skills/alef/LICENSES/GPL-3.0.txt": GPL,
@@ -317,7 +334,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and "ABSORPTION.md gate 1" in r.stderr, r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -345,6 +362,26 @@ def main() -> int:
         refused("prefix heading is not a declaration; the real License section says GPL", good[:1] + ["acme/prefix-heading|MIT|skills/bet|bet"], "README.md License section reads as a refused licence")
         refused("two License sections that disagree", good[:1] + ["acme/two-sections|MIT|skills/gimel|gimel"], "does not read as MIT")
         refused("nested vendor/LICENSE-GPL inside the skill", good[:1] + ["acme/nested-gpl|MIT|skills/dalet|dalet"], "skills/dalet/vendor/thing/LICENSE-GPL reads as a refused licence")
+        refused("a License heading only inside a code fence is no declaration", good[:1] + ["acme/fenced-only|MIT|skills/vav|vav"], "no README has a License section")
+        refused("Setext License heading declaring GPL under an MIT root", good[:1] + ["acme/setext-conflict|MIT|skills/chet|chet"], "skills/chet/README.md License section reads as a refused licence")
+
+        # ---- a refused run leaves nothing in TMPDIR -----------------------------
+        tmpdir_probe = os.path.join(tmp, "probe-tmp")
+        os.makedirs(tmpdir_probe)
+        env_probe = dict(os.environ)
+        env_probe["TMPDIR"] = tmpdir_probe
+        env_probe["WEB_EXCELLENCE_UPSTREAM_BASE"] = "file://" + base
+        env_probe["WEB_EXCELLENCE_UPSTREAM_FILE"] = os.path.join(tmp, "does-not-exist.txt")
+        r = subprocess.run(["bash", os.path.join(pack, "sync-upstream.sh")], capture_output=True, text=True, env=env_probe)
+        check("refused override still exits 2", r.returncode == 2, r.stderr)
+        check("refused override leaves no work directory behind", os.listdir(tmpdir_probe) == [], str(os.listdir(tmpdir_probe)))
+        bad_row = os.path.join(tmp, "bad-row.txt")
+        with open(bad_row, "w", encoding="utf-8") as fh:
+            fh.write("acme/with-file|MIT|skills/alpha|\n")
+        env_probe["WEB_EXCELLENCE_UPSTREAM_FILE"] = bad_row
+        r = subprocess.run(["bash", os.path.join(pack, "sync-upstream.sh")], capture_output=True, text=True, env=env_probe)
+        check("malformed row still exits 2", r.returncode == 2, r.stderr)
+        check("malformed row leaves no work directory behind", os.listdir(tmpdir_probe) == [], str(os.listdir(tmpdir_probe)))
 
         # ---- malformed override rows never reach pass 2 -------------------------
         p3 = make_pack(os.path.join(tmp, "p3"))
@@ -394,6 +431,12 @@ def main() -> int:
         tau_lic = os.path.join(pack, "skills", "tau", "UPSTREAM-LICENSE")
         check("benign sub-heading under License vendors", r.returncode == 0 and os.path.isfile(tau_lic), r.stderr)
         check("record keeps the sub-heading and stops at the next same-level heading", os.path.isfile(tau_lic) and "### Attribution" in read(tau_lic) and "nope" not in read(tau_lic))
+        r = run_sync(pack, base, good[:1] + ["acme/fenced-decoy|MIT|skills/zayin|zayin"])
+        check("a GPL example inside a code fence does not poison a real MIT declaration", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "zayin", "UPSTREAM-LICENSE")), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/setext-only|MIT|skills/tet|tet"])
+        tet_lic = os.path.join(pack, "skills", "tet", "UPSTREAM-LICENSE")
+        check("Setext License heading with MIT vendors", r.returncode == 0 and os.path.isfile(tet_lic), r.stderr)
+        check("Setext record quotes MIT and stops at the next same-level heading", os.path.isfile(tet_lic) and "\n    MIT\n" in read(tet_lic) and "nope" not in read(tet_lic))
         r = run_sync(pack, base, good[:1] + ["acme/nested-mit|MIT|skills/he|he"])
         he_lic = os.path.join(pack, "skills", "he", "UPSTREAM-LICENSE")
         check("nested MIT licence and nested README under an MIT root vendor", r.returncode == 0 and os.path.isfile(he_lic), r.stderr)
