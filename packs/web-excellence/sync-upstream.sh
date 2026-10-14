@@ -67,7 +67,9 @@ for entry in "${UPSTREAM[@]}"; do
   fi
 
   if [ $CHECK_ONLY -eq 1 ]; then
-    if ! diff -rq "$WORK/$slug/$src" "$SKILLS_DIR/$dest" >/dev/null 2>&1; then
+    # UPSTREAM-LICENSE is written by this script, not by upstream, so it must
+    # not count as drift — otherwise every licensed skill reports DRIFT forever.
+    if ! diff -rq --exclude=UPSTREAM-LICENSE "$WORK/$slug/$src" "$SKILLS_DIR/$dest" >/dev/null 2>&1; then
       echo "DRIFT  $dest  (upstream $repo @ ${SHAS[$repo]:0:8})"
       drift=1
     else
@@ -81,9 +83,38 @@ for entry in "${UPSTREAM[@]}"; do
   mkdir -p "$SKILLS_DIR/$dest"
   cp -R "$WORK/$slug/$src/." "$SKILLS_DIR/$dest/"
   # upstream LICENSE travels with the skill so attribution survives a copy
-  for lic in LICENSE LICENSE.md LICENSE.txt; do
-    [ -f "$WORK/$slug/$lic" ] && cp "$WORK/$slug/$lic" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE" && break
+  found_lic=0
+  for lic in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md license.md; do
+    if [ -f "$WORK/$slug/$lic" ]; then
+      cp "$WORK/$slug/$lic" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"; found_lic=1; break
+    fi
   done
+  # Some upstreams ship no LICENSE file and declare the licence only in their
+  # README (vercel-labs/agent-skills does this). Record that declaration, with
+  # the commit, so the vendored copy still carries its provenance. Refuse the
+  # vendor outright if even that is missing — ABSORPTION.md gate 1.
+  if [ $found_lic -eq 0 ]; then
+    section="$(awk '/^##+[[:space:]]+[Ll]icen[cs]e/{f=1; next} /^##+[[:space:]]/{if(f) exit} f' "$WORK/$slug/README.md" 2>/dev/null | sed '/^[[:space:]]*$/d')"
+    if [ -z "$section" ]; then
+      echo "!! $repo ships no LICENSE file and its README has no License section — refusing to vendor $dest (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    {
+      echo "UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not hand-edit"
+      echo
+      echo "Upstream: https://github.com/$repo"
+      echo "Commit:   ${SHAS[$repo]}"
+      echo "Path:     $src"
+      echo
+      echo "The upstream repository ships no LICENSE file at this commit. Its README.md"
+      echo "declares the licence under a 'License' heading. That declaration, verbatim:"
+      echo
+      printf '%s\n' "$section" | sed 's/^/    /'
+      echo
+      echo "Declared licence as recorded in SOURCES.md: $license."
+      echo "Licence text: https://spdx.org/licenses/$license.html"
+    } > "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"
+  fi
 done
 
 if [ $CHECK_ONLY -eq 1 ]; then

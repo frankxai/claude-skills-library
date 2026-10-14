@@ -1,0 +1,13 @@
+UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not hand-edit
+
+Upstream: https://github.com/vercel-labs/agent-skills
+Commit:   7c180d9044c9
+Path:     skills/web-design-guidelines
+
+The upstream repository ships no LICENSE file at this commit. Its README.md
+declares the licence under a 'License' heading. That declaration, verbatim:
+
+    MIT
+
+Declared licence as recorded in SOURCES.md: MIT.
+Licence text: https://spdx.org/licenses/MIT.html

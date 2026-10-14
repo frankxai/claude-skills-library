@@ -47,10 +47,13 @@ for src in "$PACK_DIR"/skills/*/; do
   if [ -d "$DEST_SKILLS/$name" ]; then
     # Never delete a skill already here — an existing copy may be a fork with
     # local-only files. Set it aside instead.
-    say "  update $name (previous copy → .claude/skills/.replaced/$name)"
+    say "  update $name (previous copy → .claude/skills/.replaced/$name.<timestamp>)"
     run mkdir -p "$DEST_SKILLS/.replaced"
-    run rm -rf "$DEST_SKILLS/.replaced/$name"
-    run mv "$DEST_SKILLS/$name" "$DEST_SKILLS/.replaced/$name"
+    # Versioned set-aside: never overwrite an earlier set-aside copy, so a
+    # customised skill survives any number of re-runs.
+    aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ)"
+    n=0; while [ -e "$aside" ]; do n=$((n+1)); aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ).$n"; done
+    run mv "$DEST_SKILLS/$name" "$aside"
   else
     say "  add    $name"
   fi
