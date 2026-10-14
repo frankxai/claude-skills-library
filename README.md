@@ -89,7 +89,7 @@ templates and is advisory.
 ## Packs: skills that enforce
 
 Installed into 19 repositories across the FrankX, Starlight, and Arcanea estate as of 2026-10-09.
-Re-run an installer to upgrade. An installed skill that differs is moved to `.claude/skills/.replaced/<name>`, and only the most recent set-aside copy is kept, so commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
+Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-infrastructure` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
 
 | Pack | What it gates | Enforced by |
 |---|---|---|
@@ -359,7 +359,7 @@ fifty answers the eval harness is published open-source regardless.
 ## License
 
 MIT. See [LICENSE](LICENSE). Imported skills retain their upstream licenses, recorded in
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and in each vendored folder.
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and, with one exception, in each vendored folder; `web-design-guidelines` carries its MIT record in the pack's `SOURCES.md` until the file is vendored.
 
 ---
 
