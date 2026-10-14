@@ -67,11 +67,15 @@ build if a marker ever reappears in the reminder.
 Matching the markers as free text failed the same way one level down: the
 `web-design-guidelines` skill quotes the guidelines URL, so loading the skills
 closed the gate. A receipt now counts only where a run leaves it: a fetch of
-the guidelines whose result is not an error (neither a failed call nor error
-text such as GitHub's `404: Not Found` body), and a `capture.mjs` run whose
-result shows the whole matrix of the changed state captured, or honestly
-reports that nothing could be rendered. A partial matrix (`Incomplete:`) is not
-proof, and neither is a run labelled `before`. Subagent transcripts
+the guidelines whose result is not an error (neither a failed call nor an
+error page such as GitHub's `429: Too Many Requests`, which curl without `-f`
+prints with exit 0), and a `capture.mjs` run whose result lists all six shots
+(375 / 768 / 1440, light and dark) of the final state, or honestly reports that
+nothing could be rendered. The run must start after the last UI edit, judged by
+the touched files' modification times, so screenshots taken before a final
+tweak do not count. A partial matrix, whether shots failed (`Incomplete:`) or
+`--widths` / `--themes` asked for fewer, is not proof, and neither is a run
+labelled `before`. Subagent transcripts
 are read too. `test_skill_text_cannot_satisfy_evidence` holds that line.
 
 The gate works in windows. The first UI change opens one, and receipts count

@@ -168,8 +168,14 @@ def user_text(text: str) -> str:
 
 AUDIT_LINE = (tool_use("audit1", "WebFetch", {"url": GUIDELINES_URL, "prompt": "list every rule"})
               + tool_result("audit1", "# Web Interface Guidelines\n- Inputs ≥16px on mobile"))
+def shots(label: str = "after", widths=("375", "768", "1440"), themes=("light", "dark")) -> str:
+    """What capture.mjs prints for a run that wrote every requested shot."""
+    paths = [f"  .visual-proof/{label}/{w}-{t}.png" for w in widths for t in themes]
+    return f'captured {len(paths)} shot(s) for "{label}":\n' + "\n".join(paths)
+
+
 SHOTS_LINE = (tool_use("shot1", "Bash", {"command": CAPTURE_CMD})
-              + tool_result("shot1", 'captured 6 shot(s) for "after":\n  .visual-proof/after/375-light.png'))
+              + tool_result("shot1", shots()))
 CANNOT_LINE = (tool_use("shot2", "Bash", {"command": CAPTURE_CMD})
                + tool_result("shot2", "Cannot capture: Playwright is not available in this project."))
 
@@ -264,6 +270,16 @@ def test_a_failed_fetch_is_not_an_audit() -> None:
           out is not None and "web-design-guidelines" in out.get("reason", ""),
           (out or {}).get("reason", "stop hook passed"))
 
+    # curl without -f also exits 0 on a rate limit or a server error.
+    for i, page in enumerate(("429: Too Many Requests", "Internal Server Error",
+                              "503 Service Unavailable", "400: Invalid request")):
+        body = (tool_use(f"h{i}", "Bash", {"command": f"curl -sS {GUIDELINES_URL}"})
+                + tool_result(f"h{i}", page) + SHOTS_LINE)
+        out = stop_with_transcript(f"httperr{i}", body)
+        check(f"a fetch that printed {page!r} leaves the audit missing",
+              out is not None and "web-design-guidelines" in out.get("reason", ""),
+              (out or {}).get("reason", "stop hook passed"))
+
     # An errored call whose text reads like anything else is still an error.
     body = (tool_use("f3", "WebFetch", {"url": GUIDELINES_URL, "prompt": "rules"})
             + tool_result("f3", "Request timed out after 30s", is_error=True) + SHOTS_LINE)
@@ -301,7 +317,55 @@ def receipts_at(ts: str) -> str:
     return (tool_use("w1", "WebFetch", {"url": GUIDELINES_URL, "prompt": "rules"}, ts)
             + tool_result("w1", "# Web Interface Guidelines", ts)
             + tool_use("w2", "Bash", {"command": CAPTURE_CMD}, ts)
-            + tool_result("w2", 'captured 6 shot(s) for "after":', ts))
+            + tool_result("w2", shots(), ts))
+
+
+def test_a_narrowed_capture_is_not_proof() -> None:
+    """--widths/--themes can ask for less than the gate requires; exit 0 then
+    proves only what was asked for."""
+    one = shots(widths=("375",), themes=("light",))
+    body = AUDIT_LINE + tool_use("n1", "Bash", {
+        "command": CAPTURE_CMD + " --widths 375 --themes light"}) + tool_result("n1", one)
+    out = stop_with_transcript("narrowshot", body)
+    check("a one-shot capture does not satisfy visual proof",
+          out is not None and "visual-proof" in out.get("reason", ""),
+          (out or {}).get("reason", "stop hook passed"))
+    light = shots(themes=("light",))
+    body = AUDIT_LINE + tool_use("n2", "Bash", {"command": CAPTURE_CMD}) + tool_result("n2", light)
+    out = stop_with_transcript("lightonly", body)
+    check("a light-only capture does not satisfy visual proof",
+          out is not None and "visual-proof" in out.get("reason", ""),
+          (out or {}).get("reason", "stop hook passed"))
+
+
+def test_proof_must_follow_the_last_ui_edit() -> None:
+    """Screenshots taken before a final tweak show a state that no longer exists."""
+    import time as _time
+    with tempfile.TemporaryDirectory() as d:
+        git_repo(d)
+        ui = os.path.join(d, "components", "A.tsx")
+        for sid, edit_offset in (("tweakafter", 60), ("tweakbefore", -60)):
+            try:
+                os.remove(os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json"))
+            except OSError:
+                pass
+            run_hook(SESSION, {"session_id": sid, "cwd": d})
+            write(d, "components/A.tsx", f"export const v = '{sid}';\n")
+            run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": ui}})
+            t = _time.time() + 5
+            os.utime(ui, (t + edit_offset, t + edit_offset))
+            tp = os.path.join(d, f"{sid}.jsonl")
+            with open(tp, "w", encoding="utf-8") as fh:
+                fh.write(receipts_at(iso(t)))
+            out, _ = run_hook(STOP, {"session_id": sid, "cwd": d, "transcript_path": tp})
+            reason = (out or {}).get("reason", "")
+            if edit_offset > 0:
+                check("a UI edit after the capture leaves the proof missing",
+                      out is not None and "visual-proof" in reason, reason or "passed")
+                check("the audit before that edit still counts",
+                      "web-design-guidelines" not in reason, reason)
+            else:
+                check("a capture after the last UI edit closes the gate", out is None, reason)
 
 
 def test_receipts_count_only_inside_the_window() -> None:

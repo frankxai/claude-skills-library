@@ -165,41 +165,62 @@ def entry_time(entry) -> float:
         return 0.0
 
 
+# The matrix the gate asks for: three widths, both themes. capture.mjs prints
+# every file it wrote as <out>/<label>/<width>-<theme>.png.
+REQUIRED_SHOTS = {(w, t) for w in ("375", "768", "1440") for t in ("light", "dark")}
+SHOT_PATH = re.compile(r"(\d+)-(light|dark)\.png")
+
+
 def captured(text: str) -> bool:
-    """A capture run that proves something: every shot of the changed state
-    written, or an honest report that nothing could be rendered. A partial
-    matrix proves neither, and a "before" run only records the starting point."""
+    """A capture run that proves something: the whole matrix of the changed
+    state written, or an honest report that nothing could be rendered. A
+    partial matrix proves neither, whether shots failed or were never asked
+    for, and a "before" run only records the starting point."""
     low = text.lower()
     if "cannot capture:" in low:
         return True
     if "shot(s) for" not in low or "incomplete:" in low:
         return False
-    return 'shot(s) for "before"' not in low
+    if 'shot(s) for "before"' in low:
+        return False
+    return REQUIRED_SHOTS <= {m.groups() for m in SHOT_PATH.finditer(low)}
 
 
 # How a fetch that did not fail as a call can still have failed: a tool that
-# reports the error as text, or curl without -f printing GitHub's 404 body.
-FETCH_FAILED = ("error:", "failed", "could not resolve", "404 not found", "404: not found")
+# reports the error as text, or curl without -f printing an error page with
+# exit 0. GitHub's raw host answers with a status line ("429: Too Many
+# Requests"); other hosts and proxies with the reason phrase alone.
+FETCH_FAILED = ("error:", "failed", "could not resolve", "not found", "forbidden",
+                "too many requests", "rate limit", "internal server error",
+                "bad gateway", "service unavailable", "gateway timeout")
+STATUS_LINE = re.compile(r"[45]\d\d\b")
 
 
 def fetched(block: dict) -> bool:
-    """The fetch returned the guidelines, not an error."""
+    """The fetch returned the guidelines, not an error.
+
+    A denylist, not a positive match on the document: WebFetch returns a
+    model's summary of the page, whose wording no check can predict.
+    """
     if block.get("is_error"):
         return False
     head = result_text(block).lower().lstrip()[:120]
-    return bool(head) and not any(m in head for m in FETCH_FAILED)
+    return (bool(head) and not STATUS_LINE.match(head)
+            and not any(m in head for m in FETCH_FAILED))
 
 
-def receipts(path: str, since: float = 0.0):
+def receipts(path: str, since: float = 0.0, proof_since: float = 0.0):
     """(audited, proved) from calls made at or after `since`, not from prose.
 
     A call counts only through its own result: a fetch whose result is not an
     error, and a capture.mjs run whose result shows the matrix was captured or
-    honestly could not be. Entries without a timestamp are kept rather than
+    honestly could not be. A capture must also start at or after
+    `proof_since`, the last UI edit, so screenshots of an earlier state do not
+    stand for the final one. Entries without a timestamp are kept rather than
     guessed away.
     """
     audited = proved = False
-    fetch_ids, capture_ids = set(), set()
+    fetch_ids, capture_ids = set(), {}
     for f in transcript_files(path):
         try:
             fh = open(f, "r", encoding="utf-8", errors="ignore")
@@ -208,7 +229,7 @@ def receipts(path: str, since: float = 0.0):
         with fh:
             for line in fh:
                 low = line.lower()
-                pending = fetch_ids | capture_ids
+                pending = fetch_ids | set(capture_ids)
                 # Cheap prefilter: most lines mention none of these and are
                 # never parsed.
                 if not ("capture.mjs" in low
@@ -234,12 +255,13 @@ def receipts(path: str, since: float = 0.0):
                         if any(n in args for n in EVIDENCE) and is_fetch(name, args):
                             fetch_ids.add(tid)
                         if name == "Bash" and CAPTURE_RUN.search(args):
-                            capture_ids.add(tid)
+                            capture_ids[tid] = stamp
                     elif kind == "tool_result":
                         tid = block.get("tool_use_id")
                         if tid in fetch_ids and fetched(block):
                             audited = True
-                        if tid in capture_ids and captured(result_text(block)):
+                        if (tid in capture_ids and captured(result_text(block))
+                                and (not capture_ids[tid] or capture_ids[tid] >= proof_since)):
                             proved = True
                 if audited and proved:
                     return True, True
@@ -272,6 +294,22 @@ def dirty_files(root: str) -> list:
             paths.append(parts[i])
             i += 1
     return paths
+
+
+def last_edit(cwd: str, touched: list) -> float:
+    """When the newest of the touched files that still exist was written.
+
+    File times, not the gate's record of Edit calls, so an edit made through
+    the shell moves it too.
+    """
+    root = (git(cwd, "rev-parse", "--show-toplevel") or "").strip() or cwd
+    newest = 0.0
+    for rel in touched:
+        try:
+            newest = max(newest, os.stat(os.path.join(root, rel)).st_mtime)
+        except OSError:
+            pass  # deleted: nothing left to capture
+    return newest
 
 
 def fingerprint(root: str, rel: str):
@@ -380,8 +418,11 @@ def main() -> int:
 
     # Receipts count from the first UI edit of this window, so the "before"
     # capture and anything done for an earlier change do not close it.
-    audited, proved = receipts(payload.get("transcript_path", ""),
-                               state.get("window_start") or floor)
+    # The capture must also follow the last UI edit: screenshots taken before
+    # a final tweak show a state that no longer exists.
+    window = state.get("window_start") or floor
+    audited, proved = receipts(payload.get("transcript_path", ""), window,
+                               max(window, last_edit(cwd, touched)))
     # BOTH halves close the gate. Gating on `audited` alone let a turn that ran
     # the guidelines audit but never rendered anything pass silently, which is
     # exactly the enforcement-that-does-not-enforce failure this hook exists to
@@ -402,7 +443,7 @@ def main() -> int:
     if not audited:
         missing.append("`web-design-guidelines` audit on the changed files (it starts by fetching the live guidelines)")
     if not proved:
-        missing.append("`visual-proof` capture at 375 / 768 / 1440 with `node .claude/skills/visual-proof/capture.mjs` (or an explicit statement that capture was impossible here, and why)")
+        missing.append("`visual-proof` capture of the final state, after the last UI edit, at 375 / 768 / 1440 in light and dark with `node .claude/skills/visual-proof/capture.mjs` (or an explicit statement that capture was impossible here, and why)")
 
     reason = (
         "web-release-gate: this turn changed UI files but the gate did not close.\n\n"

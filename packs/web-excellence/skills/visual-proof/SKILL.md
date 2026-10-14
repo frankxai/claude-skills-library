@@ -51,6 +51,9 @@ paths it printed are real, the rest are not captured, and the report says which.
 The Stop gate does not accept a partial run as proof; capture the missing states
 or say why they cannot be captured. Nor does it accept a `before` run on its own:
 that records the starting point, and only the `after` run shows the change.
+The `after` run must cover all six shots (narrow `--widths` or `--themes` for a
+quick look, not for the receipt) and start after your last UI edit: change
+anything after capturing, and capture again.
 
 ## Environment notes
 
