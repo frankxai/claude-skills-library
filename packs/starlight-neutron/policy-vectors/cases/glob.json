@@ -1,0 +1,411 @@
+{
+  "category": "glob",
+  "description": "Wildcards that touch other text or sit in the middle of a rule.",
+  "cases": [
+    {
+      "id": "glob-01",
+      "description": "Wildcard touching text catches a dotted suffix",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(cat .env*)"
+        ],
+        "deny": []
+      },
+      "command": "cat .env.local",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-02",
+      "description": "Wildcard touching text also matches no suffix",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(cat .env*)"
+        ],
+        "deny": []
+      },
+      "command": "cat .env",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-03",
+      "description": "Wildcard touching text catches another suffix",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(cat .env*)"
+        ],
+        "deny": []
+      },
+      "command": "cat .envrc",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-04",
+      "description": "A different file name does not match the glob",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(cat .env*)"
+        ],
+        "deny": []
+      },
+      "command": "cat env.txt",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "glob-05",
+      "description": "Option glob matches a long option",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git status --*)"
+        ],
+        "deny": []
+      },
+      "command": "git status --short",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-06",
+      "description": "Option glob does not match a short option",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git status --*)"
+        ],
+        "deny": []
+      },
+      "command": "git status -s",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "glob-07",
+      "description": "ls* with no space matches ls with options",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(ls*)"
+        ],
+        "deny": []
+      },
+      "command": "ls -la",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-08",
+      "description": "ls* matches a longer word that starts with ls",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(ls*)"
+        ],
+        "deny": []
+      },
+      "command": "lsof -i",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-09",
+      "description": "ls* does not match an unrelated command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(ls*)"
+        ],
+        "deny": []
+      },
+      "command": "echo hello",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "glob-10",
+      "description": "A path glob matches when the path follows the command directly",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(grep /etc/*)"
+        ],
+        "deny": []
+      },
+      "command": "grep /etc/passwd",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-11",
+      "description": "A path glob does not match when another argument comes first",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(grep /etc/*)"
+        ],
+        "deny": []
+      },
+      "command": "grep root /etc/passwd",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "glob-12",
+      "description": "Leading wildcard matches any program",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(* --version)"
+        ],
+        "deny": []
+      },
+      "command": "node --version",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-13",
+      "description": "Leading wildcard does not match a different flag",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(* --version)"
+        ],
+        "deny": []
+      },
+      "command": "node -v",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "glob-14",
+      "description": "Middle wildcard matches the words around it",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git log * main)"
+        ],
+        "deny": []
+      },
+      "command": "git log --oneline main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-15",
+      "description": "Middle wildcard needs something in its place",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git log * main)"
+        ],
+        "deny": []
+      },
+      "command": "git log main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "glob-16",
+      "description": "Wildcard in place of the subcommand",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git * main)"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-17",
+      "description": "Wildcard in place of the subcommand does not match another branch name",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git * main)"
+        ],
+        "deny": []
+      },
+      "command": "git log",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "glob-18",
+      "description": "Two wildcards need a word between them",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(* --help *)"
+        ],
+        "deny": []
+      },
+      "command": "npm --help x",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-19",
+      "description": "Two wildcards do not match the bare form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(* --help *)"
+        ],
+        "deny": []
+      },
+      "command": "npm --help",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "glob-20",
+      "description": "Wildcard between program and subcommand",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(npm * build)"
+        ],
+        "deny": []
+      },
+      "command": "npm run build",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-21",
+      "description": "Flags in a different order do not match a literal flag rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(rm -rf *)"
+        ],
+        "deny": []
+      },
+      "command": "rm -fr /tmp/x",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "glob-22",
+      "description": "Literal flag rule matches",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(rm -rf *)"
+        ],
+        "deny": []
+      },
+      "command": "rm -rf /tmp/x",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-23",
+      "description": "No-space glob matches a longer program name",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push*)"
+        ],
+        "deny": []
+      },
+      "command": "git pushd",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-24",
+      "description": "Glob on a file extension matches",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(curl *.sh)"
+        ],
+        "deny": []
+      },
+      "command": "curl https://example.com/install.sh",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-25",
+      "description": "Glob on a file extension does not match another extension",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(curl *.sh)"
+        ],
+        "deny": []
+      },
+      "command": "curl https://example.com/data.json",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "glob-26",
+      "description": "Two wildcards in one rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git * --force*)"
+        ],
+        "deny": []
+      },
+      "command": "git push --force-with-lease",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-27",
+      "description": "Glob on a certificate file",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(cat *.pem)"
+        ],
+        "deny": []
+      },
+      "command": "cat server.pem",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-28",
+      "description": "Glob on a relative script path",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(./deploy*)"
+        ],
+        "deny": []
+      },
+      "command": "./deploy.sh production",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-29",
+      "description": "Glob on a home-relative path",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(~/bin/*)"
+        ],
+        "deny": []
+      },
+      "command": "~/bin/tool run",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-30",
+      "description": "Root path glob matches the root directory",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(rm -rf /*)"
+        ],
+        "deny": []
+      },
+      "command": "rm -rf /",
+      "expect": "passthrough"
+    },
+    {
+      "id": "glob-31",
+      "description": "Root path glob matches a path under root",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(rm -rf /*)"
+        ],
+        "deny": []
+      },
+      "command": "rm -rf /var/tmp/cache",
+      "expect": "passthrough"
+    }
+  ]
+}

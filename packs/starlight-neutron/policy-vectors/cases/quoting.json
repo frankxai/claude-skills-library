@@ -1,0 +1,141 @@
+{
+  "category": "quoting",
+  "description": "Quotes, escapes, comments and operators inside strings.",
+  "cases": [
+    {
+      "id": "quoting-01",
+      "description": "A double-quoted subcommand is a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git \"push\" origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "quoting-02",
+      "description": "A backslash inside the subcommand is a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git pu\\sh origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "quoting-03",
+      "description": "Empty quotes inside the program name are a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "g''it push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "quoting-04",
+      "description": "Escaped single quote in an argument still reaches the command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit *)"
+        ],
+        "deny": []
+      },
+      "command": "git commit -m 'it'\\''s done'",
+      "expect": "passthrough"
+    },
+    {
+      "id": "quoting-05",
+      "description": "An operator inside a quoted argument does not hide the command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit *)"
+        ],
+        "deny": []
+      },
+      "command": "git commit -m \"a && b\"",
+      "expect": "passthrough"
+    },
+    {
+      "id": "quoting-06",
+      "description": "An operator inside a quoted argument of another command is data",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo \"a; git push\"",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "quoting-07",
+      "description": "A trailing comment does not hide the command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main # release",
+      "expect": "passthrough"
+    },
+    {
+      "id": "quoting-08",
+      "description": "A comment-only line is not a command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "# git push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "quoting-09",
+      "description": "An escaped space keeps the words together",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit *)"
+        ],
+        "deny": []
+      },
+      "command": "git commit -m release\\ notes",
+      "expect": "passthrough"
+    },
+    {
+      "id": "quoting-10",
+      "description": "Double quoted flag still matches a flag rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(rm -rf *)"
+        ],
+        "deny": []
+      },
+      "command": "rm -rf \"build dir\"",
+      "expect": "passthrough"
+    }
+  ]
+}

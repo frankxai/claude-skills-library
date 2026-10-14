@@ -11,13 +11,15 @@ records the touched files so the Stop hook can check that the audit happened.
 Never blocks. It returns `additionalContext` only — a design change should never
 be denied by a linter-shaped hook, only held to a standard.
 
-Fires once per session by default (set WEB_GATE_EVERY_EDIT=1 to repeat).
+Fires once per change set by default: the Stop hook re-arms it when a
+window closes (set WEB_GATE_EVERY_EDIT=1 to fire on every UI edit).
 """
 import json
 import os
 import re
 import sys
 import tempfile
+import time
 
 UI_PATH = re.compile(
     r"(^|/)(app|src|components|pages|styles|layouts|ui|islands)/.*\.(tsx|jsx|ts|js|vue|svelte|astro|css|scss|sass)$"
@@ -115,6 +117,9 @@ def main() -> int:
     touched.add(rel)
     state["touched"] = sorted(touched)
     state["fired"] = True
+    # The first UI edit opens the window the Stop hook takes receipts from.
+    if not state.get("window_start"):
+        state["window_start"] = time.time()
     try:
         write_state(sp, state)
     except OSError:

@@ -1,0 +1,6 @@
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t0","arm":"baseline","uncachedInput":100,"cacheWrite":0,"cacheRead":1000,"output":200,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t1","arm":"baseline","uncachedInput":120,"cacheWrite":0,"cacheRead":900,"output":220,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t2","arm":"baseline","uncachedInput":90,"cacheWrite":0,"cacheRead":1100,"output":180,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t3","arm":"baseline","uncachedInput":110,"cacheWrite":0,"cacheRead":950,"output":210,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t4","arm":"baseline","uncachedInput":100,"cacheWrite":0,"cacheRead":1000,"output":200,"check":"pass","notes":"fixture data"}
+{"date":"2026-10-01","harness":"fixture","model":null,"taskId":"t5","arm":"baseline","uncachedInput":100,"cacheWrite":0,"cacheRead":1000,"output":200,"check":"fail","notes":"fixture data"}

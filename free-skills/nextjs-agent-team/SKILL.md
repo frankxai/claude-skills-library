@@ -24,52 +24,6 @@ The full detail lives in `references/` and loads only when needed:
 
 ---
 
-## Architecture
-
-This system uses Next.js 16 Server Components and Server Actions for
-optimal performance.
-
-## Components
-
-### PostList
-Server Component that fetches and displays posts.
-
-**Props:** None
-**Data Source:** `/api/posts`
-**Caching:** ISR with 1 hour revalidation
-
-### PostForm
-Client Component for creating new posts.
-
-**Props:**
-- `onSuccess?: () => void` - Callback after successful submission
-
-**Server Action:** `createPost`
-
-## API Routes
-
-### GET /api/posts
-Retrieves all published posts.
-
-**Response:**
-```json
-{
-  "posts": [
-    { "id": 1, "title": "...", "content": "..." }
-  ]
-}
-```
-
-## Setup
-
-1. Install dependencies: `npm install`
-2. Configure database in `.env`
-3. Run migrations: `npm run db:migrate`
-4. Start dev server: `npm run dev`
-```
-
----
-
 ## Team Collaboration Patterns
 
 ### Pattern 1: New Feature Development

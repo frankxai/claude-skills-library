@@ -1,0 +1,9 @@
+{
+  "name": "starlight-neutron",
+  "version": "0.2.0",
+  "description": "Spend fewer tokens without lowering the ceiling: a router skill, a measurement protocol, a doctor/bench CLI and a fail-open RTK hook for shell output.",
+  "author": { "name": "FrankX", "url": "https://github.com/frankxai" },
+  "homepage": "https://github.com/frankxai/claude-skills-library/tree/main/packs/starlight-neutron",
+  "license": "MIT",
+  "keywords": ["tokens", "cost", "context", "rtk", "headroom", "orchestration"]
+}

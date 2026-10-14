@@ -5,8 +5,9 @@
 //   node capture.mjs --url https://example.com/x --label after --widths 390,1280 --full
 //
 // Writes <out>/<label>/<width>-<theme>.png and prints every path it wrote.
-// Exits non-zero with a plain-English reason if it cannot capture, so the
-// caller can report "not captured" instead of inventing a description.
+// Exits non-zero with a plain-English reason if it cannot capture, or if any
+// requested width/theme failed (exit 6, after listing what it did write), so
+// the caller can report "not captured" instead of inventing a description.
 
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -120,5 +121,10 @@ if (!written.length) {
 console.log(`\ncaptured ${written.length} shot(s) for "${label}":`);
 for (const p of written) console.log(`  ${p}`);
 if (failed) {
-  console.log(`\n${failed} shot(s) failed — report them as not captured, do not describe those states.`);
+  // A partial matrix is not proof of the whole one. Exit non-zero so one good
+  // phone shot cannot pass for the desktop and dark captures that failed.
+  console.error(
+    `\nIncomplete: ${failed} of ${written.length + failed} shot(s) failed — report them as not captured, do not describe those states.`,
+  );
+  process.exit(6);
 }

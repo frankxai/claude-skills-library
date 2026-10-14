@@ -4,7 +4,7 @@
 
 # Claude Skills Library
 
-### 114 Agent Skills for every skills-aware runtime, and 6 enforcement packs for Claude Code
+### 114 Agent Skills for every skills-aware runtime, and 7 enforcement packs for Claude Code
 
 Skills teach an agent a domain. Packs make the agent go through the gate. This is the only public
 library that ships both, with provenance pinned to commits, counts that check themselves in CI, and
@@ -12,7 +12,7 @@ hooks that block "done" until the evidence exists.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-10b981.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/skills-114-blue.svg)](docs/CATALOG.md)
-[![Packs](https://img.shields.io/badge/packs-6-06b6d4.svg)](#packs-skills-that-enforce)
+[![Packs](https://img.shields.io/badge/packs-7-06b6d4.svg)](#packs-skills-that-enforce)
 [![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#works-with-six-runtimes)
 [![Validate](https://github.com/frankxai/claude-skills-library/actions/workflows/validate.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/validate.yml)
 [![Pack tests](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml)
@@ -70,7 +70,7 @@ Two layers. The first is what every skills repo has. The second is what none of 
 | Layer | What it is | Where |
 |---|---|---|
 | **Skills** | 114 self-contained `SKILL.md` folders. Spec-validated frontmatter, trigger-rich descriptions, deep guidance in `references/` loaded only on use. | [`free-skills/`](free-skills) · [catalog](docs/CATALOG.md) |
-| **Packs** | 6 installable contracts. Each bundles the skills for one kind of work with whatever enforcement it has: hooks, CI scripts, drift checks, or templates. The packs table below says which. | [`packs/`](packs) |
+| **Packs** | 7 installable contracts. Each bundles the skills for one kind of work with whatever enforcement it has: hooks, CI scripts, drift checks, or templates. The packs table below says which. | [`packs/`](packs) |
 
 A skill is loaded when the task matches its description. That makes it *available*, not *mandatory*.
 A pack adds what turns a suggestion into a default, and the mechanism differs by pack.
@@ -176,7 +176,7 @@ Browse the **[full catalog](docs/CATALOG.md)**, or the generated site at [`docs/
 ```mermaid
 flowchart LR
     SIS["Starlight Intelligence System<br/>substrate: memory, agents, SIP"] --> ACOS["Agentic Creator OS<br/>canonical skill source"]
-    ACOS -->|"mirror the strongest"| LIB["claude-skills-library<br/>114 skills · 6 packs"]
+    ACOS -->|"mirror the strongest"| LIB["claude-skills-library<br/>114 skills · 7 packs"]
     UP["Upstreams<br/>Vercel · Emil Kowalski · Anthropic · ..."] -->|"pinned, licensed, drift-checked"| LIB
     LIB -->|"/plugin · npx skills add · cp"| CC["Claude Code"]
     LIB -->|"runtimes/"| RT["Cursor · Codex · Gemini CLI<br/>OpenCode · Antigravity"]
