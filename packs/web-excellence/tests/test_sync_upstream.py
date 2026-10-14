@@ -125,6 +125,20 @@ def main() -> int:
             "LICENSE": "Apache License\nVersion 2.0, January 2004\n",
             "skills/epsilon/SKILL.md": "epsilon\n",
         })
+        make_upstream(base, "acme", "reserved-readme", {
+            "README.md": "# r\n\n## License\n\nMIT. All rights reserved.\n",
+            "skills/zeta/SKILL.md": "zeta\n",
+        })
+        make_upstream(base, "acme", "reserved-file", {
+            "LICENSE": "MIT License\n\nCopyright (c) 2026 Example. All rights reserved.\n",
+            "skills/eta/SKILL.md": "eta\n",
+        })
+        make_upstream(base, "acme", "bsd-file", {
+            "LICENSE": "BSD 3-Clause License\n\nCopyright (c) 2026 Example. All rights reserved.\n\n"
+                       "Redistribution and use in source and binary forms, with or without\n"
+                       "modification, are permitted provided that the following conditions are met.\n",
+            "skills/theta/SKILL.md": "theta\n",
+        })
 
         good = [
             "acme/with-file|MIT|skills/alpha|alpha",
@@ -189,7 +203,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and "ABSORPTION.md gate 1" in r.stderr, r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -199,8 +213,13 @@ def main() -> int:
         refused("declaration mismatch", good[:1] + ["acme/apache-file|MIT|skills/epsilon|epsilon"], "does not read as MIT")
         refused("licence not on allowlist", good[:1] + ["acme/apache-file|GPL-3.0|skills/epsilon|epsilon"], "not on the ABSORPTION.md allowlist")
 
+        refused("README declares MIT but reserves all rights", good[:1] + ["acme/reserved-readme|MIT|skills/zeta|zeta"], "all rights reserved and grants nothing")
+        refused("LICENSE file reserves all rights with no grant", good[:1] + ["acme/reserved-file|MIT|skills/eta|eta"], "all rights reserved and grants nothing")
+
         r = run_sync(pack, base, good[:1] + ["acme/apache-file|Apache-2.0|skills/epsilon|epsilon"])
         check("Apache text declared Apache-2.0 vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "epsilon", "UPSTREAM-LICENSE")), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/bsd-file|BSD-3-Clause|skills/theta|theta"])
+        check("BSD copyright boilerplate with a grant vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "theta", "UPSTREAM-LICENSE")), r.stderr)
 
         # ---- the real pack's records match what the script would write -------
         real = read(os.path.join(PACK, "skills", "web-design-guidelines", "UPSTREAM-LICENSE"))

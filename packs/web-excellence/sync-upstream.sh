@@ -73,16 +73,27 @@ declare -A ALLOWED=(
   [Unlicense]='Unlicense|This is free and unencumbered software'
 )
 # Refused whatever SOURCES.md says: copyleft reaches this library's MIT root
-# and -NC conflicts with commercial shipping. ("All rights reserved" is not
-# here: the BSD and many MIT texts open with it above the grant.)
+# and -NC conflicts with commercial shipping.
 REFUSED='GNU (General|Lesser|Affero) (General )?Public License|GPL|NonCommercial|(^|[^[:alnum:]])NC([^[:alnum:]]|$)'
+# "All rights reserved" is refused too, with one carve-out: the BSD and many
+# MIT LICENSE files open with it in the copyright line above the grant. So a
+# LICENSE file may carry it only alongside a grant clause; a README
+# declaration never may, since "MIT. All rights reserved." grants nothing.
+RESERVED='All rights reserved'
+GRANT='Permission is hereby granted|Permission to use, copy, modify|Redistribution and use in source and binary forms|hereby grants? (to )?You|free and unencumbered|hereby overtly, fully, permanently'
 
 # check_license_text <repo> <license> <text> <where>
 check_license_text() {
   local repo="$1" license="$2" text="$3" where="$4"
   if printf '%s\n' "$text" | grep -qiE "$REFUSED"; then
-    echo "!! $repo: $where reads as a refused licence (copyleft, -NC or all-rights-reserved) — refusing (ABSORPTION.md gate 1)" >&2
+    echo "!! $repo: $where reads as a refused licence (copyleft or -NC) — refusing (ABSORPTION.md gate 1)" >&2
     exit 1
+  fi
+  if printf '%s\n' "$text" | grep -qiE "$RESERVED"; then
+    if [ "$where" = "README.md License section" ] || ! printf '%s\n' "$text" | grep -qiE "$GRANT"; then
+      echo "!! $repo: $where says all rights reserved and grants nothing — refusing (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
   fi
   if ! printf '%s\n' "$text" | grep -qiE "${ALLOWED[$license]}"; then
     echo "!! $repo: $where does not read as $license, the licence SOURCES.md declares — fix UPSTREAM[] or drop the entry (ABSORPTION.md gate 1)" >&2
