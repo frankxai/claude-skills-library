@@ -42,6 +42,16 @@ type's known UX rules rather than inventing them. `emil-design-eng` and
 `apple-design` carry the judgment the database does not: restraint, hierarchy,
 what earns its place on the screen.
 
+Run `ui-ux-pro-max` from the repo root as
+`python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <domain>`.
+Its own SKILL.md prefixes that path with `${CLAUDE_PLUGIN_ROOT}`, which is unset
+for a project skill. A `design-system/<project>/MASTER.md` it generates is a
+draft below the repo's contracts. It hard-codes `transition: all`, which the
+Audit phase forbids, and white primary-button text whatever the palette's On
+Accent colour, so check that contrast. It also says page overrides live in
+`design-system/pages/`, when it writes them to `design-system/<project>/pages/`.
+SOURCES.md lists these upstream defects.
+
 For a high-value page or a redesign, compare exactly **three** directions and
 say why the winner won. One option is not a decision.
 

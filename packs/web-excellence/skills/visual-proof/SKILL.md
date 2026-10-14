@@ -46,6 +46,9 @@ turn, not repo artifacts.
 Flags: `--widths 375,768,1440` · `--themes light,dark` · `--full` (full-page
 instead of viewport) · `--out <dir>`.
 
+Exit 0 means every width × theme was captured. Exit 6 means some were not: the
+paths it printed are real, the rest are not captured, and the report says which.
+
 ## Environment notes
 
 - **Cloud / remote Claude Code sessions:** Chromium is already installed and

@@ -92,6 +92,24 @@ If that trade stops being acceptable, the options in order of preference:
 Note that `sync-upstream.sh` will overwrite any hand-edit to this skill. Change
 it in the `UPSTREAM[]` table or in a wrapper, not in the vendored file.
 
+## Known upstream defects (vendored, not patched here)
+
+A vendored skill is never hand-edited: the next `./sync-upstream.sh` would
+overwrite the fix. These were found in review and checked against the
+upstream HEAD at the time, so they belong upstream. Until then, the native
+`web-release-gate` tells the agent how to work around the ones that change an
+outcome.
+
+| Skill | Defect | Effect | Handled by |
+|---|---|---|---|
+| `ui-ux-pro-max` | SKILL.md runs `search.py` under `${CLAUDE_PLUGIN_ROOT}` | Unset for a project skill, so the documented command fails | `web-release-gate` gives the repo-relative command |
+| `ui-ux-pro-max` | `design_system.py` emits `transition: all` in button and card templates | A generated MASTER.md breaks the gate's own baseline | `web-release-gate` marks generated output as a draft below the gate |
+| `ui-ux-pro-max` | Primary-button text is hard-coded `white`, ignoring the palette's On Accent | White-on-white CTAs for light-accent palettes | `web-release-gate` says to check that contrast |
+| `ui-ux-pro-max` | MASTER.md points to `design-system/pages/`; overrides are written to `design-system/<project>/pages/` | An agent following the master misses its page overrides | `web-release-gate` names the real path |
+| `ui-ux-pro-max` | `--persist --page` returns early once MASTER.md exists | The page override is never written without `--force`, which also overwrites the master | Upstream only |
+| `ui-ux-pro-max` | Synonym normalization uses `str.replace`, so `navigation` becomes `navigationigation` | `nav` and `navigation` queries return different results | Upstream only |
+| `extract-design-system` | Runs `npx extract-design-system` and `npx playwright install` unpinned | Fetches whatever the registry serves, outside the lockfile | Use only for reference URLs, as above; skip where the repo's contract forbids unlisted tooling |
+
 ## Re-syncing
 
 ```bash

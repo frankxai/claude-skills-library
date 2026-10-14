@@ -50,9 +50,9 @@ The hooks:
 
 | Hook | Event | What it does |
 |---|---|---|
-| `web-excellence-session.py` | `SessionStart` | Injects the gate contract as `additionalContext`, and names the repo's own `design.md` / `taste.md` / `tailwind.config` as outranking the pack. Silent if the pack is not installed. |
+| `web-excellence-session.py` | `SessionStart` | Injects the gate contract as `additionalContext`, and names the repo's own `design.md` / `taste.md` / `tailwind.config` as outranking the pack. Records which files were already uncommitted, so the Stop hook can tell this session's shell edits from earlier work. Silent if the pack is not installed. |
 | `web-excellence-gate.py` | `PreToolUse` on `Edit\|Write\|MultiEdit\|NotebookEdit` | Fires the moment a UI file is written — `app/`, `components/`, `styles/`, any `.css` — with the checklist. Skips `api/`, `lib/`, tests, `route.ts`. Never blocks. Once per session (`WEB_GATE_EVERY_EDIT=1` to repeat). |
-| `web-excellence-stop.py` | `Stop` | Closes the loop: if UI files were touched and the transcript shows no `web-design-guidelines` audit, blocks the stop **once** with what is missing. Guarded three ways against looping. `WEB_GATE_NO_STOP=1` to disable. |
+| `web-excellence-stop.py` | `Stop` | Closes the loop: if UI files were touched (through Edit/Write, or left uncommitted by a shell command since the session began) and the transcript shows no executed audit and capture, blocks the stop **once** with what is missing. Guarded three ways against looping. `WEB_GATE_NO_STOP=1` to disable. |
 
 That last one is the loop. PreToolUse opens it, Stop closes it, and the state
 file in `$TMPDIR` carries the touched-file list between them.
@@ -61,9 +61,24 @@ file in `$TMPDIR` carries the touched-file list between them.
 version did, and the PreToolUse reminder names the very skills it asks for — so
 the reminder text landed in the transcript, the check saw the names, and the
 gate passed on the strength of its own nagging. The loop was a no-op and nothing
-caught it. Evidence is now the guidelines URL and the capture runner's own
-output; `tests/test_hooks.py::test_reminder_cannot_satisfy_evidence` fails the
+caught it. `tests/test_hooks.py::test_reminder_cannot_satisfy_evidence` fails the
 build if a marker ever reappears in the reminder.
+
+Matching the markers as free text failed the same way one level down: the
+`web-design-guidelines` skill quotes the guidelines URL, so loading the skills
+closed the gate. A receipt now counts only where a run leaves it: the URL in
+the input of a fetch call, and the capture line in the result of a Bash call
+that executed `capture.mjs`. Subagent transcripts are read too.
+`test_skill_text_cannot_satisfy_evidence` holds that line.
+
+Commands in `settings.json` go through `${CLAUDE_PROJECT_DIR}`. Hooks run in the
+session's current directory, so a relative path stops resolving after the
+agent `cd`s into a subdirectory.
+
+Known gap: a UI change made by a shell command *and committed in the same turn*
+is not seen; only uncommitted changes are compared, because comparing commits
+would also flag everything a `git pull` brought in. The PR workflow still lints
+those lines.
 
 ## Tests
 

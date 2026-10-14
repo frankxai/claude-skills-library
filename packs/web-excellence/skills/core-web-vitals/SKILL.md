@@ -45,8 +45,15 @@ Flag any route whose First Load JS grew in this change, and by how much.
 
 **2. Lighthouse against a running server.**
 
+Use the repo's own Lighthouse when it has one (`pnpm exec lighthouse`, or a
+script in `package.json`). Otherwise the pinned version below is fetched into
+the npm cache, outside the lockfile. When the repo's contract says tooling
+comes only from its lockfile (a frozen-install rule in `AGENTS.md`/`SYSTEM.md`),
+skip this step and say Lighthouse was not run and why; do not add the
+dependency to make the number appear.
+
 ```bash
-npx --yes lighthouse http://localhost:3000/<route> \
+npx --yes lighthouse@13.5.0 http://localhost:3000/<route> \
   --only-categories=performance \
   --preset=desktop \
   --output=json --output-path=./.lighthouse.json --quiet --chrome-flags="--headless"

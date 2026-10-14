@@ -127,23 +127,57 @@ def test_stop_blocks_then_never_again() -> None:
     check("stop never blocks twice", second is None)
 
 
-AUDIT_LINE = ("fetched https://raw.githubusercontent.com/vercel-labs/"
-              "web-interface-guidelines/main/command.md\n")
+GUIDELINES_URL = ("https://raw.githubusercontent.com/vercel-labs/"
+                  "web-interface-guidelines/main/command.md")
+CAPTURE_CMD = ("node .claude/skills/visual-proof/capture.mjs "
+               "--url http://localhost:3000/pricing --label after")
 
 
-def stop_with_transcript(sid: str, body: str):
-    """Arm the gate for `sid`, then run the Stop hook against a fake transcript."""
+def tool_use(tid: str, name: str, tool_input: dict) -> str:
+    return json.dumps({"type": "assistant", "message": {"role": "assistant", "content": [
+        {"type": "tool_use", "id": tid, "name": name, "input": tool_input}]}}) + "\n"
+
+
+def tool_result(tid: str, text: str) -> str:
+    return json.dumps({"type": "user", "message": {"role": "user", "content": [
+        {"type": "tool_result", "tool_use_id": tid, "content": text}]}}) + "\n"
+
+
+def user_text(text: str) -> str:
+    """How a loaded skill's body reaches the transcript."""
+    return json.dumps({"type": "user", "isMeta": True, "message": {"role": "user", "content": [
+        {"type": "text", "text": text}]}}) + "\n"
+
+
+AUDIT_LINE = (tool_use("audit1", "WebFetch", {"url": GUIDELINES_URL, "prompt": "list every rule"})
+              + tool_result("audit1", "# Web Interface Guidelines\n- Inputs ≥16px on mobile"))
+SHOTS_LINE = (tool_use("shot1", "Bash", {"command": CAPTURE_CMD})
+              + tool_result("shot1", 'captured 6 shot(s) for "after":\n  .visual-proof/after/375-light.png'))
+CANNOT_LINE = (tool_use("shot2", "Bash", {"command": CAPTURE_CMD})
+               + tool_result("shot2", "Cannot capture: Playwright is not available in this project."))
+
+
+def stop_with_transcript(sid: str, body: str, subagent: str = ""):
+    """Arm the gate for `sid`, then run the Stop hook against a fake transcript.
+
+    `subagent`, when given, is written where Claude Code keeps a subagent's
+    transcript: <session>/subagents/agent-*.jsonl beside <session>.jsonl.
+    """
     sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
     try:
         os.remove(sp)
     except OSError:
         pass
     run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/X.tsx"}})
-    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as fh:
-        fh.write(body)
-        path = fh.name
-    out, _ = run_hook(STOP, {"session_id": sid, "transcript_path": path})
-    os.unlink(path)
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, f"{sid}.jsonl")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(body)
+        if subagent:
+            os.makedirs(os.path.join(d, sid, "subagents"))
+            with open(os.path.join(d, sid, "subagents", "agent-a1.jsonl"), "w", encoding="utf-8") as fh:
+                fh.write(subagent)
+        out, _ = run_hook(STOP, {"session_id": sid, "transcript_path": path})
     return out
 
 
@@ -164,16 +198,173 @@ def test_stop_requires_both_halves() -> None:
               "visual-proof" in reason and "web-design-guidelines" not in reason,
               reason)
 
-    visual_only = stop_with_transcript("bothvisual", "wrote 6 shot(s) for /pricing\n")
+    visual_only = stop_with_transcript("bothvisual", SHOTS_LINE)
     check("visual proof without an audit still blocks",
           visual_only is not None and visual_only.get("decision") == "block")
 
-    both = stop_with_transcript("bothdone", AUDIT_LINE + "wrote 6 shot(s) for /pricing\n")
+    both = stop_with_transcript("bothdone", AUDIT_LINE + SHOTS_LINE)
     check("gate closes when both halves ran", both is None)
 
-    excused = stop_with_transcript(
-        "bothexcused", AUDIT_LINE + "cannot capture: no dev server on :3000\n")
+    excused = stop_with_transcript("bothexcused", AUDIT_LINE + CANNOT_LINE)
     check("an honest 'cannot capture' counts as visual proof", excused is None)
+
+
+def test_skill_text_cannot_satisfy_evidence() -> None:
+    """Loading or reading the pack must not pass for running it.
+
+    web-design-guidelines/SKILL.md quotes the guidelines URL, visual-proof/
+    SKILL.md names .visual-proof/, and capture.mjs and this hook contain every
+    marker. The first receipts matched anywhere in the transcript, so loading
+    the two skills closed the gate before either step ran.
+    """
+    pack_text = "".join(
+        open(os.path.join(PACK, rel), encoding="utf-8").read()
+        for rel in ("skills/web-design-guidelines/SKILL.md", "skills/visual-proof/SKILL.md",
+                    "skills/visual-proof/capture.mjs", "hooks/web-excellence-stop.py"))
+    body = (
+        user_text(pack_text)                                       # Skill tool loads
+        + tool_use("r1", "Read", {"file_path": ".claude/skills/visual-proof/capture.mjs"})
+        + tool_result("r1", pack_text)                             # Read of the sources
+        + tool_use("c1", "Bash", {"command": "cat .claude/skills/visual-proof/capture.mjs"})
+        + tool_result("c1", pack_text)                             # cat is not a run
+        + tool_use("g1", "Grep", {"pattern": GUIDELINES_URL})      # searching for the URL
+        + tool_result("g1", "SKILL.md:26")
+    )
+    out = stop_with_transcript("skilltext", body)
+    reason = (out or {}).get("reason", "")
+    check("skill and source text satisfies neither receipt",
+          out is not None and "web-design-guidelines" in reason and "visual-proof" in reason,
+          reason or "stop hook passed")
+
+
+def test_receipts_count_from_a_subagent_transcript() -> None:
+    out = stop_with_transcript("subagent", "", subagent=AUDIT_LINE + SHOTS_LINE)
+    check("an audit run by a subagent closes the gate", out is None)
+
+
+def test_receipts_accept_a_shell_fetch() -> None:
+    body = (tool_use("cu1", "Bash", {"command": f"curl -s {GUIDELINES_URL}"})
+            + tool_result("cu1", "# Web Interface Guidelines") + SHOTS_LINE)
+    check("curl of the guidelines counts as the fetch",
+          stop_with_transcript("curlfetch", body) is None)
+
+
+def test_gate_and_stop_agree_on_ui_paths() -> None:
+    """The stop hook classifies shell-edited files with a copy of the gate's regexes."""
+    gate = open(GATE, encoding="utf-8").read()
+    stop = open(STOP, encoding="utf-8").read()
+    for name in ("UI_PATH", "NOT_UI"):
+        pat = re.compile(rf"^{name} = re\.compile\(\n(.*?)\n\)$", re.S | re.M)
+        a, b = pat.search(gate), pat.search(stop)
+        check(f"{name} is identical in gate and stop hooks",
+              bool(a and b) and a.group(1) == b.group(1))
+
+
+def git_repo(d: str) -> None:
+    def git(*a):
+        subprocess.run(["git", "-C", d, *a], capture_output=True, check=True)
+    os.makedirs(os.path.join(d, "components"))
+    os.makedirs(os.path.join(d, "lib"))
+    os.makedirs(os.path.join(d, ".claude", "skills", "web-release-gate"))
+    for rel in ("components/A.tsx", "components/Old.tsx", "lib/x.ts"):
+        with open(os.path.join(d, rel), "w") as fh:
+            fh.write("export {};\n")
+    git("init", "-q")
+    git("config", "user.email", "t@t")
+    git("config", "user.name", "t")
+    git("add", "-A")
+    git("commit", "-qm", "base")
+
+
+def write(d: str, rel: str, text: str) -> None:
+    with open(os.path.join(d, rel), "w") as fh:
+        fh.write(text)
+
+
+def test_stop_sees_ui_edits_made_through_the_shell() -> None:
+    """A UI file rewritten by sed or a heredoc never reaches the PreToolUse matcher."""
+    with tempfile.TemporaryDirectory() as d:
+        git_repo(d)
+        write(d, "components/Old.tsx", "export const dirtyBeforeSession = 1;\n")
+
+        def session(sid):
+            try:
+                os.remove(os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json"))
+            except OSError:
+                pass
+            run_hook(SESSION, {"session_id": sid, "cwd": d})
+
+        def stop(sid, cwd=d):
+            out, _ = run_hook(STOP, {"session_id": sid, "cwd": cwd, "transcript_path": "/nope"})
+            return out
+
+        session("shellquiet")
+        write(d, "lib/x.ts", "export const notUi = 2;\n")
+        check("pre-existing dirty UI file and a non-UI edit do not block",
+              stop("shellquiet") is None)
+
+        session("shelledit")
+        write(d, "components/A.tsx", "export const viaSed = 1;\n")
+        out = stop("shelledit", cwd=os.path.join(d, "components"))
+        reason = (out or {}).get("reason", "")
+        check("a UI file changed outside Edit/Write blocks the stop",
+              out is not None and "components/A.tsx" in reason, reason or "passed")
+        check("the file that was dirty before the session is not blamed",
+              "components/Old.tsx" not in reason, reason)
+
+        session("shellagain")
+        write(d, "components/Old.tsx", "export const editedAgainThisSession = 2;\n")
+        out = stop("shellagain")
+        check("a pre-dirty UI file edited again this session blocks",
+              out is not None and "components/Old.tsx" in out.get("reason", ""))
+
+        try:
+            os.remove(os.path.join(tempfile.gettempdir(), "web-gate-nobaseline.json"))
+        except OSError:
+            pass
+        check("no baseline recorded means no shell-edit check",
+              stop("nobaseline") is None)
+
+
+def test_capture_exits_nonzero_on_a_partial_matrix() -> None:
+    """One good phone shot must not pass for failed desktop and dark captures."""
+    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+        print("  skip capture test (node not available)")
+        return
+    stub = """
+import { writeFileSync } from 'node:fs';
+const failWidth = Number(process.env.FAIL_WIDTH || 0);
+export const chromium = { launch: async () => ({
+  newContext: async (opts) => ({
+    newPage: async () => ({
+      goto: async () => { if (opts.viewport.width === failWidth) throw new Error('boom'); },
+      evaluate: async () => false,
+      waitForTimeout: async () => {},
+      screenshot: async ({ path }) => writeFileSync(path, ''),
+    }),
+    close: async () => {},
+  }),
+  close: async () => {},
+}) };
+"""
+    with tempfile.TemporaryDirectory() as d:
+        mod = os.path.join(d, "node_modules", "playwright")
+        os.makedirs(mod)
+        write(mod, "package.json", '{"name":"playwright","type":"module","main":"index.js"}')
+        write(mod, "index.js", stub)
+        src = open(os.path.join(PACK, "skills", "visual-proof", "capture.mjs"), encoding="utf-8").read()
+        write(d, "capture.mjs", src)
+
+        def capture(fail_width):
+            env = dict(os.environ, FAIL_WIDTH=str(fail_width))
+            return subprocess.run(["node", "capture.mjs", "--url", "http://x.test/", "--label", "t"],
+                                  cwd=d, capture_output=True, text=True, env=env)
+
+        full = capture(0)
+        check("a complete matrix exits 0", full.returncode == 0, full.stderr)
+        part = capture(768)
+        check("a partial matrix exits non-zero",
+              part.returncode == 6 and "Incomplete: 2 of 6" in part.stderr, part.stderr)
 
 
 def test_stop_opt_out() -> None:
@@ -414,6 +605,45 @@ def test_linter_survives_a_hostile_base_ref() -> None:
             cwd=d, capture_output=True, text=True)
         check("hostile --base does not reach a shell",
               not os.path.exists(canary) and r.returncode == 2, r.stderr.strip())
+
+
+def test_installer_upgrades_an_old_install() -> None:
+    """Re-running install.sh must move old hook commands, not add second copies.
+
+    Hooks run in the session's current directory, so the commands are anchored
+    to ${CLAUDE_PROJECT_DIR}. Matching ours by exact command string would leave
+    every relative entry from an older install in place beside the new one, and
+    each hook would then run twice.
+    """
+    old_cmd = "python3 .claude/hooks/web-excellence-{}.py"
+    settings = {"hooks": {
+        "SessionStart": [{"matcher": ".*", "hooks": [
+            {"type": "command", "command": old_cmd.format("session"), "timeout": 10}]}],
+        "PreToolUse": [
+            {"matcher": "Bash", "hooks": [{"type": "command", "command": "python3 .claude/hooks/other.py"}]},
+            {"matcher": "Edit|Write|MultiEdit|NotebookEdit", "hooks": [
+                {"type": "command", "command": old_cmd.format("gate"), "timeout": 10}]}],
+        "Stop": [{"hooks": [{"type": "command", "command": old_cmd.format("stop"), "timeout": 15}]}],
+    }}
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, ".claude"))
+        write(d, ".claude/settings.json", json.dumps(settings))
+        write(d, ".gitignore", "node_modules/\n\n# web-excellence pack — local evidence, not repo artifacts\n"
+                               ".visual-proof/\n.lighthouse.json\n.extract-design-system/\n.claude/skills/.replaced/\n")
+        for _ in range(2):
+            r = subprocess.run(["bash", os.path.join(PACK, "install.sh"), d, "--no-db", "--no-ci"],
+                               capture_output=True, text=True)
+        check("installer runs", r.returncode == 0, r.stderr)
+        got = json.load(open(os.path.join(d, ".claude", "settings.json")))
+        cmds = [h["command"] for ev in got["hooks"].values() for e in ev for h in e["hooks"]]
+        for name in ("session", "gate", "stop"):
+            mine = [c for c in cmds if f"web-excellence-{name}.py" in c]
+            check(f"exactly one {name} hook, anchored to the project root",
+                  len(mine) == 1 and "${CLAUDE_PROJECT_DIR" in mine[0], str(mine))
+        check("unrelated hooks are kept", "python3 .claude/hooks/other.py" in cmds)
+        gi = open(os.path.join(d, ".gitignore")).read().splitlines()
+        check("new ignore lines reach a repo installed by an older version",
+              gi.count(".claude/skills/**/__pycache__/") == 1 and gi.count(".visual-proof/") == 1, str(gi))
 
 
 if __name__ == "__main__":
