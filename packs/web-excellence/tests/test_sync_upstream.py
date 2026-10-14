@@ -380,6 +380,22 @@ def main() -> int:
             "README.md": "# y\r\n\r\n## License\r\n\r\nMIT\r\n\r\nCredits\r\n-------\r\n\r\nnope\r\n",
             "skills/yot/SKILL.md": "yot\n",
         })
+        make_upstream(base, "acme", "setext-indented", {
+            "README.md": "# s\n\nExample:\n\n    License\n    =======\n    MIT\n",
+            "skills/ash/SKILL.md": "ash\n",
+        })
+        make_upstream(base, "acme", "setext-indented-ok", {
+            "README.md": "# e\n\n   License\n   -------\n\nMIT\n\nCredits\n-------\n\nnope\n",
+            "skills/ethel/SKILL.md": "ethel\n",
+        })
+        make_upstream(base, "acme", "frontmatter-quoted", {
+            "LICENSE": MIT,
+            "skills/wynn/SKILL.md": "---\nname: wynn\n\"license\": GPL-3.0\n---\nwynn\n",
+        })
+        make_upstream(base, "acme", "frontmatter-quoted-ok", {
+            "LICENSE": MIT,
+            "skills/thorn/SKILL.md": "---\nname: thorn\n'license': 'MIT'\n---\nthorn\n",
+        })
         make_upstream(base, "acme", "fenced-nested-decoy", {
             "README.md": "# a\n\n## License\n\nMIT\n\n## Example\n\n````markdown\nSay:\n```\n## License\n\nGPL-3.0\n```\n````\n\n~~~\n```\n## Licence\n\nGPL-3.0\n```\n~~~\n",
             "skills/ayin/SKILL.md": "ayin\n",
@@ -437,6 +453,15 @@ def main() -> int:
             fh.write(moved)
         r = run_sync(pack, base, good, "--check")
         check("a moved Commit line alone is not drift", r.returncode == 0, r.stdout)
+        for label, bad in (("a bare Commit: line", "Commit:"), ("a non-hexadecimal Commit value", "Commit:   not-a-sha")):
+            run_sync(pack, base, good)
+            tampered = read(beta_lic).replace(f"Commit:   {sha}", bad)
+            check(f"{label}: fixture differs from the record", tampered != read(beta_lic) and bad in tampered)
+            with open(beta_lic, "w", encoding="utf-8") as fh:
+                fh.write(tampered)
+            r = run_sync(pack, base, good, "--check")
+            check(f"{label} in a record is drift", r.returncode == 1 and "DRIFT  beta" in r.stdout, r.stdout)
+        run_sync(pack, base, good)
 
         # ---- refusals leave the tree untouched ---------------------------------
         def refused(label: str, entries: list[str], needle: str, gate: bool = True) -> None:
@@ -448,7 +473,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and (not gate or "ABSORPTION.md gate 1" in r.stderr), r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -494,6 +519,8 @@ def main() -> int:
         refused("a closing fence indented four spaces is fence content, not a close", good[:1] + ["acme/fence-indented-close|MIT|skills/digamma|digamma"], "no README has a License section")
         refused("CRLF SKILL.md frontmatter declaring GPL under an MIT root", good[:1] + ["acme/crlf-frontmatter|MIT|skills/san|san"], "skills/san/SKILL.md frontmatter license reads as a refused licence")
         refused("CRLF skill README declaring GPL under an MIT root", good[:1] + ["acme/crlf-readme|MIT|skills/sho|sho"], "skills/sho/README.md License section reads as a refused licence")
+        refused("a four-space-indented Setext License block is code, not a declaration", good[:1] + ["acme/setext-indented|MIT|skills/ash|ash"], "no README has a License section")
+        refused("a double-quoted frontmatter license key declaring GPL under an MIT root", good[:1] + ["acme/frontmatter-quoted|MIT|skills/wynn|wynn"], "skills/wynn/SKILL.md frontmatter license reads as a refused licence")
 
         # ---- a refused run leaves nothing in TMPDIR -----------------------------
         tmpdir_probe = os.path.join(tmp, "probe-tmp")
@@ -610,6 +637,11 @@ def main() -> int:
             fh.write(MIT + "\nCommit: tampered\n")
         r = run_sync(pack, base, heta_entries, "--check")
         check("a changed Commit: line in a raw LICENSE record is drift", r.returncode == 1 and "DRIFT  heta" in r.stdout, r.stdout)
+        r = run_sync(pack, base, good[:1] + ["acme/setext-indented-ok|MIT|skills/ethel|ethel"])
+        ethel_lic = os.path.join(pack, "skills", "ethel", "UPSTREAM-LICENSE")
+        check("a Setext heading indented three spaces is a heading", r.returncode == 0 and os.path.isfile(ethel_lic) and "\n    MIT\n" in read(ethel_lic) and "nope" not in read(ethel_lic), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/frontmatter-quoted-ok|MIT|skills/thorn|thorn"])
+        check("a single-quoted frontmatter license key agreeing with the root vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "thorn", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/frontmatter-ok|MIT|skills/kaph|kaph"])
         check("SKILL.md frontmatter declaring the same licence vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "kaph", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/fenced-nested-decoy|MIT|skills/ayin|ayin"])

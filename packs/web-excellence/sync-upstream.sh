@@ -235,9 +235,14 @@ extract_license_sections() {
           text = ind
           match(text, /^#+/); h = RLENGTH
           sub(/^#+[ \t]+/, "", text); sub(/[ \t]+#+[ \t]*$/, "", text)
-        } else if (i < NR && line ~ /[^ \t]/ && line !~ /^[ \t]*[-=*#>|]/ && (L[i+1] ~ /^[ \t]*=+[ \t]*$/ || L[i+1] ~ /^[ \t]*-+[ \t]*$/)) {
-          h = (L[i+1] ~ /^[ \t]*=+[ \t]*$/) ? 1 : 2
-          text = line; sub(/^[ \t]+/, "", text); sub(/[ \t]+$/, "", text); skip = 1
+        } else if (i < NR && nsp <= 3 && ind ~ /[^ \t]/ && ind !~ /^[-=*#>|]/) {
+          # Setext: the title and its underline may each be indented at most
+          # three spaces; a four-space-indented pair is a code block.
+          uind = L[i+1]; sub(/^ */, "", uind); unsp = length(L[i+1]) - length(uind)
+          if (unsp <= 3 && (uind ~ /^=+[ \t]*$/ || uind ~ /^-+[ \t]*$/)) {
+            h = (uind ~ /^=+/) ? 1 : 2
+            text = ind; sub(/[ \t]+$/, "", text); skip = 1
+          }
         }
         if (h) {
           if (f && h <= lvl) { f = 0; print "----8<----" }
@@ -340,7 +345,8 @@ resolve_license() {
   # Agent Skills frontmatter may carry a license field. A skill that says
   # "license: GPL-3.0" under an MIT root is not MIT whatever the root file
   # says, so the field is read as a bare declaration, in the selected skill
-  # and in every SKILL.md nested inside it. A value that is not the plain
+  # and in every SKILL.md nested inside it, with the key bare or quoted as
+  # YAML allows. A value that is not the plain
   # licence name ("see LICENSE.txt") is refused the same way and needs a
   # human read.
   local decl
@@ -348,7 +354,7 @@ resolve_license() {
     decl="$(awk '{ sub(/\r$/, "") }
                  NR == 1 { if ($0 != "---") exit; next }
                  $0 == "---" { exit }
-                 /^license[ \t]*:/ { sub(/^license[ \t]*:[ \t]*/, ""); gsub(/^[\042\047]|[\042\047]$/, ""); print; exit }' "$path" 2>/dev/null)"
+                 /^[\042\047]?license[\042\047]?[ \t]*:/ { sub(/^[\042\047]?license[\042\047]?[ \t]*:[ \t]*/, ""); gsub(/^[\042\047]|[\042\047]$/, ""); print; exit }' "$path" 2>/dev/null)"
     [ -n "$decl" ] && check_license_text "$repo" "$license" "$decl" "${path#"$clone"/} frontmatter license"
   done < <(find "$clone/$src" -iname 'SKILL.md' -type f -print0 2>/dev/null)
   if [ -n "$nearest_file" ]; then
@@ -387,16 +393,19 @@ RECORD_HEADER="UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not h
 
 # license_current <expected> <actual>
 # The Commit line of a generated record moves with upstream HEAD even when the
-# skill tree does not, so its value is not drift. Its absence is: a record with
-# no commit has lost its provenance. Everything else, and every byte of a raw
-# upstream LICENSE, must match.
+# skill tree does not, so which commit it names is not drift. Its absence, or a
+# value that is not a commit, is: such a record has lost its provenance.
+# Everything else, and every byte of a raw upstream LICENSE, must match.
 license_current() {
   # A symlink is not a self-contained record, whatever it points at.
   [ -L "$2" ] && return 1
   [ -f "$2" ] || return 1
   if [ "$(head -n 1 "$1")" = "$RECORD_HEADER" ]; then
     [ "$(head -n 1 "$2")" = "$RECORD_HEADER" ] || return 1
+    # Exactly one Commit line, and it must name a commit: a bare or
+    # non-hexadecimal value has lost the provenance the line exists for.
     [ "$(grep -c '^Commit:' "$2")" = 1 ] || return 1
+    grep -qE '^Commit:[[:space:]]+[0-9a-f]{7,40}[[:space:]]*$' "$2" || return 1
     diff -q <(grep -v '^Commit:' "$1") <(grep -v '^Commit:' "$2") >/dev/null 2>&1
   else
     # A raw upstream LICENSE has no Commit field; nothing in it is ignorable.
