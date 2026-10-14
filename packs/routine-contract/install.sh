@@ -47,9 +47,12 @@ for src in "$PACK_DIR"/skills/*/; do
   if [ -d "$DEST_SKILLS/$name" ]; then
     # An installed copy identical to the pack's is already canonical: leave
     # it and create no set-aside, or every re-run would mint one.
-    # A symlink is never canonical, whatever it points at: the install must be
-    # a self-contained copy, so it falls through to the set-aside below.
-    if [ ! -L "${DEST_SKILLS%/}/$name" ] && diff -rq "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
+    # A symlink is never canonical, whatever it points at, whether the skill
+    # directory itself or any file inside it: the install must be a
+    # self-contained copy, so it falls through to the set-aside below.
+    if [ ! -L "${DEST_SKILLS%/}/$name" ] \
+       && [ -z "$(find "$DEST_SKILLS/$name" -type l -print -quit)" ] \
+       && diff -rq "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
       say "  ok     $name (already canonical)"
       continue
     fi

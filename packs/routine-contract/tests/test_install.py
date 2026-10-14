@@ -78,10 +78,21 @@ def main() -> int:
         check("symlinked skill was set aside, not deleted", len(set_asides(target)) == before + 1, str(set_asides(target)))
         check("external tree untouched", os.path.isfile(os.path.join(external, "SKILL.md")))
 
+        # A nested symlink to an identical external file is not self-contained
+        # either, even though the skill directory itself is real.
+        before = len(set_asides(target))
+        ext_file = os.path.join(tmp, "external-SKILL.md")
+        shutil.move(os.path.join(installed, "SKILL.md"), ext_file)
+        os.symlink(ext_file, os.path.join(installed, "SKILL.md"))
+        r = install(target)
+        check("nested symlink: install exits 0", r.returncode == 0, r.stderr)
+        check("nested symlink is replaced by a real file", os.path.isfile(os.path.join(installed, "SKILL.md")) and not os.path.islink(os.path.join(installed, "SKILL.md")))
+        check("nested symlink: skill was set aside", len(set_asides(target)) == before + 1, str(set_asides(target)))
+
         with open(os.path.join(installed, "LOCAL.md"), "w", encoding="utf-8") as fh:
             fh.write("second fork marker\n")
         install(target)
-        check("second divergence does not overwrite the first set-aside", len(set_asides(target)) == 3, str(set_asides(target)))
+        check("second divergence does not overwrite the first set-aside", len(set_asides(target)) == 4, str(set_asides(target)))
 
     print()
     if failures:

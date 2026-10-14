@@ -146,14 +146,56 @@ def main() -> int:
         outside = os.path.join(tmp, "outside.txt")
         with open(outside, "w", encoding="utf-8") as fh:
             fh.write("precious\n")
+
+        def add_symlink(repo_name: str, rel: str, target: str) -> None:
+            repo = os.path.join(base, "acme", repo_name + ".git")
+            os.symlink(target, os.path.join(repo, rel))
+            git(repo, "add", "-A")
+            git(repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "symlink")
+
         make_upstream(base, "acme", "symlinked", {
             "README.md": "# s\n\n## License\n\nMIT\n",
             "skills/iota/SKILL.md": "iota\n",
         })
-        os.symlink(outside, os.path.join(base, "acme", "symlinked.git", "skills", "iota", "UPSTREAM-LICENSE"))
-        sym_repo = os.path.join(base, "acme", "symlinked.git")
-        git(sym_repo, "add", "-A")
-        git(sym_repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "symlink")
+        add_symlink("symlinked", "skills/iota/UPSTREAM-LICENSE", outside)
+        make_upstream(base, "acme", "dir-collision", {
+            "LICENSE": MIT,
+            "skills/omicron/SKILL.md": "omicron\n",
+            "skills/omicron/UPSTREAM-LICENSE/x": "x\n",
+        })
+        make_upstream(base, "acme", "two-files", {
+            "skills/nu/LICENSE": MIT,
+            "skills/nu/LICENSE.md": GPL,
+            "skills/nu/SKILL.md": "nu\n",
+        })
+        make_upstream(base, "acme", "readme-conflict", {
+            "LICENSE": MIT,
+            "skills/xi/README.md": "# xi\n\n## License\n\nGPL-3.0\n",
+            "skills/xi/SKILL.md": "xi\n",
+        })
+        make_upstream(base, "acme", "proprietary-file", {
+            "LICENSE": "This proprietary work is not licensed under MIT; contact us for terms.\n",
+            "skills/pi/SKILL.md": "pi\n",
+        })
+        outside_mit = os.path.join(tmp, "outside-LICENSE")
+        with open(outside_mit, "w", encoding="utf-8") as fh:
+            fh.write(MIT)
+        make_upstream(base, "acme", "symlink-license", {
+            "skills/rho/SKILL.md": "rho\n",
+        })
+        add_symlink("symlink-license", "skills/rho/LICENSE", outside_mit)
+        make_upstream(base, "acme", "subheading", {
+            "README.md": "# s\n\n## License\n\nMIT\n\n### Exceptions\n\nNot for commercial use.\n\n## Other\n\nfine\n",
+            "skills/sigma/SKILL.md": "sigma\n",
+        })
+        make_upstream(base, "acme", "subheading-benign", {
+            "README.md": "# t\n\n## License\n\nMIT\n\n### Attribution\n\nPlease credit the authors.\n\n## Credits\n\nnope\n",
+            "skills/tau/SKILL.md": "tau\n",
+        })
+        make_upstream(base, "acme", "bare-file", {
+            "LICENSE": "MIT\n",
+            "skills/upsilon/SKILL.md": "upsilon\n",
+        })
         make_upstream(base, "acme", "negated", {
             "README.md": "# n\n\n## License\n\nThis project is not licensed under MIT; contact us for terms.\n",
             "skills/mu/SKILL.md": "mu\n",
@@ -233,18 +275,26 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and "ABSORPTION.md gate 1" in r.stderr, r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
         # would have re-vendored it (dropping LOCAL.md) before hitting the bad entry.
-        refused("unlicensed upstream", good[:1] + ["acme/unlicensed|MIT|skills/gamma|gamma"], "no License section")
+        refused("unlicensed upstream", good[:1] + ["acme/unlicensed|MIT|skills/gamma|gamma"], "License section")
         refused("copyleft text declared MIT", good[:1] + ["acme/copyleft|MIT|skills/delta|delta"], "refused licence")
         refused("declaration mismatch", good[:1] + ["acme/apache-file|MIT|skills/epsilon|epsilon"], "does not read as MIT")
         refused("licence not on allowlist", good[:1] + ["acme/apache-file|GPL-3.0|skills/epsilon|epsilon"], "not on the ABSORPTION.md allowlist")
         refused("BSD-3 text declared BSD-2-Clause", good[:1] + ["acme/bsd-file|BSD-2-Clause|skills/theta|theta"], "does not read as BSD-2-Clause")
         refused("README negates its declaration", good[:1] + ["acme/negated|MIT|skills/mu|mu"], "qualifies or negates")
         refused("skill-local GPL under an MIT root", good[:1] + ["acme/mono-conflict|MIT|skills/kappa|kappa"], "skills/kappa/LICENSE reads as a refused licence")
+        refused("two licence files at one level, one GPL", good[:1] + ["acme/two-files|MIT|skills/nu|nu"], "skills/nu/LICENSE.md reads as a refused licence")
+        refused("skill README declares GPL under an MIT root", good[:1] + ["acme/readme-conflict|MIT|skills/xi|xi"], "skills/xi/README.md License section reads as a refused licence")
+        refused("LICENSE file that is a negated declaration", good[:1] + ["acme/proprietary-file|MIT|skills/pi|pi"], "qualifies or negates")
+        refused("symlinked LICENSE input", good[:1] + ["acme/symlink-license|MIT|skills/rho|rho"], "is a symlink")
+        refused("restriction hidden under a License sub-heading", good[:1] + ["acme/subheading|MIT|skills/sigma|sigma"], "qualifies or negates")
+        refused("upstream ships UPSTREAM-LICENSE at the skill root", good[:1] + ["acme/symlinked|MIT|skills/iota|iota"], "reserves")
+        check("planted UPSTREAM-LICENSE symlink never touched the outside file", read(outside) == "precious\n")
+        refused("upstream ships an UPSTREAM-LICENSE directory", good[:1] + ["acme/dir-collision|MIT|skills/omicron|omicron"], "reserves")
 
         refused("README declares MIT but reserves all rights", good[:1] + ["acme/reserved-readme|MIT|skills/zeta|zeta"], "all rights reserved and grants nothing")
         refused("LICENSE file reserves all rights with no grant", good[:1] + ["acme/reserved-file|MIT|skills/eta|eta"], "all rights reserved and grants nothing")
@@ -257,6 +307,12 @@ def main() -> int:
         lambda_lic = os.path.join(pack, "skills", "lambda", "UPSTREAM-LICENSE")
         check("skill-local MIT under an MIT root vendors", r.returncode == 0 and os.path.isfile(lambda_lic), r.stderr)
         check("the nearest licence is the one recorded", os.path.isfile(lambda_lic) and read(lambda_lic) == local_mit)
+        r = run_sync(pack, base, good[:1] + ["acme/subheading-benign|MIT|skills/tau|tau"])
+        tau_lic = os.path.join(pack, "skills", "tau", "UPSTREAM-LICENSE")
+        check("benign sub-heading under License vendors", r.returncode == 0 and os.path.isfile(tau_lic), r.stderr)
+        check("record keeps the sub-heading and stops at the next same-level heading", os.path.isfile(tau_lic) and "### Attribution" in read(tau_lic) and "nope" not in read(tau_lic))
+        r = run_sync(pack, base, good[:1] + ["acme/bare-file|MIT|skills/upsilon|upsilon"])
+        check("a LICENSE file that is a bare declaration vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "upsilon", "UPSTREAM-LICENSE")), r.stderr)
 
         # ---- a raw LICENSE record ignores nothing -------------------------------
         run_sync(pack, base, good)
@@ -285,12 +341,6 @@ def main() -> int:
         r = run_sync(pack, base, good, "--check")
         check("--check reports a record missing its Commit line as drift", r.returncode == 1 and "DRIFT  beta" in r.stdout, r.stdout)
 
-        # ---- an upstream symlink named UPSTREAM-LICENSE cannot redirect the record
-        r = run_sync(pack, base, good[:1] + ["acme/symlinked|MIT|skills/iota|iota"])
-        iota_lic = os.path.join(pack, "skills", "iota", "UPSTREAM-LICENSE")
-        check("symlinked upstream vendors", r.returncode == 0, r.stderr)
-        check("record is a regular file, not the upstream symlink", os.path.isfile(iota_lic) and not os.path.islink(iota_lic))
-        check("file outside the pack is untouched", read(outside) == "precious\n")
 
         # ---- the real pack's records match what the script would write -------
         real = read(os.path.join(PACK, "skills", "web-design-guidelines", "UPSTREAM-LICENSE"))

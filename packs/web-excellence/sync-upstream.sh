@@ -87,10 +87,11 @@ REFUSED='GNU (General|Lesser|Affero) (General )?Public License|GPL|NonCommercial
 # LICENSE file may carry it only alongside a grant clause; a README
 # declaration never may, since "MIT. All rights reserved." grants nothing.
 RESERVED='All rights reserved'
-# A README declaration must be a bare statement of the licence. One that
-# negates or qualifies it ("not licensed under MIT", "MIT except assets",
-# "contact us for commercial terms") is no declaration; pin a LICENSE file.
-QUALIFIED='(^|[^[:alnum:]])(not|no|never|except|unless|proprietary|dual|commercial|contact|restricted)([^[:alnum:]]|$)'
+# A bare declaration (a README section, or a LICENSE file that just says
+# "MIT") must say nothing but the licence. One that negates or qualifies it
+# ("not licensed under MIT", "MIT except assets", "contact us for commercial
+# terms") is no declaration and needs a human read.
+QUALIFIED='(^|[^[:alnum:]])(not|no|never|except|exceptions?|unless|proprietary|dual|commercial|contact|restricted)([^[:alnum:]]|$)'
 GRANT='Permission is hereby granted|Permission to use, copy, modify|Redistribution and use in source and binary forms|hereby grants? (to )?You|free and unencumbered|hereby overtly, fully, permanently'
 
 # check_license_text <repo> <license> <text> <where>
@@ -100,15 +101,19 @@ check_license_text() {
     echo "!! $repo: $where reads as a refused licence (copyleft or -NC) — refusing (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
-  if printf '%s\n' "$text" | grep -qiE "$RESERVED"; then
-    if [ "$where" = "README.md License section" ] || ! printf '%s\n' "$text" | grep -qiE "$GRANT"; then
+  # Two kinds of input. A recognised licence text carries a grant clause, and
+  # that clause is what the gate trusts. Anything without one is a bare
+  # declaration, whether it came from a README section or a one-line LICENSE
+  # file, and a declaration may say nothing but the licence.
+  if ! printf '%s\n' "$text" | grep -qiE "$GRANT"; then
+    if printf '%s\n' "$text" | grep -qiE "$RESERVED"; then
       echo "!! $repo: $where says all rights reserved and grants nothing — refusing (ABSORPTION.md gate 1)" >&2
       exit 1
     fi
-  fi
-  if [ "$where" = "README.md License section" ] && printf '%s\n' "$text" | grep -qiE "$QUALIFIED"; then
-    echo "!! $repo: README License section qualifies or negates its declaration — refusing; an upstream without a plain LICENSE file needs a human read (ABSORPTION.md gate 1)" >&2
-    exit 1
+    if printf '%s\n' "$text" | grep -qiE "$QUALIFIED"; then
+      echo "!! $repo: $where qualifies or negates its declaration — refusing; this upstream needs a human read (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
   fi
   if ! printf '%s\n' "$text" | grep -qiE "${ALLOWED[$license]}" \
      || { [ -n "${EXCLUDES[$license]+x}" ] && printf '%s\n' "$text" | grep -qiE "${EXCLUDES[$license]}"; }; then
@@ -117,47 +122,76 @@ check_license_text() {
   fi
 }
 
+# extract_license_section <README path>
+# The body of the first "License"/"Licence" heading, up to the next heading of
+# the same or a higher level. Sub-headings stay in: a "### Exceptions" under
+# "## License" is part of the declaration, not a way to hide a restriction.
+extract_license_section() {
+  awk '
+    /^#+[[:space:]]+[Ll]icen[cs]e/ && !f { f=1; match($0, /^#+/); lvl=RLENGTH; next }
+    /^#+[[:space:]]/ && f { match($0, /^#+/); if (RLENGTH <= lvl) exit }
+    f' "$1" 2>/dev/null | sed '/^[[:space:]]*$/d'
+}
+
 # resolve_license <clone> <repo> <license> <src> <out>
 # Writes to <out> exactly what the skill's UPSTREAM-LICENSE must contain: the
-# upstream LICENSE file when one exists, else a record of the README's License
-# declaration. Exits 1 when the declaration is missing, mismatched or refused.
+# licence file nearest the skill when one exists, else a record of the nearest
+# README declaration. Exits 1 when anything is missing, mismatched or refused.
 # Reads the clone only, so it can run before anything under skills/ is touched.
 resolve_license() {
-  local clone="$1" repo="$2" license="$3" src="$4" out="$5" lic section dir rel found=""
+  local clone="$1" repo="$2" license="$3" src="$4" out="$5"
+  local dir rel lic section nearest_file="" nearest_decl=""
   if [ -z "${ALLOWED[$license]+x}" ]; then
     echo "!! $repo: licence '$license' is not on the ABSORPTION.md allowlist — refusing (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
-  # The licence nearest the skill governs it, so that one is recorded. Every
-  # licence file between the skill and the repo root is checked too: a
-  # monorepo whose root says MIT while the skill's own LICENSE says GPL is a
-  # conflict, and the root file must not launder the subtree.
+  # The name this script writes at the skill root is reserved. An upstream
+  # that ships it, as a file, directory or symlink, would collide with the
+  # record, so it is refused rather than overwritten.
+  if [ -e "$clone/$src/UPSTREAM-LICENSE" ] || [ -L "$clone/$src/UPSTREAM-LICENSE" ]; then
+    echo "!! $repo: $src ships its own UPSTREAM-LICENSE, the name this script reserves for the licence record — refusing (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  # Walk from the skill up to the repo root. Every licence file and every
+  # README declaration on the way is checked against the declared licence, so
+  # a root MIT cannot launder a skill-local GPL and two files at one level
+  # cannot disagree. The nearest licence file is the one recorded; failing
+  # that, the nearest README declaration. Symlinks are refused: a file
+  # operator follows them, and a hostile upstream could point one at any
+  # readable file on the syncing machine.
   dir="$clone/$src"
   while :; do
-    for lic in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md license.md; do
-      if [ -f "$dir/$lic" ]; then
-        rel="${dir#"$clone"}"; rel="${rel#/}"
+    rel="${dir#"$clone"}"; rel="${rel#/}"
+    for lic in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md license.md README.md; do
+      if [ -L "$dir/$lic" ]; then
+        echo "!! $repo: ${rel:+$rel/}$lic is a symlink; licence inputs must be regular files inside the clone — refusing (ABSORPTION.md gate 1)" >&2
+        exit 1
+      fi
+      [ -f "$dir/$lic" ] || continue
+      if [ "$lic" = README.md ]; then
+        section="$(extract_license_section "$dir/README.md")"
+        [ -n "$section" ] || continue
+        check_license_text "$repo" "$license" "$section" "${rel:+$rel/}README.md License section"
+        [ -n "$nearest_decl" ] || nearest_decl="$section"
+      else
         check_license_text "$repo" "$license" "$(cat "$dir/$lic")" "${rel:+$rel/}$lic"
-        [ -n "$found" ] || found="$dir/$lic"
-        break
+        [ -n "$nearest_file" ] || nearest_file="$dir/$lic"
       fi
     done
     [ "$dir" = "$clone" ] && break
     dir="$(dirname "$dir")"
   done
-  if [ -n "$found" ]; then
-    cp "$found" "$out"
+  if [ -n "$nearest_file" ]; then
+    cp "$nearest_file" "$out"
     return 0
   fi
-  # Some upstreams ship no LICENSE file and declare the licence only in their
+  # Some upstreams ship no LICENSE file and declare the licence only in a
   # README (vercel-labs/agent-skills does this). Record that declaration, with
   # the commit it was read from, so the vendored copy still carries provenance.
-  section="$(awk '/^##+[[:space:]]+[Ll]icen[cs]e/{f=1; next} /^##+[[:space:]]/{if(f) exit} f' "$clone/README.md" 2>/dev/null | sed '/^[[:space:]]*$/d')"
-  if [ -z "$section" ]; then
-    echo "!! $repo ships no LICENSE file and its README has no License section — refusing to vendor $src (ABSORPTION.md gate 1)" >&2
+  if [ -z "$nearest_decl" ]; then
+    echo "!! $repo ships no LICENSE file and no README has a License section — refusing to vendor $src (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
-  check_license_text "$repo" "$license" "$section" "README.md License section"
   {
     echo "UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not hand-edit"
     echo
@@ -168,7 +202,7 @@ resolve_license() {
     echo "The upstream repository ships no LICENSE file at this commit. Its README.md"
     echo "declares the licence under a 'License' heading. That declaration, verbatim:"
     echo
-    printf '%s\n' "$section" | sed 's/^/    /'
+    printf '%s\n' "$nearest_decl" | sed 's/^/    /'
     echo
     echo "Declared licence as recorded in SOURCES.md: $license."
     echo "Licence text: https://spdx.org/licenses/$license.html"
@@ -228,8 +262,7 @@ for entry in "${UPSTREAM[@]}"; do
     # own below. Only the root: a nested file of the same name is upstream
     # content and drifts like any other.
     tree_drift="$(diff -rq "$WORK/$slug/$src" "$SKILLS_DIR/$dest" 2>&1 \
-      | grep -vxF -e "Only in $SKILLS_DIR/$dest: UPSTREAM-LICENSE" \
-                  -e "Files $WORK/$slug/$src/UPSTREAM-LICENSE and $SKILLS_DIR/$dest/UPSTREAM-LICENSE differ" || true)"
+      | grep -vxF -e "Only in $SKILLS_DIR/$dest: UPSTREAM-LICENSE" || true)"
     if [ -n "$tree_drift" ]; then
       echo "DRIFT  $dest  (upstream $repo @ ${SHAS[$repo]:0:8})"
       drift=1
@@ -247,10 +280,8 @@ for entry in "${UPSTREAM[@]}"; do
   mkdir -p "$SKILLS_DIR/$dest"
   cp -R "$WORK/$slug/$src/." "$SKILLS_DIR/$dest/"
   # The upstream licence travels with the skill so attribution survives a copy.
-  # Unlink first: cp writes through a destination symlink, and an upstream that
-  # ships UPSTREAM-LICENSE as a symlink would otherwise choose where the record
-  # lands on the machine running the sync.
-  rm -f "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"
+  # Pass 1 refused any upstream that ships this name itself, so nothing is
+  # here to be overwritten or written through.
   cp "$WORK/license/$dest" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"
 done
 
