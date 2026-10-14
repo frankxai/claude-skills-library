@@ -151,6 +151,7 @@ def receipts(path: str):
     """(audited, proved) from the calls the transcript records, not its prose."""
     audited = proved = False
     capture_ids = set()
+    fetch_ids = set()
     for f in transcript_files(path):
         try:
             fh = open(f, "r", encoding="utf-8", errors="ignore")
@@ -163,7 +164,9 @@ def receipts(path: str):
                 # never parsed.
                 if not ("capture.mjs" in low
                         or any(n in low for n in EVIDENCE)
-                        or any(n in low for n in VISUAL_EVIDENCE)):
+                        or any(n in low for n in VISUAL_EVIDENCE)
+                        or any(fid in low for fid in fetch_ids)
+                        or any(cid in low for cid in capture_ids)):
                     continue
                 for block in content_blocks(line):
                     kind = block.get("type")
@@ -171,12 +174,27 @@ def receipts(path: str):
                         name = str(block.get("name", ""))
                         args = json.dumps(block.get("input", {})).lower()
                         if any(n in args for n in EVIDENCE) and is_fetch(name, args):
-                            audited = True
+                            fetch_ids.add(str(block.get("id", "")))
                         if name == "Bash" and CAPTURE_RUN.search(args):
-                            capture_ids.add(block.get("id"))
-                    elif kind == "tool_result" and block.get("tool_use_id") in capture_ids:
-                        if any(n in result_text(block).lower() for n in VISUAL_EVIDENCE):
-                            proved = True
+                            capture_ids.add(str(block.get("id", "")))
+                    elif kind == "tool_result":
+                        t_id = str(block.get("tool_use_id", ""))
+                        if t_id and t_id in fetch_ids:
+                            if not block.get("is_error"):
+                                res = result_text(block).lower()
+                                if res and not any(err in res[:120] for err in ("error:", "failed", "could not resolve", "404 not found")):
+                                    audited = True
+                        if t_id and t_id in capture_ids:
+                            if not block.get("is_error"):
+                                res = result_text(block).lower()
+                                if "incomplete:" not in res:
+                                    if "cannot capture:" in res:
+                                        proved = True
+                                    elif any(n in res for n in VISUAL_EVIDENCE):
+                                        if 'shot(s) for "before"' in res and 'shot(s) for "after"' not in res:
+                                            pass
+                                        else:
+                                            proved = True
                 if audited and proved:
                     return True, True
     return audited, proved
@@ -216,23 +234,31 @@ def fingerprint(root: str, rel: str):
 
 
 def changed_outside_tools(cwd: str, baselines: dict) -> list:
-    """UI files changed since session start that the Edit/Write gate never saw.
-
-    Only uncommitted changes count. Comparing commits against the start HEAD
-    would also flag every file a `git pull` brought in, and a check that blocks
-    on other people's work gets switched off.
-    """
+    """UI files changed since session start that the Edit/Write gate never saw."""
     root = (git(cwd, "rev-parse", "--show-toplevel") or "").strip()
     base = baselines.get(root) if root else None
     if not isinstance(base, dict):
         return []  # no baseline for this checkout: nothing to compare against
     before = base.get("dirty") or {}
+    start_head = base.get("head")
     changed = []
     for rel in dirty_files(root):
+        rel = rel.replace("\\", "/")
         if not UI_PATH.search(rel) or NOT_UI.search(rel):
             continue
         if rel not in before or before[rel] != fingerprint(root, rel):
             changed.append(rel)
+    if start_head:
+        curr_head = (git(root, "rev-parse", "HEAD") or "").strip()
+        if curr_head and curr_head != start_head:
+            out = git(root, "diff", "--name-only", f"{start_head}..{curr_head}")
+            if out:
+                for rel in out.splitlines():
+                    rel = rel.strip().replace("\\", "/")
+                    if not rel or not UI_PATH.search(rel) or NOT_UI.search(rel):
+                        continue
+                    if rel not in changed:
+                        changed.append(rel)
     return changed
 
 

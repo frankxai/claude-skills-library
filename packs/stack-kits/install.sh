@@ -181,7 +181,7 @@ import json, os, re, sys
 path = sys.argv[1]
 # Anchored to the project root: hooks run in the session's current directory,
 # which moves when the agent `cd`s. `:-.` covers a Claude Code too old to set it.
-ours = {"type": "command", "command": 'node "${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/skill-activation-prompt.mjs"', "timeout": 5}
+ours = {"type": "command", "command": 'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/skill-activation-prompt.mjs"', "timeout": 5}
 # Ours by script path, so an older install's command form is upgraded in place
 # rather than left beside the new one to route every prompt twice.
 OURS = re.compile(r"\.claude/hooks/skill-activation-prompt\.mjs")

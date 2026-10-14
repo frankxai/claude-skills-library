@@ -215,13 +215,13 @@ test('install.sh: detects the stack, preserves other hooks, aliases equivalents,
 
   const settings = () => JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf8'));
   const cmds = () => settings().hooks.UserPromptSubmit.flatMap((e) => e.hooks.map((h) => h.command));
-  assert.deepEqual(cmds(), ['bash existing.sh', 'node "${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/skill-activation-prompt.mjs"']);
+  assert.deepEqual(cmds(), ['bash existing.sh', 'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/skill-activation-prompt.mjs"']);
 
   const rulesBefore = readFileSync(join(dir, '.claude', 'skills', 'stack-kits.rules.json'), 'utf8');
   const second = execFileSync('bash', [sh, dir], { encoding: 'utf8' });
   assert.match(second, /keep\s+tailwindcss \(already current\)/);
   assert.match(second, /router unchanged/);
-  assert.deepEqual(cmds(), ['bash existing.sh', 'node "${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/skill-activation-prompt.mjs"']);
+  assert.deepEqual(cmds(), ['bash existing.sh', 'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/skill-activation-prompt.mjs"']);
   assert.equal(readFileSync(join(dir, '.claude', 'skills', 'stack-kits.rules.json'), 'utf8'), rulesBefore);
 
   const r = runHook(dir, 'make the hero responsive with tailwind');
@@ -415,5 +415,5 @@ test('install.sh upgrades an older relative router command in place, never addin
   assert.match(out, /router upgraded/);
   const cmds = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf8'))
     .hooks.UserPromptSubmit.flatMap((e) => e.hooks.map((h) => h.command));
-  assert.deepEqual(cmds, ['node "${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/skill-activation-prompt.mjs"', 'bash existing.sh']);
+  assert.deepEqual(cmds, ['node "${CLAUDE_PROJECT_DIR}/.claude/hooks/skill-activation-prompt.mjs"', 'bash existing.sh']);
 });

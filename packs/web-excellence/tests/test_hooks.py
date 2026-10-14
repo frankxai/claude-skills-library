@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -28,6 +29,12 @@ GATE = os.path.join(HOOKS, "web-excellence-gate.py")
 STOP = os.path.join(HOOKS, "web-excellence-stop.py")
 SESSION = os.path.join(HOOKS, "web-excellence-session.py")
 LINT = os.path.join(PACK, "ci", "web-guidelines-lint.mjs")
+
+BASH = "bash"
+if sys.platform == "win32":
+    git_bash = r"C:\Program Files\Git\bin\bash.exe"
+    if os.path.exists(git_bash):
+        BASH = git_bash
 
 failures: list[str] = []
 
@@ -48,6 +55,8 @@ def run_hook(path: str, payload: dict, env: dict | None = None):
         input=json.dumps(payload),
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         env=e,
     )
     out = p.stdout.strip()
@@ -138,9 +147,11 @@ def tool_use(tid: str, name: str, tool_input: dict) -> str:
         {"type": "tool_use", "id": tid, "name": name, "input": tool_input}]}}) + "\n"
 
 
-def tool_result(tid: str, text: str) -> str:
-    return json.dumps({"type": "user", "message": {"role": "user", "content": [
-        {"type": "tool_result", "tool_use_id": tid, "content": text}]}}) + "\n"
+def tool_result(tid: str, text: str, is_error: bool = False) -> str:
+    block = {"type": "tool_result", "tool_use_id": tid, "content": text}
+    if is_error:
+        block["is_error"] = True
+    return json.dumps({"type": "user", "message": {"role": "user", "content": [block]}}) + "\n"
 
 
 def user_text(text: str) -> str:
@@ -249,6 +260,39 @@ def test_receipts_accept_a_shell_fetch() -> None:
           stop_with_transcript("curlfetch", body) is None)
 
 
+def test_receipts_rejects_failed_or_incomplete_capture() -> None:
+    # Partial failure: capture.mjs exit 6 with Incomplete
+    partial_shots = (tool_use("shot_part", "Bash", {"command": CAPTURE_CMD})
+                     + tool_result("shot_part", 'captured 5 shot(s) for "after":\nIncomplete: 1 of 6 shot(s) failed', is_error=True))
+    out = stop_with_transcript("partshot", AUDIT_LINE + partial_shots)
+    check("partial screenshot capture still blocks", out is not None and "visual-proof" in (out or {}).get("reason", ""))
+
+    # Before-only shots:
+    before_shots = (tool_use("shot_bef", "Bash", {"command": CAPTURE_CMD})
+                    + tool_result("shot_bef", 'captured 6 shot(s) for "before":\n  .visual-proof/before/375-light.png'))
+    out_bef = stop_with_transcript("befshot", AUDIT_LINE + before_shots)
+    check("before-only capture does not satisfy visual proof", out_bef is not None and "visual-proof" in (out_bef or {}).get("reason", ""))
+
+
+def test_receipts_requires_successful_guidelines_fetch() -> None:
+    # Fetch failed with error:
+    fetch_err = (tool_use("audit_err", "WebFetch", {"url": GUIDELINES_URL, "prompt": "list rules"})
+                 + tool_result("audit_err", "Error: Connection timeout", is_error=True))
+    out = stop_with_transcript("fetcherr", fetch_err + SHOTS_LINE)
+    check("failed fetch does not satisfy audit requirement", out is not None and "web-design-guidelines" in (out or {}).get("reason", ""))
+
+
+def test_session_hook_in_subdirectory() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, ".claude", "skills", "web-release-gate"))
+        sub = os.path.join(d, "apps", "web")
+        os.makedirs(sub)
+        write(d, "DESIGN.md", "tokens\n")
+        out, _ = run_hook(SESSION, {"cwd": sub}, env={"CLAUDE_PROJECT_DIR": d})
+        ctx = (out or {}).get("hookSpecificOutput", {}).get("additionalContext", "")
+        check("session hook resolves project root from subdirectory", "WEB EXCELLENCE PACK is installed" in ctx)
+
+
 def test_gate_and_stop_agree_on_ui_paths() -> None:
     """The stop hook classifies shell-edited files with a copy of the gate's regexes."""
     gate = open(GATE, encoding="utf-8").read()
@@ -318,6 +362,13 @@ def test_stop_sees_ui_edits_made_through_the_shell() -> None:
         check("a pre-dirty UI file edited again this session blocks",
               out is not None and "components/Old.tsx" in out.get("reason", ""))
 
+        session("shellcommit")
+        write(d, "components/A.tsx", "export const committedViaBash = 3;\n")
+        subprocess.run(["git", "-C", d, "commit", "-am", "commit via bash"], capture_output=True, check=True)
+        out = stop("shellcommit")
+        check("a committed UI edit made this session blocks",
+              out is not None and "components/A.tsx" in (out or {}).get("reason", ""))
+
         try:
             os.remove(os.path.join(tempfile.gettempdir(), "web-gate-nobaseline.json"))
         except OSError:
@@ -328,7 +379,7 @@ def test_stop_sees_ui_edits_made_through_the_shell() -> None:
 
 def test_capture_exits_nonzero_on_a_partial_matrix() -> None:
     """One good phone shot must not pass for failed desktop and dark captures."""
-    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+    if not shutil.which("node"):
         print("  skip capture test (node not available)")
         return
     stub = """
@@ -407,6 +458,9 @@ def test_session_hook_finds_uppercase_contracts() -> None:
 
 
 def test_state_file_is_private() -> None:
+    if sys.platform == "win32":
+        print("  skip permission test (Windows NTFS does not use POSIX 0600 mode bits)")
+        return
     sid = "permtest"
     sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
     try:
@@ -462,7 +516,7 @@ def test_session_id_is_sanitized() -> None:
 
 
 def test_linter_ratchet() -> None:
-    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+    if not shutil.which("node"):
         print("  skip node linter tests (node not available)")
         return
     with tempfile.TemporaryDirectory() as d:
@@ -498,7 +552,7 @@ def test_linter_div_onclick_exempts_keyboard_path() -> None:
     Flagging the deliberate accessible pattern (modal backdrop with role +
     tabIndex + onKeyDown) is how a rule earns itself a blanket disable.
     """
-    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+    if not shutil.which("node"):
         print("  skip node linter tests (node not available)")
         return
     with tempfile.TemporaryDirectory() as d:
@@ -521,7 +575,7 @@ def test_linter_sees_multiline_jsx_tags() -> None:
     Matching one physical line at a time missed exactly that shape, so the
     accessibility rule looked stronger than it was on real formatted code.
     """
-    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+    if not shutil.which("node"):
         return
     with tempfile.TemporaryDirectory() as d:
         os.makedirs(os.path.join(d, "components"))
@@ -596,7 +650,7 @@ def test_capture_label_cannot_escape_the_output_dir() -> None:
 
 def test_linter_survives_a_hostile_base_ref() -> None:
     """`base` reaches git as argv, not as a shell string."""
-    if subprocess.run(["which", "node"], capture_output=True).returncode != 0:
+    if not shutil.which("node"):
         return
     with tempfile.TemporaryDirectory() as d:
         canary = os.path.join(d, "pwned")
@@ -631,8 +685,8 @@ def test_installer_upgrades_an_old_install() -> None:
         write(d, ".gitignore", "node_modules/\n\n# web-excellence pack — local evidence, not repo artifacts\n"
                                ".visual-proof/\n.lighthouse.json\n.extract-design-system/\n.claude/skills/.replaced/\n")
         for _ in range(2):
-            r = subprocess.run(["bash", os.path.join(PACK, "install.sh"), d, "--no-db", "--no-ci"],
-                               capture_output=True, text=True)
+            r = subprocess.run([BASH, os.path.join(PACK, "install.sh"), d, "--no-db", "--no-ci"],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace")
         check("installer runs", r.returncode == 0, r.stderr)
         got = json.load(open(os.path.join(d, ".claude", "settings.json")))
         cmds = [h["command"] for ev in got["hooks"].values() for e in ev for h in e["hooks"]]
@@ -652,14 +706,15 @@ def test_installer_keeps_a_repo_tuned_workflow() -> None:
         os.makedirs(os.path.join(d, ".github", "workflows"))
         tuned = "name: Web excellence\n# repo-tuned: draft gate, pinned actions\n"
         write(d, ".github/workflows/web-excellence.yml", tuned)
-        r = subprocess.run(["bash", os.path.join(PACK, "install.sh"), d, "--no-db"],
-                           capture_output=True, text=True)
+        r = subprocess.run([BASH, os.path.join(PACK, "install.sh"), d, "--no-db"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
         kept = open(os.path.join(d, ".github", "workflows", "web-excellence.yml")).read()
         check("a differing workflow is kept and reported",
               r.returncode == 0 and kept == tuned and "keep   .github/workflows/web-excellence.yml" in r.stdout,
               r.stdout[-300:])
     with tempfile.TemporaryDirectory() as d:
-        subprocess.run(["bash", os.path.join(PACK, "install.sh"), d, "--no-db"], capture_output=True, text=True)
+        subprocess.run([BASH, os.path.join(PACK, "install.sh"), d, "--no-db"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace")
         check("a missing workflow is installed",
               os.path.exists(os.path.join(d, ".github", "workflows", "web-excellence.yml")))
 

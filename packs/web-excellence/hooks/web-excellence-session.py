@@ -54,9 +54,6 @@ CONTRACTS = [
 
 def find_contract(cwd: str, rel: str) -> str | None:
     """Return the real relative path if `rel` exists under `cwd`, any casing."""
-    direct = os.path.join(cwd, rel)
-    if os.path.exists(direct):
-        return rel
     parent, name = os.path.split(rel)
     base = os.path.join(cwd, parent) if parent else cwd
     try:
@@ -123,7 +120,8 @@ def record_baseline(session_id: str, cwd: str) -> None:
             dirty[rel] = [st.st_mtime_ns, st.st_size]
         except OSError:
             dirty[rel] = None
-    baselines[root] = {"dirty": dirty}
+    head = (git(root, "rev-parse", "HEAD") or "").strip()
+    baselines[root] = {"dirty": dirty, "head": head}
     try:
         fd = os.open(sp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | NOFOLLOW, 0o600)
         with os.fdopen(fd, "w") as fh:
@@ -139,15 +137,16 @@ def main() -> int:
         payload = {}
     cwd = payload.get("cwd") or os.getcwd()
 
-    skills_dir = os.path.join(cwd, ".claude", "skills")
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR") or (git(cwd, "rev-parse", "--show-toplevel") or "").strip() or cwd
+    skills_dir = os.path.join(project_dir, ".claude", "skills")
     present = [s for s in PACK_SKILLS if os.path.isdir(os.path.join(skills_dir, s))]
     if not present:
         # Pack not installed here — stay quiet rather than advertising nothing.
         return 0
 
-    record_baseline(payload.get("session_id", ""), cwd)
+    record_baseline(payload.get("session_id", ""), project_dir)
 
-    contracts = [r for r in (find_contract(cwd, c) for c in CONTRACTS) if r]
+    contracts = [r for r in (find_contract(project_dir, c) for c in CONTRACTS) if r]
 
     lines = [
         "WEB EXCELLENCE PACK is installed in this repo.",
