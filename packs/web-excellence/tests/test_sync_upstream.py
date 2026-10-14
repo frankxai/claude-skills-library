@@ -196,6 +196,29 @@ def main() -> int:
             "LICENSE": "MIT\n",
             "skills/upsilon/SKILL.md": "upsilon\n",
         })
+        make_upstream(base, "acme", "apache11", {
+            "LICENSE": "Apache License\nVersion 1.1\n\nCopyright (c) 2000 The Apache Software Foundation. All rights reserved.\n\n"
+                       "Redistribution and use in source and binary forms, with or without modification, are permitted.\n",
+            "skills/phi/SKILL.md": "phi\n",
+        })
+        make_upstream(base, "acme", "mit0", {
+            "LICENSE": "MIT No Attribution\n\nCopyright 2026 Example\n\nPermission is hereby granted, free of charge, to any person obtaining a copy.\n",
+            "skills/chi/SKILL.md": "chi\n",
+        })
+        make_upstream(base, "acme", "copying", {
+            "LICENSE": MIT,
+            "skills/psi/COPYING": GPL,
+            "skills/psi/SKILL.md": "psi\n",
+        })
+        make_upstream(base, "acme", "rider", {
+            "LICENSE": MIT + "\nThis software may not be used for surveillance of any kind.\n",
+            "skills/omega/SKILL.md": "omega\n",
+        })
+        make_upstream(base, "acme", "licenses-dir", {
+            "LICENSE": MIT,
+            "skills/alef/LICENSES/GPL-3.0.txt": GPL,
+            "skills/alef/SKILL.md": "alef\n",
+        })
         make_upstream(base, "acme", "negated", {
             "README.md": "# n\n\n## License\n\nThis project is not licensed under MIT; contact us for terms.\n",
             "skills/mu/SKILL.md": "mu\n",
@@ -275,7 +298,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and "ABSORPTION.md gate 1" in r.stderr, r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -295,6 +318,26 @@ def main() -> int:
         refused("upstream ships UPSTREAM-LICENSE at the skill root", good[:1] + ["acme/symlinked|MIT|skills/iota|iota"], "reserves")
         check("planted UPSTREAM-LICENSE symlink never touched the outside file", read(outside) == "precious\n")
         refused("upstream ships an UPSTREAM-LICENSE directory", good[:1] + ["acme/dir-collision|MIT|skills/omicron|omicron"], "reserves")
+        refused("Apache 1.1 text declared Apache-2.0", good[:1] + ["acme/apache11|Apache-2.0|skills/phi|phi"], "does not read as Apache-2.0")
+        refused("MIT-0 text declared MIT", good[:1] + ["acme/mit0|MIT|skills/chi|chi"], "does not read as MIT")
+        refused("skill-local COPYING with GPL under an MIT root", good[:1] + ["acme/copying|MIT|skills/psi|psi"], "skills/psi/COPYING reads as a refused licence")
+        refused("MIT text with a use-restriction rider", good[:1] + ["acme/rider|MIT|skills/omega|omega"], "use restriction on top of its grant")
+        refused("skill-local LICENSES directory", good[:1] + ["acme/licenses-dir|MIT|skills/alef|alef"], "directory of licences")
+
+        # ---- an unreadable override file aborts before anything is rewritten
+        p2 = make_pack(os.path.join(tmp, "p2"))
+        env = dict(os.environ)
+        env["WEB_EXCELLENCE_UPSTREAM_BASE"] = "file://" + base
+        env["WEB_EXCELLENCE_UPSTREAM_FILE"] = os.path.join(tmp, "does-not-exist.txt")
+        r = subprocess.run(["bash", os.path.join(p2, "sync-upstream.sh")], capture_output=True, text=True, env=env)
+        check("unreadable override file exits 2", r.returncode == 2, r.stderr)
+        check("unreadable override file leaves SOURCES.md untouched", "old" in read(os.path.join(p2, "SOURCES.md")))
+        with open(os.path.join(p2, "empty.txt"), "w", encoding="utf-8") as fh:
+            fh.write("# nothing here\n\n")
+        env["WEB_EXCELLENCE_UPSTREAM_FILE"] = os.path.join(p2, "empty.txt")
+        r = subprocess.run(["bash", os.path.join(p2, "sync-upstream.sh")], capture_output=True, text=True, env=env)
+        check("empty override file exits 2", r.returncode == 2, r.stderr)
+        check("empty override file leaves SOURCES.md untouched", "old" in read(os.path.join(p2, "SOURCES.md")))
 
         refused("README declares MIT but reserves all rights", good[:1] + ["acme/reserved-readme|MIT|skills/zeta|zeta"], "all rights reserved and grants nothing")
         refused("LICENSE file reserves all rights with no grant", good[:1] + ["acme/reserved-file|MIT|skills/eta|eta"], "all rights reserved and grants nothing")
@@ -313,6 +356,17 @@ def main() -> int:
         check("record keeps the sub-heading and stops at the next same-level heading", os.path.isfile(tau_lic) and "### Attribution" in read(tau_lic) and "nope" not in read(tau_lic))
         r = run_sync(pack, base, good[:1] + ["acme/bare-file|MIT|skills/upsilon|upsilon"])
         check("a LICENSE file that is a bare declaration vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "upsilon", "UPSTREAM-LICENSE")), r.stderr)
+
+        # ---- a symlinked installed record is not a record ------------------------
+        run_sync(pack, base, good)
+        copy_of_record = os.path.join(tmp, "beta-record-copy")
+        shutil.copy(beta_lic, copy_of_record)
+        os.remove(beta_lic)
+        os.symlink(copy_of_record, beta_lic)
+        r = run_sync(pack, base, good, "--check")
+        check("--check reports a symlinked record as drift", r.returncode == 1 and "DRIFT  beta" in r.stdout, r.stdout)
+        os.remove(beta_lic)
+        run_sync(pack, base, good)
 
         # ---- a raw LICENSE record ignores nothing -------------------------------
         run_sync(pack, base, good)

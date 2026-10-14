@@ -55,7 +55,15 @@ UPSTREAM=(
   "Leonxlnx/taste-skill|MIT|skills/brandkit|brandkit"
 )
 if [ -n "${WEB_EXCELLENCE_UPSTREAM_FILE:-}" ]; then
-  mapfile -t UPSTREAM < <(grep -v '^[[:space:]]*\(#\|$\)' "$WEB_EXCELLENCE_UPSTREAM_FILE")
+  if [ ! -r "$WEB_EXCELLENCE_UPSTREAM_FILE" ]; then
+    echo "!! WEB_EXCELLENCE_UPSTREAM_FILE is not readable: $WEB_EXCELLENCE_UPSTREAM_FILE" >&2
+    exit 2
+  fi
+  mapfile -t UPSTREAM < <(grep -v '^[[:space:]]*\(#\|$\)' "$WEB_EXCELLENCE_UPSTREAM_FILE" || true)
+  if [ ${#UPSTREAM[@]} -eq 0 ]; then
+    echo "!! WEB_EXCELLENCE_UPSTREAM_FILE lists no entries: $WEB_EXCELLENCE_UPSTREAM_FILE" >&2
+    exit 2
+  fi
 fi
 UPSTREAM_BASE="${WEB_EXCELLENCE_UPSTREAM_BASE:-https://github.com}"
 
@@ -64,7 +72,7 @@ UPSTREAM_BASE="${WEB_EXCELLENCE_UPSTREAM_BASE:-https://github.com}"
 # that licence. Word-bounded so "LIMITED" in a GPL text never reads as MIT.
 declare -A ALLOWED=(
   [MIT]='(^|[^[:alnum:]])MIT([^[:alnum:]]|$)'
-  [Apache-2.0]='Apache License|Apache-2\.0'
+  [Apache-2.0]='Version 2\.0, January 2004|Apache License,? Version 2\.0|Apache License 2\.0|Apache-2\.0'
   [BSD-2-Clause]='BSD[- ]2|2-Clause|Simplified BSD|Redistributions of source code must retain'
   [BSD-3-Clause]='BSD[- ]3|3-Clause|Neither the name of'
   [ISC]='(^|[^[:alnum:]])ISC([^[:alnum:]]|$)|Permission to use, copy, modify, and/or distribute'
@@ -77,6 +85,8 @@ declare -A ALLOWED=(
 declare -A EXCLUDES=(
   [BSD-2-Clause]='BSD[- ]3|3-Clause|Neither the name of'
   [BSD-3-Clause]='BSD[- ]2|2-Clause|Simplified BSD'
+  [MIT]='MIT-0|No Attribution'
+  [Apache-2.0]='Version 1\.[01]|Apache-1\.|Apache License 1\.'
 )
 # Refused whatever SOURCES.md says: copyleft reaches this library's MIT root
 # and -NC conflicts with commercial shipping. The -NC form is the SPDX suffix
@@ -87,6 +97,11 @@ REFUSED='GNU (General|Lesser|Affero) (General )?Public License|GPL|NonCommercial
 # LICENSE file may carry it only alongside a grant clause; a README
 # declaration never may, since "MIT. All rights reserved." grants nothing.
 RESERVED='All rights reserved'
+# Use restrictions bolted onto a permissive text (the Hippocratic family and
+# its relatives) keep the grant clause and add a prohibition after it. The
+# canonical permissive texts never phrase a restriction this way. This is a
+# heuristic for the known riders, not exact licence matching; see SOURCES.md.
+RIDER='(shall|may|must|can) ?not be used|not be used (by|for)|Hippocratic|Human Rights|surveillance|unethical'
 # A bare declaration (a README section, or a LICENSE file that just says
 # "MIT") must say nothing but the licence. One that negates or qualifies it
 # ("not licensed under MIT", "MIT except assets", "contact us for commercial
@@ -99,6 +114,10 @@ check_license_text() {
   local repo="$1" license="$2" text="$3" where="$4"
   if printf '%s\n' "$text" | grep -qiE "$REFUSED"; then
     echo "!! $repo: $where reads as a refused licence (copyleft or -NC) — refusing (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  if printf '%s\n' "$text" | grep -qiE "$RIDER"; then
+    echo "!! $repo: $where carries a use restriction on top of its grant — refusing; a permissive text with a rider is not the permissive licence (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
   # Two kinds of input. A recognised licence text carries a grant clause, and
@@ -160,23 +179,37 @@ resolve_license() {
   # operator follows them, and a hostile upstream could point one at any
   # readable file on the syncing machine.
   dir="$clone/$src"
+  local -a candidates
   while :; do
     rel="${dir#"$clone"}"; rel="${rel#/}"
-    for lic in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md license.md README.md; do
-      if [ -L "$dir/$lic" ]; then
+    # Anything that looks like a licence file counts, whatever its suffix or
+    # case: LICENSE, LICENSE.md, LICENSE-MIT, LICENCE.txt, COPYING, UNLICENSE.
+    shopt -s nullglob nocaseglob
+    candidates=("$dir"/LICENSE* "$dir"/LICENCE* "$dir"/COPYING* "$dir"/UNLICENSE* "$dir"/README.md)
+    shopt -u nullglob nocaseglob
+    for path in "${candidates[@]}"; do
+      lic="$(basename "$path")"
+      if [ -L "$path" ]; then
         echo "!! $repo: ${rel:+$rel/}$lic is a symlink; licence inputs must be regular files inside the clone — refusing (ABSORPTION.md gate 1)" >&2
         exit 1
       fi
-      [ -f "$dir/$lic" ] || continue
-      if [ "$lic" = README.md ]; then
-        section="$(extract_license_section "$dir/README.md")"
-        [ -n "$section" ] || continue
-        check_license_text "$repo" "$license" "$section" "${rel:+$rel/}README.md License section"
-        [ -n "$nearest_decl" ] || nearest_decl="$section"
-      else
-        check_license_text "$repo" "$license" "$(cat "$dir/$lic")" "${rel:+$rel/}$lic"
-        [ -n "$nearest_file" ] || nearest_file="$dir/$lic"
+      if [ -d "$path" ]; then
+        echo "!! $repo: ${rel:+$rel/}$lic is a directory of licences; a multi-licence tree needs a human read — refusing (ABSORPTION.md gate 1)" >&2
+        exit 1
       fi
+      [ -f "$path" ] || continue
+      case "$lic" in
+        [Rr][Ee][Aa][Dd][Mm][Ee].md)
+          section="$(extract_license_section "$path")"
+          [ -n "$section" ] || continue
+          check_license_text "$repo" "$license" "$section" "${rel:+$rel/}$lic License section"
+          [ -n "$nearest_decl" ] || nearest_decl="$section"
+          ;;
+        *)
+          check_license_text "$repo" "$license" "$(cat "$path")" "${rel:+$rel/}$lic"
+          [ -n "$nearest_file" ] || nearest_file="$path"
+          ;;
+      esac
     done
     [ "$dir" = "$clone" ] && break
     dir="$(dirname "$dir")"
@@ -214,6 +247,8 @@ resolve_license() {
 # does not, so its value is not drift. Its absence is: a record with no commit
 # has lost its provenance. Everything else must match byte for byte.
 license_current() {
+  # A symlink is not a self-contained record, whatever it points at.
+  [ -L "$2" ] && return 1
   [ -f "$2" ] || return 1
   if grep -q '^Commit:' "$1"; then
     [ "$(grep -c '^Commit:' "$2")" = 1 ] || return 1

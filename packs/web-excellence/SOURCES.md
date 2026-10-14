@@ -21,7 +21,15 @@ one is a bare declaration and may say nothing but the licence: all-rights-
 reserved, negations and qualifiers are refused, as are copyleft and `-NC`
 texts, symlinked inputs, and an upstream that ships `UPSTREAM-LICENSE` at
 the skill root. One failing entry aborts the whole run with the vendored
-tree unchanged. `--check` excludes `UPSTREAM-LICENSE` from the
+tree unchanged.
+
+The gate is pattern matching, not licence identification. It catches the
+mistakes an honest pin can make and the known riders bolted onto permissive
+texts; it does not prove a file is byte-for-byte the SPDX text. The vendored
+diff is reviewed by a person before it merges, and that review is the
+control for an upstream that sets out to deceive the patterns. Exact SPDX
+text matching (`licensee`, `askalono` or similar) is a separate tool to add
+in CI if that control is ever not enough. `--check` excludes `UPSTREAM-LICENSE` from the
 tree comparison, because upstream does not have it, and then checks it on its
 own: missing, or saying something other than what the upstream says today, is
 drift. The record's `Commit:` line moves with upstream HEAD and is not drift.
