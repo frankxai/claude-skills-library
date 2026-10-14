@@ -396,6 +396,37 @@ def main() -> int:
             "LICENSE": MIT,
             "skills/thorn/SKILL.md": "---\nname: thorn\n'license': 'MIT'\n---\nthorn\n",
         })
+        make_upstream(base, "acme", "html-block", {
+            "README.md": "# h\n\n<script type=\"text/plain\">\n## License\n\nMIT\n</script>\n",
+            "skills/az/SKILL.md": "az\n",
+        })
+        make_upstream(base, "acme", "html-block-decoy", {
+            "README.md": "# b\n\n## License\n\nMIT\n\n## Credits\n\n<PRE>\n## License\n\nGPL-3.0\n</PRE>\n\n<style>\n## Licence\n\nGPL-3.0\n</style>\n",
+            "skills/buky/SKILL.md": "buky\n",
+        })
+        make_upstream(base, "acme", "lower-reserved", {
+            "LICENSE": MIT,
+            "skills/glagoli/SKILL.md": "glagoli\n",
+            "skills/glagoli/upstream-license": GPL,
+        })
+        make_upstream(base, "acme", "seven-hashes", {
+            "README.md": "# d\n\n####### License\n\nMIT\n",
+            "skills/dobro/SKILL.md": "dobro\n",
+        })
+        make_upstream(base, "acme", "six-hashes", {
+            "README.md": "# y\n\n###### License\n\nMIT\n\n###### Credits\n\nnope\n",
+            "skills/yest/SKILL.md": "yest\n",
+        })
+        sub_repo = make_upstream(base, "acme", "sub", {
+            "LICENSE": MIT,
+            "SKILL.md": "---\nname: zhivete\n---\nzhivete\n",
+        })
+        gitlink_repo = make_upstream(base, "acme", "gitlink-src", {
+            "LICENSE": MIT,
+            "skills/.keep": "",
+        })
+        subprocess.run(["git", "-C", gitlink_repo, "-c", "protocol.file.allow=always", "submodule", "add", "-q", "file://" + sub_repo, "skills/zhivete"], check=True, capture_output=True)
+        git(gitlink_repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "gitlink")
         make_upstream(base, "acme", "fenced-nested-decoy", {
             "README.md": "# a\n\n## License\n\nMIT\n\n## Example\n\n````markdown\nSay:\n```\n## License\n\nGPL-3.0\n```\n````\n\n~~~\n```\n## Licence\n\nGPL-3.0\n```\n~~~\n",
             "skills/ayin/SKILL.md": "ayin\n",
@@ -473,7 +504,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and (not gate or "ABSORPTION.md gate 1" in r.stderr), r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn", "az", "glagoli", "dobro", "zhivete")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -521,6 +552,10 @@ def main() -> int:
         refused("CRLF skill README declaring GPL under an MIT root", good[:1] + ["acme/crlf-readme|MIT|skills/sho|sho"], "skills/sho/README.md License section reads as a refused licence")
         refused("a four-space-indented Setext License block is code, not a declaration", good[:1] + ["acme/setext-indented|MIT|skills/ash|ash"], "no README has a License section")
         refused("a double-quoted frontmatter license key declaring GPL under an MIT root", good[:1] + ["acme/frontmatter-quoted|MIT|skills/wynn|wynn"], "skills/wynn/SKILL.md frontmatter license reads as a refused licence")
+        refused("a License heading inside a raw HTML block is no declaration", good[:1] + ["acme/html-block|MIT|skills/az|az"], "no README has a License section")
+        refused("a lower-case upstream-license at the skill root is the reserved name", good[:1] + ["acme/lower-reserved|MIT|skills/glagoli|glagoli"], "reserves")
+        refused("seven hashes is prose, not a heading", good[:1] + ["acme/seven-hashes|MIT|skills/dobro|dobro"], "no README has a License section")
+        refused("a submodule gitlink as src", good[:1] + ["acme/gitlink-src|MIT|skills/zhivete|zhivete"], "submodule gitlink", gate=False)
 
         # ---- a refused run leaves nothing in TMPDIR -----------------------------
         tmpdir_probe = os.path.join(tmp, "probe-tmp")
@@ -642,10 +677,33 @@ def main() -> int:
         check("a Setext heading indented three spaces is a heading", r.returncode == 0 and os.path.isfile(ethel_lic) and "\n    MIT\n" in read(ethel_lic) and "nope" not in read(ethel_lic), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/frontmatter-quoted-ok|MIT|skills/thorn|thorn"])
         check("a single-quoted frontmatter license key agreeing with the root vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "thorn", "UPSTREAM-LICENSE")), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/html-block-decoy|MIT|skills/buky|buky"])
+        buky_lic = os.path.join(pack, "skills", "buky", "UPSTREAM-LICENSE")
+        check("headings inside raw HTML blocks after the License section neither reopen it nor poison it", r.returncode == 0 and os.path.isfile(buky_lic) and "GPL" not in read(buky_lic), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/six-hashes|MIT|skills/yest|yest"])
+        yest_lic = os.path.join(pack, "skills", "yest", "UPSTREAM-LICENSE")
+        check("six hashes is still a heading", r.returncode == 0 and os.path.isfile(yest_lic) and "\n    MIT\n" in read(yest_lic) and "nope" not in read(yest_lic), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/frontmatter-ok|MIT|skills/kaph|kaph"])
         check("SKILL.md frontmatter declaring the same licence vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "kaph", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/fenced-nested-decoy|MIT|skills/ayin|ayin"])
         check("an inner fence does not close the outer one; nested GPL examples do not poison a real MIT declaration", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "ayin", "UPSTREAM-LICENSE")), r.stderr)
+
+        # ---- a symlinked vendored tree is not self-contained ---------------------
+        run_sync(pack, base, good)
+        alpha_dir = os.path.join(pack, "skills", "alpha")
+        moved_alpha = os.path.join(tmp, "alpha-moved")
+        shutil.move(alpha_dir, moved_alpha)
+        os.symlink(moved_alpha, alpha_dir)
+        r = run_sync(pack, base, good, "--check")
+        check("--check reports a symlinked skill root as drift", r.returncode == 1 and "DRIFT  alpha" in r.stdout and "symlink" in r.stdout, r.stdout)
+        os.remove(alpha_dir)
+        shutil.move(moved_alpha, alpha_dir)
+        os.symlink(os.path.join(alpha_dir, "SKILL.md"), os.path.join(alpha_dir, "link.md"))
+        r = run_sync(pack, base, good, "--check")
+        check("--check reports a symlink nested in the vendored tree as drift", r.returncode == 1 and "DRIFT  alpha" in r.stdout and "symlink" in r.stdout, r.stdout)
+        os.remove(os.path.join(alpha_dir, "link.md"))
+        r = run_sync(pack, base, good, "--check")
+        check("--check is clean again once the tree is real", r.returncode == 0, r.stdout)
 
         # ---- a symlinked installed record is not a record ------------------------
         run_sync(pack, base, good)

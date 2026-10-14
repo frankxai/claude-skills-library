@@ -195,7 +195,11 @@ check_license_text() {
 # it, so a three-backtick example inside a four-backtick fence stays inside.
 # An HTML comment block (a line opening with <!--, through the line that
 # carries -->) is not rendered, so nothing in it is a heading or part of a
-# declaration: a commented-out README template licenses nothing. An ATX
+# declaration: a commented-out README template licenses nothing. A raw HTML
+# block opened by <script, <style, <pre or <textarea runs to the line that
+# carries its closing tag; nothing inside is a heading either, though its
+# lines stay part of a section already open, since <pre> text is shown. An
+# ATX heading has one to six hashes; seven is prose. An ATX
 # heading or a fence delimiter may be indented up to three spaces, as
 # Markdown allows; four is a code block, or content of the open fence. The
 # indentation is counted outside the patterns: mawk's regex engine rejects
@@ -209,7 +213,7 @@ extract_license_sections() {
     function is_lic(t) { t = tolower(t); sub(/[ \t:]+$/, "", t); return (t == "license" || t == "licence" || t == "licensing") }
     { sub(/\r$/, ""); L[NR] = $0 }
     END {
-      fence = 0; comment = 0; f = 0; lvl = 0
+      fence = 0; comment = 0; html = ""; f = 0; lvl = 0
       for (i = 1; i <= NR; i++) {
         line = L[i]
         ind = line; sub(/^ */, "", ind); nsp = length(line) - length(ind)
@@ -230,10 +234,19 @@ extract_license_sections() {
           if (!index(substr(ind, 5), "-->")) comment = 1
           continue
         }
+        if (html != "") {
+          if (index(tolower(line), "</" html ">")) html = ""
+          if (f) print line; continue
+        }
+        if (nsp <= 3 && match(tolower(ind), /^<(script|style|pre|textarea)([ \t>]|$)/)) {
+          html = tolower(ind); sub(/^</, "", html); sub(/[ \t>].*$/, "", html)
+          if (index(tolower(line), "</" html ">")) html = ""
+          if (f) print line; continue
+        }
         h = 0; skip = 0
-        if (nsp <= 3 && ind ~ /^#+[ \t]+/) {
+        if (nsp <= 3 && ind ~ /^#+[ \t]+/ && match(ind, /^#+/) && RLENGTH <= 6) {
           text = ind
-          match(text, /^#+/); h = RLENGTH
+          h = RLENGTH
           sub(/^#+[ \t]+/, "", text); sub(/[ \t]+#+[ \t]*$/, "", text)
         } else if (i < NR && nsp <= 3 && ind ~ /[^ \t]/ && ind !~ /^[-=*#>|]/) {
           # Setext: the title and its underline may each be indented at most
@@ -269,11 +282,15 @@ resolve_license() {
     echo "!! $repo: licence '$license' is not on the ABSORPTION.md allowlist — refusing (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
-  # The name this script writes at the skill root is reserved. An upstream
-  # that ships it, as a file, directory or symlink, would collide with the
-  # record, so it is refused rather than overwritten.
-  if [ -e "$clone/$src/UPSTREAM-LICENSE" ] || [ -L "$clone/$src/UPSTREAM-LICENSE" ]; then
-    echo "!! $repo: $src ships its own UPSTREAM-LICENSE, the name this script reserves for the licence record — refusing (ABSORPTION.md gate 1)" >&2
+  # The name this script writes at the skill root is reserved, in any case:
+  # an upstream that ships it, as a file, directory or symlink, would
+  # collide with the record on a case-insensitive filesystem or sit beside
+  # it unchecked on a case-sensitive one, so it is refused rather than
+  # overwritten.
+  local reserved
+  reserved="$(find "$clone/$src" -mindepth 1 -maxdepth 1 -iname 'UPSTREAM-LICENSE' -print -quit 2>/dev/null)"
+  if [ -n "$reserved" ]; then
+    echo "!! $repo: $src ships its own ${reserved##*/}, the name this script reserves for the licence record (in any case) — refusing (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
   # Walk from the skill up to the repo root. Every licence file and every
@@ -448,6 +465,12 @@ for entry in "${UPSTREAM[@]}"; do
     fi
   done
   unset p comps comp
+  # A submodule is a gitlink, which a plain clone leaves as an empty
+  # directory: -d would pass and pass 2 would vendor nothing but the record.
+  if git -C "$clone" ls-files --stage -- "$src" 2>/dev/null | grep -q '^160000 '; then
+    echo "!! $repo: '$src' is a submodule gitlink, not a directory of this repository; its content is not in the clone — refusing" >&2
+    exit 1
+  fi
   if [ ! -d "$clone/$src" ]; then
     echo "!! $repo: upstream path '$src' no longer exists — upstream restructured, fix UPSTREAM[] above" >&2
     exit 1
@@ -472,6 +495,13 @@ for entry in "${UPSTREAM[@]}"; do
   clone="${CLONES[$repo]}"
 
   if [ $CHECK_ONLY -eq 1 ]; then
+    # diff follows symlinks, so a vendored tree that is a link, or carries
+    # one, could compare clean while not being self-contained. That is drift.
+    if [ -L "$SKILLS_DIR/$dest" ] || [ -n "$(find "$SKILLS_DIR/$dest" -type l -print -quit 2>/dev/null)" ]; then
+      echo "DRIFT  $dest  (vendored tree is or contains a symlink — upstream $repo @ ${SHAS[$repo]:0:8})"
+      drift=1
+      continue
+    fi
     # The root UPSTREAM-LICENSE is written by this script, not by upstream, so
     # that one path is dropped from the tree comparison and checked on its
     # own below. Only the root: a nested file of the same name is upstream
