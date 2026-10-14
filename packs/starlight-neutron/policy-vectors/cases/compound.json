@@ -1,0 +1,216 @@
+{
+  "category": "compound",
+  "description": "Separators, subshells and control flow. A rule applies when any subcommand matches.",
+  "cases": [
+    {
+      "id": "compound-01",
+      "description": "&& puts the match in the second command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "cd /tmp && git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-02",
+      "description": "; puts the match in the second command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git status; git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-03",
+      "description": "|| puts the match in the second command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git fetch || git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-04",
+      "description": "A pipe puts the match in the second command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo done | git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-05",
+      "description": "& puts the match in the second command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "sleep 1 & git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-06",
+      "description": "A newline separates commands",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo hi\ngit push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-07",
+      "description": "|& puts the match in the second command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "make |& git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-08",
+      "description": "A for loop body is checked",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "for r in a b; do git push $r main; done",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-09",
+      "description": "A subshell is checked",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "(git push origin main)",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-10",
+      "description": "A brace group is checked",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "{ git push origin main; }",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-11",
+      "description": "A deny rule matches the second command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash(rm *)"
+        ]
+      },
+      "command": "echo ok && rm -rf build",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-12",
+      "description": "Safe commands joined together are not matched",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git status && git log --oneline",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "compound-13",
+      "description": "A match in the first command is enough",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main && git status",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-14",
+      "description": "Three subcommands, the middle one matches",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(npm publish *)"
+        ],
+        "deny": []
+      },
+      "command": "npm test && npm publish --access public && echo done",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-15",
+      "description": "An ask rule on the second of two lists matches inside a compound",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit *)"
+        ],
+        "deny": [
+          "Bash(rm *)"
+        ]
+      },
+      "command": "git add -A && git commit -m wip",
+      "expect": "passthrough"
+    },
+    {
+      "id": "compound-16",
+      "description": "A while loop body is checked",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(rm *)"
+        ],
+        "deny": []
+      },
+      "command": "while true; do rm -f lock; done",
+      "expect": "passthrough"
+    }
+  ]
+}

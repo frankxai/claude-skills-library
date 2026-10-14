@@ -1,0 +1,166 @@
+{
+  "category": "windows",
+  "description": "Windows paths and launchers.",
+  "cases": [
+    {
+      "id": "windows-01",
+      "description": "A full Windows path to git.exe is a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "C:\\Program Files\\Git\\bin\\git.exe push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "windows-02",
+      "description": "A quoted Windows path to git.exe is a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "\"C:\\Program Files\\Git\\bin\\git.exe\" push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "windows-03",
+      "description": "cmd /c is not unwrapped",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "cmd /c git push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "windows-04",
+      "description": "powershell -Command is not unwrapped",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "powershell -Command \"git push origin main\"",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "windows-05",
+      "description": "A rule with a Windows path glob matches a file under it",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(type C:\\work\\app\\*)"
+        ],
+        "deny": []
+      },
+      "command": "type C:\\work\\app\\notes.txt",
+      "expect": "passthrough"
+    },
+    {
+      "id": "windows-06",
+      "description": "A rule with a Windows path glob does not match another drive",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(type C:\\work\\app\\*)"
+        ],
+        "deny": []
+      },
+      "command": "type D:\\data\\notes.txt",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "windows-07",
+      "description": "A UNC path argument still reaches the command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(type *)"
+        ],
+        "deny": []
+      },
+      "command": "type \\\\fileserver\\share\\report.txt",
+      "expect": "passthrough"
+    },
+    {
+      "id": "windows-08",
+      "description": "Forward slashes in a Windows path match a glob on the extension",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(cat *.env)"
+        ],
+        "deny": []
+      },
+      "command": "cat C:/work/app/.env",
+      "expect": "passthrough"
+    },
+    {
+      "id": "windows-09",
+      "description": "A cmd deletion command with a deny rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash(del *)"
+        ]
+      },
+      "command": "del /q build\\*.tmp",
+      "expect": "passthrough"
+    },
+    {
+      "id": "windows-10",
+      "description": "PowerShell tool with a git rule",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "windows-11",
+      "description": "PowerShell Windows path glob matches a file under it",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item C:\\temp\\*)"
+        ],
+        "deny": []
+      },
+      "command": "Remove-Item C:\\temp\\old.txt",
+      "expect": "passthrough"
+    },
+    {
+      "id": "windows-12",
+      "description": "PowerShell Windows path glob does not match another drive",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item C:\\temp\\*)"
+        ],
+        "deny": []
+      },
+      "command": "Remove-Item D:\\data",
+      "expect": "rewrite-eligible"
+    }
+  ]
+}

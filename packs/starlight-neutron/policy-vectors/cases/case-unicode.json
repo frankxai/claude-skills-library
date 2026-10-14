@@ -1,0 +1,151 @@
+{
+  "category": "case-unicode",
+  "description": "Letter case and lookalike characters.",
+  "cases": [
+    {
+      "id": "case-unicode-01",
+      "description": "Upper case Bash command, case sensitivity of Bash rules is not documented so the spec fails closed",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "GIT PUSH origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "case-unicode-02",
+      "description": "PowerShell matching is case-insensitive",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "REMOVE-ITEM old.txt",
+      "expect": "passthrough"
+    },
+    {
+      "id": "case-unicode-03",
+      "description": "Lower case PowerShell cmdlet matches the rule",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "remove-item old.txt",
+      "expect": "passthrough"
+    },
+    {
+      "id": "case-unicode-04",
+      "description": "A Cyrillic i makes a different program name",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push:*)"
+        ],
+        "deny": []
+      },
+      "command": "g\u0456t push origin main",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "case-unicode-05",
+      "description": "Fullwidth letters with a glob rule, the guard folds them",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "\uff47\uff49\uff54 push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "case-unicode-06",
+      "description": "Fullwidth letters with a prefix rule do not match",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push:*)"
+        ],
+        "deny": []
+      },
+      "command": "\uff47\uff49\uff54 push origin main",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "case-unicode-07",
+      "description": "A zero-width space inside a word makes a different word",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push:*)"
+        ],
+        "deny": []
+      },
+      "command": "git pu\u200bsh origin main",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "case-unicode-08",
+      "description": "A no-break space joins two words into one word",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push:*)"
+        ],
+        "deny": []
+      },
+      "command": "git\u00a0push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "case-unicode-09",
+      "description": "Non-ASCII text in an argument does not stop a match",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit *)"
+        ],
+        "deny": []
+      },
+      "command": "git commit -m \"caf\u00e9 \u2615\"",
+      "expect": "passthrough"
+    },
+    {
+      "id": "case-unicode-10",
+      "description": "Non-ASCII text inside a rule matches the same text",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(echo caf\u00e9*)"
+        ],
+        "deny": []
+      },
+      "command": "echo caf\u00e9 latte",
+      "expect": "passthrough"
+    },
+    {
+      "id": "case-unicode-11",
+      "description": "Mixed case does not hide a deny rule on PowerShell cmdlets",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "PowerShell(Stop-Process *)"
+        ]
+      },
+      "command": "sToP-pRoCeSs -Name app",
+      "expect": "passthrough"
+    }
+  ]
+}

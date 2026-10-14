@@ -1,0 +1,349 @@
+{
+  "category": "powershell",
+  "description": "PowerShell syntax: aliases, call operator, backtick, Invoke-Expression, pipelines.",
+  "cases": [
+    {
+      "id": "powershell-01",
+      "description": "Cmdlet rule matches the cmdlet",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "Remove-Item -Recurse build",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-02",
+      "description": "Cmdlet rule matches the bare cmdlet",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "Remove-Item",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-03",
+      "description": "Cmdlet rule matches the alias rm",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "rm -r build",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-04",
+      "description": "Cmdlet rule matches the alias del",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "del build",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-05",
+      "description": "Cmdlet rule matches the alias ri",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "ri build",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-06",
+      "description": "Get-ChildItem rule matches the alias gci",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Get-ChildItem *)"
+        ],
+        "deny": []
+      },
+      "command": "gci -Recurse",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-07",
+      "description": "Get-ChildItem rule matches the alias ls",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Get-ChildItem *)"
+        ],
+        "deny": []
+      },
+      "command": "ls -Force",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-08",
+      "description": "Get-ChildItem rule matches the alias dir",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Get-ChildItem *)"
+        ],
+        "deny": []
+      },
+      "command": "dir",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-09",
+      "description": "An unrelated cmdlet is not matched",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "Write-Output \"hello\"",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "powershell-10",
+      "description": "Call operator before a program name",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "& git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-11",
+      "description": "Call operator with a quoted program name, undocumented so the spec fails closed",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "& 'git' push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-12",
+      "description": "Backtick line continuation inside a command",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "Remove-Item `\n  -Recurse build",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-13",
+      "description": "Backtick escape inside a word, undocumented so the spec fails closed",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "Remove-`Item build",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-14",
+      "description": "Invoke-Expression string is data to the rule",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "Invoke-Expression \"git push origin main\"",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "powershell-15",
+      "description": "The iex alias with a string is data to the rule",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "iex 'git push origin main'",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "powershell-16",
+      "description": "Pipeline puts the match in the second command",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Stop-Process *)"
+        ],
+        "deny": []
+      },
+      "command": "Get-Process app | Stop-Process",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-17",
+      "description": "Semicolon puts the match in the second command",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "$p = \"build\"; Remove-Item $p",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-18",
+      "description": "&& chain on PowerShell 7 puts the match in the second command",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git status && git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-19",
+      "description": "|| chain on PowerShell 7 puts the match in the second command",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git fetch || git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-20",
+      "description": "A script block body is checked, undocumented so the spec fails closed",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "Invoke-Command -ScriptBlock { Remove-Item build }",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-21",
+      "description": "A cmdlet name inside a string argument is data",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(Remove-Item *)"
+        ],
+        "deny": []
+      },
+      "command": "Write-Output \"Remove-Item build\"",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "powershell-22",
+      "description": "A Bash rule does not apply to the PowerShell tool",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "powershell-23",
+      "description": "A PowerShell rule does not apply to the Bash tool",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "PowerShell(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "powershell-24",
+      "description": "Match-all PowerShell rule",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell(*)"
+        ],
+        "deny": []
+      },
+      "command": "Get-Date",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-25",
+      "description": "Bare PowerShell rule matches every command",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [
+          "PowerShell"
+        ],
+        "deny": []
+      },
+      "command": "Get-Date",
+      "expect": "passthrough"
+    },
+    {
+      "id": "powershell-26",
+      "description": "PowerShell deny rule with :* suffix",
+      "tool": "PowerShell",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "PowerShell(Remove-Item:*)"
+        ]
+      },
+      "command": "Remove-Item build",
+      "expect": "passthrough"
+    }
+  ]
+}

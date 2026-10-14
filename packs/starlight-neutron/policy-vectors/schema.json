@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/neutron/policy-vectors/schema.json",
+  "title": "Permission guard policy vector file",
+  "description": "A file of golden cases for an implementation of the permission guard. Each case gives permission rules written as Claude Code writes them, one command, and whether the guard may rewrite that command.",
+  "type": "object",
+  "required": ["category", "description", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "category": { "type": "string", "pattern": "^[a-z][a-z-]*$" },
+    "description": { "type": "string", "minLength": 1 },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } }
+  },
+  "$defs": {
+    "rules": {
+      "type": "object",
+      "required": ["ask", "deny"],
+      "additionalProperties": false,
+      "properties": {
+        "ask": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "case": {
+      "type": "object",
+      "required": ["id", "description", "tool", "rules", "command", "expect"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z-]*-[0-9]{2,}$" },
+        "description": { "type": "string", "minLength": 1 },
+        "tool": { "enum": ["Bash", "PowerShell"] },
+        "rules": { "$ref": "#/$defs/rules" },
+        "command": { "type": "string" },
+        "expect": {
+          "enum": ["passthrough", "rewrite-eligible"],
+          "description": "passthrough: some ask or deny rule could apply, so the guard must leave the command alone. rewrite-eligible: no rule applies, so the guard may let the rewrite happen."
+        },
+        "overmatch": {
+          "type": "boolean",
+          "description": "Only with rewrite-eligible. Claude Code would not match, but an implementation may still pass the command through. Stricter is allowed."
+        },
+        "knownGap": {
+          "type": "boolean",
+          "description": "Only with passthrough. The reference guard currently returns the wrong answer for this case."
+        },
+        "gapReason": { "type": "string", "minLength": 1, "description": "Required when knownGap is true." }
+      }
+    }
+  }
+}
