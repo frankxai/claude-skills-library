@@ -80,15 +80,27 @@ def main() -> int:
         )
         check("installed skill is the pack's again", not os.path.exists(os.path.join(installed, "LOCAL.md")))
 
+        # A symlink to an identical external tree is not an install: it must be
+        # set aside and replaced with a self-contained copy.
+        before = len(set_asides(target))
+        external = os.path.join(tmp, "external-" + SKILL)
+        shutil.move(installed, external)
+        os.symlink(external, installed)
+        r = install(target)
+        check("symlinked skill: install exits 0", r.returncode == 0, r.stderr)
+        check("symlinked skill is replaced by a real directory", os.path.isdir(installed) and not os.path.islink(installed))
+        check("symlinked skill was set aside, not deleted", len(set_asides(target)) == before + 1, str(set_asides(target)))
+        check("external tree untouched", os.path.isfile(os.path.join(external, "SKILL.md")))
+
         with open(os.path.join(installed, "LOCAL.md"), "w", encoding="utf-8") as fh:
             fh.write("second fork marker\n")
         r = install(target)
         asides = set_asides(target)
-        check("second divergence does not overwrite the first set-aside", len(asides) == 2, str(asides))
+        check("second divergence does not overwrite the first set-aside", len(asides) == 3, str(asides))
 
         r = install(target, "--dry-run")
         check("dry run exits 0", r.returncode == 0, r.stderr)
-        check("dry run adds no set-aside", len(set_asides(target)) == 2)
+        check("dry run adds no set-aside", len(set_asides(target)) == 3)
 
     print()
     if failures:

@@ -108,6 +108,7 @@ def main() -> int:
         with_file = make_upstream(base, "acme", "with-file", {
             "LICENSE": MIT,
             "skills/alpha/SKILL.md": "---\nname: alpha\n---\nalpha\n",
+            "skills/alpha/references/UPSTREAM-LICENSE": "nested upstream content, not our record\n",
         })
         readme_only = make_upstream(base, "acme", "readme-only", {
             "README.md": "# readme-only\n\nIntro.\n\n## License\n\nMIT\n\n## Credits\n\nnope\n",
@@ -153,6 +154,21 @@ def main() -> int:
         sym_repo = os.path.join(base, "acme", "symlinked.git")
         git(sym_repo, "add", "-A")
         git(sym_repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "symlink")
+        make_upstream(base, "acme", "negated", {
+            "README.md": "# n\n\n## License\n\nThis project is not licensed under MIT; contact us for terms.\n",
+            "skills/mu/SKILL.md": "mu\n",
+        })
+        make_upstream(base, "acme", "mono-conflict", {
+            "LICENSE": MIT,
+            "skills/kappa/LICENSE": GPL,
+            "skills/kappa/SKILL.md": "kappa\n",
+        })
+        local_mit = MIT.replace("Copyright (c) 2026 Example", "Copyright (c) 2026 Lambda Authors")
+        make_upstream(base, "acme", "mono-local", {
+            "LICENSE": MIT,
+            "skills/lambda/LICENSE": local_mit,
+            "skills/lambda/SKILL.md": "lambda\n",
+        })
 
         good = [
             "acme/with-file|MIT|skills/alpha|alpha",
@@ -217,7 +233,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and "ABSORPTION.md gate 1" in r.stderr, r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -227,6 +243,8 @@ def main() -> int:
         refused("declaration mismatch", good[:1] + ["acme/apache-file|MIT|skills/epsilon|epsilon"], "does not read as MIT")
         refused("licence not on allowlist", good[:1] + ["acme/apache-file|GPL-3.0|skills/epsilon|epsilon"], "not on the ABSORPTION.md allowlist")
         refused("BSD-3 text declared BSD-2-Clause", good[:1] + ["acme/bsd-file|BSD-2-Clause|skills/theta|theta"], "does not read as BSD-2-Clause")
+        refused("README negates its declaration", good[:1] + ["acme/negated|MIT|skills/mu|mu"], "qualifies or negates")
+        refused("skill-local GPL under an MIT root", good[:1] + ["acme/mono-conflict|MIT|skills/kappa|kappa"], "skills/kappa/LICENSE reads as a refused licence")
 
         refused("README declares MIT but reserves all rights", good[:1] + ["acme/reserved-readme|MIT|skills/zeta|zeta"], "all rights reserved and grants nothing")
         refused("LICENSE file reserves all rights with no grant", good[:1] + ["acme/reserved-file|MIT|skills/eta|eta"], "all rights reserved and grants nothing")
@@ -235,6 +253,29 @@ def main() -> int:
         check("Apache text declared Apache-2.0 vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "epsilon", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/bsd-file|BSD-3-Clause|skills/theta|theta"])
         check("BSD-3 boilerplate, NC initials and all, vendors as BSD-3-Clause", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "theta", "UPSTREAM-LICENSE")), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/mono-local|MIT|skills/lambda|lambda"])
+        lambda_lic = os.path.join(pack, "skills", "lambda", "UPSTREAM-LICENSE")
+        check("skill-local MIT under an MIT root vendors", r.returncode == 0 and os.path.isfile(lambda_lic), r.stderr)
+        check("the nearest licence is the one recorded", os.path.isfile(lambda_lic) and read(lambda_lic) == local_mit)
+
+        # ---- a raw LICENSE record ignores nothing -------------------------------
+        run_sync(pack, base, good)
+        with open(alpha_lic, "a", encoding="utf-8") as fh:
+            fh.write("Commit: deadbeef\n")
+        r = run_sync(pack, base, good, "--check")
+        check("--check reports a Commit line injected into a raw LICENSE record as drift", r.returncode == 1 and "DRIFT  alpha" in r.stdout, r.stdout)
+        run_sync(pack, base, good)
+
+        # ---- only the root UPSTREAM-LICENSE is ours; a nested one is upstream content
+        nested = os.path.join(pack, "skills", "alpha", "references", "UPSTREAM-LICENSE")
+        check("nested upstream UPSTREAM-LICENSE is vendored", os.path.isfile(nested))
+        with open(nested, "a", encoding="utf-8") as fh:
+            fh.write("edited\n")
+        r = run_sync(pack, base, good, "--check")
+        check("--check reports an edited nested UPSTREAM-LICENSE as drift", r.returncode == 1 and "DRIFT  alpha" in r.stdout, r.stdout)
+        run_sync(pack, base, good)
+        r = run_sync(pack, base, good, "--check")
+        check("--check is clean again after re-sync", r.returncode == 0, r.stdout)
 
         # ---- a record with no Commit line has lost its provenance ------------
         run_sync(pack, base, good)

@@ -87,6 +87,10 @@ REFUSED='GNU (General|Lesser|Affero) (General )?Public License|GPL|NonCommercial
 # LICENSE file may carry it only alongside a grant clause; a README
 # declaration never may, since "MIT. All rights reserved." grants nothing.
 RESERVED='All rights reserved'
+# A README declaration must be a bare statement of the licence. One that
+# negates or qualifies it ("not licensed under MIT", "MIT except assets",
+# "contact us for commercial terms") is no declaration; pin a LICENSE file.
+QUALIFIED='(^|[^[:alnum:]])(not|no|never|except|unless|proprietary|dual|commercial|contact|restricted)([^[:alnum:]]|$)'
 GRANT='Permission is hereby granted|Permission to use, copy, modify|Redistribution and use in source and binary forms|hereby grants? (to )?You|free and unencumbered|hereby overtly, fully, permanently'
 
 # check_license_text <repo> <license> <text> <where>
@@ -102,6 +106,10 @@ check_license_text() {
       exit 1
     fi
   fi
+  if [ "$where" = "README.md License section" ] && printf '%s\n' "$text" | grep -qiE "$QUALIFIED"; then
+    echo "!! $repo: README License section qualifies or negates its declaration — refusing; an upstream without a plain LICENSE file needs a human read (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
   if ! printf '%s\n' "$text" | grep -qiE "${ALLOWED[$license]}" \
      || { [ -n "${EXCLUDES[$license]+x}" ] && printf '%s\n' "$text" | grep -qiE "${EXCLUDES[$license]}"; }; then
     echo "!! $repo: $where does not read as $license, the licence SOURCES.md declares — fix UPSTREAM[] or drop the entry (ABSORPTION.md gate 1)" >&2
@@ -115,18 +123,32 @@ check_license_text() {
 # declaration. Exits 1 when the declaration is missing, mismatched or refused.
 # Reads the clone only, so it can run before anything under skills/ is touched.
 resolve_license() {
-  local clone="$1" repo="$2" license="$3" src="$4" out="$5" lic section
+  local clone="$1" repo="$2" license="$3" src="$4" out="$5" lic section dir rel found=""
   if [ -z "${ALLOWED[$license]+x}" ]; then
     echo "!! $repo: licence '$license' is not on the ABSORPTION.md allowlist — refusing (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
-  for lic in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md license.md; do
-    if [ -f "$clone/$lic" ]; then
-      check_license_text "$repo" "$license" "$(cat "$clone/$lic")" "$lic"
-      cp "$clone/$lic" "$out"
-      return 0
-    fi
+  # The licence nearest the skill governs it, so that one is recorded. Every
+  # licence file between the skill and the repo root is checked too: a
+  # monorepo whose root says MIT while the skill's own LICENSE says GPL is a
+  # conflict, and the root file must not launder the subtree.
+  dir="$clone/$src"
+  while :; do
+    for lic in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md license.md; do
+      if [ -f "$dir/$lic" ]; then
+        rel="${dir#"$clone"}"; rel="${rel#/}"
+        check_license_text "$repo" "$license" "$(cat "$dir/$lic")" "${rel:+$rel/}$lic"
+        [ -n "$found" ] || found="$dir/$lic"
+        break
+      fi
+    done
+    [ "$dir" = "$clone" ] && break
+    dir="$(dirname "$dir")"
   done
+  if [ -n "$found" ]; then
+    cp "$found" "$out"
+    return 0
+  fi
   # Some upstreams ship no LICENSE file and declare the licence only in their
   # README (vercel-labs/agent-skills does this). Record that declaration, with
   # the commit it was read from, so the vendored copy still carries provenance.
@@ -159,10 +181,13 @@ resolve_license() {
 # has lost its provenance. Everything else must match byte for byte.
 license_current() {
   [ -f "$2" ] || return 1
-  if grep -q '^Commit:' "$1" && [ "$(grep -c '^Commit:' "$2")" != 1 ]; then
-    return 1
+  if grep -q '^Commit:' "$1"; then
+    [ "$(grep -c '^Commit:' "$2")" = 1 ] || return 1
+    diff -q <(grep -v '^Commit:' "$1") <(grep -v '^Commit:' "$2") >/dev/null 2>&1
+  else
+    # A raw upstream LICENSE has no Commit field; nothing in it is ignorable.
+    cmp -s "$1" "$2"
   fi
-  diff -q <(grep -v '^Commit:' "$1") <(grep -v '^Commit:' "$2") >/dev/null 2>&1
 }
 
 cleanup() { rm -rf "$WORK"; }
@@ -198,10 +223,14 @@ for entry in "${UPSTREAM[@]}"; do
   slug="${repo//\//_}"
 
   if [ $CHECK_ONLY -eq 1 ]; then
-    # UPSTREAM-LICENSE is written by this script, not by upstream, so it is
-    # excluded from the tree comparison and checked on its own: it must exist
-    # and say what the upstream's licence says today.
-    if ! diff -rq --exclude=UPSTREAM-LICENSE "$WORK/$slug/$src" "$SKILLS_DIR/$dest" >/dev/null 2>&1; then
+    # The root UPSTREAM-LICENSE is written by this script, not by upstream, so
+    # that one path is dropped from the tree comparison and checked on its
+    # own below. Only the root: a nested file of the same name is upstream
+    # content and drifts like any other.
+    tree_drift="$(diff -rq "$WORK/$slug/$src" "$SKILLS_DIR/$dest" 2>&1 \
+      | grep -vxF -e "Only in $SKILLS_DIR/$dest: UPSTREAM-LICENSE" \
+                  -e "Files $WORK/$slug/$src/UPSTREAM-LICENSE and $SKILLS_DIR/$dest/UPSTREAM-LICENSE differ" || true)"
+    if [ -n "$tree_drift" ]; then
       echo "DRIFT  $dest  (upstream $repo @ ${SHAS[$repo]:0:8})"
       drift=1
     elif ! license_current "$WORK/license/$dest" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"; then

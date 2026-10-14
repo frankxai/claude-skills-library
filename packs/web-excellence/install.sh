@@ -53,7 +53,9 @@ for src in "$PACK_DIR"/skills/*/; do
     # An installed copy identical to the pack's is already canonical: leave
     # it and create no set-aside, or every re-run would mint one. Python's
     # bytecode cache under ui-ux-pro-max is not a difference.
-    if diff -rq -x __pycache__ "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
+    # A symlink is never canonical, whatever it points at: the install must be
+    # a self-contained copy, so it falls through to the set-aside below.
+    if [ ! -L "${DEST_SKILLS%/}/$name" ] && diff -rq -x __pycache__ "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
       say "  ok     $name (already canonical)"
       continue
     fi

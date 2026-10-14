@@ -9,6 +9,7 @@ alone; a diverged one is set aside under a name no later run reuses.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import tempfile
 
@@ -65,10 +66,22 @@ def main() -> int:
             bool(asides) and os.path.isfile(os.path.join(target, ".claude", "skills", ".replaced", asides[0], "LOCAL.md")),
         )
 
+        # A symlink to an identical external tree is not an install: it must be
+        # set aside and replaced with a self-contained copy.
+        before = len(set_asides(target))
+        external = os.path.join(tmp, "external-" + SKILL)
+        shutil.move(installed, external)
+        os.symlink(external, installed)
+        r = install(target)
+        check("symlinked skill: install exits 0", r.returncode == 0, r.stderr)
+        check("symlinked skill is replaced by a real directory", os.path.isdir(installed) and not os.path.islink(installed))
+        check("symlinked skill was set aside, not deleted", len(set_asides(target)) == before + 1, str(set_asides(target)))
+        check("external tree untouched", os.path.isfile(os.path.join(external, "SKILL.md")))
+
         with open(os.path.join(installed, "LOCAL.md"), "w", encoding="utf-8") as fh:
             fh.write("second fork marker\n")
         install(target)
-        check("second divergence does not overwrite the first set-aside", len(set_asides(target)) == 2, str(set_asides(target)))
+        check("second divergence does not overwrite the first set-aside", len(set_asides(target)) == 3, str(set_asides(target)))
 
     print()
     if failures:

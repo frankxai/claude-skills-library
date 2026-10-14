@@ -13,9 +13,10 @@ was read from.
 
 `sync-upstream.sh` applies ABSORPTION.md gate 1 before it touches `skills/`:
 the licence declared in the table below must be on the allowlist, and the
-upstream's LICENSE file or README declaration must read as that licence and
-not as a copyleft or `-NC` one. One failing entry aborts the whole run with
-the vendored tree unchanged. `--check` excludes `UPSTREAM-LICENSE` from the
+upstream's LICENSE file (the one nearest the skill, with every file between
+the skill and the repo root agreeing) or its README declaration must read as
+that licence and not as a copyleft, `-NC`, all-rights-reserved or qualified
+one. One failing entry aborts the whole run with the vendored tree unchanged. `--check` excludes `UPSTREAM-LICENSE` from the
 tree comparison, because upstream does not have it, and then checks it on its
 own: missing, or saying something other than what the upstream says today, is
 drift. The record's `Commit:` line moves with upstream HEAD and is not drift.
