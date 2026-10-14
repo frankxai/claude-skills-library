@@ -151,10 +151,19 @@ fi
 # ------------------------------------------------------ CI (between sessions)
 # The hooks cover a session. This covers every PR, whoever opened it.
 if [ $NO_CI -eq 0 ]; then
-  say "  ci     .claude/ci/web-guidelines-lint.mjs + .github/workflows/web-excellence.yml"
+  say "  ci     .claude/ci/web-guidelines-lint.mjs"
   run mkdir -p "$TARGET/.claude/ci" "$TARGET/.github/workflows"
   run cp "$PACK_DIR/ci/web-guidelines-lint.mjs" "$TARGET/.claude/ci/"
-  run cp "$PACK_DIR/ci/web-excellence.yml" "$TARGET/.github/workflows/"
+  # A workflow is repo policy (action pins, draft gating, triggers), and repos
+  # tune it after install. Write it only when absent; never overwrite a copy
+  # that differs, say so instead.
+  WF="$TARGET/.github/workflows/web-excellence.yml"
+  if [ ! -f "$WF" ]; then
+    say "  ci     .github/workflows/web-excellence.yml"
+    run cp "$PACK_DIR/ci/web-excellence.yml" "$WF"
+  elif ! cmp -s "$WF" "$PACK_DIR/ci/web-excellence.yml"; then
+    say "  keep   .github/workflows/web-excellence.yml (differs from the pack's; compare with $PACK_DIR/ci/web-excellence.yml)"
+  fi
 fi
 
 # ---------------------------------------------------------------- gitignore

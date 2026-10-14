@@ -71,6 +71,8 @@ the input of a fetch call, and the capture line in the result of a Bash call
 that executed `capture.mjs`. Subagent transcripts are read too.
 `test_skill_text_cannot_satisfy_evidence` holds that line.
 
+Re-running `install.sh` never overwrites a `.github/workflows/web-excellence.yml` that differs from the pack's. A repo tunes its workflow (action pins, draft gating), so the installer reports the difference instead.
+
 Commands in `settings.json` go through `${CLAUDE_PROJECT_DIR}`. Hooks run in the
 session's current directory, so a relative path stops resolving after the
 agent `cd`s into a subdirectory.

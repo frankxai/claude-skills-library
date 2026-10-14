@@ -646,6 +646,24 @@ def test_installer_upgrades_an_old_install() -> None:
               gi.count(".claude/skills/**/__pycache__/") == 1 and gi.count(".visual-proof/") == 1, str(gi))
 
 
+def test_installer_keeps_a_repo_tuned_workflow() -> None:
+    """A repo's own edits to the CI workflow (action pins, draft gating) survive a re-install."""
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, ".github", "workflows"))
+        tuned = "name: Web excellence\n# repo-tuned: draft gate, pinned actions\n"
+        write(d, ".github/workflows/web-excellence.yml", tuned)
+        r = subprocess.run(["bash", os.path.join(PACK, "install.sh"), d, "--no-db"],
+                           capture_output=True, text=True)
+        kept = open(os.path.join(d, ".github", "workflows", "web-excellence.yml")).read()
+        check("a differing workflow is kept and reported",
+              r.returncode == 0 and kept == tuned and "keep   .github/workflows/web-excellence.yml" in r.stdout,
+              r.stdout[-300:])
+    with tempfile.TemporaryDirectory() as d:
+        subprocess.run(["bash", os.path.join(PACK, "install.sh"), d, "--no-db"], capture_output=True, text=True)
+        check("a missing workflow is installed",
+              os.path.exists(os.path.join(d, ".github", "workflows", "web-excellence.yml")))
+
+
 if __name__ == "__main__":
     print("web-excellence hook tests\n")
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
