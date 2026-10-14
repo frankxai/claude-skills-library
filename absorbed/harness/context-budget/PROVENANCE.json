@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "harness/context-budget",
+  "source": {
+    "repository": "https://github.com/affaan-m/ECC",
+    "commit": "4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2",
+    "path": "skills/context-budget/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-10-10",
+    "by": "grok"
+  },
+  "changed": "Replaced the generic token inventory with the estate turn-0 cap, Foundry counts, and a cold-skill rule.",
+  "distinctness": {
+    "nearest": "absorbed\\harness\\strategic-compact\\SKILL.md",
+    "similarity": 0.004
+  }
+}

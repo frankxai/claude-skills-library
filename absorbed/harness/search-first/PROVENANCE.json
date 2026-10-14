@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "harness/search-first",
+  "source": {
+    "repository": "https://github.com/affaan-m/ECC",
+    "commit": "4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2",
+    "path": "skills/search-first/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-10-10",
+    "by": "grok"
+  },
+  "changed": "Replaced the npm search flowchart with the estate repo order, Phone Link ban, and location gate.",
+  "distinctness": {
+    "nearest": "absorbed\\harness\\strategic-compact\\SKILL.md",
+    "similarity": 0.002
+  }
+}

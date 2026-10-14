@@ -1,0 +1,29 @@
+{
+  "$comment": "estate-guard pack hooks. install.sh merges this into .claude/settings.json; merging by hand, add the three arrays to your existing hooks block rather than replacing it. `timeout` is in SECONDS. The gate denies the catastrophic subset of Bash commands and asks on the risky subset; the taint hook marks instruction-shaped text in external tool output as data; the session hook puts the contract in the prompt.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          { "type": "command", "command": "python3 .claude/hooks/estate-guard-session.py", "timeout": 10 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "python3 .claude/hooks/estate-guard-gate.py", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "WebFetch|WebSearch|Bash|mcp__.*",
+        "hooks": [
+          { "type": "command", "command": "python3 .claude/hooks/estate-guard-taint.py", "timeout": 15 }
+        ]
+      }
+    ]
+  }
+}

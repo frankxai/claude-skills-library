@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-skills-library",
-  "description": "Production-grade Agent Skills for Claude Code and every major agentic runtime.",
+  "description": "FrankX multi-brand plugin marketplace: the Agent Skills library plus validated brand packs for GenCreator creators and Starlight Academy.",
   "owner": {
     "name": "FrankX",
     "url": "https://github.com/frankxai"
@@ -30,11 +30,124 @@
         "suno"
       ],
       "skills": [
-        "free-skills",
-        "free-skills/anthropic",
-        "free-skills/creative",
-        "free-skills/technical"
+        "./free-skills",
+        "./free-skills/anthropic",
+        "./free-skills/creative",
+        "./free-skills/technical"
+      ],
+      "tags": [
+        "skills-library",
+        "agent-skills",
+        "multi-runtime"
       ]
+    },
+    {
+      "name": "creator-os-core",
+      "displayName": "Creator OS core",
+      "description": "GenCreator / FrankX creator OS: five practices for starting work safely, reviewing a diff, writing in a stated voice, running the checks, and a clean handoff.",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/frankxai/agentic-creator-os.git",
+        "path": "plugins/creator-os-core",
+        "ref": "main",
+        "sha": "e919db95667d9d59c4fc32d971fe4872538a2734"
+      },
+      "category": "creator-tools",
+      "tags": [
+        "gencreator",
+        "frankx",
+        "creator-os",
+        "review",
+        "handoff"
+      ],
+      "homepage": "https://github.com/frankxai/agentic-creator-os",
+      "license": "Apache-2.0",
+      "relevance": {
+        "topic": "creator systems",
+        "signals": {
+          "cwd": [
+            "**/agentic-creator-os",
+            "**/agentic-creator-skills",
+            "**/creator-skills",
+            "**/creator-intelligence-system",
+            "**/creator-intelligence-systems",
+            "**/GenCreator-Studio",
+            "**/gencreator-community",
+            "**/frankx.ai-vercel-website",
+            "**/publishing-house",
+            "**/author-os"
+          ]
+        }
+      }
+    },
+    {
+      "name": "starlight-academy",
+      "displayName": "Starlight Academy",
+      "description": "Starlight: practice with public Academy teaching guides, source-backed challenges and feedback inside your own conversation.",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/frankxai/starlight-academy-plugin.git",
+        "path": "plugins/starlight-academy",
+        "ref": "main",
+        "sha": "68e2da44ace583d0bcf13a5bd38fae41f4057401"
+      },
+      "category": "education",
+      "tags": [
+        "starlight",
+        "academy",
+        "learning",
+        "agent-skills"
+      ],
+      "homepage": "https://starlightintelligence.academy/academy/connect",
+      "license": "Apache-2.0",
+      "relevance": {
+        "topic": "Starlight Academy",
+        "signals": {
+          "cwd": [
+            "**/starlight-academy-plugin",
+            "**/starlight-intelligence-academy",
+            "**/starlight-intelligence-lab",
+            "**/Starlight-Intelligence-System",
+            "**/starlight-agent-skills",
+            "**/starlight-knowledge-tree"
+          ]
+        }
+      }
+    },
+    {
+      "name": "starlight-department-lab",
+      "displayName": "Starlight Department Lab",
+      "description": "Starlight: design one accountable AI department, practise agent evaluation and verify workflow evidence, with a local MCP practice server.",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/frankxai/starlight-academy-plugin.git",
+        "path": "plugins/starlight-department-lab",
+        "ref": "main",
+        "sha": "68e2da44ace583d0bcf13a5bd38fae41f4057401"
+      },
+      "category": "education",
+      "tags": [
+        "starlight",
+        "ai-departments",
+        "evaluation",
+        "mcp",
+        "human-approval"
+      ],
+      "homepage": "https://starlightintelligence.academy/academy/departments",
+      "license": "Apache-2.0",
+      "relevance": {
+        "topic": "AI departments",
+        "signals": {
+          "cwd": [
+            "**/starlight-academy-plugin",
+            "**/starlight-intelligence-academy",
+            "**/starlight-intelligence-lab",
+            "**/agentic-ops",
+            "**/starlight-agent-army-architecture",
+            "**/starlight-evals"
+          ]
+        }
+      }
     }
   ]
 }
