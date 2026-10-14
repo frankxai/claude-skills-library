@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "harness/cost-aware-llm-pipeline",
+  "source": {
+    "repository": "https://github.com/affaan-m/ECC",
+    "commit": "4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2",
+    "path": "skills/cost-aware-llm-pipeline/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-10-10",
+    "by": "grok"
+  },
+  "changed": "Replaced pipeline tuning with a three-class model route, a loop cap, and a privacy list.",
+  "distinctness": {
+    "nearest": "absorbed\\harness\\verification-loop\\SKILL.md",
+    "similarity": 0.005
+  }
+}

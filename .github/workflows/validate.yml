@@ -31,6 +31,9 @@ jobs:
       - name: Run the absorption gate tests
         run: node --test scripts/tests/absorb.test.mjs
 
+      - name: Run the harness end-to-end checks
+        run: node --test scripts/tests/harness-e2e.test.mjs
+
       - name: Check catalog is in sync
         run: python3 scripts/generate_catalog.py --check
 

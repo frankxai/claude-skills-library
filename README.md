@@ -119,7 +119,7 @@ whether it has moved upstream since. This library is built around those gaps.
 | | Most skills repos | This library |
 |---|---|---|
 | Skill format | `SKILL.md` | `SKILL.md`, validated in CI for frontmatter, name, description length, filename |
-| Provenance | Copied | Third-party skills in the packs are pinned to an upstream commit with the license beside them, re-syncable, drift-checked. The Anthropic reference skills under `free-skills/anthropic/` carry their licenses but not yet pins; closing that is bet 3 in the strategy |
+| Provenance | Copied | Third-party skills in the packs are pinned to an upstream commit and re-syncable, with the upstream license beside ten of the eleven (`web-design-guidelines` is MIT per its `SOURCES.md` row but the file is not yet vendored). The Anthropic reference skills under `free-skills/anthropic/` carry their licenses but not yet pins; closing that is bet 3 in the strategy |
 | Enforcement | Advisory | Hooks that block once without an audit, each with a test |
 | Counts | Hand-maintained | The README's skill total, pack total, and per-category counts are checked against the tree; a mismatch fails the build |
 | Inbound work | Paste it in | A four-gate absorption contract (license, provenance, distinctness, attestation) that refuses rather than warns |
@@ -262,6 +262,9 @@ node --test scripts/tests/absorb.test.mjs    # the four absorption gates still r
 Inbound external work runs through [`ABSORPTION.md`](ABSORPTION.md): license, provenance,
 distinctness, attestation. `node scripts/absorb.mjs` refuses rather than warns. What has entered
 is recorded in [`ABSORBED.md`](ABSORBED.md).
+
+> [!NOTE]
+> **Pinned upstream, 2026-10-10.** [affaan-m/ECC](https://github.com/affaan-m/ECC) at `4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2` (MIT) is a dependency of the Claude config repo, not a prose dump in `free-skills/`. Patterns that cleared the four gates are listed in [`ABSORBED.md`](ABSORBED.md). The port receipt is [`docs/ecc-port-report.md`](docs/ecc-port-report.md). Watching a repo is not the same as absorbing it.
 
 ---
 

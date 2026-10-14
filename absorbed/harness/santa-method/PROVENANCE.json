@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "harness/santa-method",
+  "source": {
+    "repository": "https://github.com/affaan-m/ECC",
+    "commit": "4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2",
+    "path": "skills/santa-method/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-10-10",
+    "by": "grok"
+  },
+  "changed": "Replaced the dual-agent framework with two fresh reviewers, a three-round cap, and no self-signoff.",
+  "distinctness": {
+    "nearest": "absorbed\\harness\\agent-harness-construction\\SKILL.md",
+    "similarity": 0.007
+  }
+}
