@@ -214,6 +214,25 @@ def main() -> int:
             "LICENSE": MIT + "\nThis software may not be used for surveillance of any kind.\n",
             "skills/omega/SKILL.md": "omega\n",
         })
+        make_upstream(base, "acme", "prefix-heading", {
+            "README.md": "# p\n\n## License compatibility\n\nWorks with MIT projects.\n\n## License\n\nGPL-3.0\n",
+            "skills/bet/SKILL.md": "bet\n",
+        })
+        make_upstream(base, "acme", "two-sections", {
+            "README.md": "# q\n\n## License\n\nMIT\n\n## Usage\n\nx\n\n## Licence\n\nApache-2.0\n",
+            "skills/gimel/SKILL.md": "gimel\n",
+        })
+        make_upstream(base, "acme", "nested-gpl", {
+            "LICENSE": MIT,
+            "skills/dalet/SKILL.md": "dalet\n",
+            "skills/dalet/vendor/thing/LICENSE-GPL": GPL,
+        })
+        make_upstream(base, "acme", "nested-mit", {
+            "LICENSE": MIT,
+            "skills/he/SKILL.md": "he\n",
+            "skills/he/vendor/thing/LICENSE": MIT.replace("Example", "Nested Example"),
+            "skills/he/docs/README.md": "# docs\n\n## License\n\nMIT\n",
+        })
         make_upstream(base, "acme", "licenses-dir", {
             "LICENSE": MIT,
             "skills/alef/LICENSES/GPL-3.0.txt": GPL,
@@ -298,7 +317,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and "ABSORPTION.md gate 1" in r.stderr, r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -323,6 +342,27 @@ def main() -> int:
         refused("skill-local COPYING with GPL under an MIT root", good[:1] + ["acme/copying|MIT|skills/psi|psi"], "skills/psi/COPYING reads as a refused licence")
         refused("MIT text with a use-restriction rider", good[:1] + ["acme/rider|MIT|skills/omega|omega"], "use restriction on top of its grant")
         refused("skill-local LICENSES directory", good[:1] + ["acme/licenses-dir|MIT|skills/alef|alef"], "directory of licences")
+        refused("prefix heading is not a declaration; the real License section says GPL", good[:1] + ["acme/prefix-heading|MIT|skills/bet|bet"], "README.md License section reads as a refused licence")
+        refused("two License sections that disagree", good[:1] + ["acme/two-sections|MIT|skills/gimel|gimel"], "does not read as MIT")
+        refused("nested vendor/LICENSE-GPL inside the skill", good[:1] + ["acme/nested-gpl|MIT|skills/dalet|dalet"], "skills/dalet/vendor/thing/LICENSE-GPL reads as a refused licence")
+
+        # ---- malformed override rows never reach pass 2 -------------------------
+        p3 = make_pack(os.path.join(tmp, "p3"))
+        os.makedirs(os.path.join(p3, "skills", "keep"))
+        with open(os.path.join(p3, "skills", "keep", "SKILL.md"), "w", encoding="utf-8") as fh:
+            fh.write("keep\n")
+        for label, row in (
+            ("three fields", "acme/with-file|MIT|skills/alpha"),
+            ("empty dest", "acme/with-file|MIT|skills/alpha|"),
+            ("traversing dest", "acme/with-file|MIT|skills/alpha|../escape"),
+            ("dest with slash", "acme/with-file|MIT|skills/alpha|a/b"),
+            ("traversing src", "acme/with-file|MIT|../etc|alpha"),
+            ("five fields", "acme/with-file|MIT|skills/alpha|alpha|extra"),
+        ):
+            r = run_sync(p3, base, [row])
+            check(f"override row with {label} exits 2", r.returncode == 2, r.stderr)
+        check("malformed rows left the existing skills tree untouched", os.path.isfile(os.path.join(p3, "skills", "keep", "SKILL.md")))
+        check("malformed rows left SOURCES.md untouched", "old" in read(os.path.join(p3, "SOURCES.md")))
 
         # ---- an unreadable override file aborts before anything is rewritten
         p2 = make_pack(os.path.join(tmp, "p2"))
@@ -354,6 +394,10 @@ def main() -> int:
         tau_lic = os.path.join(pack, "skills", "tau", "UPSTREAM-LICENSE")
         check("benign sub-heading under License vendors", r.returncode == 0 and os.path.isfile(tau_lic), r.stderr)
         check("record keeps the sub-heading and stops at the next same-level heading", os.path.isfile(tau_lic) and "### Attribution" in read(tau_lic) and "nope" not in read(tau_lic))
+        r = run_sync(pack, base, good[:1] + ["acme/nested-mit|MIT|skills/he|he"])
+        he_lic = os.path.join(pack, "skills", "he", "UPSTREAM-LICENSE")
+        check("nested MIT licence and nested README under an MIT root vendor", r.returncode == 0 and os.path.isfile(he_lic), r.stderr)
+        check("the root licence, not the nested one, is recorded", os.path.isfile(he_lic) and read(he_lic) == MIT)
         r = run_sync(pack, base, good[:1] + ["acme/bare-file|MIT|skills/upsilon|upsilon"])
         check("a LICENSE file that is a bare declaration vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "upsilon", "UPSTREAM-LICENSE")), r.stderr)
 

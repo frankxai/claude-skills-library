@@ -67,6 +67,29 @@ if [ -n "${WEB_EXCELLENCE_UPSTREAM_FILE:-}" ]; then
 fi
 UPSTREAM_BASE="${WEB_EXCELLENCE_UPSTREAM_BASE:-https://github.com}"
 
+# Every entry is validated before a clone, let alone a removal. Pass 2 runs
+# rm -rf on "$SKILLS_DIR/$dest", so an empty or traversing dest would reach
+# far beyond one skill; a bad row is refused here with exit 2.
+for entry in "${UPSTREAM[@]}"; do
+  IFS='|' read -r e_repo e_license e_src e_dest e_extra <<<"$entry"
+  if [ -n "${e_extra:-}" ] || [ -z "$e_repo" ] || [ -z "$e_license" ] || [ -z "$e_src" ] || [ -z "$e_dest" ]; then
+    echo "!! UPSTREAM entry needs exactly four non-empty fields repo|license|src|dest: '$entry'" >&2
+    exit 2
+  fi
+  if ! [[ "$e_repo" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]]; then
+    echo "!! UPSTREAM entry has a malformed repo '$e_repo': '$entry'" >&2
+    exit 2
+  fi
+  if ! [[ "$e_dest" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || [ "$e_dest" = "." ] || [ "$e_dest" = ".." ]; then
+    echo "!! UPSTREAM entry has an unsafe dest '$e_dest' (one plain directory name, no slashes): '$entry'" >&2
+    exit 2
+  fi
+  case "/$e_src/" in
+    *"/../"*|*"//"*) echo "!! UPSTREAM entry has an unsafe src '$e_src' (relative, no .. or empty components): '$entry'" >&2; exit 2 ;;
+  esac
+done
+unset e_repo e_license e_src e_dest e_extra
+
 # ABSORPTION.md gate 1. Key: the licence SOURCES.md may declare. Value: what the
 # upstream's LICENSE file, or its README declaration, must contain to count as
 # that licence. Word-bounded so "LIMITED" in a GPL text never reads as MIT.
@@ -141,15 +164,22 @@ check_license_text() {
   fi
 }
 
-# extract_license_section <README path>
-# The body of the first "License"/"Licence" heading, up to the next heading of
-# the same or a higher level. Sub-headings stay in: a "### Exceptions" under
-# "## License" is part of the declaration, not a way to hide a restriction.
-extract_license_section() {
+# extract_license_sections <README path>
+# The body of every heading that reads exactly "License", "Licence" or
+# "Licensing" (any case, optional trailing colon), each running to the next
+# heading of the same or a higher level and terminated by a line reading
+# ----8<----. Sub-headings stay in: a "### Exceptions" under "## License" is
+# part of the declaration. A heading that merely starts with the word, such
+# as "License compatibility", is not a declaration and is skipped.
+extract_license_sections() {
   awk '
-    /^#+[[:space:]]+[Ll]icen[cs]e/ && !f { f=1; match($0, /^#+/); lvl=RLENGTH; next }
-    /^#+[[:space:]]/ && f { match($0, /^#+/); if (RLENGTH <= lvl) exit }
-    f' "$1" 2>/dev/null | sed '/^[[:space:]]*$/d'
+    function is_lic(h) { h = tolower(h); sub(/^#+[ \t]+/, "", h); sub(/[ \t:]+$/, "", h); return (h == "license" || h == "licence" || h == "licensing") }
+    /^#+[[:space:]]+/ {
+      if (f) { match($0, /^#+/); if (RLENGTH <= lvl) { f = 0; print "----8<----" } }
+      if (!f && is_lic($0)) { f = 1; match($0, /^#+/); lvl = RLENGTH; next }
+    }
+    f
+    END { if (f) print "----8<----" }' "$1" 2>/dev/null | sed '/^[[:space:]]*$/d'
 }
 
 # resolve_license <clone> <repo> <license> <src> <out>
@@ -175,9 +205,45 @@ resolve_license() {
   # README declaration on the way is checked against the declared licence, so
   # a root MIT cannot launder a skill-local GPL and two files at one level
   # cannot disagree. The nearest licence file is the one recorded; failing
-  # that, the nearest README declaration. Symlinks are refused: a file
-  # operator follows them, and a hostile upstream could point one at any
-  # readable file on the syncing machine.
+  # that, the nearest README declaration. Then the whole skill subtree is
+  # scanned the same way, since cp -R publishes every nested file: a
+  # vendor/LICENSE-GPL three levels down is checked and refused too, but
+  # never recorded. Symlinks are refused everywhere: a file operator follows
+  # them, and a hostile upstream could point one at any readable local file.
+  check_candidate() {  # <path> <relative label> <may-record 0|1>
+    local path="$1" label="$2" record="$3" lic section cur
+    lic="$(basename "$path")"
+    if [ -L "$path" ]; then
+      echo "!! $repo: $label is a symlink; licence inputs must be regular files inside the clone — refusing (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    if [ -d "$path" ]; then
+      echo "!! $repo: $label is a directory of licences; a multi-licence tree needs a human read — refusing (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    [ -f "$path" ] || return 0
+    case "$lic" in
+      [Rr][Ee][Aa][Dd][Mm][Ee].md)
+        cur=""
+        while IFS= read -r line; do
+          if [ "$line" = "----8<----" ]; then
+            if [ -n "$cur" ]; then
+              check_license_text "$repo" "$license" "$cur" "$label License section"
+              [ "$record" = 1 ] && [ -z "$nearest_decl" ] && nearest_decl="$cur"
+            fi
+            cur=""
+          else
+            cur+="$line"$'\n'
+          fi
+        done < <(extract_license_sections "$path")
+        ;;
+      *)
+        check_license_text "$repo" "$license" "$(cat "$path")" "$label"
+        [ "$record" = 1 ] && [ -z "$nearest_file" ] && nearest_file="$path"
+        ;;
+    esac
+    return 0
+  }
   dir="$clone/$src"
   local -a candidates
   while :; do
@@ -188,32 +254,14 @@ resolve_license() {
     candidates=("$dir"/LICENSE* "$dir"/LICENCE* "$dir"/COPYING* "$dir"/UNLICENSE* "$dir"/README.md)
     shopt -u nullglob nocaseglob
     for path in "${candidates[@]}"; do
-      lic="$(basename "$path")"
-      if [ -L "$path" ]; then
-        echo "!! $repo: ${rel:+$rel/}$lic is a symlink; licence inputs must be regular files inside the clone — refusing (ABSORPTION.md gate 1)" >&2
-        exit 1
-      fi
-      if [ -d "$path" ]; then
-        echo "!! $repo: ${rel:+$rel/}$lic is a directory of licences; a multi-licence tree needs a human read — refusing (ABSORPTION.md gate 1)" >&2
-        exit 1
-      fi
-      [ -f "$path" ] || continue
-      case "$lic" in
-        [Rr][Ee][Aa][Dd][Mm][Ee].md)
-          section="$(extract_license_section "$path")"
-          [ -n "$section" ] || continue
-          check_license_text "$repo" "$license" "$section" "${rel:+$rel/}$lic License section"
-          [ -n "$nearest_decl" ] || nearest_decl="$section"
-          ;;
-        *)
-          check_license_text "$repo" "$license" "$(cat "$path")" "${rel:+$rel/}$lic"
-          [ -n "$nearest_file" ] || nearest_file="$path"
-          ;;
-      esac
+      check_candidate "$path" "${rel:+$rel/}$(basename "$path")" 1
     done
     [ "$dir" = "$clone" ] && break
     dir="$(dirname "$dir")"
   done
+  while IFS= read -r -d '' path; do
+    check_candidate "$path" "${path#"$clone"/}" 0
+  done < <(find "$clone/$src" -mindepth 2 \( -iname 'LICENSE*' -o -iname 'LICENCE*' -o -iname 'COPYING*' -o -iname 'UNLICENSE*' -o -iname 'README.md' \) -print0 2>/dev/null)
   if [ -n "$nearest_file" ]; then
     cp "$nearest_file" "$out"
     return 0

@@ -13,9 +13,11 @@ was read from.
 
 `sync-upstream.sh` applies ABSORPTION.md gate 1 before it touches `skills/`:
 the licence declared in the table below must be on the allowlist, and the
-upstream's licence inputs must agree with it. Every LICENSE file and every
-README License section between the skill and the repo root is read; the
-nearest LICENSE file is recorded, else the nearest README declaration. A
+upstream's licence inputs must agree with it. Every licence-looking file and
+every README section headed exactly "License" between the skill and the repo
+root, and every one nested anywhere inside the skill, is read; the nearest
+licence file on the path to the root is recorded, else the nearest README
+declaration. A
 recognised licence text is identified by its grant clause. Anything without
 one is a bare declaration and may say nothing but the licence: all-rights-
 reserved, negations and qualifiers are refused, as are copyleft and `-NC`
