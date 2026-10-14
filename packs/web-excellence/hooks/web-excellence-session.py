@@ -55,9 +55,6 @@ CONTRACTS = [
 
 def find_contract(cwd: str, rel: str) -> str | None:
     """Return the real relative path if `rel` exists under `cwd`, any casing."""
-    direct = os.path.join(cwd, rel)
-    if os.path.exists(direct):
-        return rel
     parent, name = os.path.split(rel)
     base = os.path.join(cwd, parent) if parent else cwd
     try:
@@ -107,8 +104,8 @@ def record_baseline(session_id: str, cwd: str) -> None:
     baselines = state.setdefault("baseline", {})
     if root in baselines:
         return
-    # When this session began: the Stop hook counts commits made here, and
-    # receipts for shell-only changes, from this point.
+    # When this session began: the Stop hook counts receipts for shell-only
+    # changes from this point.
     state.setdefault("started", time.time())
     out = git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     if out is None:
@@ -129,7 +126,10 @@ def record_baseline(session_id: str, cwd: str) -> None:
                 dirty[rel] = [st.st_mtime_ns, st.st_size]
             except OSError:
                 dirty[rel] = None
-    baselines[root] = {"dirty": dirty}
+    # Where HEAD's reflog stands: the Stop hook counts commits made here from
+    # this entry on, by position, since the reflog only keeps whole seconds.
+    reflog = len((git(root, "log", "-g", "--format=%H", "HEAD") or "").splitlines())
+    baselines[root] = {"dirty": dirty, "reflog": reflog}
     try:
         fd = os.open(sp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | NOFOLLOW, 0o600)
         with os.fdopen(fd, "w") as fh:
@@ -144,19 +144,22 @@ def main() -> int:
     except Exception:
         payload = {}
     # A session can start or resume below the repo root (cwd = <repo>/app);
-    # the pack, the contracts and the baseline all live at the root.
+    # the pack, the contracts and the baseline all live at the root. The
+    # checkout the session is in wins over CLAUDE_PROJECT_DIR: in a worktree
+    # that names the main checkout, and the stop hook keys baselines by the
+    # checkout it runs in.
     cwd = payload.get("cwd") or os.getcwd()
-    cwd = (git(cwd, "rev-parse", "--show-toplevel") or "").strip() or cwd
-
-    skills_dir = os.path.join(cwd, ".claude", "skills")
+    project_dir = ((git(cwd, "rev-parse", "--show-toplevel") or "").strip()
+                   or os.environ.get("CLAUDE_PROJECT_DIR") or cwd)
+    skills_dir = os.path.join(project_dir, ".claude", "skills")
     present = [s for s in PACK_SKILLS if os.path.isdir(os.path.join(skills_dir, s))]
     if not present:
         # Pack not installed here — stay quiet rather than advertising nothing.
         return 0
 
-    record_baseline(payload.get("session_id", ""), cwd)
+    record_baseline(payload.get("session_id", ""), project_dir)
 
-    contracts = [r for r in (find_contract(cwd, c) for c in CONTRACTS) if r]
+    contracts = [r for r in (find_contract(project_dir, c) for c in CONTRACTS) if r]
 
     lines = [
         "WEB EXCELLENCE PACK is installed in this repo.",

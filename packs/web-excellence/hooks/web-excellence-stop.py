@@ -166,12 +166,28 @@ def entry_time(entry) -> float:
 
 
 def captured(text: str) -> bool:
-    """A capture run that proves something: every shot written, or an honest
-    report that nothing could be rendered. A partial matrix proves neither."""
+    """A capture run that proves something: every shot of the changed state
+    written, or an honest report that nothing could be rendered. A partial
+    matrix proves neither, and a "before" run only records the starting point."""
     low = text.lower()
     if "cannot capture:" in low:
         return True
-    return "shot(s) for" in low and "incomplete:" not in low
+    if "shot(s) for" not in low or "incomplete:" in low:
+        return False
+    return 'shot(s) for "before"' not in low
+
+
+# How a fetch that did not fail as a call can still have failed: a tool that
+# reports the error as text, or curl without -f printing GitHub's 404 body.
+FETCH_FAILED = ("error:", "failed", "could not resolve", "404 not found", "404: not found")
+
+
+def fetched(block: dict) -> bool:
+    """The fetch returned the guidelines, not an error."""
+    if block.get("is_error"):
+        return False
+    head = result_text(block).lower().lstrip()[:120]
+    return bool(head) and not any(m in head for m in FETCH_FAILED)
 
 
 def receipts(path: str, since: float = 0.0):
@@ -210,15 +226,18 @@ def receipts(path: str, since: float = 0.0):
                 for block in content_blocks(line):
                     kind = block.get("type")
                     if kind == "tool_use":
+                        tid = block.get("id")
+                        if not tid:
+                            continue  # nothing could ever answer it
                         name = str(block.get("name", ""))
                         args = json.dumps(block.get("input", {})).lower()
                         if any(n in args for n in EVIDENCE) and is_fetch(name, args):
-                            fetch_ids.add(block.get("id"))
+                            fetch_ids.add(tid)
                         if name == "Bash" and CAPTURE_RUN.search(args):
-                            capture_ids.add(block.get("id"))
+                            capture_ids.add(tid)
                     elif kind == "tool_result":
                         tid = block.get("tool_use_id")
-                        if tid in fetch_ids and not block.get("is_error"):
+                        if tid in fetch_ids and fetched(block):
                             audited = True
                         if tid in capture_ids and captured(result_text(block)):
                             proved = True
@@ -263,23 +282,24 @@ def fingerprint(root: str, rel: str):
     return [st.st_mtime_ns, st.st_size]
 
 
-def committed_here(root: str, since: float) -> set:
-    """Files in commits made in this checkout since `since`, from HEAD's reflog.
+def reflog_size(root: str) -> int:
+    """How many times HEAD has moved in this checkout; 0 before the first commit."""
+    return len((git(root, "log", "-g", "--format=%H", "HEAD") or "").splitlines())
+
+
+def committed_here(root: str, mark: int) -> set:
+    """Files in commits made in this checkout since the reflog stood at `mark`.
 
     The reflog says how HEAD moved. `commit:` entries are commits made here;
     a pull, merge, rebase or checkout records itself differently, so other
-    people's work that a `git pull` brings in is never counted.
+    people's work that a `git pull` brings in is never counted. A position, not
+    a time: the reflog keeps whole seconds, too coarse to order a commit
+    against the moment a window opened.
     """
-    out = git(root, "log", "-g", "--date=unix", "--format=%H%x09%gd%x09%gs", "-n", "200", "HEAD")
+    lines = (git(root, "log", "-g", "--format=%H%x09%gs", "HEAD") or "").splitlines()
     files = set()
-    for line in (out or "").splitlines():
-        parts = line.split("\t", 2)
-        if len(parts) != 3:
-            continue
-        sha, selector, subject = parts
-        m = re.search(r"\{(\d+)\}", selector)
-        if not m or int(m.group(1)) < since:
-            break  # newest first: everything further down is older
+    for line in lines[:max(len(lines) - mark, 0)][:200]:  # newest first
+        sha, _, subject = line.partition("\t")
         if not re.match(r"commit( \((amend|initial)\))?:", subject):
             continue
         diff = git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", "--root", sha)
@@ -287,11 +307,12 @@ def committed_here(root: str, since: float) -> set:
     return files
 
 
-def changed_outside_tools(cwd: str, baselines: dict, since: float = 0.0) -> list:
+def changed_outside_tools(cwd: str, baselines: dict) -> list:
     """UI files changed in this window that the Edit/Write gate never saw.
 
     Uncommitted changes are compared with the files that were already dirty
-    when the window opened; committed ones come from the reflog.
+    when the window opened; committed ones come from the reflog entries added
+    since then.
     """
     root = (git(cwd, "rev-parse", "--show-toplevel") or "").strip()
     base = baselines.get(root) if root else None
@@ -302,8 +323,9 @@ def changed_outside_tools(cwd: str, baselines: dict, since: float = 0.0) -> list
     for rel in dirty_files(root):
         if rel not in before or before[rel] != fingerprint(root, rel):
             changed.add(rel)
-    if since > 0:  # without a start time every old commit would count
-        changed |= committed_here(root, since)
+    mark = base.get("reflog")
+    if isinstance(mark, int):  # a baseline from before this field: no commit check
+        changed |= committed_here(root, mark)
     return sorted(p for p in changed if UI_PATH.search(p) and not NOT_UI.search(p))
 
 
@@ -314,7 +336,8 @@ def close_window(state: dict, cwd: str) -> None:
     root = (git(cwd, "rev-parse", "--show-toplevel") or "").strip()
     baselines = state.get("baseline") or {}
     if root in baselines:
-        baselines[root] = {"dirty": {rel: fingerprint(root, rel) for rel in dirty_files(root)}}
+        baselines[root] = {"dirty": {rel: fingerprint(root, rel) for rel in dirty_files(root)},
+                           "reflog": reflog_size(root)}
 
 
 def write_state(path: str, state: dict) -> None:
@@ -350,7 +373,7 @@ def main() -> int:
 
     floor = state.get("closed_at") or state.get("started") or 0.0
     touched = list(state.get("touched") or [])
-    touched += [p for p in changed_outside_tools(cwd, state.get("baseline") or {}, floor)
+    touched += [p for p in changed_outside_tools(cwd, state.get("baseline") or {})
                 if p not in touched]
     if not touched:
         return 0

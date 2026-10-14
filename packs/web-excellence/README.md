@@ -67,9 +67,11 @@ build if a marker ever reappears in the reminder.
 Matching the markers as free text failed the same way one level down: the
 `web-design-guidelines` skill quotes the guidelines URL, so loading the skills
 closed the gate. A receipt now counts only where a run leaves it: a fetch of
-the guidelines whose result is not an error, and a `capture.mjs` run whose
-result shows the whole matrix captured, or honestly reports that nothing could
-be rendered. A partial matrix (`Incomplete:`) is not proof. Subagent transcripts
+the guidelines whose result is not an error (neither a failed call nor error
+text such as GitHub's `404: Not Found` body), and a `capture.mjs` run whose
+result shows the whole matrix of the changed state captured, or honestly
+reports that nothing could be rendered. A partial matrix (`Incomplete:`) is not
+proof, and neither is a run labelled `before`. Subagent transcripts
 are read too. `test_skill_text_cannot_satisfy_evidence` holds that line.
 
 The gate works in windows. The first UI change opens one, and receipts count
@@ -79,11 +81,14 @@ receipts, or on the stop that follows its one block; the next UI change opens a
 new window and re-arms the reminder and the block.
 
 A UI change made through the shell counts too. The SessionStart hook records
-which files were already uncommitted (resolving the repo root when the session
-starts in a subdirectory), and Stop compares the working tree with that, keeping
-both paths of a rename. It also reads HEAD's reflog for `commit:` entries since
-the window opened, so a shell edit committed in the same turn is seen while
-other people's commits that a `git pull` or merge brings in are not.
+which files were already uncommitted and where HEAD's reflog stands (resolving
+the repo root when the session starts in a subdirectory), and Stop compares the
+working tree with that, keeping both paths of a rename. It also reads the
+`commit:` entries added to the reflog since then, so a shell edit committed in
+the same turn is seen while other people's commits that a `git pull` or merge
+brings in are not. The mark is a reflog position rather than a time because the
+reflog keeps whole seconds, too coarse to order a commit against the moment a
+window opened. Closing a window moves both marks forward.
 
 Commands in `settings.json` use the exact `${CLAUDE_PROJECT_DIR}` placeholder
 from the Claude Code hooks reference. Hooks run in the session's current

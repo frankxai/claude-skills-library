@@ -49,7 +49,8 @@ instead of viewport) · `--out <dir>`.
 Exit 0 means every width × theme was captured. Exit 6 means some were not: the
 paths it printed are real, the rest are not captured, and the report says which.
 The Stop gate does not accept a partial run as proof; capture the missing states
-or say why they cannot be captured.
+or say why they cannot be captured. Nor does it accept a `before` run on its own:
+that records the starting point, and only the `after` run shows the change.
 
 ## Environment notes
 
