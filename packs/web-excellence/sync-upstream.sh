@@ -12,6 +12,15 @@
 #   ./sync-upstream.sh            # sync all
 #   ./sync-upstream.sh --check    # report drift, change nothing (CI-safe)
 #
+# Licensing is checked before anything under skills/ is touched: every entry's
+# declared licence must be on the ABSORPTION.md allowlist, and the upstream's
+# LICENSE file (or, failing that, the License section of its README) must read
+# as that licence. One refusal aborts the whole run with the tree unchanged.
+#
+# Test hooks (tests/test_sync_upstream.py): WEB_EXCELLENCE_UPSTREAM_BASE replaces
+# https://github.com as the clone prefix; WEB_EXCELLENCE_UPSTREAM_FILE replaces
+# the UPSTREAM list below with the lines of that file, same format.
+#
 set -euo pipefail
 
 PACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -45,19 +54,109 @@ UPSTREAM=(
   "Leonxlnx/taste-skill|MIT|skills/image-to-code-skill|image-to-code"
   "Leonxlnx/taste-skill|MIT|skills/brandkit|brandkit"
 )
+if [ -n "${WEB_EXCELLENCE_UPSTREAM_FILE:-}" ]; then
+  mapfile -t UPSTREAM < <(grep -v '^[[:space:]]*\(#\|$\)' "$WEB_EXCELLENCE_UPSTREAM_FILE")
+fi
+UPSTREAM_BASE="${WEB_EXCELLENCE_UPSTREAM_BASE:-https://github.com}"
+
+# ABSORPTION.md gate 1. Key: the licence SOURCES.md may declare. Value: what the
+# upstream's LICENSE file, or its README declaration, must contain to count as
+# that licence. Word-bounded so "LIMITED" in a GPL text never reads as MIT.
+declare -A ALLOWED=(
+  [MIT]='(^|[^[:alnum:]])MIT([^[:alnum:]]|$)'
+  [Apache-2.0]='Apache License|Apache-2\.0'
+  [BSD-2-Clause]='(^|[^[:alnum:]])BSD([^[:alnum:]]|$)|Redistributions of source code must retain'
+  [BSD-3-Clause]='(^|[^[:alnum:]])BSD([^[:alnum:]]|$)|Redistributions of source code must retain'
+  [ISC]='(^|[^[:alnum:]])ISC([^[:alnum:]]|$)|Permission to use, copy, modify, and/or distribute'
+  [CC0-1.0]='CC0|Creative Commons Zero'
+  [CC-BY-4.0]='CC-BY-4\.0|CC BY 4\.0|Attribution 4\.0 International'
+  [Unlicense]='Unlicense|This is free and unencumbered software'
+)
+# Refused whatever SOURCES.md says: copyleft reaches this library's MIT root
+# and -NC conflicts with commercial shipping. ("All rights reserved" is not
+# here: the BSD and many MIT texts open with it above the grant.)
+REFUSED='GNU (General|Lesser|Affero) (General )?Public License|GPL|NonCommercial|(^|[^[:alnum:]])NC([^[:alnum:]]|$)'
+
+# check_license_text <repo> <license> <text> <where>
+check_license_text() {
+  local repo="$1" license="$2" text="$3" where="$4"
+  if printf '%s\n' "$text" | grep -qiE "$REFUSED"; then
+    echo "!! $repo: $where reads as a refused licence (copyleft, -NC or all-rights-reserved) — refusing (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  if ! printf '%s\n' "$text" | grep -qiE "${ALLOWED[$license]}"; then
+    echo "!! $repo: $where does not read as $license, the licence SOURCES.md declares — fix UPSTREAM[] or drop the entry (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+}
+
+# resolve_license <clone> <repo> <license> <src> <out>
+# Writes to <out> exactly what the skill's UPSTREAM-LICENSE must contain: the
+# upstream LICENSE file when one exists, else a record of the README's License
+# declaration. Exits 1 when the declaration is missing, mismatched or refused.
+# Reads the clone only, so it can run before anything under skills/ is touched.
+resolve_license() {
+  local clone="$1" repo="$2" license="$3" src="$4" out="$5" lic section
+  if [ -z "${ALLOWED[$license]+x}" ]; then
+    echo "!! $repo: licence '$license' is not on the ABSORPTION.md allowlist — refusing (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  for lic in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md license.md; do
+    if [ -f "$clone/$lic" ]; then
+      check_license_text "$repo" "$license" "$(cat "$clone/$lic")" "$lic"
+      cp "$clone/$lic" "$out"
+      return 0
+    fi
+  done
+  # Some upstreams ship no LICENSE file and declare the licence only in their
+  # README (vercel-labs/agent-skills does this). Record that declaration, with
+  # the commit it was read from, so the vendored copy still carries provenance.
+  section="$(awk '/^##+[[:space:]]+[Ll]icen[cs]e/{f=1; next} /^##+[[:space:]]/{if(f) exit} f' "$clone/README.md" 2>/dev/null | sed '/^[[:space:]]*$/d')"
+  if [ -z "$section" ]; then
+    echo "!! $repo ships no LICENSE file and its README has no License section — refusing to vendor $src (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  check_license_text "$repo" "$license" "$section" "README.md License section"
+  {
+    echo "UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not hand-edit"
+    echo
+    echo "Upstream: https://github.com/$repo"
+    echo "Commit:   ${SHAS[$repo]}"
+    echo "Path:     $src"
+    echo
+    echo "The upstream repository ships no LICENSE file at this commit. Its README.md"
+    echo "declares the licence under a 'License' heading. That declaration, verbatim:"
+    echo
+    printf '%s\n' "$section" | sed 's/^/    /'
+    echo
+    echo "Declared licence as recorded in SOURCES.md: $license."
+    echo "Licence text: https://spdx.org/licenses/$license.html"
+  } >"$out"
+}
+
+# license_current <expected> <actual>
+# The Commit line of a record moves with upstream HEAD even when the skill tree
+# does not, so it is not drift. Everything else must match byte for byte.
+license_current() {
+  [ -f "$2" ] && diff -q <(grep -v '^Commit:' "$1") <(grep -v '^Commit:' "$2") >/dev/null 2>&1
+}
 
 cleanup() { rm -rf "$WORK"; }
 trap cleanup EXIT
 
 declare -A SHAS
 drift=0
+mkdir -p "$WORK/license"
 
+# ---- pass 1: clone and validate every entry before touching skills/ ----
+# A refusal here leaves the vendored tree exactly as it was; a half-synced pack
+# with one skill deleted and nothing in its place is worse than a stale one.
 for entry in "${UPSTREAM[@]}"; do
   IFS='|' read -r repo license src dest <<<"$entry"
   slug="${repo//\//_}"
   if [ ! -d "$WORK/$slug" ]; then
     echo "→ cloning $repo"
-    git clone --depth 1 -q "https://github.com/$repo.git" "$WORK/$slug"
+    git clone --depth 1 -q "$UPSTREAM_BASE/$repo.git" "$WORK/$slug"
     SHAS["$repo"]="$(git -C "$WORK/$slug" rev-parse HEAD)"
   fi
 
@@ -66,11 +165,23 @@ for entry in "${UPSTREAM[@]}"; do
     exit 1
   fi
 
+  resolve_license "$WORK/$slug" "$repo" "$license" "$src" "$WORK/license/$dest"
+done
+
+# ---- pass 2: report drift, or vendor ----
+for entry in "${UPSTREAM[@]}"; do
+  IFS='|' read -r repo license src dest <<<"$entry"
+  slug="${repo//\//_}"
+
   if [ $CHECK_ONLY -eq 1 ]; then
-    # UPSTREAM-LICENSE is written by this script, not by upstream, so it must
-    # not count as drift — otherwise every licensed skill reports DRIFT forever.
+    # UPSTREAM-LICENSE is written by this script, not by upstream, so it is
+    # excluded from the tree comparison and checked on its own: it must exist
+    # and say what the upstream's licence says today.
     if ! diff -rq --exclude=UPSTREAM-LICENSE "$WORK/$slug/$src" "$SKILLS_DIR/$dest" >/dev/null 2>&1; then
       echo "DRIFT  $dest  (upstream $repo @ ${SHAS[$repo]:0:8})"
+      drift=1
+    elif ! license_current "$WORK/license/$dest" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"; then
+      echo "DRIFT  $dest  (UPSTREAM-LICENSE missing or stale — upstream $repo @ ${SHAS[$repo]:0:8})"
       drift=1
     else
       echo "ok     $dest"
@@ -82,39 +193,8 @@ for entry in "${UPSTREAM[@]}"; do
   rm -rf "${SKILLS_DIR:?}/$dest"
   mkdir -p "$SKILLS_DIR/$dest"
   cp -R "$WORK/$slug/$src/." "$SKILLS_DIR/$dest/"
-  # upstream LICENSE travels with the skill so attribution survives a copy
-  found_lic=0
-  for lic in LICENSE LICENSE.md LICENSE.txt LICENCE LICENCE.md license.md; do
-    if [ -f "$WORK/$slug/$lic" ]; then
-      cp "$WORK/$slug/$lic" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"; found_lic=1; break
-    fi
-  done
-  # Some upstreams ship no LICENSE file and declare the licence only in their
-  # README (vercel-labs/agent-skills does this). Record that declaration, with
-  # the commit, so the vendored copy still carries its provenance. Refuse the
-  # vendor outright if even that is missing — ABSORPTION.md gate 1.
-  if [ $found_lic -eq 0 ]; then
-    section="$(awk '/^##+[[:space:]]+[Ll]icen[cs]e/{f=1; next} /^##+[[:space:]]/{if(f) exit} f' "$WORK/$slug/README.md" 2>/dev/null | sed '/^[[:space:]]*$/d')"
-    if [ -z "$section" ]; then
-      echo "!! $repo ships no LICENSE file and its README has no License section — refusing to vendor $dest (ABSORPTION.md gate 1)" >&2
-      exit 1
-    fi
-    {
-      echo "UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not hand-edit"
-      echo
-      echo "Upstream: https://github.com/$repo"
-      echo "Commit:   ${SHAS[$repo]}"
-      echo "Path:     $src"
-      echo
-      echo "The upstream repository ships no LICENSE file at this commit. Its README.md"
-      echo "declares the licence under a 'License' heading. That declaration, verbatim:"
-      echo
-      printf '%s\n' "$section" | sed 's/^/    /'
-      echo
-      echo "Declared licence as recorded in SOURCES.md: $license."
-      echo "Licence text: https://spdx.org/licenses/$license.html"
-    } > "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"
-  fi
+  # The upstream licence travels with the skill so attribution survives a copy.
+  cp "$WORK/license/$dest" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"
 done
 
 if [ $CHECK_ONLY -eq 1 ]; then

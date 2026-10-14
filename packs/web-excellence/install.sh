@@ -50,6 +50,13 @@ for src in "$PACK_DIR"/skills/*/; do
     continue
   fi
   if [ -d "$DEST_SKILLS/$name" ]; then
+    # An installed copy identical to the pack's is already canonical: leave
+    # it and create no set-aside, or every re-run would mint one. Python's
+    # bytecode cache under ui-ux-pro-max is not a difference.
+    if diff -rq -x __pycache__ "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
+      say "  ok     $name (already canonical)"
+      continue
+    fi
     # Never delete a skill that is already here — an existing copy may be an
     # older fork carrying local-only files. Set it aside instead.
     say "  update $name (previous copy → .claude/skills/.replaced/$name.<timestamp>)"

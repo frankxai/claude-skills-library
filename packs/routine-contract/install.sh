@@ -45,6 +45,12 @@ run mkdir -p "$DEST_SKILLS"
 for src in "$PACK_DIR"/skills/*/; do
   name="$(basename "$src")"
   if [ -d "$DEST_SKILLS/$name" ]; then
+    # An installed copy identical to the pack's is already canonical: leave
+    # it and create no set-aside, or every re-run would mint one.
+    if diff -rq "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
+      say "  ok     $name (already canonical)"
+      continue
+    fi
     # Never delete a skill already here — an existing copy may be a fork with
     # local-only files. Set it aside instead.
     say "  update $name (previous copy → .claude/skills/.replaced/$name.<timestamp>)"
