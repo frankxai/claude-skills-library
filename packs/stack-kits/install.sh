@@ -66,12 +66,14 @@ const kits = [], retire = [];
 if (deps.has('next')) kits.push('nextjs');
 if (deps.has('react')) kits.push('react');
 // The tailwindcss kit is written for v4 (@import "tailwindcss", @theme, automatic
-// content detection). On a v3 repo that guidance breaks tailwind.config.js, so the
-// kit is installed only when every declared major is 4+ or a v4-only package is present.
+// content detection). On a v3 workspace that guidance breaks tailwind.config.js, so
+// the kit is installed only when every declared major is 4+. In a monorepo with one
+// v3 app and one v4 app, a v4-only package elsewhere does not make the v3 app safe.
 const v4Only = deps.has('@tailwindcss/postcss') || deps.has('@tailwindcss/vite');
 const majors = (deps.get('tailwindcss') || []).map((v) => (/(\d+)/.exec(v) || [])[1]).filter(Boolean).map(Number);
-if (v4Only || (majors.length && majors.every((m) => m >= 4)) || (deps.has('tailwindcss') && !majors.length)) kits.push('tailwindcss');
-else if (deps.has('tailwindcss')) retire.push('tailwindcss');
+if (v4Only) majors.push(4);
+if (majors.length ? majors.every((m) => m >= 4) : deps.has('tailwindcss')) kits.push('tailwindcss');
+else if (deps.has('tailwindcss') || v4Only) retire.push('tailwindcss');
 const hasComponentsJson = [root, ...fs.existsSync(apps) ? fs.readdirSync(apps).map((d) => path.join(apps, d)) : []]
   .some((d) => { try { return /shadcn/.test(fs.readFileSync(path.join(d, 'components.json'), 'utf8')); } catch { return false; } });
 if (hasComponentsJson) kits.push('shadcn');
@@ -142,7 +144,7 @@ done
 if [ -n "$RETIRE" ]; then
   IFS=',' read -ra RETIRE_LIST <<<"$RETIRE"
   for kit in "${RETIRE_LIST[@]}"; do
-    case "$kit" in tailwindcss) why="this repo is on Tailwind v3; the kit is written for v4" ;; *) why="it does not fit this repo's stack" ;; esac
+    case "$kit" in tailwindcss) why="a workspace here is on Tailwind v3; the kit is written for v4" ;; *) why="it does not fit this repo's stack" ;; esac
     if [ ! -d "$DEST_SKILLS/$kit" ]; then
       say "  skip   $kit ($why)"
     elif diff -rq "$DEST_SKILLS/$kit" "$PACK_DIR/skills/$kit" >/dev/null 2>&1; then

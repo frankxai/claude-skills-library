@@ -328,7 +328,7 @@ test('install.sh: the v4 tailwindcss kit is skipped on Tailwind v3, and an unedi
   execFileSync('cp', ['-R', join(PACK, 'skills', 'tailwindcss'), join(dir, '.claude', 'skills', 'tailwindcss')]);
   const out = execFileSync('bash', [join(PACK, 'install.sh'), dir], { encoding: 'utf8' });
   assert.match(out, /stack\s+nextjs,react\n/);
-  assert.match(out, /retire tailwindcss \(this repo is on Tailwind v3/);
+  assert.match(out, /retire tailwindcss \(a workspace here is on Tailwind v3/);
   assert.ok(!existsSync(join(dir, '.claude', 'skills', 'tailwindcss')), 'no v4 guidance left for the harness to offer');
   assert.ok(existsSync(join(dir, '.claude', 'skills', '.replaced', 'tailwindcss', 'SKILL.md')), 'moved, never deleted');
   const rules = JSON.parse(readFileSync(join(dir, '.claude', 'skills', 'stack-kits.rules.json'), 'utf8'));
@@ -343,6 +343,16 @@ test('install.sh: the v4 tailwindcss kit is skipped on Tailwind v3, and an unedi
 
   const v4 = repo([], [], { 'package.json': JSON.stringify({ devDependencies: { '@tailwindcss/postcss': '^4.1.0' } }) });
   assert.match(execFileSync('bash', [join(PACK, 'install.sh'), v4], { encoding: 'utf8' }), /stack\s+tailwindcss/);
+
+  // A monorepo with a v3 web app and a v4 side app: the v3 app decides.
+  const mixed = repo([], [], {
+    'package.json': JSON.stringify({ dependencies: { react: '19' } }),
+    'apps/web/package.json': JSON.stringify({ dependencies: { tailwindcss: '^3.4.9' } }),
+    'apps/hub/package.json': JSON.stringify({ dependencies: { tailwindcss: '^4.0.0', '@tailwindcss/postcss': '^4.3.3' } }),
+  });
+  const out3 = execFileSync('bash', [join(PACK, 'install.sh'), mixed], { encoding: 'utf8' });
+  assert.match(out3, /stack\s+react\n/);
+  assert.match(out3, /skip\s+tailwindcss \(a workspace here is on Tailwind v3/);
 });
 
 test('the release gate fires for UI creation and styling, not for book pages', () => {
