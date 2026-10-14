@@ -91,19 +91,26 @@ for entry in "${UPSTREAM[@]}"; do
     echo "!! UPSTREAM entry has an unsafe dest '$e_dest' (one plain directory name, no slashes): '$entry'" >&2
     exit 2
   fi
-  case " $NATIVE " in
-    *" $e_dest "*) echo "!! UPSTREAM entry targets '$e_dest', a skill native to this pack that a sync never overwrites: '$entry'" >&2; exit 2 ;;
+  # Both dest checks fold case: on a case-insensitive checkout "Core-Web-Vitals"
+  # is the native skill's directory and two rows differing only in case are
+  # one directory, so each comparison is made on the lower-cased name.
+  lc_dest="${e_dest,,}"
+  case " ${NATIVE,,} " in
+    *" $lc_dest "*) echo "!! UPSTREAM entry targets '$e_dest', a skill native to this pack that a sync never overwrites: '$entry'" >&2; exit 2 ;;
   esac
-  if [ -n "${SEEN_DEST[$e_dest]+x}" ]; then
-    echo "!! UPSTREAM lists dest '$e_dest' twice; the second row would silently replace the first: '$entry'" >&2
+  if [ -n "${SEEN_DEST[$lc_dest]+x}" ]; then
+    echo "!! UPSTREAM lists dest '$e_dest' twice (case folded); the second row would silently replace the first: '$entry'" >&2
     exit 2
   fi
-  SEEN_DEST["$e_dest"]=1
-  case "/$e_src/" in
-    *"/../"*|*"//"*|*"/./"*|*"/.git/"*) echo "!! UPSTREAM entry has an unsafe src '$e_src' (relative, below the repo root, no .., . or .git components): '$entry'" >&2; exit 2 ;;
+  SEEN_DEST["$lc_dest"]=1
+  # The .git component is matched case folded too: git refuses to track a
+  # path that is .git in any case, so .GIT/info can only be the metadata
+  # directory on a case-insensitive checkout.
+  case "/${e_src,,}/" in
+    *"/../"*|*"//"*|*"/./"*|*"/.git/"*) echo "!! UPSTREAM entry has an unsafe src '$e_src' (relative, below the repo root, no .., . or .git components, in any case): '$entry'" >&2; exit 2 ;;
   esac
 done
-unset e_repo e_license e_src e_dest e_extra SEEN_DEST
+unset e_repo e_license e_src e_dest e_extra lc_dest SEEN_DEST
 
 # ABSORPTION.md gate 1. Key: the licence SOURCES.md may declare. Value: what the
 # upstream's LICENSE file, or its README declaration, must contain to count as
@@ -164,6 +171,12 @@ QUALIFIED='(^|[^[:alnum:]])(not|no|never|except|exceptions?|unless|proprietary|d
 # name on both sides, so a URL path is not one.
 LICNAME='(MIT|Apache[-0-9.]*|BSD[-0-9A-Za-z]*|ISC|GPL[-0-9.]*|LGPL[-0-9.]*|AGPL[-0-9.]*|CC[-0-9A-Za-z.]*|Unlicense|MPL[-0-9.]*|0BSD)'
 COMPOUND="(^|[^[:alnum:]])(AND|OR|WITH)([^[:alnum:]]|$)|$LICNAME ?/ ?$LICNAME"
+# A full licence text may carry a compound expression too: "MIT OR Apache-2.0"
+# above both texts, or a WITH exception. The bare operator cannot be the test
+# there, since every warranty clause is written in capitals ("EXPRESS OR
+# IMPLIED", "MERCHANTABILITY AND FITNESS"), so a full text is refused only
+# when the operator joins two licence names, or WITH names an exception.
+COMPOUND_FULL="(^|[^[:alnum:]])$LICNAME( (AND|OR) $LICNAME| WITH ($LICNAME|[A-Za-z0-9.-]*-exception[A-Za-z0-9.-]*)| ?/ ?$LICNAME)([^[:alnum:]]|$)"
 GRANT='Permission is hereby granted|Permission to use, copy, modify|Redistribution and use in source and binary forms|hereby grants? (to )?You|free and unencumbered|hereby overtly, fully, permanently'
 
 # check_license_text <repo> <license> <text> <where>
@@ -172,6 +185,12 @@ GRANT='Permission is hereby granted|Permission to use, copy, modify|Redistributi
 # turn a found marker into a failed pipeline, reading as "not found".
 check_license_text() {
   local repo="$1" license="$2" text="$3" where="$4"
+  # Every run of whitespace, line breaks included, becomes one space before
+  # any pattern is tried: a LICENSE wrapped at 72 columns puts "provided that
+  # the above" and "copyright notice" on different lines, and a phrase
+  # pattern must still read it as one phrase. Nothing below depends on where
+  # a line ends.
+  text="$(tr -s '[:space:]' ' ' <<<"$text")"
   if grep -qiE "$REFUSED" <<<"$text"; then
     echo "!! $repo: $where reads as a refused licence (copyleft or -NC) — refusing (ABSORPTION.md gate 1)" >&2
     exit 1
@@ -197,6 +216,9 @@ check_license_text() {
       echo "!! $repo: $where declares a compound licence expression, not the single licence SOURCES.md names — refusing; this upstream needs a human read (ABSORPTION.md gate 1)" >&2
       exit 1
     fi
+  elif grep -qE "$COMPOUND_FULL" <<<"$text"; then
+    echo "!! $repo: $where carries a compound licence expression alongside its grant, not the single licence SOURCES.md names — refusing; this upstream needs a human read (ABSORPTION.md gate 1)" >&2
+    exit 1
   fi
   if ! grep -qiE "${ALLOWED[$license]}" <<<"$text" \
      || { [ -n "${EXCLUDES[$license]+x}" ] && grep -qiE "${EXCLUDES[$license]}" <<<"$text"; } \
@@ -236,10 +258,12 @@ check_license_text() {
 # optional spaces, so every pattern anchors on the line with its leading
 # spaces removed, under a count of at most three.
 # A trailing carriage return is stripped first, so a CRLF README reads the
-# same as an LF one.
+# same as an LF one, and a UTF-8 byte-order mark on the first line, so a
+# heading there is still a heading.
 extract_license_sections() {
   awk '
     function is_lic(t) { t = tolower(t); sub(/[ \t:]+$/, "", t); return (t == "license" || t == "licence" || t == "licensing") }
+    NR == 1 { sub(/^\357\273\277/, "") }
     { sub(/\r$/, ""); L[NR] = $0 }
     END {
       fence = 0; hterm = ""; hshow = 0; hblank = 0; f = 0; lvl = 0
@@ -253,7 +277,10 @@ extract_license_sections() {
           }
           if (f) print line; continue
         }
-        if (nsp <= 3 && match(ind, /^(```+|~~~+)/)) {
+        # A backtick fence may not carry a backtick in its info string, as
+        # Markdown has it: such a line is a paragraph of inline code, not an
+        # opener, and the headings after it stay headings. A tilde fence may.
+        if (nsp <= 3 && match(ind, /^(```+|~~~+)/) && !(substr(ind, 1, 1) == "`" && index(substr(ind, RLENGTH + 1), "`"))) {
           run = substr(ind, RSTART, RLENGTH)
           fch = substr(run, 1, 1); flen = length(run); fence = 1
           if (f) print line; continue
@@ -423,17 +450,73 @@ resolve_license() {
   # "license: GPL-3.0" under an MIT root is not MIT whatever the root file
   # says, so the field is read as a bare declaration, in the selected skill
   # and in every SKILL.md nested inside it, with the key bare or quoted as
-  # YAML allows. A value that is not the plain
+  # YAML allows. The delimiters are read as YAML parsers read them: a UTF-8
+  # byte-order mark ahead of the opening "---" and trailing blanks after
+  # either are not part of the line. A value that is not the plain
   # licence name ("see LICENSE.txt") is refused the same way and needs a
   # human read.
   local decl
   while IFS= read -r -d '' path; do
-    decl="$(awk '{ sub(/\r$/, "") }
+    decl="$(awk 'NR == 1 { sub(/^\357\273\277/, "") }
+                 { sub(/\r$/, ""); sub(/[ \t]+$/, "") }
                  NR == 1 { if ($0 != "---") exit; next }
                  $0 == "---" { exit }
                  /^[\042\047]?license[\042\047]?[ \t]*:/ { sub(/^[\042\047]?license[\042\047]?[ \t]*:[ \t]*/, ""); gsub(/^[\042\047]|[\042\047]$/, ""); print; exit }' "$path" 2>/dev/null)"
     [ -n "$decl" ] && check_license_text "$repo" "$license" "$decl" "${path#"$clone"/} frontmatter license"
   done < <(find "$clone/$src" -iname 'SKILL.md' -type f -print0 2>/dev/null)
+  # A package.json inside the skill declares a licence the same way, in its
+  # "license" field (a string, or the legacy {"type": ...} object) or the
+  # legacy "licenses" array. Each is a bare declaration and is checked as one;
+  # npm's own "UNLICENSED" and "SEE LICENSE IN <file>" values name no licence
+  # on the allowlist and are refused by the same check. A manifest that is
+  # not JSON cannot be read and is refused outright: its field could say
+  # anything. The root manifest of a monorepo is outside the skill and is
+  # not read, since "private" monorepo roots routinely say UNLICENSED above
+  # packages that are MIT.
+  while IFS= read -r -d '' path; do
+    if ! decl="$(python3 -I - "$path" <<'MANIFEST'
+import json, sys
+try:
+    with open(sys.argv[1], encoding="utf-8-sig") as fh:
+        doc = json.load(fh)
+except Exception as exc:
+    print(f"unparseable: {exc}", file=sys.stderr)
+    sys.exit(1)
+if not isinstance(doc, dict):
+    sys.exit(0)
+out = []
+lic = doc.get("license")
+if isinstance(lic, str):
+    out.append(lic)
+elif isinstance(lic, dict) and isinstance(lic.get("type"), str):
+    out.append(lic["type"])
+elif lic is not None:
+    print("license field is neither a string nor a {type} object", file=sys.stderr)
+    sys.exit(1)
+lics = doc.get("licenses")
+if isinstance(lics, list):
+    for item in lics:
+        if isinstance(item, dict) and isinstance(item.get("type"), str):
+            out.append(item["type"])
+        elif isinstance(item, str):
+            out.append(item)
+        else:
+            print("licenses entry is neither a string nor a {type} object", file=sys.stderr)
+            sys.exit(1)
+elif lics is not None:
+    print("licenses field is not a list", file=sys.stderr)
+    sys.exit(1)
+for value in out:
+    print(value)
+MANIFEST
+    )"; then
+      echo "!! $repo: ${path#"$clone"/} cannot be read as a manifest; its licence field needs a human read — refusing (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    while IFS= read -r value; do
+      [ -n "$value" ] && check_license_text "$repo" "$license" "$value" "${path#"$clone"/} license field"
+    done <<<"$decl"
+  done < <(find "$clone/$src" -name 'package.json' -type f -print0 2>/dev/null)
   if [ ${#notice_files[@]} -eq 1 ]; then
     cp "${notice_files[0]}" "$notice_out"
   elif [ ${#notice_files[@]} -gt 1 ]; then
@@ -558,6 +641,15 @@ for entry in "${UPSTREAM[@]}"; do
   fi
   if [ ! -d "$clone/$src" ]; then
     echo "!! $repo: upstream path '$src' no longer exists — upstream restructured, fix UPSTREAM[] above" >&2
+    exit 1
+  fi
+  # A skill is a directory with a SKILL.md at its root; nothing else is one.
+  # An upstream that moved or renamed the file would otherwise pass every
+  # check above and replace a working skill with a directory no harness
+  # loads. The file must be a regular, non-empty file: a symlink is refused
+  # with the other links below, and an empty file loads as nothing.
+  if [ -L "$clone/$src/SKILL.md" ] || [ ! -f "$clone/$src/SKILL.md" ] || [ ! -s "$clone/$src/SKILL.md" ]; then
+    echo "!! $repo: '$src' has no SKILL.md at its root (or it is empty or a symlink); not a skill — upstream restructured, fix UPSTREAM[] above" >&2
     exit 1
   fi
 

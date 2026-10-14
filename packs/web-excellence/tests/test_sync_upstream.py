@@ -509,6 +509,63 @@ def main() -> int:
             "README.md": "# a\n\n## License\n\nMIT\n\n## Example\n\n````markdown\nSay:\n```\n## License\n\nGPL-3.0\n```\n````\n\n~~~\n```\n## Licence\n\nGPL-3.0\n```\n~~~\n",
             "skills/ayin/SKILL.md": "ayin\n",
         })
+        # The same ISC text wrapped at a different column: the retention
+        # condition's phrase breaks across two lines.
+        ISC_WRAPPED = ISC.replace("provided that the above copyright notice\nand", "provided that the above\ncopyright notice and")
+        make_upstream(base, "acme", "isc-wrapped", {
+            "LICENSE": ISC_WRAPPED,
+            "skills/yat/SKILL.md": "yat\n",
+        })
+        make_upstream(base, "acme", "compound-full", {
+            "LICENSE": "Licensed under MIT OR Apache-2.0, at your option.\n\n" + MIT,
+            "skills/shta/SKILL.md": "shta\n",
+        })
+        make_upstream(base, "acme", "compound-with", {
+            "LICENSE": "SPDX-License-Identifier: MIT WITH Classpath-exception-2.0\n\n" + MIT,
+            "skills/yer/SKILL.md": "yer\n",
+        })
+        make_upstream(base, "acme", "manifest-gpl", {
+            "LICENSE": MIT,
+            "skills/yeri/SKILL.md": "yeri\n",
+            "skills/yeri/scripts/package.json": '{\n  "name": "yeri-tool",\n  "license": "GPL-3.0"\n}\n',
+        })
+        make_upstream(base, "acme", "manifest-legacy", {
+            "LICENSE": MIT,
+            "skills/yu/SKILL.md": "yu\n",
+            "skills/yu/package.json": '{"name": "yu", "licenses": [{"type": "Apache-2.0", "url": "https://example.com"}]}\n',
+        })
+        make_upstream(base, "acme", "manifest-broken", {
+            "LICENSE": MIT,
+            "skills/ya/SKILL.md": "ya\n",
+            "skills/ya/package.json": '{"name": "ya", "license": "GPL-3.0",\n',
+        })
+        make_upstream(base, "acme", "manifest-ok", {
+            "LICENSE": MIT,
+            "skills/ye/SKILL.md": "ye\n",
+            "skills/ye/package.json": '{"name": "ye", "private": true, "license": "MIT"}\n',
+        })
+        make_upstream(base, "acme", "bom-frontmatter", {
+            "LICENSE": MIT,
+            "skills/yus/SKILL.md": "\ufeff---\nname: yus\nlicense: GPL-3.0\n---\nyus\n",
+        })
+        make_upstream(base, "acme", "trailing-space-frontmatter", {
+            "LICENSE": MIT,
+            "skills/ksi/SKILL.md": "--- \nname: ksi\nlicense: GPL-3.0\n---  \nksi\n",
+        })
+        make_upstream(base, "acme", "backtick-info-fence", {
+            "LICENSE": MIT,
+            "skills/fita/SKILL.md": "fita\n",
+            "skills/fita/README.md": "# f\n\n```not a `fence`\n\n## License\n\nGPL-3.0\n",
+        })
+        make_upstream(base, "acme", "no-skill-md", {
+            "LICENSE": MIT,
+            "skills/izhitsa/README.md": "A directory that is not a skill.\n",
+            "skills/izhitsa/skill.md": "lower-case name, not the file a harness loads\n",
+        })
+        make_upstream(base, "acme", "empty-skill-md", {
+            "LICENSE": MIT,
+            "skills/zelo/SKILL.md": "",
+        })
 
         good = [
             "acme/with-file|MIT|skills/alpha|alpha",
@@ -583,7 +640,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and (not gate or "ABSORPTION.md gate 1" in r.stderr), r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn", "az", "glagoli", "dobro", "zhivete", "ivan", "pokoi", "lyudi", "nash", "on", "uk", "kher", "tsi", "cherv")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn", "az", "glagoli", "dobro", "zhivete", "ivan", "pokoi", "lyudi", "nash", "on", "uk", "kher", "tsi", "cherv", "shta", "yer", "yeri", "yu", "ya", "yus", "ksi", "fita", "izhitsa", "zelo")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -644,6 +701,16 @@ def main() -> int:
         refused("a compound expression in a README declaration", good[:1] + ["acme/compound-readme|MIT|skills/kher|kher"], "compound licence expression")
         refused("a compound expression in SKILL.md frontmatter", good[:1] + ["acme/compound-frontmatter|MIT|skills/tsi|tsi"], "compound licence expression")
         refused("a slash-joined pair of licences in a README declaration", good[:1] + ["acme/compound-slash|MIT|skills/cherv|cherv"], "compound licence expression")
+        refused("a compound expression above a full MIT text", good[:1] + ["acme/compound-full|MIT|skills/shta|shta"], "compound licence expression alongside its grant")
+        refused("a WITH exception above a full MIT text", good[:1] + ["acme/compound-with|MIT|skills/yer|yer"], "compound licence expression alongside its grant")
+        refused("a nested package.json declaring GPL under an MIT root", good[:1] + ["acme/manifest-gpl|MIT|skills/yeri|yeri"], "skills/yeri/scripts/package.json license field reads as a refused licence")
+        refused("a legacy licenses array declaring Apache-2.0 under MIT", good[:1] + ["acme/manifest-legacy|MIT|skills/yu|yu"], "skills/yu/package.json license field does not read as MIT")
+        refused("a package.json that is not JSON", good[:1] + ["acme/manifest-broken|MIT|skills/ya|ya"], "cannot be read as a manifest")
+        refused("SKILL.md frontmatter behind a byte-order mark declaring GPL", good[:1] + ["acme/bom-frontmatter|MIT|skills/yus|yus"], "skills/yus/SKILL.md frontmatter license reads as a refused licence")
+        refused("SKILL.md frontmatter delimiters with trailing blanks declaring GPL", good[:1] + ["acme/trailing-space-frontmatter|MIT|skills/ksi|ksi"], "skills/ksi/SKILL.md frontmatter license reads as a refused licence")
+        refused("a backtick run with a backtick in its info string is not a fence", good[:1] + ["acme/backtick-info-fence|MIT|skills/fita|fita"], "skills/fita/README.md License section reads as a refused licence")
+        refused("a src with no SKILL.md at its root", good[:1] + ["acme/no-skill-md|MIT|skills/izhitsa|izhitsa"], "has no SKILL.md at its root", gate=False)
+        refused("a src whose SKILL.md is empty", good[:1] + ["acme/empty-skill-md|MIT|skills/zelo|zelo"], "has no SKILL.md at its root", gate=False)
 
         # ---- a refused run leaves nothing in TMPDIR -----------------------------
         tmpdir_probe = os.path.join(tmp, "probe-tmp")
@@ -681,12 +748,17 @@ def main() -> int:
             ("native dest", "acme/with-file|MIT|skills/alpha|core-web-vitals"),
             ("root src", "acme/with-file|MIT|.|rootskill"),
             ("src under .git", "acme/with-file|MIT|.git/info|gitskill"),
+            ("src under .GIT in upper case", "acme/with-file|MIT|.GIT/info|gitskill"),
             ("src with a . component", "acme/with-file|MIT|skills/./alpha|dotskill"),
+            ("native dest in another case", "acme/with-file|MIT|skills/alpha|Core-Web-Vitals"),
         ):
             r = run_sync(p3, base, [row])
             check(f"override row with {label} exits 2", r.returncode == 2, r.stderr)
         r = run_sync(p3, base, ["acme/with-file|MIT|skills/alpha|same", "acme/readme-only|MIT|skills/beta|same"])
         check("two rows with one dest exit 2", r.returncode == 2 and "twice" in r.stderr, r.stderr)
+        r = run_sync(p3, base, ["acme/with-file|MIT|skills/alpha|same", "acme/readme-only|MIT|skills/beta|SAME"])
+        check("two rows whose dests differ only in case exit 2", r.returncode == 2 and "twice" in r.stderr, r.stderr)
+        check("no row with a case-variant dest vendored anything", not os.path.isdir(os.path.join(p3, "skills", "SAME")) and not os.path.isdir(os.path.join(p3, "skills", "Core-Web-Vitals")))
         check("malformed rows left the existing skills tree untouched", os.path.isfile(os.path.join(p3, "skills", "keep", "SKILL.md")))
         check("the native skill named as a dest is untouched", read(os.path.join(p3, "skills", "core-web-vitals", "SKILL.md")) == "native\n")
         check("no row with a native or duplicate dest vendored anything", not os.path.isdir(os.path.join(p3, "skills", "same")) and not os.path.isdir(os.path.join(p3, "skills", "alpha")))
@@ -803,6 +875,11 @@ def main() -> int:
         check("an autolink is not an HTML block and does not swallow the heading after it", r.returncode == 0 and os.path.isfile(slovo_lic) and "\n    MIT\n" in read(slovo_lic) and "nope" not in read(slovo_lic), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/isc-file|ISC|skills/fert|fert"])
         check("ISC text with its retention condition vendors as ISC", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "fert", "UPSTREAM-LICENSE")), r.stderr)
+        check("the wrapped ISC fixture breaks the phrase across lines", "the above\ncopyright notice" in ISC_WRAPPED)
+        r = run_sync(pack, base, good[:1] + ["acme/isc-wrapped|ISC|skills/yat|yat"])
+        check("ISC text whose retention condition wraps across lines vendors as ISC", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "yat", "UPSTREAM-LICENSE")), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/manifest-ok|MIT|skills/ye|ye"])
+        check("a package.json declaring the same licence vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "ye", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/url-in-declaration|MIT|skills/sha|sha"])
         check("a URL beside a declaration is not a slash-joined licence pair", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "sha", "UPSTREAM-LICENSE")), r.stderr)
         multi_entries = good[:1] + ["acme/multi-notice|Apache-2.0|skills/tverdo|tverdo"]

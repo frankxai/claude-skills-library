@@ -26,7 +26,11 @@ HTML block ignored, a fence opening or closing at most three spaces in and
 closing only on its own delimiter) between the skill and the repo root, and
 every one nested anywhere inside the skill, a nested `UPSTREAM-LICENSE`
 included, is read; so is the `license:` field, key bare or quoted, of every
-SKILL.md frontmatter in the skill. The
+SKILL.md frontmatter in the skill (delimiters read past a byte-order mark and
+trailing blanks), and the `license` or legacy `licenses` field of every
+`package.json` in the skill, a manifest that is not JSON being refused. The
+text is read with its whitespace folded, so a phrase wrapped across lines is
+still the phrase. The
 nearest licence file on the path to the
 root is recorded, else the nearest README declaration. A recognised licence
 text is identified by its grant clause and checked against the exact declared
@@ -36,14 +40,18 @@ is not the Unlicense.
 Anything without a grant clause is a bare declaration and may say nothing but
 the licence: all-rights-reserved, negations, qualifiers and compound
 expressions (`MIT AND Apache-2.0`, `MIT OR X`, `X WITH Y`, `MIT/Apache-2.0`)
-are refused, as are
+are refused; a full text is refused too when such an expression joins two
+licence names above its grant. Refused as well are
 copyleft and `-NC` texts, symlinked inputs, and an upstream that ships
 `UPSTREAM-LICENSE`, in any case, at the skill root. A source path that is or
 crosses a symlink, a skill tree containing one, and a source that is a
 submodule gitlink are refused: the copy would follow or carry a pointer off
 the clone, or vendor an empty directory. Before any clone, every table row is checked
-for shape: a destination that names a native skill, or one listed twice, and
-a source at the repository root or under `.git`, are refused. One failing
+for shape: a destination that names a native skill, or one listed twice (both
+compared with case folded), and a source at the repository root or under
+`.git`, in any case, are refused; so is a source directory with no `SKILL.md`
+at its root, since replacing a skill with a directory no harness loads is not
+a sync. One failing
 entry aborts the whole run with the vendored tree unchanged.
 
 The gate is pattern matching, not licence identification. It catches the
