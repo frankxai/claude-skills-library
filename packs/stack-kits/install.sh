@@ -177,9 +177,14 @@ if [ $DRY -eq 1 ]; then
   say "  would: merge one UserPromptSubmit hook into .claude/settings.json (others preserved)"
 else
   python3 - "$SETTINGS" <<'PY'
-import json, os, sys
+import json, os, re, sys
 path = sys.argv[1]
-ours = {"type": "command", "command": "node .claude/hooks/skill-activation-prompt.mjs", "timeout": 5}
+# Anchored to the project root: hooks run in the session's current directory,
+# which moves when the agent `cd`s. `:-.` covers a Claude Code too old to set it.
+ours = {"type": "command", "command": 'node "${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/skill-activation-prompt.mjs"', "timeout": 5}
+# Ours by script path, so an older install's command form is upgraded in place
+# rather than left beside the new one to route every prompt twice.
+OURS = re.compile(r"\.claude/hooks/skill-activation-prompt\.mjs")
 if os.path.exists(path):
     try:
         settings = json.load(open(path, encoding="utf-8"))
@@ -190,10 +195,17 @@ else:
 entries = settings.setdefault("hooks", {}).setdefault("UserPromptSubmit", [])
 state = "added"
 for e in entries:
-    for i, h in enumerate(e.get("hooks", [])):
-        if h.get("command") == ours["command"]:
+    kept = []
+    for h in e.get("hooks", []):
+        if OURS.search(h.get("command") or ""):
+            if state != "added":
+                state = "upgraded"  # a second copy: drop it
+                continue
             state = "unchanged" if h == ours else "upgraded"
-            e["hooks"][i] = dict(ours)
+            h = dict(ours)
+        kept.append(h)
+    e["hooks"] = kept
+entries[:] = [e for e in entries if e.get("hooks")]
 if state == "added":
     entries.append({"hooks": [dict(ours)]})
 os.makedirs(os.path.dirname(path), exist_ok=True)

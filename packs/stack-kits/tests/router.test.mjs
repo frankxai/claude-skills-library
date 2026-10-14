@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { route, render } from '../hooks/skill-activation-prompt.mjs';
+import { route, render, projectDir } from '../hooks/skill-activation-prompt.mjs';
 import { compose } from '../lib/compose.mjs';
 
 const PACK = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -215,13 +215,13 @@ test('install.sh: detects the stack, preserves other hooks, aliases equivalents,
 
   const settings = () => JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf8'));
   const cmds = () => settings().hooks.UserPromptSubmit.flatMap((e) => e.hooks.map((h) => h.command));
-  assert.deepEqual(cmds(), ['bash existing.sh', 'node .claude/hooks/skill-activation-prompt.mjs']);
+  assert.deepEqual(cmds(), ['bash existing.sh', 'node "${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/skill-activation-prompt.mjs"']);
 
   const rulesBefore = readFileSync(join(dir, '.claude', 'skills', 'stack-kits.rules.json'), 'utf8');
   const second = execFileSync('bash', [sh, dir], { encoding: 'utf8' });
   assert.match(second, /keep\s+tailwindcss \(already current\)/);
   assert.match(second, /router unchanged/);
-  assert.deepEqual(cmds(), ['bash existing.sh', 'node .claude/hooks/skill-activation-prompt.mjs']);
+  assert.deepEqual(cmds(), ['bash existing.sh', 'node "${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/skill-activation-prompt.mjs"']);
   assert.equal(readFileSync(join(dir, '.claude', 'skills', 'stack-kits.rules.json'), 'utf8'), rulesBefore);
 
   const r = runHook(dir, 'make the hero responsive with tailwind');
@@ -373,4 +373,47 @@ test('install.sh names the .gitignore lines a whitelisting repo is missing', () 
   const out = execFileSync('bash', [join(PACK, 'install.sh'), dir], { encoding: 'utf8' });
   assert.match(out, /!!\.claude\/hooks\/skill-activation-prompt\.mjs|!\.claude\/hooks\/skill-activation-prompt\.mjs/);
   assert.match(out, /!\.claude\/skills\/tailwindcss\//);
+});
+
+test('routes by the rules of the checkout the hook runs in, not where the session started', () => {
+  // A worktree session: CLAUDE_PROJECT_DIR stays on the main checkout while cwd
+  // follows the worktree (and any `cd` inside it).
+  const rule = (kw) => JSON.stringify({ skills: { [kw]: { priority: 'high', promptTriggers: { keywords: ['hero'] } } } });
+  const main = repo(['main-only'], [], { '.claude/skills/stack-kits.rules.json': rule('main-only') });
+  const tree = repo(['branch-only'], [], {
+    '.claude/skills/stack-kits.rules.json': rule('branch-only'),
+    'apps/web/app/page.tsx': '',
+  });
+  const sub = join(tree, 'apps', 'web');
+  assert.equal(projectDir({ cwd: sub }, { CLAUDE_PROJECT_DIR: main }), tree);
+  assert.equal(projectDir({ cwd: tmpdir() }, { CLAUDE_PROJECT_DIR: main }), main, 'falls back when no rules are found');
+  assert.equal(projectDir({}, { CLAUDE_PROJECT_DIR: main }), main);
+
+  const r = spawnSync('node', [HOOK], {
+    input: JSON.stringify({ prompt: 'restyle the hero', cwd: sub }),
+    env: { ...process.env, CLAUDE_PROJECT_DIR: main },
+    encoding: 'utf8',
+  });
+  const ctx = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
+  assert.match(ctx, /branch-only/);
+  assert.doesNotMatch(ctx, /main-only/);
+});
+
+test('install.sh upgrades an older relative router command in place, never adding a second', () => {
+  const dir = repo([], [], {
+    'package.json': JSON.stringify({ dependencies: { next: '16', react: '19' } }),
+    '.claude/settings.json': JSON.stringify({
+      hooks: {
+        UserPromptSubmit: [
+          { hooks: [{ type: 'command', command: 'node .claude/hooks/skill-activation-prompt.mjs', timeout: 5 }] },
+          { hooks: [{ type: 'command', command: 'bash existing.sh' }] },
+        ],
+      },
+    }),
+  });
+  const out = execFileSync('bash', [join(PACK, 'install.sh'), dir], { encoding: 'utf8' });
+  assert.match(out, /router upgraded/);
+  const cmds = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf8'))
+    .hooks.UserPromptSubmit.flatMap((e) => e.hooks.map((h) => h.command));
+  assert.deepEqual(cmds, ['node "${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/skill-activation-prompt.mjs"', 'bash existing.sh']);
 });

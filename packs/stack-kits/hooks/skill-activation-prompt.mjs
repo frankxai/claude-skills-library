@@ -25,7 +25,7 @@
 //     kit the prompt named out of a broad request's list.
 
 import { readFileSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const PROMPT_CAP = 20000;
@@ -135,6 +135,29 @@ export function render({ skills, agents }, rules) {
   return lines.join('\n');
 }
 
+// The checkout whose rules and skills apply to this prompt: the nearest
+// directory at or above the hook's `cwd` that carries routing rules. `cwd`
+// follows a worktree and a `cd` into a subdirectory; CLAUDE_PROJECT_DIR stays
+// where the session started, so in a worktree it names the main checkout and
+// would route by that branch's rules instead of this one's.
+export function projectDir(input, env = process.env) {
+  const hasRules = (dir) =>
+    ['stack-kits.rules.json', 'skill-rules.json'].some((f) => {
+      try {
+        return statSync(join(dir, '.claude', 'skills', f)).isFile();
+      } catch {
+        return false;
+      }
+    });
+  if (typeof input?.cwd === 'string' && input.cwd) {
+    for (let dir = resolve(input.cwd); ; dir = dirname(dir)) {
+      if (hasRules(dir)) return dir;
+      if (dirname(dir) === dir) break;
+    }
+  }
+  return env.CLAUDE_PROJECT_DIR || input?.cwd || process.cwd();
+}
+
 function main() {
   let input;
   try {
@@ -142,8 +165,8 @@ function main() {
   } catch {
     return;
   }
-  const projectDir = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
-  const dir = join(projectDir, '.claude', 'skills');
+  const root = projectDir(input);
+  const dir = join(root, '.claude', 'skills');
   const load = (file) => {
     try {
       const parsed = JSON.parse(readFileSync(join(dir, file), 'utf8'));
@@ -164,8 +187,8 @@ function main() {
     if (!/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(name)) return false; // no path segments
     const file =
       kind === 'skill'
-        ? join(projectDir, '.claude', 'skills', name, 'SKILL.md')
-        : join(projectDir, '.claude', 'agents', `${name}.md`);
+        ? join(root, '.claude', 'skills', name, 'SKILL.md')
+        : join(root, '.claude', 'agents', `${name}.md`);
     try {
       return statSync(file).size > 0; // an empty SKILL.md gives the reader nothing to follow
     } catch {
