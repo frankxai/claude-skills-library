@@ -1,0 +1,151 @@
+{
+  "category": "substitution",
+  "description": "Command substitution, process substitution, here-docs and quoted text.",
+  "cases": [
+    {
+      "id": "substitution-01",
+      "description": "Command substitution is checked",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo $(git push origin main)",
+      "expect": "passthrough"
+    },
+    {
+      "id": "substitution-02",
+      "description": "Backtick substitution is checked",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo `git push origin main`",
+      "expect": "passthrough"
+    },
+    {
+      "id": "substitution-03",
+      "description": "Process substitution is checked",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "diff <(git push origin main) other.txt",
+      "expect": "passthrough"
+    },
+    {
+      "id": "substitution-04",
+      "description": "Substitution on an assignment is checked",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "result=$(git push origin main)",
+      "expect": "passthrough"
+    },
+    {
+      "id": "substitution-05",
+      "description": "Substitution in a deny rule context",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash(rm *)"
+        ]
+      },
+      "command": "echo \"$(rm -rf build)\"",
+      "expect": "passthrough"
+    },
+    {
+      "id": "substitution-06",
+      "description": "Here-doc inside a commit message substitution still reaches the commit",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit *)"
+        ],
+        "deny": []
+      },
+      "command": "git commit -m \"$(cat <<'EOF'\nmessage body\nEOF\n)\"",
+      "expect": "passthrough"
+    },
+    {
+      "id": "substitution-07",
+      "description": "Here-doc body is data, not a command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "cat <<'EOF' > notes.txt\nrun git push later\nEOF",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "substitution-08",
+      "description": "A quoted string argument is data, not a command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo \"git push\"",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "substitution-09",
+      "description": "Substitution that holds an unrelated command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo $(git status)",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "substitution-10",
+      "description": "Arithmetic expansion is not a command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo $((1 + 2))",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "substitution-11",
+      "description": "Variable expansion is not a command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "echo \"$HOME/projects\"",
+      "expect": "rewrite-eligible"
+    }
+  ]
+}

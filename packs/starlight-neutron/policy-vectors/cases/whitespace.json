@@ -1,0 +1,110 @@
+{
+  "category": "whitespace",
+  "description": "Spacing, tabs, continuations and empty commands.",
+  "cases": [
+    {
+      "id": "whitespace-01",
+      "description": "Extra spaces between words, spacing is not documented so the spec fails closed",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git   push   origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "whitespace-02",
+      "description": "Tabs between words, tabs are not documented so the spec fails closed",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git\tpush\torigin\tmain",
+      "expect": "passthrough"
+    },
+    {
+      "id": "whitespace-03",
+      "description": "Leading whitespace is ignored",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "   git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "whitespace-04",
+      "description": "Trailing whitespace is ignored",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main   ",
+      "expect": "passthrough"
+    },
+    {
+      "id": "whitespace-05",
+      "description": "Line continuation between words, the spec fails closed",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git \\\npush origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "whitespace-06",
+      "description": "A whitespace-only command matches no specific rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "   ",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "whitespace-07",
+      "description": "An empty command matches no specific rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "whitespace-08",
+      "description": "An empty command matches the match-all rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(*)"
+        ],
+        "deny": []
+      },
+      "command": "",
+      "expect": "passthrough"
+    }
+  ]
+}

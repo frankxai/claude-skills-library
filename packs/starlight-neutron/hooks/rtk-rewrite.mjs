@@ -87,7 +87,13 @@ export function loadGuardRules({ home = homedir(), cwd = process.cwd(), env = pr
         continue;
       }
       for (const rule of list) {
-        const match = /^(?:Bash|PowerShell)\((.*)\)$/s.exec(String(rule));
+        const text = String(rule).trim();
+        // A bare tool name (`Bash`, `PowerShell`) is a rule on every command of that tool: treat it as match-all.
+        if (/^(?:Bash|PowerShell)$/.test(text)) {
+          patterns.push('*');
+          continue;
+        }
+        const match = /^(?:Bash|PowerShell)\((.*)\)$/s.exec(text);
         if (match) patterns.push(match[1]);
       }
     }
@@ -109,7 +115,7 @@ const squash = (text) => String(text).normalize('NFKC').toLowerCase().replace(/[
 //    the command text as a substring. A wildcard can stand for any text, including the rest of a word.
 // A rule with no literal text (`*`) matches everything. Over-matching costs a skipped rewrite; under-matching would
 // drop a prompt, so ties go to skipping.
-export function commandHitsRule(command, patterns) {
+function hitsOnce(command, patterns) {
   const present = new Set(tokens(command));
   const haystack = squash(command);
   return patterns.some((raw) => {
@@ -118,6 +124,40 @@ export function commandHitsRule(command, patterns) {
     if (!body.includes('*')) return wordsHit;
     return wordsHit || body.split('*').map(squash).filter(Boolean).every((piece) => haystack.includes(piece));
   });
+}
+
+// Default PowerShell aliases. Claude Code canonicalizes these before matching a PowerShell rule, so a rule on
+// `Remove-Item` also covers `rm`. The test runs on the original text and again with every alias spelled as its
+// cmdlet on both sides, so an alias can neither hide a match nor remove one that was there.
+const POWERSHELL_ALIASES = {
+  'remove-item': ['rm', 'del', 'ri', 'erase', 'rd', 'rmdir'],
+  'get-childitem': ['gci', 'ls', 'dir'],
+  'get-content': ['gc', 'cat', 'type'],
+  'set-content': ['sc'],
+  'add-content': ['ac'],
+  'clear-content': ['clc'],
+  'copy-item': ['cp', 'copy', 'cpi'],
+  'move-item': ['mv', 'move', 'mi'],
+  'rename-item': ['rni', 'ren'],
+  'new-item': ['ni'],
+  'set-location': ['sl', 'cd', 'chdir'],
+  'invoke-expression': ['iex'],
+  'invoke-webrequest': ['iwr', 'curl', 'wget'],
+  'invoke-restmethod': ['irm'],
+  'select-string': ['sls'],
+  'get-process': ['gps', 'ps'],
+  'stop-process': ['spps', 'kill'],
+  'start-process': ['saps', 'start'],
+};
+const ALIAS_TO_CMDLET = new Map(Object.entries(POWERSHELL_ALIASES).flatMap(([cmdlet, aliases]) => aliases.map((alias) => [alias, cmdlet])));
+const ALIAS_WORD = new RegExp(`(?<![\\w-])(${[...ALIAS_TO_CMDLET.keys()].join('|')})(?![\\w-])`, 'gi');
+const spellCmdlets = (text) => String(text).replace(ALIAS_WORD, (word) => ALIAS_TO_CMDLET.get(word.toLowerCase()));
+
+export function commandHitsRule(command, patterns) {
+  if (hitsOnce(command, patterns)) return true;
+  const expandedCommand = spellCmdlets(command);
+  const expandedPatterns = patterns.map(spellCmdlets);
+  return hitsOnce(expandedCommand, expandedPatterns);
 }
 
 // The shim rewrites commands. It never grants authorization and never lets RTK add fields. RTK adds

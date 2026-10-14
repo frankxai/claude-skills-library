@@ -1,0 +1,303 @@
+{
+  "category": "wrappers",
+  "description": "Wrappers Claude Code strips, wrappers it does not, and env prefixes.",
+  "cases": [
+    {
+      "id": "wrappers-01",
+      "description": "timeout is stripped before matching",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "timeout 30 git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-02",
+      "description": "nice is stripped before matching",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "nice -n 5 git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-03",
+      "description": "nohup is stripped before matching",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "nohup git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-04",
+      "description": "time is stripped before matching",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "time git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-05",
+      "description": "stdbuf is stripped before matching",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "stdbuf -oL git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-06",
+      "description": "command is stripped before matching",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "command git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-07",
+      "description": "noglob is stripped before matching",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "noglob git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-08",
+      "description": "A leading variable assignment does not hide a deny rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash(rm *)"
+        ]
+      },
+      "command": "FOO=bar rm -rf tmp/",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-09",
+      "description": "A known-safe variable assignment is stripped",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(npm test *)"
+        ],
+        "deny": []
+      },
+      "command": "NODE_ENV=test npm test",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-10",
+      "description": "env is not in the stripped list, so the rule does not match",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "env GIT_TRACE=1 git push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-11",
+      "description": "Bare xargs is stripped",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(grep *)"
+        ],
+        "deny": []
+      },
+      "command": "xargs grep pattern",
+      "expect": "passthrough"
+    },
+    {
+      "id": "wrappers-12",
+      "description": "xargs with flags is matched as xargs",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "xargs -n1 git push",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-13",
+      "description": "sudo is not stripped",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "sudo git push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-14",
+      "description": "bash -c is not unwrapped",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(rm *)"
+        ],
+        "deny": []
+      },
+      "command": "bash -c 'rm -rf build/'",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-15",
+      "description": "sh -c is not unwrapped",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "sh -c \"git push origin main\"",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-16",
+      "description": "An absolute path to the program is a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(curl *)"
+        ],
+        "deny": []
+      },
+      "command": "/usr/bin/curl https://example.com",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-17",
+      "description": "git -C between program and subcommand is a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git -C . push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-18",
+      "description": "git -c between program and subcommand is a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git -c push.default=current push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-19",
+      "description": "A quoted subcommand is a different form",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git 'push' origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-20",
+      "description": "docker exec is not stripped",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "docker exec build git push origin main",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-21",
+      "description": "command -v is a lookup, not a wrapper",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git *)"
+        ],
+        "deny": []
+      },
+      "command": "command -v git",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "wrappers-22",
+      "description": "Two stripped wrappers in a row",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "nohup timeout 60 git push origin main",
+      "expect": "passthrough"
+    }
+  ]
+}
