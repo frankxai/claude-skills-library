@@ -68,10 +68,10 @@ file, and a re-install merges it over the generated rules:
 node --test packs/stack-kits/tests/*.test.mjs
 ```
 
-There are 25 checks, all run in CI by `pack-tests.yml`. They cover priority ordering,
+There are 26 checks, all run in CI by `pack-tests.yml`. They cover priority ordering,
 word-boundary keywords (including `next.js`), invalid regex tolerance, dead-reference
 filtering, the prompt never being echoed, never-block on bad input, path-like skill
-names refused, alias, alias-merge and local-override composition, reading ACOS-schema rules, routing by the rules of the checkout the hook runs in (a worktree or a subdirectory), and install idempotency, including upgrading an older install's hook command in place. The
+names refused, alias, alias-merge and local-override composition, reading ACOS-schema rules, routing by the rules of the checkout the hook runs in (a worktree or a subdirectory, and nothing when that checkout has no rules), and install idempotency, including upgrading an older install's hook command in place. The
 install tests also confirm that existing hooks are preserved and that locally edited
 kits are set aside rather than deleted, that a repo's own `skill-rules.json` is never written, and that a `.gitignore` hiding installed files is reported with the exact lines to add.
 

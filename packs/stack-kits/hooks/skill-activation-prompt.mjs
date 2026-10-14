@@ -149,9 +149,21 @@ export function projectDir(input, env = process.env) {
         return false;
       }
     });
+  const isCheckout = (dir) => {
+    try {
+      statSync(join(dir, '.git')); // a directory, or a worktree's .git file
+      return true;
+    } catch {
+      return false;
+    }
+  };
   if (typeof input?.cwd === 'string' && input.cwd) {
     for (let dir = resolve(input.cwd); ; dir = dirname(dir)) {
       if (hasRules(dir)) return dir;
+      // A checkout without rules routes nothing. Falling through to
+      // CLAUDE_PROJECT_DIR would apply the main checkout's rules to a worktree
+      // whose branch predates or removed them.
+      if (isCheckout(dir)) return dir;
       if (dirname(dir) === dir) break;
     }
   }
