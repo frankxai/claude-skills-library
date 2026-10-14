@@ -9,11 +9,12 @@ All upstreams are MIT-licensed. Each vendored skill directory carries the
 upstream `LICENSE` as `UPSTREAM-LICENSE`. Where an upstream ships no LICENSE
 file and declares its licence only in its README (`vercel-labs/agent-skills`
 does), `UPSTREAM-LICENSE` records that declaration verbatim with the commit it
-was read from. Where an upstream ships a `NOTICE` file on the path from the
-skill to the repository root, the nearest one is carried as `UPSTREAM-NOTICE`:
+was read from. Where an upstream ships `NOTICE` files on the path from the
+skill to the repository root, every one is carried as `UPSTREAM-NOTICE`, a
+single file as is and several concatenated under lines naming their paths:
 Apache-2.0 section 4(d) requires that attribution to travel with a
-redistribution, and it is carried for every licence. None of the current
-upstreams ships one.
+redistribution, the obligations add up, and it is carried for every licence.
+None of the current upstreams ships one.
 
 `sync-upstream.sh` applies ABSORPTION.md gate 1 before it touches `skills/`:
 the licence declared in the table below must be on the allowlist, and the
@@ -29,10 +30,13 @@ SKILL.md frontmatter in the skill. The
 nearest licence file on the path to the
 root is recorded, else the nearest README declaration. A recognised licence
 text is identified by its grant clause and checked against the exact declared
-variant, so BSD-4's advertising clause fails a BSD-3 declaration and
-"unlicensed" is not the Unlicense.
+variant, so BSD-4's advertising clause fails a BSD-3 declaration, 0BSD's grant
+without ISC's retention condition fails an ISC declaration, and "unlicensed"
+is not the Unlicense.
 Anything without a grant clause is a bare declaration and may say nothing but
-the licence: all-rights-reserved, negations and qualifiers are refused, as are
+the licence: all-rights-reserved, negations, qualifiers and compound
+expressions (`MIT AND Apache-2.0`, `MIT OR X`, `X WITH Y`, `MIT/Apache-2.0`)
+are refused, as are
 copyleft and `-NC` texts, symlinked inputs, and an upstream that ships
 `UPSTREAM-LICENSE`, in any case, at the skill root. A source path that is or
 crosses a symlink, a skill tree containing one, and a source that is a

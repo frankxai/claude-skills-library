@@ -127,6 +127,13 @@ declare -A EXCLUDES=(
   [BSD-3-Clause]='BSD[- ]2|2-Clause|Simplified BSD|BSD[- ]4|4-Clause|advertising materials'
   [MIT]='MIT-0|No Attribution'
   [Apache-2.0]='Version 1\.[01]|Apache-1\.|Apache License 1\.'
+  [ISC]='0BSD|Zero[- ]Clause|BSD Zero'
+)
+# What a full licence text (one with a grant clause) must also contain to be
+# the declared licence. ISC and 0BSD share their grant sentence; ISC alone
+# conditions it on keeping the copyright and permission notices.
+declare -A REQUIRED=(
+  [ISC]='provided that the above copyright notice'
 )
 # Refused whatever SOURCES.md says: copyleft reaches this library's MIT root
 # and -NC conflicts with commercial shipping. The -NC form is the SPDX suffix
@@ -149,6 +156,14 @@ RIDER='(shall|may|must|can) ?not be used|not be used (by|for)|(shall|must) be us
 # ("not licensed under MIT", "MIT except assets", "contact us for commercial
 # terms") is no declaration and needs a human read.
 QUALIFIED='(^|[^[:alnum:]])(not|no|never|except|exceptions?|unless|proprietary|dual|commercial|contact|restricted)([^[:alnum:]]|$)'
+# A compound SPDX expression ("MIT AND Apache-2.0", "MIT OR GPL-3.0", "GPL-2.0
+# WITH Classpath-exception", "MIT/Apache-2.0") is not the single licence the
+# table declares: recording it as one would drop the other's obligations. The
+# operators are matched in upper case, as SPDX writes them, so prose "and" in a
+# declaration is left to the qualifier check; the slash form needs a licence
+# name on both sides, so a URL path is not one.
+LICNAME='(MIT|Apache[-0-9.]*|BSD[-0-9A-Za-z]*|ISC|GPL[-0-9.]*|LGPL[-0-9.]*|AGPL[-0-9.]*|CC[-0-9A-Za-z.]*|Unlicense|MPL[-0-9.]*|0BSD)'
+COMPOUND="(^|[^[:alnum:]])(AND|OR|WITH)([^[:alnum:]]|$)|$LICNAME ?/ ?$LICNAME"
 GRANT='Permission is hereby granted|Permission to use, copy, modify|Redistribution and use in source and binary forms|hereby grants? (to )?You|free and unencumbered|hereby overtly, fully, permanently'
 
 # check_license_text <repo> <license> <text> <where>
@@ -178,9 +193,14 @@ check_license_text() {
       echo "!! $repo: $where qualifies or negates its declaration — refusing; this upstream needs a human read (ABSORPTION.md gate 1)" >&2
       exit 1
     fi
+    if grep -qE "$COMPOUND" <<<"$text"; then
+      echo "!! $repo: $where declares a compound licence expression, not the single licence SOURCES.md names — refusing; this upstream needs a human read (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
   fi
   if ! grep -qiE "${ALLOWED[$license]}" <<<"$text" \
-     || { [ -n "${EXCLUDES[$license]+x}" ] && grep -qiE "${EXCLUDES[$license]}" <<<"$text"; }; then
+     || { [ -n "${EXCLUDES[$license]+x}" ] && grep -qiE "${EXCLUDES[$license]}" <<<"$text"; } \
+     || { [ -n "${REQUIRED[$license]+x}" ] && grep -qiE "$GRANT" <<<"$text" && ! grep -qiE "${REQUIRED[$license]}" <<<"$text"; }; then
     echo "!! $repo: $where does not read as $license, the licence SOURCES.md declares — fix UPSTREAM[] or drop the entry (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
@@ -202,8 +222,10 @@ check_license_text() {
 # comment (<!-- to -->), processing instruction (<? to ?>), declaration (<!X
 # to >) or CDATA section, none of which is rendered and none of which joins a
 # declaration; a <script, <style, <pre or <textarea block, which runs to its
-# closing tag; and any other line opening with a tag, which runs to the next
-# blank line. Lines of the last two kinds stay part of a section already open,
+# closing tag; and any other line opening with a tag (a tag name followed by
+# a space, ">" or the end of the line, so an autolink such as <https://x> is
+# not one), which runs to the next blank line. Lines of the last two kinds
+# stay part of a section already open,
 # since <pre> and <table> text is shown. A commented-out README template or a
 # heading inside a table licenses nothing. An ATX heading has one to six
 # hashes; seven is prose. An ATX
@@ -254,7 +276,7 @@ extract_license_sections() {
             tag = low; sub(/^</, "", tag); sub(/[ \t>].*$/, "", tag)
             hterm = "</" tag ">"; rest = substr(low, length(tag) + 2); hshow = 1
           }
-          else if (low ~ /^<\/?[a-z]/) { hblank = 1; if (f) print line; continue }
+          else if (low ~ /^<\/?[a-z][a-z0-9-]*([ \t>]|\/>|$)/) { hblank = 1; if (f) print line; continue }
           if (hterm != "") {
             if (index(rest, hterm)) hterm = ""
             if (hshow && f) print line; continue
@@ -290,14 +312,17 @@ extract_license_sections() {
 # resolve_license <clone> <repo> <license> <src> <out> <notice_out>
 # Writes to <out> exactly what the skill's UPSTREAM-LICENSE must contain: the
 # licence file nearest the skill when one exists, else a record of the nearest
-# README declaration. Writes to <notice_out> the nearest NOTICE file on the
-# same path when there is one: Apache-2.0 section 4(d) requires its
-# attribution to travel with a redistribution, and it is carried for every
-# licence. Exits 1 when anything is missing, mismatched or refused. Reads the
-# clone only, so it can run before anything under skills/ is touched.
+# README declaration. Writes to <notice_out> every NOTICE file on the same
+# path when there is one: Apache-2.0 section 4(d) requires that attribution
+# to travel with a redistribution, the obligations add up rather than
+# compete, and it is carried for every licence. A single NOTICE is copied as
+# is; several are concatenated, each under a line naming its path. Exits 1
+# when anything is missing, mismatched or refused. Reads the clone only, so
+# it can run before anything under skills/ is touched.
 resolve_license() {
   local clone="$1" repo="$2" license="$3" src="$4" out="$5" notice_out="$6"
-  local dir rel lic section nearest_file="" nearest_decl="" nearest_notice=""
+  local dir rel lic section nearest_file="" nearest_decl=""
+  local -a notice_files=()
   if [ -z "${ALLOWED[$license]+x}" ]; then
     echo "!! $repo: licence '$license' is not on the ABSORPTION.md allowlist — refusing (ABSORPTION.md gate 1)" >&2
     exit 1
@@ -377,7 +402,7 @@ resolve_license() {
       check_candidate "$path" "${rel:+$rel/}$(basename "$path")" 1
     done
     # A NOTICE is attribution, not a licence text, so it is carried rather
-    # than checked; the nearest one on the path to the root is the one kept.
+    # than checked; every one on the path to the root is kept, skill first.
     shopt -s nullglob nocaseglob
     notices=("$dir"/NOTICE*)
     shopt -u nullglob nocaseglob
@@ -386,7 +411,7 @@ resolve_license() {
         echo "!! $repo: ${rel:+$rel/}$(basename "$path") is a symlink or directory; a NOTICE must be a regular file inside the clone — refusing" >&2
         exit 1
       fi
-      if [ -z "$nearest_notice" ]; then nearest_notice="$path"; fi
+      notice_files+=("$path")
     done
     [ "$dir" = "$clone" ] && break
     dir="$(dirname "$dir")"
@@ -409,8 +434,17 @@ resolve_license() {
                  /^[\042\047]?license[\042\047]?[ \t]*:/ { sub(/^[\042\047]?license[\042\047]?[ \t]*:[ \t]*/, ""); gsub(/^[\042\047]|[\042\047]$/, ""); print; exit }' "$path" 2>/dev/null)"
     [ -n "$decl" ] && check_license_text "$repo" "$license" "$decl" "${path#"$clone"/} frontmatter license"
   done < <(find "$clone/$src" -iname 'SKILL.md' -type f -print0 2>/dev/null)
-  if [ -n "$nearest_notice" ]; then
-    cp "$nearest_notice" "$notice_out"
+  if [ ${#notice_files[@]} -eq 1 ]; then
+    cp "${notice_files[0]}" "$notice_out"
+  elif [ ${#notice_files[@]} -gt 1 ]; then
+    : >"$notice_out"
+    for path in "${notice_files[@]}"; do
+      {
+        echo "---- ${path#"$clone"/} ----"
+        cat "$path"
+        echo
+      } >>"$notice_out"
+    done
   fi
   if [ -n "$nearest_file" ]; then
     cp "$nearest_file" "$out"

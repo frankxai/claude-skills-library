@@ -461,6 +461,50 @@ def main() -> int:
             "LICENSE": MIT + "\nThe Software shall be used for Good, not Evil.\n",
             "skills/on/SKILL.md": "on\n",
         })
+        ISC = ("ISC License\n\nCopyright (c) 2026 Example\n\n"
+               "Permission to use, copy, modify, and/or distribute this software for any purpose\n"
+               "with or without fee is hereby granted, provided that the above copyright notice\n"
+               "and this permission notice appear in all copies.\n\n"
+               "THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES.\n")
+        ZERO_BSD = ("Copyright (C) 2026 Example\n\n"
+                    "Permission to use, copy, modify, and/or distribute this software for any purpose\n"
+                    "with or without fee is hereby granted.\n\n"
+                    "THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES.\n")
+        make_upstream(base, "acme", "autolink-then-license", {
+            "README.md": "# s\n\n<https://example.com>\n## License\n\nMIT\n\n## Credits\n\nnope\n",
+            "skills/slovo/SKILL.md": "slovo\n",
+        })
+        make_upstream(base, "acme", "multi-notice", {
+            "LICENSE": "Apache License\nVersion 2.0, January 2004\n",
+            "NOTICE": "Root Product\nCopyright 2026 Root\n",
+            "NOTICE.third-party": "Third-party component X, Copyright 2020 Someone\n",
+            "skills/tverdo/NOTICE": "Skill-level attribution for tverdo\n",
+            "skills/tverdo/SKILL.md": "tverdo\n",
+        })
+        make_upstream(base, "acme", "zero-bsd", {
+            "LICENSE": ZERO_BSD,
+            "skills/uk/SKILL.md": "uk\n",
+        })
+        make_upstream(base, "acme", "isc-file", {
+            "LICENSE": ISC,
+            "skills/fert/SKILL.md": "fert\n",
+        })
+        make_upstream(base, "acme", "compound-readme", {
+            "README.md": "# k\n\n## License\n\nMIT AND Apache-2.0\n",
+            "skills/kher/SKILL.md": "kher\n",
+        })
+        make_upstream(base, "acme", "compound-frontmatter", {
+            "LICENSE": MIT,
+            "skills/tsi/SKILL.md": "---\nname: tsi\nlicense: MIT OR Apache-2.0\n---\ntsi\n",
+        })
+        make_upstream(base, "acme", "compound-slash", {
+            "README.md": "# c\n\n## License\n\nMIT/Apache-2.0\n",
+            "skills/cherv/SKILL.md": "cherv\n",
+        })
+        make_upstream(base, "acme", "url-in-declaration", {
+            "README.md": "# u\n\n## License\n\nMIT, see https://spdx.org/licenses/MIT.html\n",
+            "skills/sha/SKILL.md": "sha\n",
+        })
         make_upstream(base, "acme", "fenced-nested-decoy", {
             "README.md": "# a\n\n## License\n\nMIT\n\n## Example\n\n````markdown\nSay:\n```\n## License\n\nGPL-3.0\n```\n````\n\n~~~\n```\n## Licence\n\nGPL-3.0\n```\n~~~\n",
             "skills/ayin/SKILL.md": "ayin\n",
@@ -539,7 +583,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and (not gate or "ABSORPTION.md gate 1" in r.stderr), r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn", "az", "glagoli", "dobro", "zhivete", "ivan", "pokoi", "lyudi", "nash", "on")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn", "az", "glagoli", "dobro", "zhivete", "ivan", "pokoi", "lyudi", "nash", "on", "uk", "kher", "tsi", "cherv")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -596,6 +640,10 @@ def main() -> int:
         refused("an early GPL marker in a licence larger than a pipe buffer", good[:1] + ["acme/big-early-gpl|MIT|skills/lyudi|lyudi"], "refused licence")
         refused("upstream ships upstream-notice at the skill root", good[:1] + ["acme/notice-reserved|MIT|skills/nash|nash"], "reserves")
         refused("the JSON licence rider on MIT text", good[:1] + ["acme/json-rider|MIT|skills/on|on"], "use restriction on top of its grant")
+        refused("0BSD text declared ISC", good[:1] + ["acme/zero-bsd|ISC|skills/uk|uk"], "does not read as ISC")
+        refused("a compound expression in a README declaration", good[:1] + ["acme/compound-readme|MIT|skills/kher|kher"], "compound licence expression")
+        refused("a compound expression in SKILL.md frontmatter", good[:1] + ["acme/compound-frontmatter|MIT|skills/tsi|tsi"], "compound licence expression")
+        refused("a slash-joined pair of licences in a README declaration", good[:1] + ["acme/compound-slash|MIT|skills/cherv|cherv"], "compound licence expression")
 
         # ---- a refused run leaves nothing in TMPDIR -----------------------------
         tmpdir_probe = os.path.join(tmp, "probe-tmp")
@@ -750,6 +798,22 @@ def main() -> int:
         os.remove(os.path.join(pack, "skills", "alpha", "UPSTREAM-NOTICE"))
         r = run_sync(pack, base, notice_entries, "--check")
         check("--check is clean again without the stray notice", r.returncode == 0, r.stdout)
+        r = run_sync(pack, base, good[:1] + ["acme/autolink-then-license|MIT|skills/slovo|slovo"])
+        slovo_lic = os.path.join(pack, "skills", "slovo", "UPSTREAM-LICENSE")
+        check("an autolink is not an HTML block and does not swallow the heading after it", r.returncode == 0 and os.path.isfile(slovo_lic) and "\n    MIT\n" in read(slovo_lic) and "nope" not in read(slovo_lic), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/isc-file|ISC|skills/fert|fert"])
+        check("ISC text with its retention condition vendors as ISC", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "fert", "UPSTREAM-LICENSE")), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/url-in-declaration|MIT|skills/sha|sha"])
+        check("a URL beside a declaration is not a slash-joined licence pair", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "sha", "UPSTREAM-LICENSE")), r.stderr)
+        multi_entries = good[:1] + ["acme/multi-notice|Apache-2.0|skills/tverdo|tverdo"]
+        r = run_sync(pack, base, multi_entries)
+        tverdo_notice = os.path.join(pack, "skills", "tverdo", "UPSTREAM-NOTICE")
+        body = read(tverdo_notice) if os.path.isfile(tverdo_notice) else ""
+        expected_order = ["---- skills/tverdo/NOTICE ----", "Skill-level attribution", "---- NOTICE ----", "Root Product", "---- NOTICE.third-party ----", "Third-party component X"]
+        positions = [body.find(marker) for marker in expected_order]
+        check("several NOTICE files are all carried, skill first, each under its path", r.returncode == 0 and all(pos >= 0 for pos in positions) and positions == sorted(positions), r.stderr + body)
+        r = run_sync(pack, base, multi_entries, "--check")
+        check("--check is clean with a concatenated NOTICE record", r.returncode == 0, r.stdout)
         r = run_sync(pack, base, good[:1] + ["acme/frontmatter-ok|MIT|skills/kaph|kaph"])
         check("SKILL.md frontmatter declaring the same licence vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "kaph", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/fenced-nested-decoy|MIT|skills/ayin|ayin"])
