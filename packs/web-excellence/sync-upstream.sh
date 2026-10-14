@@ -65,16 +65,23 @@ UPSTREAM_BASE="${WEB_EXCELLENCE_UPSTREAM_BASE:-https://github.com}"
 declare -A ALLOWED=(
   [MIT]='(^|[^[:alnum:]])MIT([^[:alnum:]]|$)'
   [Apache-2.0]='Apache License|Apache-2\.0'
-  [BSD-2-Clause]='(^|[^[:alnum:]])BSD([^[:alnum:]]|$)|Redistributions of source code must retain'
-  [BSD-3-Clause]='(^|[^[:alnum:]])BSD([^[:alnum:]]|$)|Redistributions of source code must retain'
+  [BSD-2-Clause]='BSD[- ]2|2-Clause|Simplified BSD|Redistributions of source code must retain'
+  [BSD-3-Clause]='BSD[- ]3|3-Clause|Neither the name of'
   [ISC]='(^|[^[:alnum:]])ISC([^[:alnum:]]|$)|Permission to use, copy, modify, and/or distribute'
   [CC0-1.0]='CC0|Creative Commons Zero'
   [CC-BY-4.0]='CC-BY-4\.0|CC BY 4\.0|Attribution 4\.0 International'
   [Unlicense]='Unlicense|This is free and unencumbered software'
 )
+# The two BSD variants share their first two clauses, so each is also refused
+# when the text carries the other's marker: the third clause names it.
+declare -A EXCLUDES=(
+  [BSD-2-Clause]='BSD[- ]3|3-Clause|Neither the name of'
+  [BSD-3-Clause]='BSD[- ]2|2-Clause|Simplified BSD'
+)
 # Refused whatever SOURCES.md says: copyleft reaches this library's MIT root
-# and -NC conflicts with commercial shipping.
-REFUSED='GNU (General|Lesser|Affero) (General )?Public License|GPL|NonCommercial|(^|[^[:alnum:]])NC([^[:alnum:]]|$)'
+# and -NC conflicts with commercial shipping. The -NC form is the SPDX suffix
+# only (CC-BY-NC-4.0), as in ABSORPTION.md; a bare "NC" is somebody's initials.
+REFUSED='GNU (General|Lesser|Affero) (General )?Public License|GPL|NonCommercial|-NC([^[:alnum:]]|$)'
 # "All rights reserved" is refused too, with one carve-out: the BSD and many
 # MIT LICENSE files open with it in the copyright line above the grant. So a
 # LICENSE file may carry it only alongside a grant clause; a README
@@ -95,7 +102,8 @@ check_license_text() {
       exit 1
     fi
   fi
-  if ! printf '%s\n' "$text" | grep -qiE "${ALLOWED[$license]}"; then
+  if ! printf '%s\n' "$text" | grep -qiE "${ALLOWED[$license]}" \
+     || { [ -n "${EXCLUDES[$license]+x}" ] && printf '%s\n' "$text" | grep -qiE "${EXCLUDES[$license]}"; }; then
     echo "!! $repo: $where does not read as $license, the licence SOURCES.md declares — fix UPSTREAM[] or drop the entry (ABSORPTION.md gate 1)" >&2
     exit 1
   fi
@@ -147,9 +155,14 @@ resolve_license() {
 
 # license_current <expected> <actual>
 # The Commit line of a record moves with upstream HEAD even when the skill tree
-# does not, so it is not drift. Everything else must match byte for byte.
+# does not, so its value is not drift. Its absence is: a record with no commit
+# has lost its provenance. Everything else must match byte for byte.
 license_current() {
-  [ -f "$2" ] && diff -q <(grep -v '^Commit:' "$1") <(grep -v '^Commit:' "$2") >/dev/null 2>&1
+  [ -f "$2" ] || return 1
+  if grep -q '^Commit:' "$1" && [ "$(grep -c '^Commit:' "$2")" != 1 ]; then
+    return 1
+  fi
+  diff -q <(grep -v '^Commit:' "$1") <(grep -v '^Commit:' "$2") >/dev/null 2>&1
 }
 
 cleanup() { rm -rf "$WORK"; }
@@ -205,6 +218,10 @@ for entry in "${UPSTREAM[@]}"; do
   mkdir -p "$SKILLS_DIR/$dest"
   cp -R "$WORK/$slug/$src/." "$SKILLS_DIR/$dest/"
   # The upstream licence travels with the skill so attribution survives a copy.
+  # Unlink first: cp writes through a destination symlink, and an upstream that
+  # ships UPSTREAM-LICENSE as a symlink would otherwise choose where the record
+  # lands on the machine running the sync.
+  rm -f "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"
   cp "$WORK/license/$dest" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"
 done
 

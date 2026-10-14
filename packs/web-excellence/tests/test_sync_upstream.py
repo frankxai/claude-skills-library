@@ -133,12 +133,26 @@ def main() -> int:
             "LICENSE": "MIT License\n\nCopyright (c) 2026 Example. All rights reserved.\n",
             "skills/eta/SKILL.md": "eta\n",
         })
+        bsd3 = ("Copyright (c) 2026 NC State Example. All rights reserved.\n\n"
+                "Redistribution and use in source and binary forms, with or without\n"
+                "modification, are permitted provided that the following conditions are met.\n"
+                "3. Neither the name of the copyright holder nor the names of its contributors\n"
+                "   may be used to endorse or promote products derived from this software.\n")
         make_upstream(base, "acme", "bsd-file", {
-            "LICENSE": "BSD 3-Clause License\n\nCopyright (c) 2026 Example. All rights reserved.\n\n"
-                       "Redistribution and use in source and binary forms, with or without\n"
-                       "modification, are permitted provided that the following conditions are met.\n",
+            "LICENSE": bsd3,
             "skills/theta/SKILL.md": "theta\n",
         })
+        outside = os.path.join(tmp, "outside.txt")
+        with open(outside, "w", encoding="utf-8") as fh:
+            fh.write("precious\n")
+        make_upstream(base, "acme", "symlinked", {
+            "README.md": "# s\n\n## License\n\nMIT\n",
+            "skills/iota/SKILL.md": "iota\n",
+        })
+        os.symlink(outside, os.path.join(base, "acme", "symlinked.git", "skills", "iota", "UPSTREAM-LICENSE"))
+        sym_repo = os.path.join(base, "acme", "symlinked.git")
+        git(sym_repo, "add", "-A")
+        git(sym_repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "symlink")
 
         good = [
             "acme/with-file|MIT|skills/alpha|alpha",
@@ -203,7 +217,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and "ABSORPTION.md gate 1" in r.stderr, r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -212,6 +226,7 @@ def main() -> int:
         refused("copyleft text declared MIT", good[:1] + ["acme/copyleft|MIT|skills/delta|delta"], "refused licence")
         refused("declaration mismatch", good[:1] + ["acme/apache-file|MIT|skills/epsilon|epsilon"], "does not read as MIT")
         refused("licence not on allowlist", good[:1] + ["acme/apache-file|GPL-3.0|skills/epsilon|epsilon"], "not on the ABSORPTION.md allowlist")
+        refused("BSD-3 text declared BSD-2-Clause", good[:1] + ["acme/bsd-file|BSD-2-Clause|skills/theta|theta"], "does not read as BSD-2-Clause")
 
         refused("README declares MIT but reserves all rights", good[:1] + ["acme/reserved-readme|MIT|skills/zeta|zeta"], "all rights reserved and grants nothing")
         refused("LICENSE file reserves all rights with no grant", good[:1] + ["acme/reserved-file|MIT|skills/eta|eta"], "all rights reserved and grants nothing")
@@ -219,7 +234,22 @@ def main() -> int:
         r = run_sync(pack, base, good[:1] + ["acme/apache-file|Apache-2.0|skills/epsilon|epsilon"])
         check("Apache text declared Apache-2.0 vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "epsilon", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/bsd-file|BSD-3-Clause|skills/theta|theta"])
-        check("BSD copyright boilerplate with a grant vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "theta", "UPSTREAM-LICENSE")), r.stderr)
+        check("BSD-3 boilerplate, NC initials and all, vendors as BSD-3-Clause", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "theta", "UPSTREAM-LICENSE")), r.stderr)
+
+        # ---- a record with no Commit line has lost its provenance ------------
+        run_sync(pack, base, good)
+        lines = [ln for ln in read(beta_lic).splitlines(keepends=True) if not ln.startswith("Commit:")]
+        with open(beta_lic, "w", encoding="utf-8") as fh:
+            fh.writelines(lines)
+        r = run_sync(pack, base, good, "--check")
+        check("--check reports a record missing its Commit line as drift", r.returncode == 1 and "DRIFT  beta" in r.stdout, r.stdout)
+
+        # ---- an upstream symlink named UPSTREAM-LICENSE cannot redirect the record
+        r = run_sync(pack, base, good[:1] + ["acme/symlinked|MIT|skills/iota|iota"])
+        iota_lic = os.path.join(pack, "skills", "iota", "UPSTREAM-LICENSE")
+        check("symlinked upstream vendors", r.returncode == 0, r.stderr)
+        check("record is a regular file, not the upstream symlink", os.path.isfile(iota_lic) and not os.path.islink(iota_lic))
+        check("file outside the pack is untouched", read(outside) == "precious\n")
 
         # ---- the real pack's records match what the script would write -------
         real = read(os.path.join(PACK, "skills", "web-design-guidelines", "UPSTREAM-LICENSE"))
