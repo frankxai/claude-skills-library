@@ -427,6 +427,40 @@ def main() -> int:
         })
         subprocess.run(["git", "-C", gitlink_repo, "-c", "protocol.file.allow=always", "submodule", "add", "-q", "file://" + sub_repo, "skills/zhivete"], check=True, capture_output=True)
         git(gitlink_repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "gitlink")
+        make_upstream(base, "acme", "table-block", {
+            "README.md": "# i\n\n<table>\n## License\n\nMIT\n</table>\n",
+            "skills/ivan/SKILL.md": "ivan\n",
+        })
+        make_upstream(base, "acme", "div-decoy", {
+            "README.md": "# j\n\n## License\n\nMIT\n\n## Credits\n\n<div>\n## License\nGPL-3.0\n</div>\n\n<?php\n## Licence\n\nGPL-3.0\n?>\n\n<!DOCTYPE html>\n",
+            "skills/jer/SKILL.md": "jer\n",
+        })
+        make_upstream(base, "acme", "badge-then-license", {
+            "README.md": "# k\n\n<img src=\"badge.svg\" alt=\"ci\">\n\n## License\n\nMIT\n\n## Credits\n\nnope\n",
+            "skills/kako/SKILL.md": "kako\n",
+        })
+        make_upstream(base, "acme", "badge-swallows-heading", {
+            "README.md": "# p\n\n<img src=\"badge.svg\" alt=\"ci\">\n## License\n\nMIT\n",
+            "skills/pokoi/SKILL.md": "pokoi\n",
+        })
+        make_upstream(base, "acme", "big-early-gpl", {
+            "LICENSE": "This work is covered by the GNU General Public License.\n" + ("filler text that pads the licence past any pipe buffer\n" * 40000) + MIT,
+            "skills/lyudi/SKILL.md": "lyudi\n",
+        })
+        make_upstream(base, "acme", "apache-notice", {
+            "LICENSE": "Apache License\nVersion 2.0, January 2004\n",
+            "NOTICE": "Example Product\nCopyright 2026 Example\nThis product includes software developed at Example.\n",
+            "skills/myslete/SKILL.md": "myslete\n",
+        })
+        make_upstream(base, "acme", "notice-reserved", {
+            "LICENSE": MIT,
+            "skills/nash/SKILL.md": "nash\n",
+            "skills/nash/upstream-notice": "not ours\n",
+        })
+        make_upstream(base, "acme", "json-rider", {
+            "LICENSE": MIT + "\nThe Software shall be used for Good, not Evil.\n",
+            "skills/on/SKILL.md": "on\n",
+        })
         make_upstream(base, "acme", "fenced-nested-decoy", {
             "README.md": "# a\n\n## License\n\nMIT\n\n## Example\n\n````markdown\nSay:\n```\n## License\n\nGPL-3.0\n```\n````\n\n~~~\n```\n## Licence\n\nGPL-3.0\n```\n~~~\n",
             "skills/ayin/SKILL.md": "ayin\n",
@@ -450,6 +484,7 @@ def main() -> int:
         check("record quotes the declaration", "\n    MIT\n" in read(beta_lic))
         check("record stops at the next heading", "nope" not in read(beta_lic))
         check("record names the declared licence", "Declared licence as recorded in SOURCES.md: MIT." in read(beta_lic))
+        check("record has no whitespace-only line", not any(ln.strip() == "" and ln != "" for ln in read(beta_lic).split("\n")), repr(read(beta_lic)))
         sources = read(os.path.join(pack, "SOURCES.md"))
         check("SOURCES.md pin table rewritten", sha[:12] in sources and "old" not in sources)
 
@@ -504,7 +539,7 @@ def main() -> int:
             check(f"{label}: exits 1", r.returncode == 1, r.stderr)
             check(f"{label}: names the gate", needle in r.stderr and (not gate or "ABSORPTION.md gate 1" in r.stderr), r.stderr)
             check(f"{label}: alpha untouched", os.path.isfile(marker) and read(os.path.join(pack, "skills", "alpha", "SKILL.md")) == before)
-            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn", "az", "glagoli", "dobro", "zhivete")))
+            check(f"{label}: nothing new vendored", not any(os.path.isdir(os.path.join(pack, "skills", d)) for d in ("gamma", "delta", "epsilon", "zeta", "eta", "theta", "mu", "kappa", "lambda", "iota", "omicron", "nu", "xi", "pi", "rho", "sigma", "phi", "chi", "psi", "omega", "alef", "bet", "gimel", "dalet", "vav", "chet", "yod", "mem", "nun", "pe", "tsadi", "resh", "shin", "waw", "heth", "teth", "yodh", "sampi", "digamma", "san", "sho", "ash", "wynn", "az", "glagoli", "dobro", "zhivete", "ivan", "pokoi", "lyudi", "nash", "on")))
             os.remove(marker)
 
         # alpha is listed first in every refused run, so a single-pass script
@@ -556,6 +591,11 @@ def main() -> int:
         refused("a lower-case upstream-license at the skill root is the reserved name", good[:1] + ["acme/lower-reserved|MIT|skills/glagoli|glagoli"], "reserves")
         refused("seven hashes is prose, not a heading", good[:1] + ["acme/seven-hashes|MIT|skills/dobro|dobro"], "no README has a License section")
         refused("a submodule gitlink as src", good[:1] + ["acme/gitlink-src|MIT|skills/zhivete|zhivete"], "submodule gitlink", gate=False)
+        refused("a License heading inside a <table> block is no declaration", good[:1] + ["acme/table-block|MIT|skills/ivan|ivan"], "no README has a License section")
+        refused("a heading on the line after a badge is swallowed by the HTML block", good[:1] + ["acme/badge-swallows-heading|MIT|skills/pokoi|pokoi"], "no README has a License section")
+        refused("an early GPL marker in a licence larger than a pipe buffer", good[:1] + ["acme/big-early-gpl|MIT|skills/lyudi|lyudi"], "refused licence")
+        refused("upstream ships upstream-notice at the skill root", good[:1] + ["acme/notice-reserved|MIT|skills/nash|nash"], "reserves")
+        refused("the JSON licence rider on MIT text", good[:1] + ["acme/json-rider|MIT|skills/on|on"], "use restriction on top of its grant")
 
         # ---- a refused run leaves nothing in TMPDIR -----------------------------
         tmpdir_probe = os.path.join(tmp, "probe-tmp")
@@ -683,6 +723,33 @@ def main() -> int:
         r = run_sync(pack, base, good[:1] + ["acme/six-hashes|MIT|skills/yest|yest"])
         yest_lic = os.path.join(pack, "skills", "yest", "UPSTREAM-LICENSE")
         check("six hashes is still a heading", r.returncode == 0 and os.path.isfile(yest_lic) and "\n    MIT\n" in read(yest_lic) and "nope" not in read(yest_lic), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/div-decoy|MIT|skills/jer|jer"])
+        jer_lic = os.path.join(pack, "skills", "jer", "UPSTREAM-LICENSE")
+        check("headings inside <div>, <?php and <!DOCTYPE blocks are neither headings nor declaration text", r.returncode == 0 and os.path.isfile(jer_lic) and "GPL" not in read(jer_lic), r.stderr)
+        r = run_sync(pack, base, good[:1] + ["acme/badge-then-license|MIT|skills/kako|kako"])
+        kako_lic = os.path.join(pack, "skills", "kako", "UPSTREAM-LICENSE")
+        check("a badge line followed by a blank line does not swallow the License heading", r.returncode == 0 and os.path.isfile(kako_lic) and "\n    MIT\n" in read(kako_lic) and "nope" not in read(kako_lic), r.stderr)
+        notice_entries = good[:1] + ["acme/apache-notice|Apache-2.0|skills/myslete|myslete"]
+        r = run_sync(pack, base, notice_entries)
+        myslete_notice = os.path.join(pack, "skills", "myslete", "UPSTREAM-NOTICE")
+        check("an upstream NOTICE is carried as UPSTREAM-NOTICE", r.returncode == 0 and os.path.isfile(myslete_notice) and read(myslete_notice).startswith("Example Product"), r.stderr)
+        r = run_sync(pack, base, notice_entries, "--check")
+        check("--check is clean with the carried NOTICE", r.returncode == 0, r.stdout)
+        with open(myslete_notice, "a", encoding="utf-8") as fh:
+            fh.write("edited\n")
+        r = run_sync(pack, base, notice_entries, "--check")
+        check("--check reports an edited UPSTREAM-NOTICE as drift", r.returncode == 1 and "DRIFT  myslete" in r.stdout and "UPSTREAM-NOTICE" in r.stdout, r.stdout)
+        os.remove(myslete_notice)
+        r = run_sync(pack, base, notice_entries, "--check")
+        check("--check reports a missing UPSTREAM-NOTICE as drift", r.returncode == 1 and "DRIFT  myslete" in r.stdout, r.stdout)
+        run_sync(pack, base, notice_entries)
+        with open(os.path.join(pack, "skills", "alpha", "UPSTREAM-NOTICE"), "w", encoding="utf-8") as fh:
+            fh.write("stray\n")
+        r = run_sync(pack, base, notice_entries, "--check")
+        check("--check reports an UPSTREAM-NOTICE the upstream does not have as drift", r.returncode == 1 and "DRIFT  alpha" in r.stdout, r.stdout)
+        os.remove(os.path.join(pack, "skills", "alpha", "UPSTREAM-NOTICE"))
+        r = run_sync(pack, base, notice_entries, "--check")
+        check("--check is clean again without the stray notice", r.returncode == 0, r.stdout)
         r = run_sync(pack, base, good[:1] + ["acme/frontmatter-ok|MIT|skills/kaph|kaph"])
         check("SKILL.md frontmatter declaring the same licence vendors", r.returncode == 0 and os.path.isfile(os.path.join(pack, "skills", "kaph", "UPSTREAM-LICENSE")), r.stderr)
         r = run_sync(pack, base, good[:1] + ["acme/fenced-nested-decoy|MIT|skills/ayin|ayin"])
