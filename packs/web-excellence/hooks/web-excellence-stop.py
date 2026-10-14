@@ -7,14 +7,19 @@ audit actually happened. If it did not, it blocks the stop once and says what is
 missing. The agent then runs the audit and stops again — the second stop is
 always allowed.
 
-Blocks AT MOST ONCE per session, guarded three ways (`stop_hook_active`, a
-persisted flag, and an explicit opt-out). A hook that can loop is worse than no
+Works in windows. A window opens with the first UI change and closes when a
+stop finds both receipts, or on the stop that follows its one block. Receipts
+count only from inside the window, so an audit run for an earlier change never
+covers a later one, and the next UI change opens a new window and re-arms the
+gate. Within a window it blocks AT MOST ONCE, guarded by `stop_hook_active`, a
+persisted flag, and an explicit opt-out. A hook that can loop is worse than no
 hook.
 
 UI files edited through the shell (sed, a heredoc, a Python one-liner) never
 pass through the PreToolUse matcher. The SessionStart hook records which files
 were already dirty when the session began; this hook compares the working tree
-against that baseline, so an uncommitted UI change counts however it was made.
+against that baseline and reads HEAD's reflog for commits made here, so a UI
+change counts however it was made, committed or not.
 
 Opt out entirely with WEB_GATE_NO_STOP=1.
 """
@@ -24,6 +29,8 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
+from datetime import datetime
 
 # Evidence that the audit actually RAN.
 #
@@ -147,10 +154,36 @@ def is_fetch(name: str, args: str) -> bool:
     return name == "Bash" and bool(SHELL_FETCH.search(args))
 
 
-def receipts(path: str):
-    """(audited, proved) from the calls the transcript records, not its prose."""
+def entry_time(entry) -> float:
+    """Epoch seconds of a transcript entry; 0 when it carries no timestamp."""
+    stamp = entry.get("timestamp") if isinstance(entry, dict) else None
+    if not isinstance(stamp, str):
+        return 0.0
+    try:
+        return datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def captured(text: str) -> bool:
+    """A capture run that proves something: every shot written, or an honest
+    report that nothing could be rendered. A partial matrix proves neither."""
+    low = text.lower()
+    if "cannot capture:" in low:
+        return True
+    return "shot(s) for" in low and "incomplete:" not in low
+
+
+def receipts(path: str, since: float = 0.0):
+    """(audited, proved) from calls made at or after `since`, not from prose.
+
+    A call counts only through its own result: a fetch whose result is not an
+    error, and a capture.mjs run whose result shows the matrix was captured or
+    honestly could not be. Entries without a timestamp are kept rather than
+    guessed away.
+    """
     audited = proved = False
-    capture_ids = set()
+    fetch_ids, capture_ids = set(), set()
     for f in transcript_files(path):
         try:
             fh = open(f, "r", encoding="utf-8", errors="ignore")
@@ -159,11 +192,20 @@ def receipts(path: str):
         with fh:
             for line in fh:
                 low = line.lower()
+                pending = fetch_ids | capture_ids
                 # Cheap prefilter: most lines mention none of these and are
                 # never parsed.
                 if not ("capture.mjs" in low
                         or any(n in low for n in EVIDENCE)
-                        or any(n in low for n in VISUAL_EVIDENCE)):
+                        or (pending and '"tool_result"' in line
+                            and any(i and i in line for i in pending))):
+                    continue
+                try:
+                    entry = json.loads(line)
+                except ValueError:
+                    continue
+                stamp = entry_time(entry)
+                if stamp and stamp < since:
                     continue
                 for block in content_blocks(line):
                     kind = block.get("type")
@@ -171,11 +213,14 @@ def receipts(path: str):
                         name = str(block.get("name", ""))
                         args = json.dumps(block.get("input", {})).lower()
                         if any(n in args for n in EVIDENCE) and is_fetch(name, args):
-                            audited = True
+                            fetch_ids.add(block.get("id"))
                         if name == "Bash" and CAPTURE_RUN.search(args):
                             capture_ids.add(block.get("id"))
-                    elif kind == "tool_result" and block.get("tool_use_id") in capture_ids:
-                        if any(n in result_text(block).lower() for n in VISUAL_EVIDENCE):
+                    elif kind == "tool_result":
+                        tid = block.get("tool_use_id")
+                        if tid in fetch_ids and not block.get("is_error"):
+                            audited = True
+                        if tid in capture_ids and captured(result_text(block)):
                             proved = True
                 if audited and proved:
                     return True, True
@@ -202,7 +247,10 @@ def dirty_files(root: str) -> list:
         if len(entry) < 4:
             continue
         paths.append(entry[3:])
-        if entry[0] in "RC":  # a rename's source path follows; skip it
+        # A rename or copy is followed by its source path. Keep it: moving
+        # app/page.tsx out of app/ is a UI change even if the new path is not.
+        if entry[0] in "RC" and i < len(parts) and parts[i]:
+            paths.append(parts[i])
             i += 1
     return paths
 
@@ -215,25 +263,67 @@ def fingerprint(root: str, rel: str):
     return [st.st_mtime_ns, st.st_size]
 
 
-def changed_outside_tools(cwd: str, baselines: dict) -> list:
-    """UI files changed since session start that the Edit/Write gate never saw.
+def committed_here(root: str, since: float) -> set:
+    """Files in commits made in this checkout since `since`, from HEAD's reflog.
 
-    Only uncommitted changes count. Comparing commits against the start HEAD
-    would also flag every file a `git pull` brought in, and a check that blocks
-    on other people's work gets switched off.
+    The reflog says how HEAD moved. `commit:` entries are commits made here;
+    a pull, merge, rebase or checkout records itself differently, so other
+    people's work that a `git pull` brings in is never counted.
+    """
+    out = git(root, "log", "-g", "--date=unix", "--format=%H%x09%gd%x09%gs", "-n", "200", "HEAD")
+    files = set()
+    for line in (out or "").splitlines():
+        parts = line.split("\t", 2)
+        if len(parts) != 3:
+            continue
+        sha, selector, subject = parts
+        m = re.search(r"\{(\d+)\}", selector)
+        if not m or int(m.group(1)) < since:
+            break  # newest first: everything further down is older
+        if not re.match(r"commit( \((amend|initial)\))?:", subject):
+            continue
+        diff = git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", "--root", sha)
+        files.update(x for x in (diff or "").splitlines() if x)
+    return files
+
+
+def changed_outside_tools(cwd: str, baselines: dict, since: float = 0.0) -> list:
+    """UI files changed in this window that the Edit/Write gate never saw.
+
+    Uncommitted changes are compared with the files that were already dirty
+    when the window opened; committed ones come from the reflog.
     """
     root = (git(cwd, "rev-parse", "--show-toplevel") or "").strip()
     base = baselines.get(root) if root else None
     if not isinstance(base, dict):
         return []  # no baseline for this checkout: nothing to compare against
     before = base.get("dirty") or {}
-    changed = []
+    changed = set()
     for rel in dirty_files(root):
-        if not UI_PATH.search(rel) or NOT_UI.search(rel):
-            continue
         if rel not in before or before[rel] != fingerprint(root, rel):
-            changed.append(rel)
-    return changed
+            changed.add(rel)
+    if since > 0:  # without a start time every old commit would count
+        changed |= committed_here(root, since)
+    return sorted(p for p in changed if UI_PATH.search(p) and not NOT_UI.search(p))
+
+
+def close_window(state: dict, cwd: str) -> None:
+    """End this change set: the next UI change opens a fresh window."""
+    state.update({"touched": [], "fired": False, "blocked": False,
+                  "window_start": None, "closed_at": time.time()})
+    root = (git(cwd, "rev-parse", "--show-toplevel") or "").strip()
+    baselines = state.get("baseline") or {}
+    if root in baselines:
+        baselines[root] = {"dirty": {rel: fingerprint(root, rel) for rel in dirty_files(root)}}
+
+
+def write_state(path: str, state: dict) -> None:
+    try:
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | NOFOLLOW, 0o600)
+        with os.fdopen(fd, "w") as fh:
+            json.dump(state, fh)
+    except OSError:
+        pass
 
 
 def main() -> int:
@@ -244,38 +334,44 @@ def main() -> int:
     except Exception:
         return 0
 
-    # Already continued once because of a stop hook — never chain.
-    if payload.get("stop_hook_active"):
-        return 0
-
     session_id = payload.get("session_id", "")
     sp = state_path(session_id)
     state = read_state(sp)
-
-    if state.get("blocked"):
-        return 0
-    touched = list(state.get("touched") or [])
     cwd = payload.get("cwd") or os.getcwd()
-    touched += [p for p in changed_outside_tools(cwd, state.get("baseline") or {}) if p not in touched]
+
+    # Already continued once because of a stop hook — never chain. If the
+    # block was ours, this is the stop after it: the window has had its one
+    # chance, so close it and let the next change open a new one.
+    if payload.get("stop_hook_active"):
+        if state.get("blocked"):
+            close_window(state, cwd)
+            write_state(sp, state)
+        return 0
+
+    floor = state.get("closed_at") or state.get("started") or 0.0
+    touched = list(state.get("touched") or [])
+    touched += [p for p in changed_outside_tools(cwd, state.get("baseline") or {}, floor)
+                if p not in touched]
     if not touched:
         return 0
 
-    audited, proved = receipts(payload.get("transcript_path", ""))
+    # Receipts count from the first UI edit of this window, so the "before"
+    # capture and anything done for an earlier change do not close it.
+    audited, proved = receipts(payload.get("transcript_path", ""),
+                               state.get("window_start") or floor)
     # BOTH halves close the gate. Gating on `audited` alone let a turn that ran
     # the guidelines audit but never rendered anything pass silently, which is
     # exactly the enforcement-that-does-not-enforce failure this hook exists to
-    # prevent. `proved` is satisfied by capture.mjs succeeding OR by its honest
-    # "cannot capture:" line — reporting that you could not render counts.
-    if audited and proved:
+    # prevent. `proved` is satisfied by a complete capture.mjs run OR by its
+    # honest "cannot capture:" line — reporting that you could not render
+    # counts; a partial matrix does not.
+    if (audited and proved) or state.get("blocked"):
+        close_window(state, cwd)
+        write_state(sp, state)
         return 0
 
     state["blocked"] = True
-    try:
-        fd = os.open(sp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | NOFOLLOW, 0o600)
-        with os.fdopen(fd, "w") as fh:
-            json.dump(state, fh)
-    except OSError:
-        pass
+    write_state(sp, state)
 
     shown = touched[:8]
     more = f" (+{len(touched) - 8} more)" if len(touched) > 8 else ""
@@ -294,7 +390,8 @@ def main() -> int:
         "  Audit:  N findings, N fixed, N waived (with reason)\n"
         "  Visual: before/after at 375/768/1440, light+dark — or why not captured\n\n"
         "If the change is genuinely not visual (a fetch call, a type, a copy fix), say that "
-        "in one line and stop. This check fires once per session and will not fire again."
+        "in one line and stop. This check fires once for this set of changes; the next UI "
+        "change re-arms it."
     )
 
     print(json.dumps({"decision": "block", "reason": reason}))

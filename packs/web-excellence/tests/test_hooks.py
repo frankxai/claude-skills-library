@@ -133,14 +133,22 @@ CAPTURE_CMD = ("node .claude/skills/visual-proof/capture.mjs "
                "--url http://localhost:3000/pricing --label after")
 
 
-def tool_use(tid: str, name: str, tool_input: dict) -> str:
-    return json.dumps({"type": "assistant", "message": {"role": "assistant", "content": [
-        {"type": "tool_use", "id": tid, "name": name, "input": tool_input}]}}) + "\n"
+def stamped(entry: dict, ts) -> str:
+    if ts:
+        entry["timestamp"] = ts
+    return json.dumps(entry) + "\n"
 
 
-def tool_result(tid: str, text: str) -> str:
-    return json.dumps({"type": "user", "message": {"role": "user", "content": [
-        {"type": "tool_result", "tool_use_id": tid, "content": text}]}}) + "\n"
+def tool_use(tid: str, name: str, tool_input: dict, ts: str = "") -> str:
+    return stamped({"type": "assistant", "message": {"role": "assistant", "content": [
+        {"type": "tool_use", "id": tid, "name": name, "input": tool_input}]}}, ts)
+
+
+def tool_result(tid: str, text: str, ts: str = "", is_error: bool = False) -> str:
+    block = {"type": "tool_result", "tool_use_id": tid, "content": text}
+    if is_error:
+        block["is_error"] = True
+    return stamped({"type": "user", "message": {"role": "user", "content": [block]}}, ts)
 
 
 def user_text(text: str) -> str:
@@ -237,6 +245,87 @@ def test_skill_text_cannot_satisfy_evidence() -> None:
           reason or "stop hook passed")
 
 
+
+def test_a_failed_fetch_is_not_an_audit() -> None:
+    """The call alone proves nothing: a fetch that errored never retrieved the rules."""
+    body = (tool_use("f1", "WebFetch", {"url": GUIDELINES_URL, "prompt": "rules"})
+            + tool_result("f1", "Request failed: ETIMEDOUT", is_error=True) + SHOTS_LINE)
+    out = stop_with_transcript("failedfetch", body)
+    check("an errored guidelines fetch leaves the audit missing",
+          out is not None and "web-design-guidelines" in out.get("reason", ""),
+          (out or {}).get("reason", "stop hook passed"))
+
+
+def test_a_partial_capture_is_not_proof() -> None:
+    """capture.mjs lists the shots it did write before reporting the gap."""
+    body = AUDIT_LINE + tool_use("p1", "Bash", {"command": CAPTURE_CMD}) + tool_result(
+        "p1", 'captured 5 shot(s) for "after":\n  .visual-proof/after/375-light.png\n'
+        "Incomplete: 1 of 6 shot(s) failed — report them as not captured", is_error=True)
+    out = stop_with_transcript("partialshots", body)
+    check("a 5-of-6 matrix leaves visual proof missing",
+          out is not None and "visual-proof" in out.get("reason", ""),
+          (out or {}).get("reason", "stop hook passed"))
+
+
+def iso(epoch: float) -> str:
+    import datetime as _dt
+    return _dt.datetime.fromtimestamp(epoch, _dt.timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def receipts_at(ts: str) -> str:
+    return (tool_use("w1", "WebFetch", {"url": GUIDELINES_URL, "prompt": "rules"}, ts)
+            + tool_result("w1", "# Web Interface Guidelines", ts)
+            + tool_use("w2", "Bash", {"command": CAPTURE_CMD}, ts)
+            + tool_result("w2", 'captured 6 shot(s) for "after":', ts))
+
+
+def test_receipts_count_only_inside_the_window() -> None:
+    """An audit run for an earlier change never covers a later one."""
+    import time as _time
+    stale = stop_with_transcript("stalewindow", receipts_at(iso(_time.time() - 3600)))
+    check("receipts from before the first UI edit do not close the window",
+          stale is not None and stale.get("decision") == "block")
+    fresh = stop_with_transcript("freshwindow", receipts_at(iso(_time.time() + 5)))
+    check("receipts from inside the window close it", fresh is None)
+
+
+def test_a_closed_window_rearms_the_gate() -> None:
+    """After a pass, the next UI change gets the reminder and needs new receipts."""
+    import time as _time
+    sid = "rearm"
+    sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
+    try:
+        os.remove(sp)
+    except OSError:
+        pass
+    with tempfile.TemporaryDirectory() as d:
+        first = os.path.join(d, "first.jsonl")
+        write(d, "first.jsonl", receipts_at(iso(_time.time() + 5)))
+        run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/A.tsx"}})
+        passed, _ = run_hook(STOP, {"session_id": sid, "transcript_path": first})
+        check("the first change set closes on its receipts", passed is None)
+        _time.sleep(0.05)
+        again, _ = run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/B.tsx"}})
+        check("the next UI edit fires the reminder again", again is not None)
+        later, _ = run_hook(STOP, {"session_id": sid, "transcript_path": first})
+        check("receipts made after the new window opened close it", later is None)
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            os.remove(sp)
+        except OSError:
+            pass
+        old = os.path.join(d, "old.jsonl")
+        write(d, "old.jsonl", receipts_at(iso(_time.time() - 60)))
+        run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/C.tsx"}})
+        blocked, _ = run_hook(STOP, {"session_id": sid, "transcript_path": old})
+        check("a new window with only older receipts blocks", blocked is not None)
+        follow, _ = run_hook(STOP, {"session_id": sid, "transcript_path": old, "stop_hook_active": True})
+        check("the stop after the block closes the window without blocking", follow is None)
+        run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/D.tsx"}})
+        rearmed, _ = run_hook(STOP, {"session_id": sid, "transcript_path": old})
+        check("a later UI change can block again", rearmed is not None)
+
+
 def test_receipts_count_from_a_subagent_transcript() -> None:
     out = stop_with_transcript("subagent", "", subagent=AUDIT_LINE + SHOTS_LINE)
     check("an audit run by a subagent closes the gate", out is None)
@@ -324,6 +413,90 @@ def test_stop_sees_ui_edits_made_through_the_shell() -> None:
             pass
         check("no baseline recorded means no shell-edit check",
               stop("nobaseline") is None)
+
+
+
+def test_committed_shell_edits_count_and_pulls_do_not() -> None:
+    """A UI file rewritten by a shell command and committed in the same turn.
+
+    The reflog tells a commit made here from one a merge or pull brought in.
+    """
+    def git(d, *a):
+        subprocess.run(["git", "-C", d, *a], capture_output=True, check=True)
+
+    with tempfile.TemporaryDirectory() as d:
+        git_repo(d)
+        git(d, "checkout", "-qb", "upstream")
+        write(d, "components/Theirs.tsx", "export const theirs = 1;\n")
+        git(d, "add", "-A")
+        git(d, "commit", "-qm", "someone else's UI change")
+        git(d, "checkout", "-q", "-")
+
+        sid = "committedshell"
+        try:
+            os.remove(os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json"))
+        except OSError:
+            pass
+        run_hook(SESSION, {"session_id": sid, "cwd": d})
+        import time as _time
+        _time.sleep(1.1)  # reflog times are whole seconds
+        git(d, "merge", "-q", "--ff-only", "upstream")
+        out, _ = run_hook(STOP, {"session_id": sid, "cwd": d, "transcript_path": "/nope"})
+        check("a fast-forward pull of someone else's UI commit does not block", out is None,
+              (out or {}).get("reason", ""))
+
+        write(d, "components/A.tsx", "export const viaHeredoc = 1;\n")
+        git(d, "commit", "-qam", "agent: restyle A")
+        out, _ = run_hook(STOP, {"session_id": sid, "cwd": d, "transcript_path": "/nope"})
+        reason = (out or {}).get("reason", "")
+        check("a UI file committed from the shell this session blocks",
+              out is not None and "components/A.tsx" in reason, reason or "passed")
+        check("the pulled file is not blamed", "components/Theirs.tsx" not in reason, reason)
+
+
+
+def test_session_below_the_repo_root_still_records_a_baseline() -> None:
+    """SessionStart can fire with cwd = <repo>/components after a resume."""
+    with tempfile.TemporaryDirectory() as d:
+        git_repo(d)
+        sid = "subdirsession"
+        sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
+        try:
+            os.remove(sp)
+        except OSError:
+            pass
+        out, _ = run_hook(SESSION, {"session_id": sid, "cwd": os.path.join(d, "components")})
+        check("the pack note is still injected from a subdirectory", out is not None)
+        state = json.load(open(sp)) if os.path.exists(sp) else {}
+        roots = [os.path.realpath(r) for r in (state.get("baseline") or {})]
+        check("the baseline is recorded for the repo root", os.path.realpath(d) in roots, str(roots))
+
+
+def test_a_shell_rename_out_of_a_ui_path_counts() -> None:
+    """`git mv app/page.tsx archive/page.tsx` changes a UI path whose new name is not one."""
+    with tempfile.TemporaryDirectory() as d:
+        git_repo(d)
+        sid = "shellrename"
+        try:
+            os.remove(os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json"))
+        except OSError:
+            pass
+        run_hook(SESSION, {"session_id": sid, "cwd": d})
+        os.makedirs(os.path.join(d, "archive"))
+        subprocess.run(["git", "-C", d, "mv", "components/A.tsx", "archive/A.tsx"],
+                       capture_output=True, check=True)
+        out, _ = run_hook(STOP, {"session_id": sid, "cwd": d, "transcript_path": "/nope"})
+        reason = (out or {}).get("reason", "")
+        check("moving a UI file away blocks, naming its old path",
+              out is not None and "components/A.tsx" in reason, reason or "passed")
+
+
+def test_hook_commands_use_the_documented_placeholder() -> None:
+    """`${CLAUDE_PROJECT_DIR:-.}` is POSIX shell, not the placeholder Claude Code substitutes."""
+    snippet = json.load(open(os.path.join(PACK, "settings.snippet.json"), encoding="utf-8"))
+    cmds = [h["command"] for es in snippet["hooks"].values() for e in es for h in e["hooks"]]
+    check("every command uses the exact ${CLAUDE_PROJECT_DIR} placeholder",
+          all('"${CLAUDE_PROJECT_DIR}/.claude/hooks/' in c for c in cmds), str(cmds))
 
 
 def test_capture_exits_nonzero_on_a_partial_matrix() -> None:

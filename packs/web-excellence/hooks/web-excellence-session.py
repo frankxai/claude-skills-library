@@ -19,6 +19,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 
 PACK_SKILLS = [
     "web-release-gate",
@@ -106,6 +107,9 @@ def record_baseline(session_id: str, cwd: str) -> None:
     baselines = state.setdefault("baseline", {})
     if root in baselines:
         return
+    # When this session began: the Stop hook counts commits made here, and
+    # receipts for shell-only changes, from this point.
+    state.setdefault("started", time.time())
     out = git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     if out is None:
         return
@@ -115,14 +119,16 @@ def record_baseline(session_id: str, cwd: str) -> None:
         i += 1
         if len(entry) < 4:
             continue
-        rel = entry[3:]
-        if entry[0] in "RC":
+        rels = [entry[3:]]
+        if entry[0] in "RC" and i < len(parts) and parts[i]:
+            rels.append(parts[i])  # the source of a rename or copy
             i += 1
-        try:
-            st = os.stat(os.path.join(root, rel))
-            dirty[rel] = [st.st_mtime_ns, st.st_size]
-        except OSError:
-            dirty[rel] = None
+        for rel in rels:
+            try:
+                st = os.stat(os.path.join(root, rel))
+                dirty[rel] = [st.st_mtime_ns, st.st_size]
+            except OSError:
+                dirty[rel] = None
     baselines[root] = {"dirty": dirty}
     try:
         fd = os.open(sp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | NOFOLLOW, 0o600)
@@ -137,7 +143,10 @@ def main() -> int:
         payload = json.load(sys.stdin)
     except Exception:
         payload = {}
+    # A session can start or resume below the repo root (cwd = <repo>/app);
+    # the pack, the contracts and the baseline all live at the root.
     cwd = payload.get("cwd") or os.getcwd()
+    cwd = (git(cwd, "rev-parse", "--show-toplevel") or "").strip() or cwd
 
     skills_dir = os.path.join(cwd, ".claude", "skills")
     present = [s for s in PACK_SKILLS if os.path.isdir(os.path.join(skills_dir, s))]

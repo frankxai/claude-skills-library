@@ -52,7 +52,7 @@ The hooks:
 |---|---|---|
 | `web-excellence-session.py` | `SessionStart` | Injects the gate contract as `additionalContext`, and names the repo's own `design.md` / `taste.md` / `tailwind.config` as outranking the pack. Records which files were already uncommitted, so the Stop hook can tell this session's shell edits from earlier work. Silent if the pack is not installed. |
 | `web-excellence-gate.py` | `PreToolUse` on `Edit\|Write\|MultiEdit\|NotebookEdit` | Fires the moment a UI file is written — `app/`, `components/`, `styles/`, any `.css` — with the checklist. Skips `api/`, `lib/`, tests, `route.ts`. Never blocks. Once per session (`WEB_GATE_EVERY_EDIT=1` to repeat). |
-| `web-excellence-stop.py` | `Stop` | Closes the loop: if UI files were touched (through Edit/Write, or left uncommitted by a shell command since the session began) and the transcript shows no executed audit and capture, blocks the stop **once** with what is missing. Guarded three ways against looping. `WEB_GATE_NO_STOP=1` to disable. |
+| `web-excellence-stop.py` | `Stop` | Closes the loop: if UI files changed (through Edit/Write, or through the shell, committed or not) and the transcript shows no executed audit and complete capture since that change began, blocks the stop **once** with what is missing. Guarded three ways against looping, and re-armed for the next change set. `WEB_GATE_NO_STOP=1` to disable. |
 
 That last one is the loop. PreToolUse opens it, Stop closes it, and the state
 file in `$TMPDIR` carries the touched-file list between them.
@@ -66,21 +66,34 @@ build if a marker ever reappears in the reminder.
 
 Matching the markers as free text failed the same way one level down: the
 `web-design-guidelines` skill quotes the guidelines URL, so loading the skills
-closed the gate. A receipt now counts only where a run leaves it: the URL in
-the input of a fetch call, and the capture line in the result of a Bash call
-that executed `capture.mjs`. Subagent transcripts are read too.
-`test_skill_text_cannot_satisfy_evidence` holds that line.
+closed the gate. A receipt now counts only where a run leaves it: a fetch of
+the guidelines whose result is not an error, and a `capture.mjs` run whose
+result shows the whole matrix captured, or honestly reports that nothing could
+be rendered. A partial matrix (`Incomplete:`) is not proof. Subagent transcripts
+are read too. `test_skill_text_cannot_satisfy_evidence` holds that line.
 
-Re-running `install.sh` never overwrites a `.github/workflows/web-excellence.yml` that differs from the pack's. A repo tunes its workflow (action pins, draft gating), so the installer reports the difference instead.
+The gate works in windows. The first UI change opens one, and receipts count
+only from that point, so an audit run for an earlier task, or the "before"
+capture, never covers a later change. A window closes when a stop finds both
+receipts, or on the stop that follows its one block; the next UI change opens a
+new window and re-arms the reminder and the block.
 
-Commands in `settings.json` go through `${CLAUDE_PROJECT_DIR}`. Hooks run in the
-session's current directory, so a relative path stops resolving after the
-agent `cd`s into a subdirectory.
+A UI change made through the shell counts too. The SessionStart hook records
+which files were already uncommitted (resolving the repo root when the session
+starts in a subdirectory), and Stop compares the working tree with that, keeping
+both paths of a rename. It also reads HEAD's reflog for `commit:` entries since
+the window opened, so a shell edit committed in the same turn is seen while
+other people's commits that a `git pull` or merge brings in are not.
 
-Known gap: a UI change made by a shell command *and committed in the same turn*
-is not seen; only uncommitted changes are compared, because comparing commits
-would also flag everything a `git pull` brought in. The PR workflow still lints
-those lines.
+Commands in `settings.json` use the exact `${CLAUDE_PROJECT_DIR}` placeholder
+from the Claude Code hooks reference. Hooks run in the session's current
+directory, so a relative path stops resolving after the agent `cd`s into a
+subdirectory, and a POSIX default such as `${CLAUDE_PROJECT_DIR:-.}` is not
+expanded where hooks run under PowerShell.
+
+Re-running `install.sh` never overwrites a `.github/workflows/web-excellence.yml`
+that differs from the pack's. A repo tunes its workflow (action pins, draft
+gating), so the installer reports the difference instead.
 
 ## Tests
 
