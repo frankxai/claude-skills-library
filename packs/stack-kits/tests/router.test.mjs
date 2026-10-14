@@ -59,6 +59,37 @@ test('orders matches by priority, not by rule order', () => {
   assert.deepEqual(skills.map((s) => s.name), ['web-release-gate', 'nextjs', 'tailwindcss']);
 });
 
+test('framework kits rank right after the gate, so a broad prompt cannot cap them out', () => {
+  // Four high-priority specialists and three medium kits all match; the cap is 6.
+  const kit = (kw) => ({ priority: 'medium', stage: 'framework', promptTriggers: { keywords: [kw] } });
+  const high = (kw) => ({ priority: 'high', promptTriggers: { keywords: [kw] } });
+  const rules = {
+    skills: {
+      'web-design-guidelines': high('accessibility'),
+      'core-web-vitals': high('performance'),
+      'canon-check': high('guardian'),
+      'apple-design': high('responsive'),
+      react: kit('react'),
+      tailwindcss: kit('tailwind'),
+      shadcn: kit('shadcn'),
+      'web-release-gate': { priority: 'critical', promptTriggers: { keywords: ['homepage'] } },
+    },
+  };
+  const { skills } = route(
+    'Redesign the responsive Next.js homepage with React, Tailwind, shadcn, accessibility, performance, and Guardian copy',
+    rules,
+    all,
+  );
+  assert.deepEqual(skills.map((s) => s.name), [
+    'web-release-gate',
+    'react',
+    'tailwindcss',
+    'shadcn',
+    'web-design-guidelines',
+    'core-web-vitals',
+  ]);
+});
+
 test('keywords respect word boundaries, including punctuation-edged ones', () => {
   assert.equal(route('heroic effort', RULES, all).skills.length, 0);
   assert.equal(route('a superhero banner', RULES, all).skills.length, 0);
@@ -252,6 +283,14 @@ test('compose unions triggers when two kits alias to the same skill', () => {
   assert.equal(r.priority, 'high', 'keeps the stronger of high (nextjs) and medium (react)');
   assert.ok(r.promptTriggers.keywords.includes('app router'), 'nextjs triggers survive');
   assert.ok(r.promptTriggers.keywords.includes('useEffect'), 'react triggers added');
+});
+
+test('compose tags kit rules, aliased or not, as the framework stage and nothing else', () => {
+  const dir = repo(['tailwindcss', 'nextjs-react-expert', 'web-release-gate']);
+  const rules = compose({ target: dir, kits: ['tailwindcss', 'nextjs'], aliases: { nextjs: 'nextjs-react-expert' } });
+  assert.equal(rules.skills.tailwindcss.stage, 'framework');
+  assert.equal(rules.skills['nextjs-react-expert'].stage, 'framework', 'an aliased kit keeps its stage');
+  assert.ok(!('stage' in rules.skills['web-release-gate']), 'estate rules are not framework kits');
 });
 
 test('install.sh names the .gitignore lines a whitelisting repo is missing', () => {

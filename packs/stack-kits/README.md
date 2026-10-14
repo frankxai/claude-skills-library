@@ -68,7 +68,7 @@ file, and a re-install merges it over the generated rules:
 node --test packs/stack-kits/tests/*.test.mjs
 ```
 
-There are 18 checks, all run in CI by `pack-tests.yml`. They cover priority ordering,
+There are 20 checks, all run in CI by `pack-tests.yml`. They cover priority ordering,
 word-boundary keywords (including `next.js`), invalid regex tolerance, dead-reference
 filtering, the prompt never being echoed, never-block on bad input, path-like skill
 names refused, alias, alias-merge and local-override composition, reading ACOS-schema rules, and install idempotency. The

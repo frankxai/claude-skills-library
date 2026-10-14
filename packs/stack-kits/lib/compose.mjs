@@ -10,6 +10,8 @@
 //
 // Aliases map a kit to an equivalent skill the repo already had (nextjs →
 // nextjs-react-expert): the kit's triggers are kept, the rule is renamed.
+// Every kit-derived rule, aliased or not, is tagged `stage: "framework"`; the
+// router lists those right after the critical gate.
 //
 // Output keeps only rules whose skill or agent exists in the target, so the
 // generated file never names something that is not there. A repo's own
@@ -39,7 +41,7 @@ export function compose({ target, kits = [], aliases = {}, pack = PACK }) {
     const fragment = readJson(join(pack, 'rules', 'kits', `${kit}.json`));
     for (const [name, rule] of Object.entries(strip(fragment))) {
       const as = aliases[name] || name;
-      const next = { ...rule };
+      const next = { ...rule, stage: 'framework' };
       delete next.fileTriggers; // the router ignores path triggers; do not imply otherwise
       if (as !== name) next.description = `framework patterns (stack-kits routes ${name} triggers here)`;
       const prev = skills[as];

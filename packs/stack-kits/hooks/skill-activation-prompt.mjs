@@ -18,8 +18,11 @@
 //     ".../arcanea-ai-app/apps/web"). That is noise, not routing.
 //   - The prompt is never echoed back, and only the first PROMPT_CAP chars are
 //     matched, so a pasted wall of text cannot balloon the injected context.
-//   - Every match is listed in priority order with its reason, capped at
-//     MAX_SKILLS, followed by the rules file's `_precedence` line.
+//   - Matches are listed critical gate first, then framework kits (rules the
+//     composer tagged `stage: "framework"`), then everything else by priority,
+//     capped at MAX_SKILLS and followed by the rules file's `_precedence` line.
+//     Ranking by priority alone let high-priority audit rules push a framework
+//     kit the prompt named out of a broad request's list.
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -68,9 +71,11 @@ export function route(prompt, rules, exists) {
       const t = rule.promptTriggers || rule.triggers || {};
       const why = keywordHit(text, t.keywords) || (intentHit(text, t.intentPatterns) && 'intent');
       if (!why) return;
-      out.push({ name, rule, why, order, rank: RANK[rule.priority] ?? RANK.low });
+      const rank = RANK[rule.priority] ?? RANK.low;
+      const tier = rank === RANK.critical ? 0 : rule.stage === 'framework' ? 1 : 2;
+      out.push({ name, rule, why, order, rank, tier });
     });
-    return out.sort((a, b) => a.rank - b.rank || a.order - b.order);
+    return out.sort((a, b) => a.tier - b.tier || a.rank - b.rank || a.order - b.order);
   };
   const skills = pick(Object.entries(rules.skills || {}), 'skill').slice(0, MAX_SKILLS);
   const agents = pick(Object.entries(rules.agents || {}), 'agent').slice(0, MAX_AGENTS);
