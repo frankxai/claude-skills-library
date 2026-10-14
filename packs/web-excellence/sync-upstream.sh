@@ -193,12 +193,17 @@ check_license_text() {
 # template in a fence cannot license the upstream. A fence closes only on a
 # run of its own character at least as long as the opener, as Markdown has
 # it, so a three-backtick example inside a four-backtick fence stays inside.
+# An HTML comment block (a line opening with <!--, through the line that
+# carries -->) is not rendered, so nothing in it is a heading or part of a
+# declaration: a commented-out README template licenses nothing. An ATX
+# heading may be indented up to three spaces, as Markdown allows; four is
+# a code block.
 extract_license_sections() {
   awk '
     function is_lic(t) { t = tolower(t); sub(/[ \t:]+$/, "", t); return (t == "license" || t == "licence" || t == "licensing") }
     { L[NR] = $0 }
     END {
-      fence = 0; f = 0; lvl = 0
+      fence = 0; comment = 0; f = 0; lvl = 0
       for (i = 1; i <= NR; i++) {
         line = L[i]
         if (fence) {
@@ -213,10 +218,16 @@ extract_license_sections() {
           fch = substr(run, 1, 1); flen = length(run); fence = 1
           if (f) print line; continue
         }
+        if (comment) { if (index(line, "-->")) comment = 0; continue }
+        if (line ~ /^ {0,3}<!--/) {
+          if (!index(substr(line, index(line, "<!--") + 4), "-->")) comment = 1
+          continue
+        }
         h = 0; skip = 0
-        if (line ~ /^#+[ \t]+/) {
-          match(line, /^#+/); h = RLENGTH
-          text = line; sub(/^#+[ \t]+/, "", text); sub(/[ \t]+#+[ \t]*$/, "", text)
+        if (line ~ /^ {0,3}#+[ \t]+/) {
+          text = line; sub(/^ {0,3}/, "", text)
+          match(text, /^#+/); h = RLENGTH
+          sub(/^#+[ \t]+/, "", text); sub(/[ \t]+#+[ \t]*$/, "", text)
         } else if (i < NR && line ~ /[^ \t]/ && line !~ /^[ \t]*[-=*#>|]/ && (L[i+1] ~ /^[ \t]*=+[ \t]*$/ || L[i+1] ~ /^[ \t]*-+[ \t]*$/)) {
           h = (L[i+1] ~ /^[ \t]*=+[ \t]*$/) ? 1 : 2
           text = line; sub(/^[ \t]+/, "", text); sub(/[ \t]+$/, "", text); skip = 1
@@ -319,6 +330,19 @@ resolve_license() {
   while IFS= read -r -d '' path; do
     check_candidate "$path" "${path#"$clone"/}" 0
   done < <(find "$clone/$src" -mindepth 2 \( -iname 'LICENSE*' -o -iname 'LICENCE*' -o -iname 'COPYING*' -o -iname 'UNLICENSE*' -o -iname 'UPSTREAM-LICENSE' -o -iname 'README.md' \) -print0 2>/dev/null)
+  # Agent Skills frontmatter may carry a license field. A skill that says
+  # "license: GPL-3.0" under an MIT root is not MIT whatever the root file
+  # says, so the field is read as a bare declaration, in the selected skill
+  # and in every SKILL.md nested inside it. A value that is not the plain
+  # licence name ("see LICENSE.txt") is refused the same way and needs a
+  # human read.
+  local decl
+  while IFS= read -r -d '' path; do
+    decl="$(awk 'NR == 1 { if ($0 != "---") exit; next }
+                 $0 == "---" { exit }
+                 /^license[ \t]*:/ { sub(/^license[ \t]*:[ \t]*/, ""); gsub(/^[\042\047]|[\042\047]$/, ""); print; exit }' "$path" 2>/dev/null)"
+    [ -n "$decl" ] && check_license_text "$repo" "$license" "$decl" "${path#"$clone"/} frontmatter license"
+  done < <(find "$clone/$src" -iname 'SKILL.md' -type f -print0 2>/dev/null)
   if [ -n "$nearest_file" ]; then
     cp "$nearest_file" "$out"
     return 0
@@ -386,12 +410,35 @@ for entry in "${UPSTREAM[@]}"; do
   fi
   clone="${CLONES[$repo]}"
 
+  # git recreates an upstream symlink as a symlink, -d follows it, and so
+  # would the cp -R of the directory itself: a src that is or crosses a
+  # link could vendor whatever the link points at on this machine.
+  p="$clone"
+  IFS=/ read -ra comps <<<"$src"
+  for comp in "${comps[@]}"; do
+    p="$p/$comp"
+    if [ -L "$p" ]; then
+      echo "!! $repo: '$src' is or crosses a symlink at '${p#"$clone"/}'; the source must be a real directory inside the clone — refusing" >&2
+      exit 1
+    fi
+  done
+  unset p comps comp
   if [ ! -d "$clone/$src" ]; then
     echo "!! $repo: upstream path '$src' no longer exists — upstream restructured, fix UPSTREAM[] above" >&2
     exit 1
   fi
 
   resolve_license "$clone" "$repo" "$license" "$src" "$WORK/license/$dest"
+
+  # Symlinks anywhere inside the skill are refused too: cp -R copies them as
+  # links, so every install would carry a pointer off the tree, and the
+  # installers already treat such a copy as never canonical.
+  link="$(find "$clone/$src" -type l -print -quit 2>/dev/null)"
+  if [ -n "$link" ]; then
+    echo "!! $repo: '$src' contains a symlink at '${link#"$clone"/}'; a vendored tree must be self-contained — refusing" >&2
+    exit 1
+  fi
+  unset link
 done
 
 # ---- pass 2: report drift, or vendor ----
