@@ -78,7 +78,8 @@ A pack adds what turns a suggestion into a default, and the mechanism differs by
 edit, and a `Stop` hook that blocks once if UI changed with no audit, each shipped with the test that
 proves it cannot be satisfied by its own reminder text. `estate-guard` installs a `PreToolUse` gate
 that denies the hard stops and a taint hook for fetched content. `routine-contract` ships a CI
-workflow and a digest primitive that fails the run when nothing durable was written.
+workflow and a digest primitive that fails the run when nothing durable was written, for each routine
+you wire to it.
 `risk-classifier` ships a fail-closed classifier script for you to wire into CI. `agent-infrastructure`
 installs skills and checks installed copies against canon. `film-excellence` installs a skill and
 templates and is advisory.
@@ -96,7 +97,7 @@ Re-run an installer to upgrade. An installed skill that differs is moved to `.cl
 | [`estate-guard`](packs/estate-guard) | The agentic surface: workflows, hooks, settings, MCP configs, skills, API routes. Denies force-push to main, recursive deletes, `curl \| sh`, permission bypass. Marks instruction-shaped text in fetched or MCP output as data. | Scanner, 3 hooks, weekly CI, severity-triaged fix patterns |
 | [`agent-infrastructure`](packs/agent-infrastructure) | The multi-agent operational layer: swarm orchestration, hive-mind, ReasoningBank memory, hooks, stream chaining, verification, skill tooling. Nine skills that drifted into 2 to 4 divergent copies across five repos now have one canonical source. | Manifest plus installer over `free-skills/`, content hashes, drift check |
 | [`risk-classifier`](packs/risk-classifier) | PR readiness. Classifies every changed file against eight risk classes. Unknown fails closed. Secret-shaped content anywhere fails closed. | CI script, `classes.json`, tests |
-| [`routine-contract`](packs/routine-contract) | Scheduled agents. Makes it impossible to report `SUCCEEDED` while committing nothing: preflight proves the output sink exists, the digest primitive exits non-zero if it could not persist. | Skill, digest script, fleet drift detector, daily CI, 12 tests |
+| [`routine-contract`](packs/routine-contract) | Scheduled agents. Once a routine is wired to the digest primitive, it cannot report `SUCCEEDED` while committing nothing: preflight proves the output sink exists, the primitive exits non-zero if it could not persist, and the drift detector catches a routine that stopped reporting. The installer puts the pieces in place; you enumerate the routines and point each at the primitive. | Skill, digest script, fleet drift detector, daily CI, 12 tests |
 | [`film-excellence`](packs/film-excellence) | Narrative film and short-form video. Doctrine, dialogue tells that mark machine writing, token contract, crew chairs, eight-stage pipeline. The film counterpart to `web-excellence`. | Native skill, templates, design and taste contracts |
 
 ```bash

@@ -58,7 +58,13 @@ def check_categories(text: str, skills, failures: list[str]) -> int:
     for n in skills:
         c = categorize(n)
         truth[norm(c)] = truth.get(norm(c), 0) + 1
-    rows = {norm(name): int(count) for name, count in CATEGORY_ROW.findall(text)}
+    matches = [(norm(name), int(count)) for name, count in CATEGORY_ROW.findall(text)]
+    rows: dict[str, int] = {}
+    for name, count in matches:
+        if name in rows:
+            failures.append(f"README.md: category row '{name}' appears more than once "
+                            f"({rows[name]} and {count}); a stale duplicate hides a wrong count.")
+        rows[name] = count
     if not rows:
         failures.append("README.md: no category table rows matched — the table was "
                         "reworded (update CATEGORY_ROW) or removed (drop this check).")
