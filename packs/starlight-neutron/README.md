@@ -39,6 +39,38 @@ This proves RTK shrinks command output. It does not prove an agent finishes a ta
 - **End-to-end savings.** Needs the session protocol in `neutron-log` with billed tokens and an acceptance check.
 - **Always-loaded instructions.** On the author's machine, global instructions, rules, the memory index and the home `AGENTS.md` total 61.9 KB (about 15.5k tokens at bytes/4; measured with a byte count on 2026-10-12, one machine, not part of the committed results) before skill and agent listings. That is likely the largest single cost and no tool here has touched it yet.
 
+## Ledger
+
+`neutron.mjs ledger` turns billed usage into a savings figure only when quality was checked. Rows are JSONL: `date, harness, model, taskId, arm, uncachedInput, cacheWrite, cacheRead, output, check, notes`. `arm` is `baseline` or a candidate name. `check` is `pass`, `fail` or `not-checked`.
+
+```
+node scripts/neutron.mjs ledger add --file l.jsonl --date 2026-10-01 --harness claude-code --task t1 --arm baseline --uncached 100 --cache-write 0 --cache-read 1000 --output 200 --check pass
+node scripts/neutron.mjs ledger import-ccusage sessions.json --arm baseline --harness claude-code --out l.jsonl
+node scripts/neutron.mjs ledger compare --baseline base.jsonl --candidate cand.jsonl [--prices prices.json] [--json]
+```
+
+Rules, enforced in `scripts/ledger.mjs` and covered by `tests/ledger.test.mjs`:
+
+- Rows pair by `taskId`. A pair counts only if both rows are `pass`. Failed, unchecked and unpaired tasks are listed and left out of every total.
+- With fewer than 5 counted pairs, `compare` prints `n=N, too few to call this a result` and no percentage.
+- Prices come only from `--prices` (per million tokens, keys `uncachedInput`, `cacheWrite`, `cacheRead`, `output`). None are built in.
+- `import-ccusage` reads the `data` array of `ccusage session --json` (older releases: `sessions`). The shape was taken from the ccusage docs and is tested against a hand-written fixture, not output from a real run. Missing fields become `null` and the row's `notes` says which. ccusage has no task or quality information, so imported rows are `not-checked` and `taskId` is the session id until you set them.
+
+Worked example, **fixture data, not a result** (`tests/fixtures/example-*.jsonl`; the prices file holds placeholder values, not current prices). Six tasks per arm, the sixth failed in both arms:
+
+```
+pairs counted (both rows pass): n=5
+metric            n      baseline     candidate          diff  saved
+uncachedInput     5           520           420          -100  19%
+cacheWrite        5             0             0             0  -
+cacheRead         5          4950          3950         -1000  20%
+output            5          1010           930           -80  8%
+weighted          5        0.0182        0.0164       -0.0018  10%
+excluded t5: baseline fail, candidate fail
+```
+
+No real session has been through the ledger yet, so this pack still has no measured end-to-end saving.
+
 ## Policy vectors
 
 `policy-vectors/` holds a language-neutral spec of the permission guard: `schema.json` (JSON Schema 2020-12) and 189 golden cases in `cases/`, written with rules as Claude Code writes them. `tests/vectors.test.mjs` checks every case against `commandHitsRule` through the same settings reader the hook uses. A case marked `overmatch` is one where the guard is stricter than Claude Code; a case marked `knownGap` is one the guard currently gets wrong, with the reason in `gapReason`. No case is flagged `knownGap` now; the PowerShell alias and bare-tool-rule gaps were fixed in 4601a1e. Run `node --test packs/starlight-neutron/tests/vectors.test.mjs`.

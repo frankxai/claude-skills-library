@@ -1,0 +1,8 @@
+{
+  "type": "session",
+  "data": [
+    { "session": "task-a", "firstActivity": "2026-10-01T09:00:00Z", "lastActivity": "2026-10-01T09:40:00Z", "models": ["claude-sonnet-5-5"], "inputTokens": 1200, "outputTokens": 3400, "cacheCreationTokens": 20000, "cacheReadTokens": 150000, "totalTokens": 174600, "costUSD": 0 },
+    { "session": "task-b", "firstActivity": "2026-10-01T10:00:00Z", "lastActivity": "2026-10-01T10:30:00Z", "models": ["claude-sonnet-5-5", "claude-haiku-5-5"], "inputTokens": 900, "outputTokens": 2000 }
+  ],
+  "summary": { "totalCostUSD": 0 }
+}
