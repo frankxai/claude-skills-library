@@ -60,3 +60,5 @@ Skills load in three levels, so a large library costs almost nothing until a ski
 - [ ] `python3 scripts/validate_skills.py` passes with no new warnings.
 
 Start from [`../template/SKILL.md`](../template/SKILL.md).
+
+Agent definitions have their own standard: see [`AGENT.md`](AGENT.md).

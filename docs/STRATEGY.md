@@ -73,7 +73,7 @@ hook, the provenance table. Six exist and nineteen repos run them.
 - Give every pack a one-line install, a `--dry-run`, and a `--check` for drift. One of six has all three working: `agent-infrastructure`. `web-excellence` has `--check`, but it compares the vendored copy, which includes the `UPSTREAM-LICENSE` the sync adds, against the bare upstream directory, so every licensed skill reports as drifted. Exclude that file from the comparison before counting it.
 - Installers keep one set-aside copy under `.claude/skills/.replaced/`; a second run overwrites it. Make the set-aside versioned before calling re-runs safe.
 - Publish each pack as its own entry in `.claude-plugin/marketplace.json` so `/plugin install` works per pack, not only for the whole library.
-- Candidate seventh pack: `agent-hygiene`, the Band A guardrails and Karpathy-distilled rules as one installable skill plus a `Stop` hook that asks for the verification line. It is the single-file lesson from the landscape table.
+- `agent-hygiene` shipped 2026-10-17 as the eighth pack: the Band A guardrails and Karpathy-distilled rules as one installable skill, a 17-check linter that ratchets on changed agent and skill files, and a `Stop` hook that asks for the verification line and checks the command it names actually ran. It is the single-file lesson from the landscape table. Next: install it in the five heavy agent carriers and backfill the 144 SIS card descriptions it exposes.
 
 ### 3. Absorb patterns, not prose
 
