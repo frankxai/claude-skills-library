@@ -4,15 +4,15 @@
 
 # Claude Skills Library
 
-### 114 Agent Skills for every skills-aware runtime, and 7 enforcement packs for Claude Code
+### 115 Agent Skills for every skills-aware runtime, and 8 enforcement packs for Claude Code
 
 Skills teach an agent a domain. Packs make the agent go through the gate. This is the only public
 library that ships both, with provenance pinned to commits, counts that check themselves in CI, and
 hooks that block "done" until the evidence exists.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-10b981.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-114-blue.svg)](docs/CATALOG.md)
-[![Packs](https://img.shields.io/badge/packs-7-06b6d4.svg)](#packs-skills-that-enforce)
+[![Skills](https://img.shields.io/badge/skills-115-blue.svg)](docs/CATALOG.md)
+[![Packs](https://img.shields.io/badge/packs-8-06b6d4.svg)](#packs-skills-that-enforce)
 [![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#works-with-six-runtimes)
 [![Validate](https://github.com/frankxai/claude-skills-library/actions/workflows/validate.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/validate.yml)
 [![Pack tests](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml)
@@ -69,8 +69,8 @@ Two layers. The first is what every skills repo has. The second is what none of 
 
 | Layer | What it is | Where |
 |---|---|---|
-| **Skills** | 114 self-contained `SKILL.md` folders. Spec-validated frontmatter, trigger-rich descriptions, deep guidance in `references/` loaded only on use. | [`free-skills/`](free-skills) · [catalog](docs/CATALOG.md) |
-| **Packs** | 7 installable contracts. Each bundles the skills for one kind of work with whatever enforcement it has: hooks, CI scripts, drift checks, or templates. The packs table below says which. | [`packs/`](packs) |
+| **Skills** | 115 self-contained `SKILL.md` folders. Spec-validated frontmatter, trigger-rich descriptions, deep guidance in `references/` loaded only on use. | [`free-skills/`](free-skills) · [catalog](docs/CATALOG.md) |
+| **Packs** | 8 installable contracts. Each bundles the skills for one kind of work with whatever enforcement it has: hooks, CI scripts, drift checks, or templates. The packs table below says which. | [`packs/`](packs) |
 
 A skill is loaded when the task matches its description. That makes it *available*, not *mandatory*.
 A pack adds what turns a suggestion into a default, and the mechanism differs by pack.
@@ -89,11 +89,12 @@ templates and is advisory.
 ## Packs: skills that enforce
 
 Installed into 19 repositories across the FrankX, Starlight, and Arcanea estate as of 2026-10-09.
-Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-infrastructure` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
+Re-run an installer to upgrade. `web-excellence`, `routine-contract`, `agent-infrastructure` and `agent-hygiene` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
 
 | Pack | What it gates | Enforced by |
 |---|---|---|
 | [`web-excellence`](packs/web-excellence) | Website and web-design work. Sequences a live Vercel Web Interface Guidelines audit, motion review, Core Web Vitals, and before/after screenshots at 375 / 768 / 1440. "Done" needs evidence, never a self-assigned score. | 11 vendored skills pinned to upstream commits (Vercel, Emil Kowalski, nextlevelbuilder, arvindrk, Leonxlnx), 3 native skills, 3 hooks, 18 tests |
+| [`agent-hygiene`](packs/agent-hygiene) | The agentic surface's own quality: agent definitions, skills, commands, `AGENTS.md`, `CLAUDE.md`. One skill states the bar (the estate guardrails, the agent-file contract, model and effort routing); a linter ratchets it on every PR that touches such a file; a Stop hook requires each hand-back after a change to end with a `Verified:` line naming a command that actually ran. | Skill, 17-check linter, PR workflow, 1 hook, 83 tests |
 | [`estate-guard`](packs/estate-guard) | The agentic surface: workflows, hooks, settings, MCP configs, skills, API routes. Denies force-push to main, recursive deletes, `curl \| sh`, permission bypass. Marks instruction-shaped text in fetched or MCP output as data. | Scanner, 3 hooks, weekly CI, severity-triaged fix patterns |
 | [`agent-infrastructure`](packs/agent-infrastructure) | The multi-agent operational layer: swarm orchestration, hive-mind, ReasoningBank memory, hooks, stream chaining, verification, skill tooling. Nine skills that drifted into 2 to 4 divergent copies across five repos now have one canonical source. | Manifest plus installer over `free-skills/`, content hashes, drift check |
 | [`risk-classifier`](packs/risk-classifier) | PR readiness. Classifies every changed file against eight risk classes. Unknown fails closed. Secret-shaped content anywhere fails closed. | CI script, `classes.json`, tests |
@@ -126,7 +127,7 @@ whether it has moved upstream since. This library is built around those gaps.
 | Inbound work | Paste it in | A four-gate absorption contract (license, provenance, distinctness, attestation) that refuses rather than warns |
 | Scheduled agents | "Report your findings" | A digest primitive that fails the run if nothing durable was written |
 
-The honest gap on our side: **evals**. All 114 in this library read well. None yet ships evidence
+The honest gap on our side: **evals**. All 115 in this library read well. None yet ships evidence
 that it still behaves under pressure. That is the next moat and the first bet in
 [`docs/STRATEGY.md`](docs/STRATEGY.md).
 
@@ -135,11 +136,11 @@ that it still behaves under pressure. That is the next moat and the first bet in
 ## Skill categories
 
 Counts are the groupings in [`docs/CATALOG.md`](docs/CATALOG.md), regenerated from the tree by
-[`scripts/generate_catalog.py`](scripts/generate_catalog.py). **114 skills** across 11 categories.
+[`scripts/generate_catalog.py`](scripts/generate_catalog.py). **115 skills** across 11 categories.
 
 | Category | Count | Examples |
 |---|---:|---|
-| **AI agents and orchestration** | 16 | `agentic-orchestration`, `swarm-orchestration`, `model-routing`, `ai-architect-review`, `v-swarm` |
+| **AI agents and orchestration** | 17 | `agent-hygiene`, `agentic-orchestration`, `swarm-orchestration`, `model-routing`, `v-swarm` |
 | **AI frameworks, MCP and SDKs** | 13 | `mcp-architecture`, `mcp-builder`, `openai-agentkit`, `claude-sdk`, `langgraph-patterns` |
 | **Oracle and cloud** | 8 | `oracle-ai-architect`, `oracle-database-expert`, `oci-services-expert`, `ai-architecture` |
 | **Web, frontend and animation** | 14 | `nextjs-expert`, `ui-ux-design-expert`, `tailwind`, `gsap`, `three`, `framer-expert` |
@@ -176,7 +177,7 @@ Browse the **[full catalog](docs/CATALOG.md)**, or the generated site at [`docs/
 ```mermaid
 flowchart LR
     SIS["Starlight Intelligence System<br/>substrate: memory, agents, SIP"] --> ACOS["Agentic Creator OS<br/>canonical skill source"]
-    ACOS -->|"mirror the strongest"| LIB["claude-skills-library<br/>114 skills · 7 packs"]
+    ACOS -->|"mirror the strongest"| LIB["claude-skills-library<br/>115 skills · 8 packs"]
     UP["Upstreams<br/>Vercel · Emil Kowalski · Anthropic · ..."] -->|"pinned, licensed, drift-checked"| LIB
     LIB -->|"/plugin · npx skills add · cp"| CC["Claude Code"]
     LIB -->|"runtimes/"| RT["Cursor · Codex · Gemini CLI<br/>OpenCode · Antigravity"]
@@ -321,9 +322,9 @@ See [`SUPPORT.md`](SUPPORT.md) for routing and [`CODE_OF_CONDUCT.md`](CODE_OF_CO
 
 ## FAQ
 
-**Does loading 114 skills bloat my context?**
+**Does loading 115 skills bloat my context?**
 No. Only each skill's `name` and `description` is preloaded for routing. The body loads when a skill
-triggers, and `references/` load only when read. A library of 114 costs almost nothing until a skill fires.
+triggers, and `references/` load only when read. A library of 115 costs almost nothing until a skill fires.
 
 **How does the right skill get picked from a library this large?**
 By the `description`. Every skill states what it does and when to use it with explicit trigger
