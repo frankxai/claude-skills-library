@@ -1,0 +1,23 @@
+{
+  "$comment": "queen-ops pack hooks. install.sh merges this into .claude/settings.json; merging by hand, add these arrays to your existing hooks block rather than replacing it. `timeout` is in SECONDS. Commands go through ${CLAUDE_PROJECT_DIR} because hooks run in the session's current directory. All six hooks are inert until .starlight/queen/active.json exists in the project (see the queen-ops skill).",
+  "hooks": {
+    "SessionStart": [
+      { "matcher": ".*", "hooks": [ { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/queen-ops-session.py\"", "timeout": 10 } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash|Edit|Write|MultiEdit", "hooks": [ { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/queen-ops-gate.py\"", "timeout": 10 } ] }
+    ],
+    "TaskCreated": [
+      { "hooks": [ { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/queen-ops-task-created.py\"", "timeout": 10 } ] }
+    ],
+    "TaskCompleted": [
+      { "hooks": [ { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/queen-ops-task-completed.py\"", "timeout": 10 } ] }
+    ],
+    "TeammateIdle": [
+      { "hooks": [ { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/queen-ops-teammate-idle.py\"", "timeout": 10 } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/queen-ops-stop.py\"", "timeout": 15 } ] }
+    ]
+  }
+}

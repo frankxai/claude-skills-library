@@ -89,7 +89,7 @@ templates and is advisory.
 ## Packs: skills that enforce
 
 Installed into 19 repositories across the FrankX, Starlight, and Arcanea estate as of 2026-10-09.
-Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-infrastructure` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
+Re-run an installer to upgrade. `web-excellence`, `routine-contract`, `agent-infrastructure` and `queen-ops` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
 
 | Pack | What it gates | Enforced by |
 |---|---|---|
@@ -99,6 +99,7 @@ Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-
 | [`risk-classifier`](packs/risk-classifier) | PR readiness. Classifies every changed file against eight risk classes. Unknown fails closed. Secret-shaped content anywhere fails closed. | CI script, `classes.json`, tests |
 | [`routine-contract`](packs/routine-contract) | Scheduled agents. Once a routine is wired to the digest primitive, it cannot report `SUCCEEDED` while committing nothing: preflight proves the output sink exists, the primitive exits non-zero if it could not persist, and the drift detector catches a routine that stopped reporting. The installer puts the pieces in place; you enumerate the routines and point each at the primitive. | Skill, digest script, fleet drift detector, daily CI, 12 tests |
 | [`film-excellence`](packs/film-excellence) | Narrative film and short-form video. Doctrine, dialogue tells that mark machine writing, token contract, crew chairs, eight-stage pipeline. The film counterpart to `web-excellence`. | Native skill, templates, design and taste contracts |
+| [`queen-ops`](packs/queen-ops) | Multi-agent dispatch. A task is created only from a complete Brief, completed only from an independent verifier's re-run receipt plus a taste receipt, and the turn cannot end with briefed work uncredited. Human-gated actions (move funds, bulk send, key rotation, force-push to main) are denied at the tool call. Inert until a repo is armed. | 6 hooks (SessionStart, PreToolUse, TaskCreated, TaskCompleted, TeammateIdle, Stop), 1 skill, zero-dependency tests; rules ported from `@starlight-intelligence/queen` |
 
 ```bash
 git clone --depth 1 https://github.com/frankxai/claude-skills-library /tmp/csl
