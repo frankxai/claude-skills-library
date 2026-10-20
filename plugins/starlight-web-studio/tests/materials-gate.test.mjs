@@ -906,6 +906,21 @@ test('concurrent literal imports through Promise.all bind by position', () => {
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 
+test('a constructor chosen by a ternary or a coalescing fallback is still a renderer', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void (async () => {\n      const [{ WebGLRenderer: GL }, { WebGPURenderer: GPU }] =\n        await Promise.all([\n          import('three'),\n          import('three/webgpu'),\n        ]);\n      const ActiveRenderer = navigator.gpu ? GPU : GL;\n      const renderer = new ActiveRenderer();\n      host.current?.appendChild(renderer.domElement);\n    })();\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/two/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGLRenderer } from 'three';\nexport default function Page() {\n  useEffect(() => {\n    const Chosen = (window as any).__renderer ?? WebGLRenderer;\n    new Chosen();\n  }, []);\n  return null;\n}\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  assert.match(life.detail, /app[\\/]page\.tsx/);
+  assert.match(life.detail, /app[\\/]two[\\/]page\.tsx/);
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
 test('a Promise.all shape the reader cannot follow, and a stray awaited import, fail coverage', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

@@ -964,6 +964,15 @@ function computeBindings(file, deps, lookup) {
       const name = bindingNameBefore(src, m.index);
       if (name && name !== 'default' && !local.has(name)) local.set(name, k);
     }
+    // A constructor chosen at runtime, `const R = navigator.gpu ? GPU : GL` or `GPU ?? GL`,
+    // is a renderer when either branch is one (`?.` is optional chaining, not a ternary).
+    for (const m of src.matchAll(new RegExp(`(?<![=!<>])=(?![=>])[^;\\n]*?(?:\\?(?!\\.)|\\?\\?|\\|\\|)\\s*(${ID}(?:\\.${ID})*)\\s*(?::\\s*(${ID}(?:\\.${ID})*))?\\s*(?=;|\\r?\\n|$|\\)|\\})`, 'gm'))) {
+      const kinds = [m[1], m[2]].filter(Boolean).map((b) => local.get(b) ?? (b.includes('.') ? null : kindOf(b)));
+      const k = kinds.find(Boolean);
+      if (!k) continue;
+      const name = bindingNameBefore(src, m.index);
+      if (name && name !== 'default' && !local.has(name)) local.set(name, k);
+    }
     for (const m of src.matchAll(DESTRUCTURE_RE)) {
       for (const spec of m[1].split(',')) {
         const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?(?:\s*=.*)?$/);
