@@ -65,6 +65,11 @@ Inside the Starlight estate, also append one line to
 ## Rules
 
 - No score without the screenshot it came from.
+- A blank stretch in a full-page screenshot is not yet a finding. Full-page captures never scroll, so
+  scroll-driven content (CSS `animation-timeline: view()`, ScrollTrigger reveals, IntersectionObserver fades)
+  stays at its starting state. Read the section's source first: if it has a designed reduced-motion and
+  no-support path, it is a capture artifact; if content only exists after scrolling, it is a finding.
+  (Measured 2026-10-20: realityarchitect.ai scored 26 on a blank capture, 29 after reading the source.)
 - Compare against named references, not against "good design".
 - If two dimensions fail for the same root cause, say so once and score both.
 - Never round up to the ship band.
