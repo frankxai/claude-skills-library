@@ -8,16 +8,17 @@
 // Owned here: design-md, glass-gated, one-gpu-surface, gpu-lifecycle, poster-first,
 // motion-scored, raw-colour, coverage. A static scan proves a pattern is absent from shipped
 // source; it never proves a page behaves. PASS means every rule held AND every local import
-// was resolved AND every file lexed cleanly: anything the scanner could not read or follow is
-// the `coverage` error, never a pass.
+// was resolved AND every file lexed cleanly AND every loading expression was one the scanner
+// understands: anything it could not read or follow is the `coverage` error, never a pass.
 //
 // Not covered, by design: raw WebGL without a library, CDN script tags, refraction behind a
-// build-time plugin, whether a gate call prevents renderer creation, and renderers reached
-// through bindings the lexer cannot follow (a class stored in a variable, a factory). Those
-// belong to the materials wrapper and the eye pass.
+// build-time plugin, whether a gate call prevents renderer creation, and a renderer class
+// that reaches `new` through more than two bindings or a function return. Those belong to
+// the materials wrapper and the eye pass.
 
 import { readdirSync, readFileSync, statSync, lstatSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { builtinModules } from 'node:module';
 import { join, relative, dirname, resolve, extname, basename, sep, isAbsolute } from 'node:path';
 
 export const SECTION_ORDER = [
@@ -40,7 +41,8 @@ const SECTION_ALIASES = {
 
 const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', 'build', '.git', '.turbo', 'coverage', '.worktrees', 'out']);
 const EVIDENCE_RE = /[\\/]\.studio[\\/]/;
-const NON_SHIPPING_RE = /(^|[\\/])(tests?|__tests__|fixtures?|__fixtures__|__mocks__|stories|e2e)[\\/]|\.(test|spec|stories)\.[cm]?[jt]sx?$/;
+// Tests, fixtures and stories anywhere, and repo tooling at the root, are not shipped pages.
+const NON_SHIPPING_RE = /(^|[\\/])(tests?|__tests__|fixtures?|__fixtures__|__mocks__|stories|e2e)[\\/]|^(scripts|tools|bin)[\\/]|\.(test|spec|stories)\.[cm]?[jt]sx?$/;
 const JS_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.astro', '.svelte', '.vue']);
 const STYLE_EXT = new Set(['.css', '.scss', '.html']);
 const FILTER_EXT = new Set(['.svg']);
@@ -48,10 +50,10 @@ const TOKEN_FILE_RE = /(^|[\\/])(tailwind\.config\.[cm]?[jt]s|globals?\.css|toke
 
 const GPU_PACKAGES = /^(three|@react-three\/fiber|@react-three\/drei|ogl|@paper-design\/shaders(-react)?|liquidgl)(\/|$)/;
 const MOTION_PACKAGES = /^(gsap|@gsap\/react|lenis|motion|framer-motion)(\/|$)/;
-// Names that create a drawing surface. Import aliases of these names are followed per file.
 const RENDERER_CTORS = ['WebGLRenderer', 'WebGPURenderer', 'Renderer'];
 const RENDERER_TAGS = ['Canvas', 'MeshGradient', 'GrainGradient', 'Dithering', 'Warp', 'DotOrbit', 'Waves', 'ShaderMount'];
 const RENDERER_CALLS = ['liquidGL'];
+const BUILTINS = new Set(builtinModules);
 
 const GLASS_CSS_RE = /backdrop-filter/i;
 const GLASS_JS_RE = /<feDisplacementMap\b|<LiquidGlass\w*\b|\bliquidGL\s*\(/;
@@ -66,8 +68,8 @@ const LIST_CAP = 8;
 const IMPORT_DEPTH = 12;
 const CASE_INSENSITIVE = process.platform === 'win32' || process.platform === 'darwin';
 
-// Path identity: the filesystem decides case, so set keys follow it.
 export const norm = (p) => (CASE_INSENSITIVE ? p.toLowerCase() : p);
+const IDENT = /[A-Za-z0-9_$]/;
 
 function listed(items) {
   return items.length > LIST_CAP ? `${items.slice(0, LIST_CAP).join(', ')} (+${items.length - LIST_CAP} more)` : items.join(', ');
@@ -97,70 +99,41 @@ function read(file) {
 }
 
 // --- lexer ---------------------------------------------------------------------------------
-// One pass over the source. Comments become a single space; string, template and regex
-// literals become empty placeholders; every string literal is kept beside its offset so import
-// specifiers can be read back. A quote that no closing quote follows on its line is an
-// apostrophe in JSX text or prose, so it is emitted as plain code and lexing continues.
-// A slash is a regex start when the previous significant token cannot end an expression.
-const REGEX_PREV_CHARS = new Set(['(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '<', '>', '~', '^']);
+// One recursive scanner over the source. Comments become a single space; string, template and
+// regex literals become empty placeholders; every string literal is kept beside its offset in
+// the emitted code so import specifiers can be read back. Template substitutions are scanned
+// by the same loop, so a regex brace or a comment inside `${}` cannot end the substitution.
+//
+// Two ambiguities a lexer cannot settle from syntax alone are settled by rules:
+// - a quote immediately after an identifier character (`Don't`) is an apostrophe, because
+//   JavaScript never lets a string literal follow an identifier; a quote with no closing
+//   quote on its line is an apostrophe for the same reason;
+// - a slash is a regex start when the previous significant token cannot end an expression:
+//   an operator, an opening bracket, a keyword that is not a property name, or a `)` that
+//   closed an `if`, `while`, `for` or `with` condition. After `<` it is a JSX closing tag.
+const REGEX_PREV_CHARS = new Set(['(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '>', '~', '^']);
 const REGEX_PREV_WORDS = new Set(['return', 'typeof', 'case', 'do', 'else', 'in', 'of', 'instanceof', 'new', 'delete', 'void', 'throw', 'yield', 'await']);
-
-function regexCanStart(code) {
-  const trimmed = code.replace(/\s+$/, '');
-  if (!trimmed) return true;
-  const last = trimmed[trimmed.length - 1];
-  // `</p>` is a JSX closing tag, never a regex.
-  if (last === '<' && code.endsWith('<')) return false;
-  if (REGEX_PREV_CHARS.has(last)) return true;
-  const word = trimmed.match(/([A-Za-z_$][\w$]*)$/);
-  return Boolean(word && REGEX_PREV_WORDS.has(word[1]));
-}
+const CONTROL_WORDS = /\b(?:if|while|for|with)\s*$/;
 
 export function lex(text) {
   const strings = [];
   const issues = [];
+  const parens = [];
+  let lastCloseWasControl = false;
   let code = '';
   const n = text.length;
-  let i = 0;
 
-  // Returns the index just past a template literal starting at `start` (the backtick), its
-  // literal text, and the source ranges of its substitutions. Each substitution is lexed on
-  // its own and its code joins the outer code, so `${liquidGL({})}` is still a call.
-  function template(start) {
-    let j = start + 1;
-    let value = '';
-    const subs = [];
-    while (j < n) {
-      const ch = text[j];
-      if (ch === '\\') { value += text[j + 1] ?? ''; j += 2; continue; }
-      if (ch === '`') return { end: j + 1, value, subs, pure: true };
-      if (ch === '$' && text[j + 1] === '{') {
-        const end = expression(j + 2);
-        subs.push([j + 2, end - 1]);
-        j = end;
-        value += '${}';
-        continue;
-      }
-      value += ch;
-      j += 1;
-    }
-    issues.push('unterminated template literal');
-    return { end: n, value, subs, pure: false };
-  }
-
-  // Skips a `${ … }` substitution body, honouring nested strings, templates and braces.
-  function expression(start) {
-    let depth = 1;
-    let j = start;
-    while (j < n && depth > 0) {
-      const ch = text[j];
-      if (ch === '"' || ch === "'") { const s = quoted(j, ch); j = s.end; continue; }
-      if (ch === '`') { j = template(j).end; continue; }
-      if (ch === '{') depth += 1;
-      else if (ch === '}') depth -= 1;
-      j += 1;
-    }
-    return j;
+  function regexCanStart() {
+    const t = code.replace(/\s+$/, '');
+    if (!t) return true;
+    const last = t[t.length - 1];
+    if (last === ')') return lastCloseWasControl;
+    if (last === '<') return false;
+    if (t.endsWith('++') || t.endsWith('--')) return false;
+    if (REGEX_PREV_CHARS.has(last)) return true;
+    const word = t.match(/([A-Za-z_$][\w$]*)$/);
+    if (!word || !REGEX_PREV_WORDS.has(word[1])) return false;
+    return !t.slice(0, -word[1].length).endsWith('.');
   }
 
   function quoted(start, quote) {
@@ -177,78 +150,116 @@ export function lex(text) {
     return { end: start + 1, value: '', closed: false };
   }
 
-  while (i < n) {
-    const c = text[i];
-    const d = text[i + 1];
-    if (c === '/' && d === '/') {
-      while (i < n && text[i] !== '\n') i += 1;
-      code += ' ';
-      continue;
-    }
-    if (c === '/' && d === '*') {
-      const end = text.indexOf('*/', i + 2);
-      if (end === -1) issues.push('unterminated block comment');
-      i = end === -1 ? n : end + 2;
-      code += ' ';
-      continue;
-    }
-    if (c === '<' && text.startsWith('<!--', i)) {
-      const end = text.indexOf('-->', i + 4);
-      i = end === -1 ? n : end + 3;
-      code += ' ';
-      continue;
-    }
-    if (c === '/' && regexCanStart(code)) {
-      let j = i + 1;
-      let inClass = false;
-      let closed = false;
-      while (j < n) {
-        const ch = text[j];
-        if (ch === '\\') { j += 2; continue; }
-        if (ch === '\n') break;
-        if (inClass) { if (ch === ']') inClass = false; j += 1; continue; }
-        if (ch === '[') { inClass = true; j += 1; continue; }
-        if (ch === '/') { closed = true; break; }
-        j += 1;
-      }
-      if (closed) {
+  function regexLiteral(start) {
+    let j = start + 1;
+    let inClass = false;
+    while (j < n) {
+      const ch = text[j];
+      if (ch === '\\') { j += 2; continue; }
+      if (ch === '\n') return null;
+      if (inClass) { if (ch === ']') inClass = false; j += 1; continue; }
+      if (ch === '[') { inClass = true; j += 1; continue; }
+      if (ch === '/') {
         j += 1;
         while (j < n && /[a-z]/i.test(text[j])) j += 1;
-        code += ' /re/ ';
-        i = j;
-        continue;
+        return j;
       }
-      // Not a regex after all (a lone slash); fall through as code.
+      j += 1;
     }
-    if (c === '"' || c === "'") {
-      const s = quoted(i, c);
-      if (s.closed) {
-        strings.push({ at: code.length, value: s.value, template: false });
-        code += c + c;
-        i = s.end;
+    return null;
+  }
+
+  // Scans from i. In a substitution it returns at the `}` that closes it; otherwise at the end.
+  function scan(i, inSub) {
+    let depth = 0;
+    while (i < n) {
+      const c = text[i];
+      const d = text[i + 1];
+      if (c === '/' && d === '/') {
+        while (i < n && text[i] !== '\n') i += 1;
+        code += ' ';
         continue;
       }
+      if (c === '/' && d === '*') {
+        const end = text.indexOf('*/', i + 2);
+        if (end === -1) issues.push('unterminated block comment');
+        i = end === -1 ? n : end + 2;
+        code += ' ';
+        continue;
+      }
+      if (c === '<' && text.startsWith('<!--', i)) {
+        const end = text.indexOf('-->', i + 4);
+        i = end === -1 ? n : end + 3;
+        code += ' ';
+        continue;
+      }
+      if (c === '/' && regexCanStart()) {
+        const end = regexLiteral(i);
+        if (end !== null) { code += ' /re/ '; i = end; continue; }
+      }
+      if (c === '"' || c === "'") {
+        const prev = code[code.length - 1];
+        const s = prev && IDENT.test(prev) ? { closed: false } : quoted(i, c);
+        if (s.closed) {
+          strings.push({ at: code.length, value: s.value, template: false });
+          code += c + c;
+          i = s.end;
+        } else {
+          code += c;
+          i += 1;
+        }
+        continue;
+      }
+      if (c === '`') {
+        i = templateLiteral(i);
+        continue;
+      }
+      if (inSub) {
+        if (c === '{') depth += 1;
+        else if (c === '}') {
+          if (depth === 0) return i + 1;
+          depth -= 1;
+        }
+      }
+      if (c === '(') parens.push(CONTROL_WORDS.test(code));
+      else if (c === ')') lastCloseWasControl = parens.pop() ?? false;
       code += c;
       i += 1;
-      continue;
     }
-    if (c === '`') {
-      const t = template(i);
-      strings.push({ at: code.length, value: t.value, template: true, pure: t.pure && !t.value.includes('${}') });
-      code += '``';
-      for (const [a, b] of t.subs) {
-        const inner = lex(text.slice(a, b));
-        code += ' ${';
-        for (const s of inner.strings) strings.push({ ...s, at: s.at + code.length });
-        code += inner.code + '} ';
-        issues.push(...inner.issues);
-      }
-      i = t.end;
-      continue;
-    }
-    code += c;
-    i += 1;
+    if (inSub) issues.push('unterminated template substitution');
+    return n;
   }
+
+  function templateLiteral(start) {
+    const at = code.length;
+    code += '``';
+    let j = start + 1;
+    let value = '';
+    let pure = true;
+    while (j < n) {
+      const ch = text[j];
+      if (ch === '\\') { value += text[j + 1] ?? ''; j += 2; continue; }
+      if (ch === '`') {
+        strings.push({ at, value, template: true, pure });
+        return j + 1;
+      }
+      if (ch === '$' && text[j + 1] === '{') {
+        pure = false;
+        value += '${}';
+        code += ' ${';
+        j = scan(j + 2, true);
+        code += '} ';
+        continue;
+      }
+      value += ch;
+      j += 1;
+    }
+    issues.push('unterminated template literal');
+    strings.push({ at, value, template: true, pure: false });
+    return n;
+  }
+
+  scan(0, false);
   return { code, strings, issues };
 }
 
@@ -266,14 +277,14 @@ function stripStyleComments(text) {
 const code = (file) => lexed(file).code;
 
 // Import and re-export specifiers: `import … from "x"`, `export … from "x"`, `import "x"`,
-// `import("x")`, `require("x")`. A template specifier counts when it has no substitution;
-// one with a substitution is reported as dynamic so coverage can fail closed. Type-only
-// forms (`import type …`, `import { type A, type B } from`) ship nothing and are dropped; a
-// default or namespace binding beside type names keeps the import.
+// `import("x")`, `require("x")`. A pure template specifier counts; any other loading
+// expression (`import(name)`, `require(require.resolve(…))`) is reported as dynamic so
+// coverage fails closed. Type-only forms ship nothing and are dropped; a default or namespace
+// binding beside type names keeps the import.
 export function importsOf(file) {
   const { code: src, strings } = lexed(file);
   const out = [];
-  const dynamic = [];
+  let dynamic = 0;
   for (const s of strings) {
     const before = src.slice(Math.max(0, s.at - 400), s.at);
     let kind = null;
@@ -283,13 +294,13 @@ export function importsOf(file) {
     if (!kind) continue;
     if (s.template) {
       if (s.pure) out.push(s.value);
-      else dynamic.push(file);
+      else dynamic += 1;
       continue;
     }
     if (kind === 'from') {
       const start = Math.max(before.lastIndexOf('import'), before.lastIndexOf('export'));
       const stmt = before.slice(start);
-      if (/^import\s+type\b/.test(stmt)) continue;
+      if (/^import\s+type\b/.test(stmt) || /^export\s+type\b/.test(stmt)) continue;
       if (/^import\b/.test(stmt)) {
         const hasDefaultOrNamespace = /^import\s+(?:[A-Za-z_$][\w$]*\s*,|\*\s+as\b|[A-Za-z_$][\w$]*\s+from)/.test(stmt);
         const names = stmt.match(/\{([^}]*)\}/);
@@ -298,14 +309,16 @@ export function importsOf(file) {
           if (specs.length && specs.every((x) => /^type\s/.test(x))) continue;
         }
       }
-      if (/^export\s+type\b/.test(stmt)) continue;
     }
     out.push(s.value);
   }
+  // A loading call whose argument is not a literal: `import(name)`, `require(require.resolve(x))`.
+  for (const m of src.matchAll(/\b(?:import|require)\s*\(\s*([^\s'"`)])/g)) if (m[1]) dynamic += 1;
   return Object.assign(out, { dynamic });
 }
 
-// Per-file renderer detection that follows import aliases: `import { WebGLRenderer as GL }`.
+// Renderer detection follows import aliases and up to two variable bindings:
+// `import { WebGLRenderer as GL }`, `const C = THREE.WebGLRenderer`, `const { Renderer: R } = ogl`.
 export function isRenderer(file) {
   const { code: src, strings } = lexed(file);
   const ctors = new Set(RENDERER_CTORS);
@@ -326,6 +339,10 @@ export function isRenderer(file) {
     }
   }
   const alt = (set) => [...set].join('|');
+  for (let pass = 0; pass < 2; pass += 1) {
+    for (const m of src.matchAll(new RegExp(`\\b([A-Za-z_$][\\w$]*)\\s*=\\s*(?:[A-Za-z_$][\\w$]*\\.)?(${alt(ctors)})\\b(?!\\s*\\()`, 'g'))) ctors.add(m[1]);
+    for (const m of src.matchAll(new RegExp(`\\b(${alt(ctors)})\\s*:\\s*([A-Za-z_$][\\w$]*)\\s*[,}]`, 'g'))) ctors.add(m[2]);
+  }
   return new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(ctors)})\\b|<(?:${alt(tags)})\\b|\\b(?:${alt(calls)})\\s*\\(`).test(src);
 }
 
@@ -379,8 +396,6 @@ export function checkDesignMd(root) {
   return { id: 'design-md', level: 'info', ok: true, detail: `${rel}: ${canonical.length} spec sections, YAML tokens present; structure only, run npx @google/design.md lint for the schema` };
 }
 
-// A gate is a gpuPlan/useGlassPlan call, a matchMedia call whose argument names reduced
-// transparency, or an import of the gate module. The media string must be the call's argument.
 function isGated(file) {
   const { code: src, strings } = lexed(file);
   if (GLASS_GATE_CALL_RE.test(src)) return true;
@@ -388,7 +403,6 @@ function isGated(file) {
   return importsOf(file).some((spec) => GLASS_GATE_MODULE_RE.test(spec));
 }
 
-// A string references an asset when it is that asset's path, not when it merely contains the name.
 function referencesAsset(value, name) {
   const clean = value.split(/[?#]/)[0];
   return clean === name || clean.endsWith('/' + name);
@@ -449,7 +463,6 @@ export function pathHasLink(root, candidate) {
   return false;
 }
 
-// JSONC as tsconfig allows it: comments anywhere outside strings, trailing commas.
 export function stripJsonc(text) {
   let out = '';
   let i = 0;
@@ -474,33 +487,33 @@ function readJsonc(file) {
   try { return JSON.parse(stripJsonc(read(file))); } catch { return null; }
 }
 
-// compilerOptions with `extends` merged (child wins), one chain, contained in the root.
+// compilerOptions with `extends` merged (child wins). A missing, cyclic, outside-root or
+// package-based parent is reported, never silently dropped.
 function compilerOptions(root, file, seen = new Set()) {
-  if (seen.has(norm(file)) || !existsSync(file) || !insideRoot(root, file)) return { opts: {}, dir: dirname(file), dropped: [] };
+  const rel = relative(root, file);
+  if (seen.has(norm(file))) return { opts: {}, dropped: [`${rel} extends itself in a cycle`] };
+  if (!existsSync(file)) return { opts: {}, dropped: [`${rel} does not exist`] };
+  if (file !== root && !insideRoot(root, file)) return { opts: {}, dropped: [`${rel} is outside the scanned root`] };
   seen.add(norm(file));
   const json = readJsonc(file);
-  if (!json) return { opts: {}, dir: dirname(file), dropped: [`${relative(root, file)} is not valid JSON`] };
-  let base = { opts: {}, dir: dirname(file), dropped: [] };
+  if (!json) return { opts: {}, dropped: [`${rel} is not valid JSON`] };
+  let base = { opts: {}, dropped: [] };
   if (typeof json.extends === 'string' && json.extends.startsWith('.')) {
     let target = resolve(dirname(file), json.extends);
     if (!/\.json$/.test(target)) target += '.json';
     base = compilerOptions(root, target, seen);
   } else if (json.extends) {
-    base.dropped.push(`${relative(root, file)} extends a package config (${json.extends}), not followed`);
+    base.dropped.push(`${rel} extends a package config (${json.extends}), not followed`);
   }
   const own = json.compilerOptions ?? {};
   const opts = { ...base.opts, ...own };
-  // baseUrl and paths are relative to the file that declares them.
   if (own.baseUrl !== undefined) opts.baseUrlDir = resolve(dirname(file), own.baseUrl);
   else if (base.opts.baseUrlDir) opts.baseUrlDir = base.opts.baseUrlDir;
   if (own.paths !== undefined) opts.pathsDir = opts.baseUrlDir ?? dirname(file);
   else if (base.opts.pathsDir) opts.pathsDir = base.opts.pathsDir;
-  return { opts, dir: dirname(file), dropped: base.dropped };
+  return { opts, dropped: base.dropped };
 }
 
-// tsconfig semantics: `paths` targets resolve against baseUrl when set, else the config's
-// directory; exact keys and `prefix/*` keys both count; longest key wins. A bare specifier
-// also resolves against baseUrl on its own. Targets outside the root are reported, not used.
 export function readAliases(root) {
   const aliases = [];
   const dropped = [];
@@ -545,18 +558,30 @@ function packageName(spec) {
   const parts = spec.split('/');
   return spec.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
 }
+// `server-only` and `client-only` are compiler directives the framework provides, not installs.
+const FRAMEWORK_VIRTUAL = new Set(['server-only', 'client-only']);
+const isBuiltin = (spec) => spec.startsWith('node:') || BUILTINS.has(packageName(spec)) || FRAMEWORK_VIRTUAL.has(spec);
 
-import { builtinModules } from 'node:module';
-const BUILTINS = new Set(builtinModules);
-const isBuiltin = (spec) => spec.startsWith('node:') || BUILTINS.has(packageName(spec));
+// Installed packages: a top-level node_modules entry, or pnpm's content store under
+// node_modules/.pnpm where `@scope/name@1.2.3` is stored as `@scope+name@1.2.3`.
+function packageStore(root) {
+  const nm = join(root, 'node_modules');
+  if (!existsSync(nm)) return null;
+  let pnpm = [];
+  try { pnpm = readdirSync(join(nm, '.pnpm')); } catch { pnpm = []; }
+  return {
+    has(name) {
+      if (existsSync(join(nm, name))) return true;
+      const key = name.replace('/', '+') + '@';
+      return pnpm.some((e) => e.startsWith(key));
+    },
+  };
+}
 
-// Local imports of one file. A bare specifier is a package when node_modules holds it; one
-// that cannot be verified (no node_modules, or a layout such as pnpm's that does not hoist
-// transitive packages) is recorded as unverified. Only a local path can be unresolved.
 function localImports(root, file, aliases, state) {
   const out = [];
   const specs = importsOf(file);
-  for (const f of specs.dynamic) state.dynamic.add(relative(root, f));
+  if (specs.dynamic) state.dynamic.set(relative(root, file), specs.dynamic);
   for (const spec of specs) {
     const clean = spec.split(/[?#]/)[0];
     let candidates = [];
@@ -571,7 +596,10 @@ function localImports(root, file, aliases, state) {
         if (aliases.baseUrlDir) candidates = [join(aliases.baseUrlDir, clean)];
         const hitBase = candidates.map((c) => resolveModule(root, c)).find(Boolean);
         if (hitBase) { out.push(hitBase); continue; }
-        if (!existsSync(join(root, 'node_modules', packageName(clean)))) state.unverified.add(packageName(clean));
+        const name = packageName(clean);
+        if (state.store === undefined) state.store = packageStore(root);
+        if (state.store === null) state.unverified.add(name);
+        else if (!state.store.has(name)) state.unresolved.add(spec);
         continue;
       }
     }
@@ -600,11 +628,38 @@ function reachable(root, entry, aliases, state) {
   return seen;
 }
 
-// Next.js route conventions: page, layout, template and default files; `@slot` segments
-// render beside their parent, so they share its route key.
+// Next.js app-router conventions. A route key is the URL-shaped path of a route file: route
+// groups `(name)` add no segment; everything inside an `@slot`, including an intercepting
+// `(.)segment`, renders beside the slot's parent and takes the parent's key. Entries for a
+// route are its own page/layout/template/default files, the layouts and templates of every
+// physical ancestor, and every route file inside a slot of any ancestor, because those render
+// at the same time.
 const ROUTE_FILE_RE = /(^|[\\/])(page|layout|template|default)\.(tsx|jsx|ts|js)$/;
-function routeKey(root, file) {
-  return relative(root, dirname(file)).split(/[\\/]/).filter((s) => !s.startsWith('@')).join('/');
+export function routeKey(root, file) {
+  const segs = relative(root, dirname(file)).split(/[\\/]/).filter(Boolean);
+  const out = [];
+  for (const s of segs) {
+    if (s.startsWith('@')) break;
+    if (/^\(.*\)$/.test(s)) continue;
+    out.push(s.replace(/^\(\.{1,3}\)/, ''));
+  }
+  return out.join('/');
+}
+
+function ancestorEntries(root, member, routeFiles) {
+  const out = [];
+  let dir = dirname(member);
+  while (insideRoot(root, dir) || dir === root) {
+    for (const f of routeFiles) {
+      if (f === member) continue;
+      const fdir = dirname(f);
+      if (fdir === dir && /(^|[\\/])(layout|template)\./.test(f)) out.push(f);
+      else if (fdir.startsWith(dir + sep + '@')) out.push(f);
+    }
+    if (dir === root) break;
+    dir = dirname(dir);
+  }
+  return out;
 }
 
 export function checkGpuSurfaces(root, files) {
@@ -612,12 +667,12 @@ export function checkGpuSurfaces(root, files) {
   for (const f of files) if (isJs(f) && importsOf(f).some((s) => GPU_PACKAGES.test(s))) gpuModules.set(norm(f), f);
   const renderers = new Map([...gpuModules].filter(([, f]) => isRenderer(f)));
   const aliases = readAliases(root);
-  const state = { unresolved: new Set(), unverified: new Set(), dynamic: new Set(), depthCut: 0 };
+  const state = { unresolved: new Set(), unverified: new Set(), dynamic: new Map(), depthCut: 0, store: undefined };
   const noLifecycle = [];
   const noPoster = [];
   for (const f of renderers.values()) {
     const { code: src, strings } = lexed(f);
-    const listens = /\baddEventListener\s*\(\s*''/.test(src) && strings.some((s) => s.value === 'visibilitychange' && /\baddEventListener\s*\(\s*$/.test(src.slice(Math.max(0, s.at - 40), s.at)));
+    const listens = strings.some((s) => s.value === 'visibilitychange' && /\baddEventListener\s*\(\s*$/.test(src.slice(Math.max(0, s.at - 40), s.at)));
     if (!LIFECYCLE_RE.test(src) && !listens) noLifecycle.push(relative(root, f));
     if (!POSTER_RE.test(src)) noPoster.push(relative(root, f));
   }
@@ -634,12 +689,19 @@ export function checkGpuSurfaces(root, files) {
   for (const [key, members] of groups) {
     if (!members.some((f) => /(^|[\\/])page\./.test(f))) continue;
     routes += 1;
+    const entries = new Map();
+    for (const m of members) {
+      entries.set(norm(m), m);
+      for (const a of ancestorEntries(root, m, routeFiles)) entries.set(norm(a), a);
+    }
     const modules = new Map();
-    const ancestors = routeFiles.filter((l) => /(^|[\\/])(layout|template)\./.test(l) && members.some((m) => m.startsWith(dirname(l) + sep)) && !members.includes(l));
-    for (const e of [...members, ...ancestors]) for (const [k, m] of reachable(root, e, aliases, state)) modules.set(k, m);
+    for (const e of entries.values()) for (const [k, m] of reachable(root, e, aliases, state)) modules.set(k, m);
     const count = [...modules.keys()].filter((k) => renderers.has(k)).length;
-    if (count > 1) offenders.push(`${key || '/'} (${count} renderer modules via ${members.length} route file(s) and ${ancestors.length} ancestor layout(s))`);
+    if (count > 1) offenders.push(`/${key} (${count} renderer modules via ${entries.size} route file(s))`);
   }
+  // Every shipped file, not only route files, is checked for loading expressions the scanner
+  // cannot follow, so a dynamic import anywhere in the product is a coverage gap.
+  for (const f of files) if (isJs(f)) { const d = importsOf(f).dynamic; if (d) state.dynamic.set(relative(root, f), d); }
   const results = [];
   results.push(offenders.length
     ? { id: 'one-gpu-surface', level: 'error', ok: false, detail: `a route reaches more than one renderer module (static count; the runtime budget is the wrapper's job): ${listed(offenders)}` }
@@ -652,12 +714,12 @@ export function checkGpuSurfaces(root, files) {
     : { id: 'poster-first', level: 'info', ok: true, detail: 'every renderer module names a poster or fallback; whether it paints first is checked by eye, not here' });
   const lexIssues = files.filter((f) => isJs(f) && lexed(f).issues.length).map((f) => relative(root, f));
   const gaps = [];
-  if (state.unresolved.size) gaps.push(`${state.unresolved.size} import specifier(s) unresolved: ${listed([...state.unresolved])}`);
-  if (state.dynamic.size) gaps.push(`${state.dynamic.size} file(s) import through a template with a substitution: ${listed([...state.dynamic])}`);
+  if (state.unresolved.size) gaps.push(`${state.unresolved.size} import specifier(s) unresolved (a local path, alias or package that is not where it should be): ${listed([...state.unresolved])}`);
+  if (state.dynamic.size) gaps.push(`${state.dynamic.size} file(s) load a module through an expression the scanner cannot follow (import(name), require(require.resolve(…)), a substituted template): ${listed([...state.dynamic.keys()])}`);
   if (state.depthCut) gaps.push(`${state.depthCut} module(s) beyond the ${IMPORT_DEPTH}-edge traversal limit`);
   if (aliases.dropped.length) gaps.push(`tsconfig: ${listed(aliases.dropped)}`);
   if (lexIssues.length) gaps.push(`${lexIssues.length} file(s) the lexer could not read to the end: ${listed(lexIssues)}`);
-  const soft = state.unverified.size ? `${state.unverified.size} bare specifier(s) not found under node_modules and assumed to be packages (absent install, or a layout that does not hoist): ${listed([...state.unverified])}` : '';
+  const soft = state.unverified.size ? `${state.unverified.size} bare specifier(s) assumed to be packages because no node_modules exists: ${listed([...state.unverified])}` : '';
   results.push(gaps.length
     ? { id: 'coverage', level: 'error', ok: false, detail: `the route graph is incomplete, so the surface count above is not a pass: ${gaps.join('; ')}${soft ? '; ' + soft : ''}` }
     : soft
@@ -666,8 +728,6 @@ export function checkGpuSurfaces(root, files) {
   return results;
 }
 
-// A score is a markdown table whose header names a reduced-motion column, followed by a
-// separator row, with at least one beat row whose reduced-motion cell is filled.
 export function validMotionScore(text) {
   const lines = text.split(/\r?\n/).filter((l) => /^\s*\|/.test(l));
   const cells = (l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());

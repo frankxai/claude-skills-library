@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
   runGate, checkDesignMd, hasYamlTokens, validMotionScore, lex, importsOf, readAliases,
-  insideRoot, pathHasLink, stripJsonc, SECTION_ORDER,
+  insideRoot, pathHasLink, stripJsonc, routeKey, SECTION_ORDER,
 } from '../bin/materials-gate.mjs';
 
 const GATE = fileURLToPath(new URL('../bin/materials-gate.mjs', import.meta.url));
@@ -123,7 +123,7 @@ test('lexer: nested templates and substitutions cannot hide code; template impor
   assert.match(byId(result, 'glass-gated').detail, /lens\.tsx/);
   assert.match(byId(result, 'motion-scored').detail, /^1 file/);
   assert.match(byId(result, 'one-gpu-surface').detail, /^2 renderer module/);
-  assert.match(byId(result, 'coverage').detail, /template with a substitution: app[\\/]page\.tsx/);
+  assert.match(byId(result, 'coverage').detail, /expression the scanner cannot follow .*: app[\\/]page\.tsx/);
 });
 
 test('importsOf: a default binding beside type names keeps the import; re-exports count; export type does not', () => {
@@ -158,10 +158,6 @@ test('resolver: bare imports resolve through baseUrl, tsconfig extends is follow
   const c = byId(runGate(noNm), 'coverage');
   assert.equal(c.level, 'warn');
   assert.match(c.detail, /assumed to be packages .*: react$/);
-  const missing = fixture({ 'DESIGN.md': GOOD_DESIGN, 'app/page.tsx': `import x from 'ghost-pkg';\n` });
-  const m = byId(runGate(missing), 'coverage');
-  assert.equal(m.level, 'warn');
-  assert.match(m.detail, /ghost-pkg/);
 });
 
 test('tsconfig with inline comments and trailing commas is read', () => {
@@ -241,6 +237,96 @@ test('motion score: the column must be reduced-motion and a separator row must f
   assert.equal(validMotionScore(`| Beat | Reduced cost |\n|---|---|\n| x | 0 |\n`), false);
   assert.equal(validMotionScore(`| Beat | Reduced-motion state |\n| x | static |\n`), false);
   assert.equal(validMotionScore(`| Beat | Reduced motion |\n|:---|:---|\n| reveal | static |\n`), true);
+});
+
+test('lexer: regex after a control condition, division after a property or postfix, paired apostrophes in JSX text', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'a/glass.tsx': `if (ok) /gpuPlan( )/.test(s);\nconst G = () => <LiquidGlass />;\n`,
+    'b/glass.tsx': `const V = () => <p>Don't <LiquidGlass /> don't</p>;\n`,
+    'c/lens.ts': `import liquidGL from 'liquidgl';\nconst x = obj.in / liquidGL({}) / 2;\nconst y = a++ / liquidGL({}) / 2;\n`,
+    'd/lens.ts': "import liquidGL from 'liquidgl';\nconst t = `${/}/.test(s) ? liquidGL({}) : 0}`;\n",
+    'e/ok.ts': `const q = (a + b) / 2 / c;\nconst r = fn(x) / 2;\nconst s = arr[0] / 2;\n`,
+  });
+  const result = runGate(root);
+  const glass = byId(result, 'glass-gated');
+  assert.equal(glass.level, 'error');
+  for (const f of ['a[\\\\/]glass', 'b[\\\\/]glass', 'c[\\\\/]lens', 'd[\\\\/]lens']) assert.match(glass.detail, new RegExp(f));
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  const { code } = lex(`const q = (a + b) / 2 / c; const g = <T,>(a: T) => a; const z = x</T>;`);
+  assert.match(code, /\(a \+ b\) \/ 2 \/ c/);
+  assert.doesNotMatch(code, /\/re\//);
+});
+
+test('routes: groups add no segment, slot subtrees and intercepts take the parent key, slot layouts cover sub-routes', () => {
+  assert.equal(routeKey('/r', '/r/app/(marketing)/page.tsx'), 'app');
+  assert.equal(routeKey('/r', '/r/app/feed/@modal/(.)photo/page.tsx'), 'app/feed');
+  const grouped = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children, overlay }) => <>{children}{overlay}</>;\n`,
+    'app/(marketing)/page.tsx': `import { A } from '../../components/a';\n`,
+    'app/@overlay/page.tsx': `import { B } from '../../components/b';\n`,
+    'components/a.tsx': GOOD_RENDERER,
+    'components/b.tsx': GOOD_RENDERER,
+  });
+  assert.equal(byId(runGate(grouped), 'one-gpu-surface').level, 'error');
+  const slotLayout = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children, overlay }) => <>{children}{overlay}</>;\n`,
+    'app/foo/page.tsx': `import { A } from '../../components/a';\n`,
+    'app/@overlay/layout.tsx': `import { B } from '../../components/b';\n`,
+    'app/@overlay/default.tsx': `export default () => null;\n`,
+    'components/a.tsx': GOOD_RENDERER,
+    'components/b.tsx': GOOD_RENDERER,
+  });
+  assert.match(byId(runGate(slotLayout), 'one-gpu-surface').detail, /\/app\/foo \(2 renderer/);
+  const intercept = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/feed/layout.tsx': `export default ({ children, modal }) => <>{children}{modal}</>;\n`,
+    'app/feed/page.tsx': `import { A } from '../../components/a';\n`,
+    'app/feed/@modal/(.)photo/page.tsx': `import { B } from '../../../../components/b';\n`,
+    'components/a.tsx': GOOD_RENDERER,
+    'components/b.tsx': GOOD_RENDERER,
+  });
+  assert.match(byId(runGate(intercept), 'one-gpu-surface').detail, /\/app\/feed \(2 renderer/);
+});
+
+test('loading expressions the scanner cannot follow fail coverage', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `require(require.resolve('../components/a'));\nconst m = import(name);\n`,
+    'components/a.tsx': GOOD_RENDERER,
+  });
+  const c = byId(runGate(root), 'coverage');
+  assert.equal(c.level, 'error');
+  assert.match(c.detail, /expression the scanner cannot follow .*app[\\/]page\.tsx/);
+});
+
+test('a renderer class reached through a variable or a destructuring is still a renderer', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'a/orb.tsx': `import * as THREE from 'three';\nconst C = THREE.WebGLRenderer;\nconst D = C;\nnew D();\n`,
+    'b/orb.tsx': `import * as ogl from 'ogl';\nconst { Renderer: R } = ogl;\nnew R();\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'one-gpu-surface').detail, /^2 renderer module/);
+  assert.equal(byId(result, 'gpu-lifecycle').level, 'error');
+});
+
+test('config and package gaps: a missing extends target is reported; pnpm layout counts as installed; a ghost package is unresolved', () => {
+  const missingExtends = fixture({ 'DESIGN.md': GOOD_DESIGN, 'tsconfig.json': `{ "extends": "./missing.json" }`, 'app/page.tsx': 'export default () => null;\n' });
+  assert.match(byId(runGate(missingExtends), 'coverage').detail, /tsconfig: missing\.json does not exist/);
+  const pnpm = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import * as THREE from 'three';\nimport { x } from '@scope/pkg';\n`,
+    'node_modules/.pnpm/three@0.160.0/node_modules/three/package.json': '{}',
+    'node_modules/.pnpm/@scope+pkg@1.0.0/node_modules/@scope/pkg/package.json': '{}',
+  }, { packages: false });
+  assert.equal(byId(runGate(pnpm), 'coverage').ok, true, byId(runGate(pnpm), 'coverage').detail);
+  const ghost = fixture({ 'DESIGN.md': GOOD_DESIGN, 'app/page.tsx': `import x from 'ghost-pkg';\n` });
+  const g = byId(runGate(ghost), 'coverage');
+  assert.equal(g.level, 'error');
+  assert.match(g.detail, /unresolved .*ghost-pkg/);
 });
 
 // --- DESIGN.md -----------------------------------------------------------------------------
@@ -390,7 +476,7 @@ test('parallel route slots render together and are counted as one route', () => 
   });
   const check = byId(runGate(root), 'one-gpu-surface');
   assert.equal(check.level, 'error');
-  assert.match(check.detail, /app \(2 renderer modules via 3 route file/);
+  assert.match(check.detail, /\/app \(2 renderer modules via 3 route file/);
 });
 
 test('a helper that imports three for maths is not a renderer and owes no lifecycle', () => {
@@ -495,9 +581,11 @@ test('colour literals in rgb and hsl form count, and only relative token paths a
   assert.match(check.detail, /25 distinct/);
 });
 
-test('tests and fixtures at the root or nested, .studio prototypes, dot folders and build output are never product', () => {
+test('tests and fixtures at the root or nested, root tooling, .studio prototypes, dot folders and build output are never product', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,
+    'scripts/check.cjs': `const m = require(process.argv[2]);\n`,
+    'app/page.tsx': `import 'server-only';\nimport 'client-only';\n`,
     'tests/scene.tsx': `import * as THREE from 'three';\nnew THREE.WebGLRenderer();\n`,
     'fixtures/glass.tsx': `export const G = () => <LiquidGlass />;\n`,
     'src/__fixtures__/glass.tsx': `export const G = () => <LiquidGlass />;\n`,
