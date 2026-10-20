@@ -57,6 +57,8 @@ so orchestration stays in the main thread and the roles stay specialists.
 | R4 page | a section or page needs a new composition | strategist, art director, copy chief, builder, critic, verifier |
 | R5 flagship | a first screen that must stop people | all of R4, then motion, GPU and media, then critic and verifier |
 
+A complete R4 run, every handoff kept, is in [examples/frankx-homepage](examples/frankx-homepage/README.md): signature, brief, three directions, decision, generated media with provenance, motion score, GSAP and liquid-glass prototype, a different-provider critique and the handoff.
+
 ## The scanner
 
 `bin/studio-scan.mjs` reads what a crawler reads: server HTML, robots.txt,
