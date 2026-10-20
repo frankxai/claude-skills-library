@@ -113,9 +113,13 @@ export function directivesBlockIndex(list) {
   });
 }
 
-function headerDirectives(value) {
-  const m = (value ?? '').match(/^\s*([a-z0-9_.-]+)\s*:\s*(.*)$/i);
-  return m && !VALUE_DIRECTIVES.has(m[1].toLowerCase()) ? m[2] : value;
+// Repeated X-Robots-Tag headers reach fetch joined by commas, so a crawler scope can start any
+// token ("max-image-preview:large, googlebot: noindex"). Strip the scope per token.
+function headerBlocksIndex(value) {
+  return (value ?? '').split(',').some(token => {
+    const m = token.trim().match(/^([a-z0-9_.-]+)\s*:\s*(.*)$/i);
+    return directivesBlockIndex(m && !VALUE_DIRECTIVES.has(m[1].toLowerCase()) ? m[2] : token);
+  });
 }
 
 // Every robots meta tag and every crawler-specific one (googlebot, bingbot, ...) counts, and
@@ -127,11 +131,7 @@ export function indexingBlocks(html, robotsHeader) {
       return `meta ${name}="${attr(t, 'content')}"`;
     }
   }
-  const lines = (robotsHeader ?? '').split(/\r?\n/).filter(Boolean);
-  for (const line of lines) {
-    if (directivesBlockIndex(headerDirectives(line))) return `X-Robots-Tag: ${line}`;
-  }
-  return null;
+  return headerBlocksIndex(robotsHeader) ? `X-Robots-Tag: ${robotsHeader}` : null;
 }
 
 function linkRel(html, rel) {

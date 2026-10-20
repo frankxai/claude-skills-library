@@ -170,6 +170,13 @@ test('preview limits with "none" values are not noindex', () => {
   assert.equal(header.score, header.max);
 });
 
+test('repeated X-Robots-Tag headers, joined by fetch, keep their crawler scopes', () => {
+  const joined = analyze({ url: 'u', html: CLEAN, ...fetched, robotsHeader: 'max-image-preview:large, googlebot: noindex' });
+  assert.ok(joined.findings.some(f => f.id === 'noindex'));
+  const scopedPreview = analyze({ url: 'u', html: CLEAN, ...fetched, robotsHeader: 'googlebot: max-image-preview: none, max-snippet: -1' });
+  assert.ok(!scopedPreview.findings.some(f => f.id === 'noindex'));
+});
+
 test('crawler-specific and repeated robots tags combine', () => {
   const googlebot = analyze({ url: 'u', html: CLEAN.replace('</head>', '<meta name="googlebot" content="noindex"></head>'), ...fetched });
   assert.ok(googlebot.findings.some(f => f.id === 'noindex' && /googlebot/.test(f.evidence)));
