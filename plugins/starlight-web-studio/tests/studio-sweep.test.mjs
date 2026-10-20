@@ -12,6 +12,25 @@ test('an accepted finding stays on record but stops counting', () => {
   assert.equal(applyAccepted(report, 'elsewhere', ['go:noindex']), report);
 });
 
+test('a sweep that cannot start overwrites the heartbeat with failed', async () => {
+  const { mkdtempSync, writeFileSync, readFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { execFileSync } = await import('node:child_process');
+  const dir = mkdtempSync(join(tmpdir(), 'sweep-'));
+  const hb = join(dir, 'hb.json');
+  writeFileSync(hb, JSON.stringify({ status: 'ok' }));
+  writeFileSync(join(dir, 'bad.json'), '{broken');
+  const script = new URL('../bin/studio-sweep.mjs', import.meta.url);
+  let code = 0;
+  try { execFileSync(process.execPath, [script.pathname.replace(/^\/([A-Z]:)/, '$1'), '--targets', join(dir, 'bad.json'), '--heartbeat', hb], { stdio: 'ignore' }); }
+  catch (err) { code = err.status; }
+  assert.equal(code, 2);
+  const beat = JSON.parse(readFileSync(hb, 'utf8'));
+  assert.equal(beat.status, 'failed');
+  assert.match(beat.error, /bad targets file/);
+});
+
 test('heartbeat status comes from what the sweep produced', () => {
   assert.equal(heartbeatStatus(0, 0), 'failed');
   assert.equal(heartbeatStatus(0, 5), 'failed');

@@ -89,7 +89,7 @@ export function heartbeatStatus(scanned, failed) {
   return failed ? 'degraded' : 'ok';
 }
 
-async function writeHeartbeat(path, { ranked, failed, board }) {
+export async function writeHeartbeat(path, { ranked, failed, board, error = null }) {
   const body = {
     ts: new Date().toISOString(),
     source: 'studio-sweep',
@@ -98,6 +98,7 @@ async function writeHeartbeat(path, { ranked, failed, board }) {
     failed: failed.map(f => f.target.id),
     p0: ranked.filter(r => r.p0).map(r => r.target.id),
     board,
+    ...(error ? { error } : {}),
   };
   await mkdir(dirname(path), { recursive: true });
   const tmp = `${path}.tmp`;
@@ -126,17 +127,20 @@ async function main(argv) {
     return 2;
   }
   const only = arg(args, '--only');
+  const heartbeat = arg(args, '--heartbeat');
+  // A run that cannot start still overwrites the heartbeat, so yesterday's "ok" never outlives it.
+  const failEarly = async reason => {
+    console.error(reason);
+    if (heartbeat) await writeHeartbeat(heartbeat, { ranked: [], failed: [], board: null, error: reason });
+    return 2;
+  };
   let targets;
   try {
     targets = loadTargets(JSON.parse(await readFile(targetsPath, 'utf8'))).filter(t => !only || t.tier === only);
   } catch (err) {
-    console.error(`bad targets file ${targetsPath}: ${err.message}`);
-    return 2;
+    return failEarly(`bad targets file ${targetsPath}: ${err.message}`);
   }
-  if (!targets.length) {
-    console.error(`no live targets in ${targetsPath}`);
-    return 2;
-  }
+  if (!targets.length) return failEarly(`no live targets in ${targetsPath}`);
   const accepted = args.flatMap((a, i) => (a === '--accept' && args[i + 1] ? args[i + 1].split(',') : []));
   const results = await pool(targets, async target => {
     try { return { target, report: applyAccepted(await scanUrl(target.url), target.id, accepted) }; }
@@ -156,7 +160,6 @@ async function main(argv) {
   await writeFile(join(outDir, 'latest.json'), JSON.stringify({ runId, machine, board: boardFile, scanned: ranked.length, failed: failed.length }, null, 2) + '\n');
   console.log(md.split('\n## Findings')[0]);
   console.log(`\nwrote ${join(outDir, boardFile)} and ${machine} (${ranked.length} scanned, ${failed.length} failed)`);
-  const heartbeat = arg(args, '--heartbeat');
   if (heartbeat) await writeHeartbeat(heartbeat, { ranked, failed, board: join(outDir, boardFile) });
   if (!ranked.length) return 3;
   return ranked.some(r => r.p0) ? 1 : 0;
