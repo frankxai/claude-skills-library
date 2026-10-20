@@ -144,21 +144,21 @@ h1 em { font: italic 400 1em var(--serif); color: var(--tech-light); }
   <div class="scene">
     <div class="copy">
       <h1>AI systems you <em>own</em>, built in the open.</h1>
-      <p class="deck">Blueprints I use in my own work, published so you can run them with your own keys. Here is one doing real work this week, with every step on the record.</p>
+      <p class="deck">Blueprints I use in my own work, published so you can run them with your own keys. Below is a snapshot of one being built this week, linked to its public record.</p>
       <div class="actions">
         <a class="cta" href="#start">See where to start</a>
         <a href="https://www.frankx.ai/blog">Read the field notes</a>
       </div>
     </div>
-    <section class="glass" aria-label="A recorded run">
-      <div class="glass-head"><span>Recorded run · web studio, 20 Oct 2026</span><span class="pill" aria-live="polite">Step <span class="n">4</span> of 4</span></div>
+    <section class="glass" aria-label="Development snapshot of the web studio">
+      <div class="glass-head"><span>Development snapshot · web studio, 20 Oct 2026</span><span class="pill" aria-hidden="true">Step <span class="n">4</span> of 4</span></div>
       <ol class="steps">
         <li class="step"><span class="mark" aria-hidden="true">✓</span><span>brief: <a href="https://github.com/frankxai/claude-skills-library/issues/76">audit 25 live sites, fix the worst</a></span></li>
-        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>build: <a href="https://github.com/frankxai/claude-skills-library/pull/77">11 agents, 52 tests, one draft PR</a></span></li>
-        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>verify: a second model reviewed it six times, then passed it</span></li>
+        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>build: <a href="https://github.com/frankxai/claude-skills-library/pull/77">11 specialist roles, 52 tests, one draft PR</a></span></li>
+        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>review: <a href="https://github.com/frankxai/claude-skills-library/pull/77#issuecomment-6292699352">six rounds by a second model, reported on the PR</a></span></li>
         <li class="step"><span class="mark" aria-hidden="true">●</span><span>ship: waiting for a person to approve</span></li>
       </ol>
-      <p class="note">The brief and the build are public on GitHub.</p>
+      <p class="note">Each linked step is public on GitHub. The final approval has not happened yet.</p>
     </section>
   </div>
 </section>
@@ -221,6 +221,7 @@ h1 em { font: italic 400 1em var(--serif); color: var(--tech-light); }
   let frame = 0;
   const clear = () => { if (frame) cancelAnimationFrame(frame); frame = 0; glass.classList.remove('lit'); };
   glass.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') { clear(); return; }
     if (!fine.matches || still.matches || frame) return;
     frame = requestAnimationFrame(() => {
       frame = 0;

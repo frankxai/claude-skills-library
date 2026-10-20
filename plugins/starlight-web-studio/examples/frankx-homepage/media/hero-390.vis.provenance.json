@@ -5,8 +5,8 @@
     "asset_id": "sha256:2bdb4e3ad1f05b4d",
     "media_type": "image",
     "sha256": "2bdb4e3ad1f05b4dabec02cb5cc148cebfd453335298a5e3aa58bfcb9e9df687",
-    "local_path": "C:\\Users\\frank\\starlight\\repos\\claude-skills-library\\.worktrees\\web-studio\\plugins\\starlight-web-studio\\examples\\frankx-homepage\\media\\hero-390.webp",
-    "relative_path": "repos\\claude-skills-library\\.worktrees\\web-studio\\plugins\\starlight-web-studio\\examples\\frankx-homepage\\media\\hero-390.webp"
+    "local_path": "plugins/starlight-web-studio/examples/frankx-homepage/media/hero-390.webp",
+    "relative_path": "plugins/starlight-web-studio/examples/frankx-homepage/media/hero-390.webp"
   },
   "generation": {
     "provider": "openai-codex",
@@ -18,7 +18,7 @@
       "brand": "frankx"
     },
     "output_paths": [
-      "C:\\Users\\frank\\starlight\\repos\\claude-skills-library\\.worktrees\\web-studio\\plugins\\starlight-web-studio\\examples\\frankx-homepage\\media\\hero-390.webp"
+      "plugins/starlight-web-studio/examples/frankx-homepage/media/hero-390.webp"
     ],
     "created_at": "2026-10-20T14:24:25.200Z"
   },

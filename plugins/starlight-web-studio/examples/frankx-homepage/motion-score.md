@@ -5,9 +5,9 @@ Motion director, 2026-10-20. One set-piece, per the FrankX design system.
 | Beat | Trigger | What moves | Why | Duration / ease | Reduced-motion state |
 |---|---|---|---|---|---|
 | 1. Hold | page load | nothing; type is already there | the static composition carries the page | none | same |
-| 2. Step the run | scroll, first screen pinned for 150vh, desktop 900px+ only | the active row of the recorded run (brief → build → verify → ship) gains a tinted background and a cyan marker; other rows keep readable text | replays a real, public run of this studio, which is the page's proof | row index derived from the smoothed timeline's progress, 0.6s smoothing | all four rows shown in their final recorded state |
+| 2. Step the run | scroll, first screen pinned for 150vh, desktop 900px+ only | the active row of the development snapshot (brief → build → review → ship) gains a tinted background and a cyan marker; other rows keep readable text | replays public evidence of this studio being built, which is the page's proof; no live region, so screen readers hear the static final state | row index derived from the smoothed timeline's progress, 0.6s smoothing | all four rows shown in their final state |
 | 3. Dim the room | same scroll range | a dark veil over the image rises from 0 to 0.45 | attention moves from the place to the artifact as the run completes | scrubbed with beat 2 | veil at 0; nothing moves |
-| 4. Light on glass | pointer move over the panel, fine pointers only | a radial highlight follows the pointer | makes the glass read as a physical surface | one update per frame; a pending frame is cancelled on leave, cancel and preference change | no highlight |
+| 4. Light on glass | mouse movement over the panel (touch and pen are ignored) | a radial highlight follows the pointer | makes the glass read as a physical surface | one update per frame; a pending frame is cancelled on leave, cancel and preference change | no highlight |
 
 Rules held:
 
