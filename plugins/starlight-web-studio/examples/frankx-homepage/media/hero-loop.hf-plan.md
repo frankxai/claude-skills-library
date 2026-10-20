@@ -13,7 +13,8 @@ Why Higgsfield here: Codex image generation makes stills only, and this job need
 | | Choice |
 |---|---|
 | Skill | `higgsfield-generate` |
-| Primary model | `kling_o3_flf` (Kling 3.0 Omni, Frames): `start_image` = `end_image` = the accepted 1536×1024 still, so the seam is the same frame |
+| Start and end frame | `hero-16x9.png`, 1536×864: the accepted 1536×1024 still (`hero.png`, sha256 `6d28edea…4b61`) with the top 160 px removed, so the desk, lamp and skyline survive the 16:9 output. sha256 `46462e80c86a3953f99a321b50e3c8668fc2a04a59a202db65d52d4ff67ed5a5`. Made locally; not uploaded. |
+| Primary model | `kling_o3_flf` (Kling 3.0 Omni, Frames): `start_image` = `end_image` = that frame, so the seam is the same frame |
 | Settings | 16:9, 5 s, `mode pro`, `sound off`, `multi_shots false` |
 | Comparison | `veo3_1_lite`, start and end frames set (forces 8 s), `generate_audio false` |
 
@@ -32,7 +33,8 @@ Locked-off camera, no movement. Only three things change: the city bokeh drifts 
 |---|---|
 | Kling 3.0 Omni Frames, 5 s, pro | 6.25 (std 5) |
 | Veo 3.1 Lite, 8 s | 12 |
-| One targeted repair, if needed | ≤ 6.25 |
+| One targeted repair, if needed: Kling 3.0 Omni Frames, pro, same frame | 6.25 |
+| **Total if all three run** | **24.5** |
 | **Cap** | **25 credits** of the 2,601 on the account |
 
 Estimates were made without the frame images, because `generate cost` auto-uploads local files and uploading is not yet approved. Re-run the estimate with `--start-image`/`--end-image` after approval and stop if it exceeds the cap.
@@ -47,6 +49,7 @@ Estimates were made without the frame images, because `generate cost` auto-uploa
 
 ## Approvals needed from Frank
 
-1. Upload `hero.png` (the accepted render, generated-owned) to Higgsfield.
-2. Two paid calls plus at most one repair, capped at 25 credits.
+1. Upload exactly one file to Higgsfield: `hero-16x9.png`, sha256 `46462e80…d5a5`, derived from the generated-owned render. No other file, brand kit or agent sync.
+2. Two paid calls plus at most one Kling repair, capped at 25 credits.
 3. Using a loop at all: the motion score has one set-piece (the scroll scene); a living background is a second moving thing on the first screen, and the motion director would need to re-score it.
+4. Publishing is a separate approval. A finished loop goes into a draft PR with its provenance sidecar and is not deployed, posted or listed without your word.

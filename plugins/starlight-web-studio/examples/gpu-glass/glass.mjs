@@ -15,12 +15,14 @@ precision highp float;
 uniform sampler2D uImage;
 uniform vec2 uImageSize;
 uniform vec2 uRes;
+uniform vec2 uBuf;
 uniform vec4 uRect;
 uniform float uRadius;
-uniform float uDpr;
 uniform vec2 uPointer;
 uniform float uLit;
 
+// Matches CSS background-size: cover; background-position: center.
+// A screen wider than the image (sr > ir) crops the image vertically, and vice versa.
 vec2 coverUV(vec2 p) {
   vec2 uv = p / uRes;
   float sr = uRes.x / uRes.y;
@@ -41,7 +43,6 @@ float sd(vec2 p) {
 }
 
 vec3 frosted(vec2 p) {
-  // 12-tap ring blur in pixel space, cheap enough for one panel.
   vec3 acc = texture2D(uImage, coverUV(p)).rgb;
   for (int i = 0; i < 12; i++) {
     float a = float(i) * 0.5235988;
@@ -52,15 +53,15 @@ vec3 frosted(vec2 p) {
 }
 
 void main() {
-  vec2 p = vec2(gl_FragCoord.x, uRes.y * uDpr - gl_FragCoord.y) / uDpr;
+  // The drawing buffer is floored to whole device pixels, so map through its real size.
+  vec2 p = vec2(gl_FragCoord.x, uBuf.y - gl_FragCoord.y) * (uRes / uBuf);
   float d = sd(p);
   vec3 base = texture2D(uImage, coverUV(p)).rgb;
   if (d > 1.5) { gl_FragColor = vec4(base, 1.0); return; }
 
   vec2 e = vec2(1.0, 0.0);
   vec2 n = normalize(vec2(sd(p + e.xy) - sd(p - e.xy), sd(p + e.yx) - sd(p - e.yx)) + 1e-5);
-  float bevel = 22.0;
-  float edge = smoothstep(-bevel, 0.0, d);
+  float edge = smoothstep(-22.0, 0.0, d);
   vec2 shift = -n * edge * edge * 26.0;
 
   vec3 glass;
@@ -72,26 +73,49 @@ void main() {
 
   float rim = pow(edge, 3.0) * max(dot(n, normalize(vec2(-0.6, -0.8))), 0.0);
   glass += vec3(rim * 0.35);
-  float glow = uLit * exp(-dot(p - uPointer, p - uPointer) / (2.0 * 140.0 * 140.0)) * 0.10;
-  glass += vec3(glow);
+  glass += vec3(uLit * exp(-dot(p - uPointer, p - uPointer) / 39200.0) * 0.10);
 
   float mask = 1.0 - smoothstep(-0.75, 0.75, d);
   gl_FragColor = vec4(mix(base, glass, mask), 1.0);
 }
 `;
 
+const PREFERENCE_QUERIES = ['(prefers-reduced-motion: reduce)', '(prefers-reduced-transparency: reduce)'];
+
 export async function mountGlass({ scene, canvas, panel, imageUrl, root = document.documentElement }) {
+  const record = (mode, reason) => {
+    root.dataset.glass = mode;
+    root.dataset.glassReason = reason;
+    return { mode, reason, teardown: () => {} };
+  };
   const plan = gpuPlan(readEnv(window));
-  root.dataset.glass = plan.mode;
-  root.dataset.glassReason = plan.reason;
-  if (plan.mode !== 'webgl') return plan;
+  if (plan.mode !== 'webgl') return record('css', plan.reason);
+
+  // Everything acquired is registered here, so one teardown releases it on every path.
+  const releases = [];
+  let active = true;
+  let queued = 0;
+  const teardown = (reason) => {
+    if (!active) return;
+    active = false;
+    if (queued) cancelAnimationFrame(queued);
+    root.classList.remove('gl-glass');
+    while (releases.length) releases.pop()();
+    if (reason) record('css', reason);
+  };
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'low-power' });
+  releases.push(() => { renderer.dispose(); renderer.forceContextLoss(); });
   renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  renderer.setPixelRatio(dpr);
 
-  const texture = await new THREE.TextureLoader().loadAsync(imageUrl);
+  let texture;
+  try {
+    texture = await new THREE.TextureLoader().loadAsync(imageUrl);
+  } catch {
+    teardown('image failed to load');
+    return { mode: 'css', reason: root.dataset.glassReason, teardown };
+  }
+  releases.push(() => texture.dispose());
   texture.colorSpace = THREE.NoColorSpace;
   texture.minFilter = THREE.LinearFilter;
   texture.generateMipmaps = false;
@@ -100,31 +124,37 @@ export async function mountGlass({ scene, canvas, panel, imageUrl, root = docume
     uImage: { value: texture },
     uImageSize: { value: new THREE.Vector2(texture.image.width, texture.image.height) },
     uRes: { value: new THREE.Vector2() },
+    uBuf: { value: new THREE.Vector2() },
     uRect: { value: new THREE.Vector4() },
     uRadius: { value: 40 },
-    uDpr: { value: dpr },
     uPointer: { value: new THREE.Vector2(-9999, -9999) },
     uLit: { value: 0 },
   };
+  const geometry = new THREE.PlaneGeometry(2, 2);
+  const material = new THREE.ShaderMaterial({ uniforms, vertexShader: vertex, fragmentShader: fragment });
+  releases.push(() => { geometry.dispose(); material.dispose(); });
   const glScene = new THREE.Scene();
-  glScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms, vertexShader: vertex, fragmentShader: fragment })));
+  glScene.add(new THREE.Mesh(geometry, material));
   const camera = new THREE.Camera();
+  const buffer = new THREE.Vector2();
 
   const measure = () => {
     const s = scene.getBoundingClientRect();
     const r = panel.getBoundingClientRect();
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(s.width, s.height, false);
+    renderer.getDrawingBufferSize(buffer);
     uniforms.uRes.value.set(s.width, s.height);
+    uniforms.uBuf.value.copy(buffer);
     uniforms.uRect.value.set(r.left - s.left, r.top - s.top, r.width, r.height);
     uniforms.uRadius.value = parseFloat(getComputedStyle(panel).borderTopLeftRadius) || 0;
   };
-
-  let queued = 0;
   let visible = true;
-  const draw = () => { queued = 0; renderer.render(glScene, camera); };
-  const request = () => { if (visible && !queued) queued = requestAnimationFrame(draw); };
+  const draw = () => { queued = 0; if (active) renderer.render(glScene, camera); };
+  const request = () => { if (active && visible && !queued) queued = requestAnimationFrame(draw); };
 
-  // Probe: the frame budget is measured on this device, not assumed.
+  // Probe: the frame budget is measured on this device, not assumed. gl.finish() times
+  // render plus GPU completion; it excludes page compositing, which CSS glass also pays.
   measure();
   const gl = renderer.getContext();
   const samples = [];
@@ -136,41 +166,46 @@ export async function mountGlass({ scene, canvas, panel, imageUrl, root = docume
   }
   root.dataset.glassMs = medianMs(samples).toFixed(2);
   if (!withinBudget(samples)) {
-    renderer.dispose();
-    texture.dispose();
-    root.dataset.glass = 'css';
-    root.dataset.glassReason = `frame budget: ${root.dataset.glassMs} ms median`;
-    return { mode: 'css', reason: root.dataset.glassReason };
+    teardown(`frame budget: ${root.dataset.glassMs} ms median`);
+    return { mode: 'css', reason: root.dataset.glassReason, teardown };
   }
 
-  root.classList.add('gl-glass');
-  const ro = new ResizeObserver(() => { measure(); request(); });
+  const listen = (target, type, fn, opts) => {
+    target.addEventListener(type, fn, opts);
+    releases.push(() => target.removeEventListener(type, fn, opts));
+  };
+  const remeasure = () => { measure(); request(); };
+
+  const ro = new ResizeObserver(remeasure);
   ro.observe(scene);
   ro.observe(panel);
-  window.addEventListener('scroll', () => { measure(); request(); }, { passive: true });
-  new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) request(); }).observe(scene);
+  releases.push(() => ro.disconnect());
+  const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; request(); });
+  io.observe(scene);
+  releases.push(() => io.disconnect());
+  listen(window, 'scroll', remeasure, { passive: true });
 
   const dark = () => { uniforms.uLit.value = 0; request(); };
-  panel.addEventListener('pointermove', (e) => {
+  listen(panel, 'pointermove', (e) => {
     if (e.pointerType !== 'mouse') { dark(); return; }
     const s = scene.getBoundingClientRect();
     uniforms.uPointer.value.set(e.clientX - s.left, e.clientY - s.top);
     uniforms.uLit.value = 1;
     request();
   });
-  panel.addEventListener('pointerleave', dark);
-  panel.addEventListener('pointercancel', dark);
+  listen(panel, 'pointerleave', dark);
+  listen(panel, 'pointercancel', dark);
 
-  // A preference flipped mid-visit drops straight back to the CSS glass.
-  for (const q of ['(prefers-reduced-motion: reduce)', '(prefers-reduced-transparency: reduce)']) {
-    window.matchMedia(q).addEventListener('change', (ev) => {
-      if (!ev.matches) return;
-      root.classList.remove('gl-glass');
-      root.dataset.glass = 'css';
-      root.dataset.glassReason = 'preference changed';
-    });
+  // Any change that would have refused WebGL at load refuses it now: preferences,
+  // the phone breakpoint (the CSS switches photographs there), or a lost context.
+  for (const q of PREFERENCE_QUERIES) {
+    listen(window.matchMedia(q), 'change', (ev) => { if (ev.matches) teardown('preference changed'); });
   }
+  listen(window.matchMedia('(min-width: 900px)'), 'change', (ev) => { if (!ev.matches) teardown('phone layout'); });
+  listen(canvas, 'webglcontextlost', (ev) => { ev.preventDefault(); teardown('WebGL context lost'); });
 
+  root.classList.add('gl-glass');
+  record('webgl', plan.reason);
   request();
-  return plan;
+  return { mode: 'webgl', reason: plan.reason, teardown };
 }

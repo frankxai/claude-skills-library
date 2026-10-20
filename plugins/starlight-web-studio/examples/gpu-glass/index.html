@@ -126,7 +126,11 @@ mountGlass({
   root.classList.remove('gl-glass');
   root.dataset.glass = 'css';
   root.dataset.glassReason = `WebGL failed: ${err.message}`;
-}).finally(show);
+}).finally(() => {
+  show();
+  // A later teardown (preference, breakpoint, lost context) updates the label too.
+  new MutationObserver(show).observe(root, { attributes: true, attributeFilter: ['data-glass'] });
+});
 </script>
 </body>
 </html>

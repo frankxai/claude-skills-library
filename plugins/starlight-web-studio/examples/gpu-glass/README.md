@@ -14,13 +14,16 @@ The wrapper follows the gpu-artist contract:
 - **Capability gate** ([glass-gate.mjs](glass-gate.mjs), 7 tests). It requires WebGL2, a viewport of at least 900px, and no reduced-motion, reduced-transparency or data-saver preference. It also requires at least 4 GB of device memory where the browser reports it.
 - **Frame budget.** Twelve probe frames are timed with `gl.finish()`; if the median exceeds 8 ms the page disposes the renderer and keeps the CSS glass.
 - **Draw on change only.** It draws on pointer, resize or scroll, never on a loop, and stops while off screen.
-- **SRI-pinned** three.js 0.160.0 minified build through an import map. If the hash fails, the module never runs and the CSS glass stays.
+- **One teardown.** A preference turned on mid-visit, a resize below 900px, a lost WebGL context or a failed image load all release every listener, observer and GPU resource and return to the CSS glass. The breakpoint and lost-context paths were checked in the browser.
+- **SRI-pinned** three.js 0.160.0 minified build through the import map's `integrity` field. Browsers that enforce it refuse a changed file, and the CSS glass stays. Browsers without import-map integrity support load it unchecked; a production build should bundle or self-host three.js instead.
 
-## Measured (2026-10-20, Chromium in the Claude desktop browser pane, Intel Arc 140T)
+## Measured
+
+One device, one browser: Chrome 152 in the Claude desktop browser pane, Intel Arc 140T, device pixel ratio 1, viewports 1024×609 and 1440×900, 2026-10-20. Frame time is the median of 12 probe frames, each timed around `render()` plus `gl.finish()`. That covers GPU work for the pass but not page compositing. The probe itself blocks the main thread for about 12 frames' worth (under 5 ms here) at startup.
 
 | | CSS glass | three.js glass |
 |---|---|---|
-| Extra transfer | 0 | 167 KB (three.js, brotli) + 8 KB modules |
+| Extra transfer | 0 | 167 KB (three.js, brotli) + 10 KB modules (uncompressed) |
 | Median frame | n/a (compositor) | 0.05 to 0.40 ms at 1024 and 1440 wide |
 | Refraction at the edge | no | yes |
 | Safari | `backdrop-filter` with prefix | WebGL2, untested |
@@ -28,6 +31,17 @@ The wrapper follows the gpu-artist contract:
 
 ## Verdict
 
-The WebGL glass looks better at the edge, and its frame cost is negligible. It still does not earn the homepage. It adds 167 KB for one panel that most readers see for a few seconds, and on phones it never runs at all. The ruling stands for direction B.
+The WebGL glass looks better at the edge, and on this device its frame cost was well under the 8 ms budget. That is one sample, not a fleet; slower GPUs are what the probe and fallback exist for. It still does not earn the homepage. It adds 167 KB for one panel that most readers see for a few seconds, and on phones it never runs at all. The ruling stands for direction B.
 
-Use this wrapper on an R5 flagship where the glass is the subject, such as a product reveal or an interactive object, rather than a frame around text.
+The wrapper is the starting point for an R5 flagship where the glass is the subject, such as a product reveal or an interactive object, rather than a frame around text. Re-measure on that page's slowest target device before shipping.
+
+## Review
+
+Codex (a different provider) reviewed the first version: "revise". The fixes since:
+- one teardown for every fallback path;
+- the drawing buffer's real size in the shader, so fractional sizes and DPR no longer offset the panel;
+- a re-check at the 900px breakpoint;
+- context-loss handling;
+- the qualified measurement and SRI notes above.
+
+One finding was declined. It claimed the cover-UV axes were reversed, but a screen wider than the image (`sr > ir`) crops the image vertically, which is the axis the shader crops, matching CSS `cover`.
