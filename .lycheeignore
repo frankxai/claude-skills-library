@@ -1,0 +1,9 @@
+# Sites that block CI crawlers with 403 but load in a browser.
+^https://docs\.oracle\.com/en-us/iaas/
+^https://(www\.)?npmjs\.com/package/
+^https://www\.gartner\.com/
+^https://openai\.com/
+^https://github\.com/signup
+^https://neptune\.ai/
+# Placeholder links inside templates that teach how to write a skill or README.
+^https://github\.com/example/

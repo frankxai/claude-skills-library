@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-12T12:18:55.207Z",
+  "unit": "bytes",
+  "rtk": "rtk 0.50.0",
+  "platform": "win32",
+  "repoHead": "20011a7",
+  "rows": [
+    {
+      "label": "git log -n 40",
+      "raw": 53307,
+      "rtk": 10374,
+      "saved": 81
+    },
+    {
+      "label": "git diff HEAD~5",
+      "raw": 131357,
+      "rtk": 27621,
+      "saved": 79
+    },
+    {
+      "label": "git status",
+      "raw": 672,
+      "rtk": 293,
+      "saved": 56
+    },
+    {
+      "label": "grep -rn name: free-skills",
+      "raw": 28229,
+      "rtk": 15179,
+      "saved": 46
+    }
+  ]
+}

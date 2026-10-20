@@ -2,7 +2,7 @@
 
 Manifest-driven risk classifier for PR readiness gating across the frankxai estate.
 Built for the 2026-08-29 campaign reviews on
-[FrankX#149](https://github.com/frankxai/FrankX/pull/149) and
+FrankX#149 (private repository) and
 [Starlight-Intelligence-System#111](https://github.com/frankxai/Starlight-Intelligence-System/pull/111),
 which retired path-based "content-only auto-ready" as a safety boundary.
 

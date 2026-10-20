@@ -627,7 +627,7 @@ def run_agent_with_logging(task):
 
 **Official Documentation:**
 - Agent SDK Docs: https://docs.claude.com/en/api/agent-sdk
-- Computer Use Guide: https://docs.anthropic.com/en/docs/agents/computer-use
+- Computer Use Guide: https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use-tool
 - MCP Integration: https://modelcontextprotocol.io
 
 **GitHub:**

@@ -1,0 +1,219 @@
+{
+  "category": "degenerate",
+  "description": "Empty lists, match-all rules, bare tool names, rules for other tools and malformed rules.",
+  "cases": [
+    {
+      "id": "degenerate-01",
+      "description": "Empty ask and deny lists never apply",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": []
+      },
+      "command": "git push origin main",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "degenerate-02",
+      "description": "Empty lists with an empty command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": []
+      },
+      "command": "",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "degenerate-03",
+      "description": "Match-all rule in ask",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(*)"
+        ],
+        "deny": []
+      },
+      "command": "ls",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-04",
+      "description": "Match-all rule in deny",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash(*)"
+        ]
+      },
+      "command": "git status",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-05",
+      "description": "Double wildcard matches everything",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(**)"
+        ],
+        "deny": []
+      },
+      "command": "echo hello",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-06",
+      "description": "Bare Bash in deny removes the tool",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash"
+        ]
+      },
+      "command": "git status",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-07",
+      "description": "Bare Bash in ask asks for every command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash"
+        ],
+        "deny": []
+      },
+      "command": "git status",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-08",
+      "description": "Rules for other tools do not apply to a command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Read(./.env)",
+          "WebFetch(domain:example.com)",
+          "Edit(**)"
+        ],
+        "deny": []
+      },
+      "command": "git status",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "degenerate-09",
+      "description": "An MCP tool wildcard rule does not apply to a command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "mcp__docs__*"
+        ],
+        "deny": []
+      },
+      "command": "git status",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "degenerate-10",
+      "description": "A rule with no closing parenthesis is not a rule, unverified against Claude Code",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "degenerate-11",
+      "description": "A rule with no parentheses and extra words is not a rule, unverified against Claude Code",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash git push"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "degenerate-12",
+      "description": "An empty pattern fails closed",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash()"
+        ],
+        "deny": []
+      },
+      "command": "git status",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-13",
+      "description": "A pattern of only :* fails closed",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(:*)"
+        ],
+        "deny": []
+      },
+      "command": "git status",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-14",
+      "description": "An extra closing parenthesis, undocumented so the spec fails closed",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *))"
+        ],
+        "deny": []
+      },
+      "command": "git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-15",
+      "description": "A rule list with only one unrelated rule among many",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(a1)",
+          "Bash(a2)",
+          "Bash(a3)",
+          "Bash(git push *)"
+        ],
+        "deny": [
+          "Bash(b1)"
+        ]
+      },
+      "command": "git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "degenerate-16",
+      "description": "A deny rule matches while the ask rule does not",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit *)"
+        ],
+        "deny": [
+          "Bash(git push *)"
+        ]
+      },
+      "command": "git push origin main",
+      "expect": "passthrough"
+    }
+  ]
+}

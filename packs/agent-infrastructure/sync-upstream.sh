@@ -45,7 +45,8 @@ def skill_hash(root):
         dirnames.sort()
         for fn in sorted(filenames):
             p = os.path.join(dirpath, fn)
-            h.update(os.path.relpath(p, root).encode())
+            # POSIX separators so a pin computed on Windows matches CI on Linux.
+            h.update(os.path.relpath(p, root).replace(os.sep, "/").encode())
             h.update(open(p, "rb").read())
             n += 1
     return h.hexdigest()[:12], n

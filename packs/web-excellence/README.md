@@ -50,9 +50,9 @@ The hooks:
 
 | Hook | Event | What it does |
 |---|---|---|
-| `web-excellence-session.py` | `SessionStart` | Injects the gate contract as `additionalContext`, and names the repo's own `design.md` / `taste.md` / `tailwind.config` as outranking the pack. Silent if the pack is not installed. |
+| `web-excellence-session.py` | `SessionStart` | Injects the gate contract as `additionalContext`, and names the repo's own `design.md` / `taste.md` / `tailwind.config` as outranking the pack. Records which files were already uncommitted, so the Stop hook can tell this session's shell edits from earlier work. Silent if the pack is not installed. |
 | `web-excellence-gate.py` | `PreToolUse` on `Edit\|Write\|MultiEdit\|NotebookEdit` | Fires the moment a UI file is written — `app/`, `components/`, `styles/`, any `.css` — with the checklist. Skips `api/`, `lib/`, tests, `route.ts`. Never blocks. Once per session (`WEB_GATE_EVERY_EDIT=1` to repeat). |
-| `web-excellence-stop.py` | `Stop` | Closes the loop: if UI files were touched and the transcript shows no `web-design-guidelines` audit, blocks the stop **once** with what is missing. Guarded three ways against looping. `WEB_GATE_NO_STOP=1` to disable. |
+| `web-excellence-stop.py` | `Stop` | Closes the loop: if UI files changed (through Edit/Write, or through the shell, committed or not) and the transcript shows no executed audit and complete capture since that change began, blocks the stop **once** with what is missing. Guarded three ways against looping, and re-armed for the next change set. `WEB_GATE_NO_STOP=1` to disable. |
 
 That last one is the loop. PreToolUse opens it, Stop closes it, and the state
 file in `$TMPDIR` carries the touched-file list between them.
@@ -61,9 +61,48 @@ file in `$TMPDIR` carries the touched-file list between them.
 version did, and the PreToolUse reminder names the very skills it asks for — so
 the reminder text landed in the transcript, the check saw the names, and the
 gate passed on the strength of its own nagging. The loop was a no-op and nothing
-caught it. Evidence is now the guidelines URL and the capture runner's own
-output; `tests/test_hooks.py::test_reminder_cannot_satisfy_evidence` fails the
+caught it. `tests/test_hooks.py::test_reminder_cannot_satisfy_evidence` fails the
 build if a marker ever reappears in the reminder.
+
+Matching the markers as free text failed the same way one level down: the
+`web-design-guidelines` skill quotes the guidelines URL, so loading the skills
+closed the gate. A receipt now counts only where a run leaves it: a fetch of
+the guidelines whose result is not an error (neither a failed call nor an
+error page such as GitHub's `429: Too Many Requests`, which curl without `-f`
+prints with exit 0), and a `capture.mjs` run whose result lists all six shots
+(375 / 768 / 1440, light and dark) of the final state, or honestly reports that
+nothing could be rendered. The run must start after the last UI edit, judged by
+the touched files' modification times, so screenshots taken before a final
+tweak do not count. A partial matrix, whether shots failed (`Incomplete:`) or
+`--widths` / `--themes` asked for fewer, is not proof, and neither is a run
+labelled `before`. Subagent transcripts
+are read too. `test_skill_text_cannot_satisfy_evidence` holds that line.
+
+The gate works in windows. The first UI change opens one, and receipts count
+only from that point, so an audit run for an earlier task, or the "before"
+capture, never covers a later change. A window closes when a stop finds both
+receipts, or on the stop that follows its one block; the next UI change opens a
+new window and re-arms the reminder and the block.
+
+A UI change made through the shell counts too. The SessionStart hook records
+which files were already uncommitted and where HEAD's reflog stands (resolving
+the repo root when the session starts in a subdirectory), and Stop compares the
+working tree with that, keeping both paths of a rename. It also reads the
+`commit:` entries added to the reflog since then, so a shell edit committed in
+the same turn is seen while other people's commits that a `git pull` or merge
+brings in are not. The mark is a reflog position rather than a time because the
+reflog keeps whole seconds, too coarse to order a commit against the moment a
+window opened. Closing a window moves both marks forward.
+
+Commands in `settings.json` use the exact `${CLAUDE_PROJECT_DIR}` placeholder
+from the Claude Code hooks reference. Hooks run in the session's current
+directory, so a relative path stops resolving after the agent `cd`s into a
+subdirectory, and a POSIX default such as `${CLAUDE_PROJECT_DIR:-.}` is not
+expanded where hooks run under PowerShell.
+
+Re-running `install.sh` never overwrites a `.github/workflows/web-excellence.yml`
+that differs from the pack's. A repo tunes its workflow (action pins, draft
+gating), so the installer reports the difference instead.
 
 ## Tests
 

@@ -314,7 +314,7 @@ npx claude-flow@alpha github version-sync \
 ### Support & Community
 - Issues: https://github.com/ruvnet/claude-flow/issues
 - Discussions: https://github.com/ruvnet/claude-flow/discussions
-- Documentation: https://claude-flow.dev/docs
+- Documentation: https://github.com/ruvnet/claude-flow
 
 ---
 

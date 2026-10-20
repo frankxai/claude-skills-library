@@ -127,7 +127,7 @@ The Framer MCP server has been installed and configured. After restarting Claude
 - [Framer Documentation](https://www.framer.com/docs/)
 - [Framer Motion API](https://www.framer.com/motion/)
 - [Framer Community](https://www.framer.com/community/)
-- [MCP Documentation](https://mcp.unframer.co/)
+- MCP Documentation (unframer; link retired)
 
 ## Version
 

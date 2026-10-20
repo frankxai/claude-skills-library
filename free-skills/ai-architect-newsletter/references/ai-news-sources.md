@@ -74,7 +74,7 @@
 ### Production AI Case Studies
 - **AWS AI Blog**: https://aws.amazon.com/blogs/machine-learning/
 - **Google Cloud Blog**: https://cloud.google.com/blog/products/ai-machine-learning
-- **Azure AI Blog**: https://azure.microsoft.com/en-us/blog/tag/azure-ai/
+- **Azure AI Blog**: https://azure.microsoft.com/en-us/blog/
 
 ### MLOps Platforms
 - **Weights & Biases**: https://wandb.ai/site/articles

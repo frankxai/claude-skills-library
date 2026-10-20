@@ -1,6 +1,6 @@
 ---
 name: your-skill-name
-description: One or two sentences that say WHAT this skill does AND WHEN the agent should load it. Write in the third person, name concrete tasks, and include trigger keywords a user would actually say. Example: "Generate professional release notes from a git history. Use when cutting a release, drafting a changelog, or summarizing commits since the last tag."
+description: 'One or two sentences that say WHAT this skill does AND WHEN the agent should load it. Write in the third person, name concrete tasks, and include trigger keywords a user would actually say. Example: "Generate professional release notes from a git history. Use when cutting a release, drafting a changelog, or summarizing commits since the last tag."'
 ---
 
 # Your Skill Name

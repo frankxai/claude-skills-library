@@ -1,0 +1,293 @@
+{
+  "category": "plain-prefix",
+  "description": "Exact rules, prefix rules, the :* suffix and the trailing space form.",
+  "cases": [
+    {
+      "id": "plain-prefix-01",
+      "description": "Prefix rule with :* matches the command with arguments",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit:*)"
+        ],
+        "deny": []
+      },
+      "command": "git commit -m \"fix\"",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-02",
+      "description": "Prefix rule with :* matches the bare command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit:*)"
+        ],
+        "deny": []
+      },
+      "command": "git commit",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-03",
+      "description": ":* needs a word boundary, so commit-tree is a different subcommand",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit:*)"
+        ],
+        "deny": []
+      },
+      "command": "git commit-tree abc123",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "plain-prefix-04",
+      "description": ":* needs a word boundary, so a longer word does not match",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git commit:*)"
+        ],
+        "deny": []
+      },
+      "command": "git committed",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "plain-prefix-05",
+      "description": "Exact rule matches the identical command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git status)"
+        ],
+        "deny": []
+      },
+      "command": "git status",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-06",
+      "description": "Exact rule does not match the same command with extra arguments",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git status)"
+        ],
+        "deny": []
+      },
+      "command": "git status --short",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "plain-prefix-07",
+      "description": "Exact rule with several words does not match a longer command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(npm run build)"
+        ],
+        "deny": []
+      },
+      "command": "npm run build --watch",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "plain-prefix-08",
+      "description": "Trailing space wildcard matches arguments",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(npm run *)"
+        ],
+        "deny": []
+      },
+      "command": "npm run test --watch",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-09",
+      "description": "Trailing space wildcard also matches the bare command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(npm run *)"
+        ],
+        "deny": []
+      },
+      "command": "npm run",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-10",
+      "description": "Trailing space wildcard does not match a different subcommand",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(npm run *)"
+        ],
+        "deny": []
+      },
+      "command": "npm install left-pad",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "plain-prefix-11",
+      "description": "Space before the wildcard is part of the rule, so lsof is not ls",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(ls *)"
+        ],
+        "deny": []
+      },
+      "command": "lsof -i :8080",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "plain-prefix-12",
+      "description": "Without the space the wildcard also matches lsof",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(ls*)"
+        ],
+        "deny": []
+      },
+      "command": "lsof -i :8080",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-13",
+      "description": "Deny rule applies like an ask rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash(rm *)"
+        ]
+      },
+      "command": "rm -rf build/",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-14",
+      "description": "Deny rule with :* matches arguments",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash(git push:*)"
+        ]
+      },
+      "command": "git push origin main",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-15",
+      "description": "Deny rule matches the bare command",
+      "tool": "Bash",
+      "rules": {
+        "ask": [],
+        "deny": [
+          "Bash(git push *)"
+        ]
+      },
+      "command": "git push",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-16",
+      "description": "An unrelated command is not matched by a different rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": []
+      },
+      "command": "git log --oneline -5",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "plain-prefix-17",
+      "description": "Several rules in both lists, the command matches the last deny rule",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": [
+          "Bash(rm *)",
+          "Bash(curl *)"
+        ]
+      },
+      "command": "curl -s https://example.com",
+      "expect": "passthrough"
+    },
+    {
+      "id": "plain-prefix-18",
+      "description": "Several rules in both lists, none applies",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)",
+          "Bash(git commit *)"
+        ],
+        "deny": [
+          "Bash(rm *)",
+          "Bash(curl *)"
+        ]
+      },
+      "command": "git diff --stat",
+      "expect": "rewrite-eligible"
+    },
+    {
+      "id": "plain-prefix-19",
+      "description": "A colon in the middle of a pattern is a literal character",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git:* push)"
+        ],
+        "deny": []
+      },
+      "command": "git push",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "plain-prefix-20",
+      "description": "A colon in the command token is literal, so build:prod is not build plus arguments",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(npm run build:*)"
+        ],
+        "deny": []
+      },
+      "command": "npm run build:prod",
+      "expect": "rewrite-eligible",
+      "overmatch": true
+    },
+    {
+      "id": "plain-prefix-21",
+      "description": "The same rule in ask and deny still matches",
+      "tool": "Bash",
+      "rules": {
+        "ask": [
+          "Bash(git push *)"
+        ],
+        "deny": [
+          "Bash(git push *)"
+        ]
+      },
+      "command": "git push origin main",
+      "expect": "passthrough"
+    }
+  ]
+}

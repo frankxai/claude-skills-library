@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t d">
+  <title id="t">Claude Skills Library mark</title>
+  <desc id="d">Three stacked skill cards on a dark rounded square, emerald to cyan gradient.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%">
+      <stop offset="0" stop-color="#0c1a15"/>
+      <stop offset="1" stop-color="#0a0a0b"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+  <rect x="1" y="1" width="254" height="254" rx="55" fill="none" stroke="url(#g)" stroke-opacity="0.35" stroke-width="2"/>
+
+  <!-- back card -->
+  <rect x="78" y="58" width="112" height="76" rx="12" fill="none" stroke="url(#g)" stroke-width="4" opacity="0.35"/>
+  <!-- middle card -->
+  <rect x="66" y="82" width="124" height="80" rx="12" fill="#0a0a0b" stroke="url(#g)" stroke-width="4" opacity="0.7"/>
+  <!-- front card -->
+  <rect x="52" y="108" width="140" height="88" rx="14" fill="#0a0a0b" stroke="url(#g)" stroke-width="5"/>
+
+  <!-- frontmatter lines on the front card -->
+  <rect x="72" y="130" width="58" height="8" rx="4" fill="url(#g)"/>
+  <rect x="72" y="150" width="100" height="6" rx="3" fill="#06b6d4" opacity="0.8"/>
+  <rect x="72" y="166" width="84" height="6" rx="3" fill="#10b981" opacity="0.6"/>
+</svg>

@@ -1,0 +1,2 @@
+# LF everywhere so content hashes (packs/*/sync-upstream.sh pins) match on Windows and CI.
+* text=auto eol=lf
