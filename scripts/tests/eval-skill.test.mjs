@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync as makeTemp, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync as makeTemp, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import test, { after } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { comparability, parseArgs, renderScorecard, stage, treeHash } from '../eval-skill.mjs';
 
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const made = [];
 const mkdtempSync = (prefix) => { const d = makeTemp(prefix); made.push(d); return d; };
 after(() => made.forEach((d) => rmSync(d, { recursive: true, force: true })));
@@ -78,6 +80,19 @@ test('unequal arms, errors, skipped judges and partial runs block a lift claim',
   assert.match(problems, /errored/);
   assert.match(problems, /judge graders were skipped/);
   assert.match(renderScorecard('demo', bad, META), /Not comparable, so no claim of lift/);
+});
+
+test('every suite in evals/ tests the free-skills/ copy and stages, with no second copy of a skill', () => {
+  const NOT_SUITES = new Set(['skill-eval', '_runs']);
+  const suites = readdirSync(join(REPO, 'evals'), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !NOT_SUITES.has(d.name)).map((d) => d.name);
+  assert.ok(suites.length >= 11, `expected at least 11 suites, found ${suites.length}`);
+  for (const skill of suites) {
+    assert.ok(existsSync(join(REPO, 'free-skills', skill, 'SKILL.md')), `evals/${skill} has no free-skills/${skill}`);
+    const { cases } = stage(REPO, skill, mkdtempSync(join(tmpdir(), 'eval-skill-all-')));
+    assert.ok(cases.length >= 1, skill);
+    assert.ok(!existsSync(join(REPO, 'packs', 'skills-with-evals', 'skills', skill)), `second copy of ${skill} in packs/`);
+  }
 });
 
 test('treeHash ignores line endings and changes with content', () => {

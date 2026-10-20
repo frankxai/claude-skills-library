@@ -7,7 +7,7 @@
 // is written in the starlight-evals contract (lanes, metrics with provenance, caveats,
 // weakness, ranAt/nextRunDue).
 //
-//   AI_GATEWAY_API_KEY=... MAX_USD=2 node evals/skill-eval/run.mjs
+//   AI_GATEWAY_API_KEY=... MAX_USD=2 [SKILL=ui-ux-design-expert] node evals/skill-eval/run.mjs
 //
 // Lanes whose credentials are missing are reported as `unavailable`, never as passing.
 import { execFileSync } from 'node:child_process';
@@ -159,8 +159,15 @@ function gradePrompt(testCase, answer) {
   ].join('\n');
 }
 
+export function selectCases(cases, skill) {
+  if (!skill) return cases;
+  const picked = cases.filter((c) => c.skill === `free-skills/${skill}`);
+  if (!picked.length) throw new Error(`SKILL=${skill} matches no case in cases.json`);
+  return picked;
+}
+
 async function main() {
-  const cases = JSON.parse(readFileSync(join(HERE, 'cases.json'), 'utf8')).cases;
+  const cases = selectCases(JSON.parse(readFileSync(join(HERE, 'cases.json'), 'utf8')).cases, process.env.SKILL);
   const budget = new Budget(Number(process.env.MAX_USD ?? 2));
   const hasGateway = Boolean(process.env.AI_GATEWAY_API_KEY);
   const hasClaude = Boolean(process.env.CLAUDE_CODE_OAUTH_TOKEN);
