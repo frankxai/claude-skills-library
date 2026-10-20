@@ -38,6 +38,8 @@ Check peer versions against the repo's React before installing; R3F 9 and drei
 - Text over the surface keeps checked contrast; axe cannot see contrast over
   WebGL, so measure it on the screenshot.
 - The h1 and core copy stay in the DOM, never only in the canvas.
+- Reference wrapper: `${CLAUDE_PLUGIN_ROOT}/examples/gpu-glass/` (three.js liquid glass,
+  tested capability gate, 8 ms median frame budget, CSS fallback). Start from it.
 
 Return: decision with reason, engine and version, bundle cost, frame time seen
 on the slowest device you tested, and the poster and reduced-motion paths.

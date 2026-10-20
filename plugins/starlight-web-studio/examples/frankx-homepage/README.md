@@ -14,6 +14,18 @@ One full R4 run of the studio (new page design), kept so a buyer can inspect eve
 | 8. Critique | Codex (different provider) | [critique.md](critique.md) — buyer who declined, then front-end review |
 | 9. Handoff | release-verifier | [handoff.md](handoff.md) — what passed, what is unverified, what the owner decides |
 
+## Capabilities, as used here
+
+| Capability | State | Where |
+|---|---|---|
+| Claude Design | used: three directions and the phone board as live artboards on a Design canvas, reviewed there | canvas artifact, linked from the PR |
+| Codex image generation | used, with a written packet, one rejected render and provenance sidecars | [media/](media/) |
+| GSAP + ScrollTrigger | used: one pinned scene, `matchMedia` cleanup, reduced-motion state | [prototype.html](prototype.html) |
+| CSS liquid glass | used | [prototype.html](prototype.html) |
+| three.js liquid glass | built, measured and compared; not chosen for this page | [../gpu-glass](../gpu-glass/README.md) |
+| Higgsfield video | planned and costed (≤ 25 credits); nothing uploaded or generated until approved | [media/hero-loop.hf-plan.md](media/hero-loop.hf-plan.md) |
+| Claude Motion | not available: no Motion artifact type on this account on 2026-10-20, and it exports MP4 only, so it fits launch films rather than on-page motion | — |
+
 The first render failed its media packet (a chair in the foreground, objects on the headline wall) and was regenerated; the first prototype got "revise" from Codex. Both failures are recorded rather than hidden.
 
 To view the prototype, open `prototype.html` from this folder in a browser; the images load by relative path.

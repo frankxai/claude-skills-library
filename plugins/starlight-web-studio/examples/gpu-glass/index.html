@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FrankX Glass Lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Playfair+Display:ital@1&family=Poppins:wght@600;800&display=swap">
+<style>
+/* The same first screen as ../frankx-homepage/prototype.html, with the CSS glass swapped for a three.js
+   refraction pass where the device earns it. Poster first; the canvas only fades in after its first frame. */
+:root {
+  --void: #0a0a0b;
+  --space: #111113;
+  --text: rgba(255, 255, 255, 0.95);
+  --text-2: rgba(255, 255, 255, 0.78);
+  --text-3: rgba(255, 255, 255, 0.66);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --tech: #10b981;
+  --tech-light: #34d399;
+  --tech-pale: #6ee7b7;
+  --display: "Poppins", system-ui, sans-serif;
+  --body: "Inter", system-ui, sans-serif;
+  --serif: "Playfair Display", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--void); color: var(--text); font: 16px/1.6 var(--body); }
+a { color: var(--tech-light); }
+a:hover { color: var(--tech-pale); }
+a:focus-visible { outline: 2px solid var(--tech-light); outline-offset: 3px; }
+
+.studio { position: relative; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
+.room { position: absolute; inset: 0; background: url("../frankx-homepage/media/hero-390.webp") center top / cover no-repeat; }
+.room canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 400ms var(--ease); }
+.gl-glass .room canvas { opacity: 1; }
+.room::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(10,10,11,0.25) 0%, rgba(10,10,11,0.65) 42%, rgba(10,10,11,0.97) 72%);
+}
+.bar { position: relative; z-index: 2; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); margin-top: env(safe-area-inset-top, 0px); }
+.brand { font: 600 19px var(--display); color: var(--text); text-decoration: none; }
+.scene { position: relative; z-index: 2; margin-top: auto; display: grid; gap: 20px; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
+.copy { display: grid; gap: 18px; max-width: 560px; }
+h1 { margin: 0; font: 800 clamp(2.4rem, 7vw, 4.6rem)/1.03 var(--display); letter-spacing: -0.02em; text-wrap: balance; }
+h1 em { font: italic 400 1em var(--serif); color: var(--tech-light); }
+.deck { margin: 0; font-size: clamp(1rem, 1.6vw, 1.2rem); line-height: 1.65; color: var(--text-2); max-width: 46ch; }
+
+.glass {
+  position: relative; border-radius: 28px; padding: 20px 22px; display: grid; gap: 14px;
+  background: rgba(10, 10, 11, 0.62);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35); backdrop-filter: blur(24px) saturate(1.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 20px 60px rgba(8,15,33,0.45);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .glass { background: rgba(17, 17, 19, 0.94); } }
+@media (prefers-reduced-transparency: reduce) { .glass { background: var(--space); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+/* The shader now does the blur, the refraction and most of the darkening. */
+.gl-glass .glass { background: rgba(10, 10, 11, 0.3); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 20px 60px rgba(8,15,33,0.45); }
+
+.glass-head { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--text-2); }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font: 13px/1.5 var(--mono); }
+.step { display: flex; gap: 12px; color: var(--text-2); }
+.step a { color: inherit; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.3); text-underline-offset: 3px; }
+.step .mark { color: var(--tech-light); width: 1ch; flex: none; }
+.note { font-size: 13px; color: var(--text-3); border-top: 1px solid var(--hairline); padding-top: 12px; margin: 0; }
+.lab { font: 12px/1.5 var(--mono); color: var(--text-3); padding: 16px max(16px, env(safe-area-inset-left, 0px)) 40px; max-width: 1120px; margin: 0 auto; }
+
+@media (min-width: 900px) {
+  .room { background-image: url("../frankx-homepage/media/hero-1440.webp"); background-position: center; }
+  .room::after { background: linear-gradient(90deg, rgba(10,10,11,0.94) 0%, rgba(10,10,11,0.78) 34%, rgba(10,10,11,0.12) 62%, rgba(10,10,11,0) 100%); }
+  .bar { padding-inline: 80px; height: 72px; }
+  .scene { margin-top: 0; flex-grow: 1; align-content: center; padding: 0 80px 64px; grid-template-columns: minmax(0, 5fr) minmax(0, 1fr) minmax(0, 4fr); align-items: center; }
+  .glass { grid-column: 3; align-self: start; margin-top: 4vh; border-radius: 40px; padding: 30px 32px; }
+  .steps { font-size: 14px; gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .room canvas { transition: none; } }
+</style>
+<script type="importmap">
+{
+  "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" },
+  "integrity": { "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js": "sha384-8/hf5tabFfIo0BPku31TKUvGIKpWGYaMwNtlSNqNyZzXgZCMd4lnOGWbJElML9dv" }
+}
+</script>
+</head>
+<body>
+<section class="studio" aria-label="FrankX">
+  <div class="room" role="img" aria-label="A quiet home studio at night: a desk with a closed laptop, an open notebook and a lamp, in front of a window over a city."><canvas aria-hidden="true"></canvas></div>
+  <header class="bar"><a class="brand" href="https://www.frankx.ai/">FrankX</a></header>
+  <div class="scene">
+    <div class="copy">
+      <h1>AI systems you <em>own</em>, built in the open.</h1>
+      <p class="deck">Blueprints I use in my own work, published so you can run them with your own keys.</p>
+    </div>
+    <section class="glass" aria-label="Development snapshot of the web studio">
+      <div class="glass-head"><span>Development snapshot · web studio, 20 Oct 2026</span></div>
+      <ol class="steps">
+        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>brief: <a href="https://github.com/frankxai/claude-skills-library/issues/76">audit 25 live sites, fix the worst</a></span></li>
+        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>build: <a href="https://github.com/frankxai/claude-skills-library/pull/77">11 specialist roles, 52 tests, one draft PR</a></span></li>
+        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>review: <a href="https://github.com/frankxai/claude-skills-library/pull/77#issuecomment-6292699352">six rounds by a second model, reported on the PR</a></span></li>
+        <li class="step"><span class="mark" aria-hidden="true">●</span><span>ship: waiting for a person to approve</span></li>
+      </ol>
+      <p class="note">Each linked step is public on GitHub. The final approval has not happened yet.</p>
+    </section>
+  </div>
+</section>
+<p class="lab" aria-live="off">Glass lab: <span id="mode">CSS glass (script not run)</span></p>
+<script type="module">
+import { mountGlass } from './glass.mjs';
+const root = document.documentElement;
+const label = document.getElementById('mode');
+const show = () => {
+  const ms = root.dataset.glassMs ? `, ${root.dataset.glassMs} ms median frame` : '';
+  label.textContent = root.dataset.glass === 'webgl'
+    ? `three.js refraction${ms}`
+    : `CSS glass (${root.dataset.glassReason}${ms})`;
+};
+const desktop = window.matchMedia('(min-width: 900px)');
+const imageUrl = new URL(desktop.matches ? '../frankx-homepage/media/hero-1440.webp' : '../frankx-homepage/media/hero-390.webp', import.meta.url).href;
+mountGlass({
+  scene: document.querySelector('.studio'),
+  canvas: document.querySelector('.room canvas'),
+  panel: document.querySelector('.glass'),
+  imageUrl,
+}).catch((err) => {
+  root.classList.remove('gl-glass');
+  root.dataset.glass = 'css';
+  root.dataset.glassReason = `WebGL failed: ${err.message}`;
+}).finally(show);
+</script>
+</body>
+</html>
