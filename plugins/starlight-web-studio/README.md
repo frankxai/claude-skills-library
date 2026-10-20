@@ -26,7 +26,14 @@ node plugins/starlight-web-studio/bin/studio-doctor.mjs                         
 node plugins/starlight-web-studio/bin/studio-scan.mjs https://example.com          # markdown report
 node plugins/starlight-web-studio/bin/studio-scan.mjs https://example.com --json   # exit 1 on any P0
 node plugins/starlight-web-studio/bin/studio-sweep.mjs --targets targets.json --out .studio/sweeps
+node plugins/starlight-web-studio/bin/materials-gate.mjs <repo> [--json]         # DESIGN.md, gated glass, one GPU surface, motion score; exit 1 on error
 ```
+
+The materials gate is the rule set behind glass, GPU and GSAP as code: a repo needs a
+`DESIGN.md` in the [open spec's](https://github.com/google-labs-code/design.md) section order
+with tokens, every glass surface gated on reduced transparency, at most one GPU surface per
+page, a poster before any canvas, and a motion score before any motion library. The system it
+enforces is written up in [docs/living-materials-system-Claude-Fable-2026-10-20.md](docs/living-materials-system-Claude-Fable-2026-10-20.md).
 
 ## The team
 
