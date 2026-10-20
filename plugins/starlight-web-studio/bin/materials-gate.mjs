@@ -14,7 +14,7 @@
 
 import { readdirSync, readFileSync, statSync, lstatSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { join, relative, dirname, resolve, extname, basename, sep } from 'node:path';
+import { join, relative, dirname, resolve, extname, basename, sep, isAbsolute } from 'node:path';
 
 export const SECTION_ORDER = [
   'Overview',
@@ -187,23 +187,37 @@ function readAliases(root) {
     try { paths = JSON.parse(text).compilerOptions?.paths ?? {}; } catch { paths = {}; }
     for (const [key, targets] of Object.entries(paths)) {
       if (!key.endsWith('/*') || !Array.isArray(targets)) continue;
-      aliases.push({ prefix: key.slice(0, -1), dirs: targets.map((t) => resolve(root, String(t).replace(/\/?\*$/, ''))) });
+      const dirs = targets
+        .map((t) => resolve(root, String(t).replace(/\/?\*$/, '')))
+        .filter((d) => d === root || insideRoot(root, d));
+      if (dirs.length) aliases.push({ prefix: key.slice(0, -1), dirs });
     }
   }
   if (!aliases.some((a) => a.prefix === '@/')) aliases.push({ prefix: '@/', dirs: [join(root, 'src'), root] });
   return aliases;
 }
 
-function resolveModule(base) {
+// The resolver follows walk()'s one-tree rule: a tsconfig alias or a ../ chain that leaves the
+// scanned root is never touched, so a hostile config cannot make the gate open a UNC share.
+export function insideRoot(root, candidate) {
+  if (/^(\\\\|\/\/)/.test(candidate)) return false;
+  const rel = relative(root, candidate);
+  return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
+}
+
+function resolveModule(root, base) {
+  if (!insideRoot(root, base)) return null;
   for (const ext of ['', '.tsx', '.ts', '.jsx', '.js', '.mjs', '/index.tsx', '/index.ts', '/index.js']) {
     const candidate = base + ext;
-    if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
+    let st;
+    try { st = lstatSync(candidate); } catch { continue; }
+    if (st.isFile()) return candidate;
   }
   return null;
 }
 
 // Local imports: relative, plus tsconfig path aliases. Unresolved ones are reported, not ignored.
-function localImports(file, text, aliases, unresolved) {
+function localImports(root, file, text, aliases, unresolved) {
   const out = [];
   for (const m of text.matchAll(/(?:from\s+|import\(\s*|require\(\s*)['"]([^'"]+)['"]/g)) {
     const spec = m[1];
@@ -218,7 +232,7 @@ function localImports(file, text, aliases, unresolved) {
       }
       candidates = alias.dirs.map((d) => join(d, spec.slice(alias.prefix.length)));
     }
-    const hit = candidates.map(resolveModule).find(Boolean);
+    const hit = candidates.map((c) => resolveModule(root, c)).find(Boolean);
     if (hit) out.push(hit);
     else unresolved.add(spec);
   }
@@ -226,13 +240,13 @@ function localImports(file, text, aliases, unresolved) {
 }
 
 // Transitive closure of local imports, depth-bounded, so a surface behind a barrel still counts.
-function reachable(entry, aliases, unresolved) {
+function reachable(root, entry, aliases, unresolved) {
   const seen = new Set([entry]);
   let frontier = [entry];
   for (let depth = 0; depth < IMPORT_DEPTH && frontier.length; depth += 1) {
     const next = [];
     for (const f of frontier) {
-      for (const dep of localImports(f, code(f), aliases, unresolved)) {
+      for (const dep of localImports(root, f, code(f), aliases, unresolved)) {
         if (!seen.has(dep)) { seen.add(dep); next.push(dep); }
       }
     }
@@ -259,7 +273,7 @@ export function checkGpuSurfaces(root, files) {
   for (const page of pages) {
     const entries = [page, ...layouts.filter((l) => page.startsWith(dirname(l) + sep))];
     const modules = new Set();
-    for (const e of entries) for (const m of reachable(e, aliases, unresolved)) modules.add(m);
+    for (const e of entries) for (const m of reachable(root, e, aliases, unresolved)) modules.add(m);
     const count = [...modules].filter((m) => gpuFiles.has(m)).length;
     if (count > 1) offenders.push(`${relative(root, page)} (${count} GPU modules via page and layouts)`);
   }

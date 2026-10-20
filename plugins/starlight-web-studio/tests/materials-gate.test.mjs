@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { runGate, checkDesignMd, hasYamlTokens, validMotionScore, stripComments, SECTION_ORDER } from '../bin/materials-gate.mjs';
+import { runGate, checkDesignMd, hasYamlTokens, validMotionScore, stripComments, insideRoot, SECTION_ORDER } from '../bin/materials-gate.mjs';
 
 const GATE = fileURLToPath(new URL('../bin/materials-gate.mjs', import.meta.url));
 
@@ -230,6 +230,23 @@ test('tests, fixtures, .studio prototypes, dot folders and build output are neve
   });
   const result = runGate(root);
   assert.equal(result.errors, 0, JSON.stringify(result.checks));
+});
+
+test('alias targets and ../ imports that leave the scanned root are never resolved', () => {
+  assert.equal(insideRoot('C:\\repo', '\\\\attacker\\share\\x'), false);
+  assert.equal(insideRoot('/repo', '//attacker/share/x'), false);
+  assert.equal(insideRoot(join(tmpdir(), 'r'), join(tmpdir(), 'other', 'x.ts')), false);
+  assert.equal(insideRoot(join(tmpdir(), 'r'), join(tmpdir(), 'r', 'src', 'x.ts')), true);
+  const outside = fixture({ 'leak/orb.tsx': `import * as THREE from 'three';\n` });
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'tsconfig.json': JSON.stringify({ compilerOptions: { paths: { '@/*': ['\\\\\\\\attacker\\\\share\\\\*', '../../*'], '~/*': [outside.replace(/\\/g, '/') + '/*'] } } }),
+    'app/page.tsx': `import { A } from '@/leak/orb';\nimport { B } from '~/leak/orb';\nimport { C } from '${'../'.repeat(6)}etc/passwd';\n`,
+  });
+  const check = byId(runGate(root), 'one-gpu-surface');
+  assert.equal(check.ok, true, check.detail);
+  assert.match(check.detail, /^0 GPU module/);
+  assert.match(check.detail, /unresolved, coverage incomplete/);
 });
 
 test('the CLI runs from a path with spaces, prints a report and exits 1 on a failing repo', () => {
