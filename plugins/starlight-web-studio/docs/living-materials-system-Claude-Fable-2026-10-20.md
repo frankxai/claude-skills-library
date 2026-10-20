@@ -148,6 +148,10 @@ First run of the gate on the two reference candidates (`node bin/materials-gate.
 | gencreator.ai (668 shipping files) | warn: prose, no YAML tokens | ok: 4 CSS blur files, 0 refracting | ok: 6 renderer modules, no route reaches two over 76 pages, 76 routes, 1 layout; coverage complete | error: 6 three.js scenes never reference visibility handling | warn: the same 6 name no poster | error: 38 motion files, no score | warn: 180 colour literals (hex, rgb, hsl, oklch) |
 | starlight-intelligence-web (316 shipping files) | error: no DESIGN.md | ok: 10 CSS blur files, no refraction | ok: 0 GPU modules; coverage complete | ok | ok | error: 9 motion files, no score | ok: 14 |
 
+Coverage on both: every local import resolved inside the root; the only gap is packages not
+found under `node_modules` (pnpm does not hoist transitive ones), reported as a warning so a
+PASS can never hide an unfollowed import.
+
 The first, regex-based cut of the gate reported two ungated refraction files on gencreator.ai
 (`LiquidGlassZoom.tsx`, `lib/brand-system.ts`). Both were name-only false positives: the
 component carries no displacement filter and is rendered nowhere, and the second hit was the

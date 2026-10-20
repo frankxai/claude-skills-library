@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
   runGate, checkDesignMd, hasYamlTokens, validMotionScore, lex, importsOf, readAliases,
-  insideRoot, pathHasLink, SECTION_ORDER,
+  insideRoot, pathHasLink, stripJsonc, SECTION_ORDER,
 } from '../bin/materials-gate.mjs';
 
 const GATE = fileURLToPath(new URL('../bin/materials-gate.mjs', import.meta.url));
@@ -42,8 +42,13 @@ const GATED_GLASS = `import { gpuPlan } from './glass-gate';
 export function Glass() { return gpuPlan(env).mode === 'webgl' ? <LiquidGlass /> : <div className="blur" />; }
 `;
 
-function fixture(files) {
+const KNOWN_PACKAGES = ['three', 'gsap', '@react-three/fiber', 'ogl', 'liquidgl', 'lenis', 'motion', 'framer-motion', '@gsap/react', 'react'];
+
+// Every fixture ships stub packages so a bare specifier is a verified package, except where a
+// test is about node_modules being absent.
+function fixture(files, { packages = true } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'materials-gate-'));
+  if (packages) for (const p of KNOWN_PACKAGES) files = { ...files, [`node_modules/${p}/package.json`]: '{}' };
   for (const [rel, content] of Object.entries(files)) {
     const full = join(root, rel);
     mkdirSync(dirname(full), { recursive: true });
@@ -65,8 +70,9 @@ test('lexer: comments become a space, strings become empty quotes, specifiers ar
   assert.doesNotMatch(code, /https/);
   assert.match(code, /  Plan\( /);
   assert.doesNotMatch(code, /tail/);
-  assert.deepEqual(strings.map((s) => s.value), ['https://x//asset', 'three', 'ac']);
+  assert.deepEqual(strings.map((s) => s.value), ['https://x//asset', 'three', 'a${}c']);
   assert.equal(strings[2].template, true);
+  assert.match(code, /\$\{b\}/);
 });
 
 test('importsOf: static, side-effect, dynamic, require; type-only forms dropped, strings never read as code', () => {
@@ -81,12 +87,160 @@ const g = await import('gsap/ScrollTrigger');
 const l = require('lenis');
 const fake = "from 'motion'";
 `);
-  assert.deepEqual(importsOf(f), ['gsap', 'three', 'gsap/ScrollTrigger', 'lenis']);
+  assert.deepEqual([...importsOf(f)], ['gsap', 'three', 'gsap/ScrollTrigger', 'lenis']);
 });
 
 test('a runtime import on the same line as a type import survives', () => {
   const f = file(`import type { X } from 'three'; import gsap from 'gsap';\n`);
-  assert.deepEqual(importsOf(f), ['gsap']);
+  assert.deepEqual([...importsOf(f)], ['gsap']);
+});
+
+test('lexer: regex literals and JSX apostrophes are not strings; a regex cannot satisfy a check', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'a/glass.tsx': `const rx = /'/; export default () => <LiquidGlass />;\n`,
+    'b/glass.tsx': `export default () => <><p>Don't</p><LiquidGlass /></>;\n`,
+    'c/scroll.tsx': `const q = /"/; import gsap from 'gsap';\n`,
+    'd/glass.tsx': `const g = /gpuPlan(\\s*)/; export const D = () => <LiquidGlass />;\n`,
+    'e/orb.tsx': `import * as THREE from 'three';\nconst r = new THREE.WebGLRenderer();\nconst io = /IntersectionObserver/;\nconst half = 4 / 2 / 1;\n`,
+  });
+  const result = runGate(root);
+  const glass = byId(result, 'glass-gated');
+  for (const f of ['a', 'b', 'd']) assert.match(glass.detail, new RegExp(`${f}[\\\\/]glass\\.tsx`));
+  assert.match(byId(result, 'motion-scored').detail, /^1 file\(s\) import a motion library/);
+  assert.equal(byId(result, 'gpu-lifecycle').level, 'error');
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
+test('lexer: nested templates and substitutions cannot hide code; template imports resolve or fail coverage', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'a/lens.tsx': "import liquidGL from 'liquidgl';\nconst s = `${liquidGL({})}`;\nconst t = `outer ${`inner ${'}'} ` } tail`;\nimport gsap from 'gsap';\n",
+    'app/page.tsx': "const a = import(`../b/orb`);\nconst b = import(`../b/${name}`);\n",
+    'b/orb.tsx': GOOD_RENDERER,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'glass-gated').detail, /lens\.tsx/);
+  assert.match(byId(result, 'motion-scored').detail, /^1 file/);
+  assert.match(byId(result, 'one-gpu-surface').detail, /^2 renderer module/);
+  assert.match(byId(result, 'coverage').detail, /template with a substitution: app[\\/]page\.tsx/);
+});
+
+test('importsOf: a default binding beside type names keeps the import; re-exports count; export type does not', () => {
+  const f = file(`import type { X } from './types';\nimport Scene, { type P } from './scene';\nexport { Grid } from './grid';\nexport * as Sky from './sky';\nexport type { T } from './t';\n`);
+  assert.deepEqual([...importsOf(f)], ['./scene', './grid', './sky']);
+});
+
+test('renderer detection follows import aliases', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'components/orb.tsx': `import { WebGLRenderer as GL } from 'three';\nexport const Orb = () => { new GL(); return null; };\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'one-gpu-surface').detail, /^1 renderer module/);
+  assert.equal(byId(result, 'gpu-lifecycle').level, 'error');
+});
+
+test('resolver: bare imports resolve through baseUrl, tsconfig extends is followed, packages need node_modules', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'tsconfig.base.json': `{ "compilerOptions": { "baseUrl": "src", "paths": { "@scene/*": ["scenes/*"] } } }`,
+    'tsconfig.json': `{ "extends": "./tsconfig.base.json", "compilerOptions": { "strict": true } }`,
+    'src/app/page.tsx': `import { A } from 'scenes/a';\nimport { B } from '@scene/b';\nimport React from 'react';\n`,
+    'src/scenes/a.tsx': GOOD_RENDERER,
+    'src/scenes/b.tsx': GOOD_RENDERER,
+    'node_modules/react/index.js': 'module.exports = {};',
+  });
+  const result = runGate(root);
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  assert.equal(byId(result, 'one-gpu-surface').level, 'error');
+  const noNm = fixture({ 'DESIGN.md': GOOD_DESIGN, 'app/page.tsx': `import React from 'react';\nimport { join } from 'node:path';\nimport fs from 'fs';\n` }, { packages: false });
+  const c = byId(runGate(noNm), 'coverage');
+  assert.equal(c.level, 'warn');
+  assert.match(c.detail, /assumed to be packages .*: react$/);
+  const missing = fixture({ 'DESIGN.md': GOOD_DESIGN, 'app/page.tsx': `import x from 'ghost-pkg';\n` });
+  const m = byId(runGate(missing), 'coverage');
+  assert.equal(m.level, 'warn');
+  assert.match(m.detail, /ghost-pkg/);
+});
+
+test('tsconfig with inline comments and trailing commas is read', () => {
+  assert.deepEqual(JSON.parse(stripJsonc(`{ "a": "x // not a comment", // real\n "b": [1, 2,], /* c */ }`)), { a: 'x // not a comment', b: [1, 2] });
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'tsconfig.json': `{ "compilerOptions": { "paths": { "@/*": ["./src/*"] }, // alias\n "strict": true, } }`,
+    'src/app/page.tsx': `import { A } from '@/a';\n`,
+    'src/a.tsx': `export const A = 1;\n`,
+  });
+  assert.equal(byId(runGate(root), 'coverage').ok, true, byId(runGate(root), 'coverage').detail);
+});
+
+test('resolver: an alias target outside the root is reported, not silently treated as a package', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'tsconfig.json': `{ "compilerOptions": { "paths": { "@ext": ["../../elsewhere"] } } }`,
+    'app/page.tsx': `import { X } from '@ext';\n`,
+  });
+  const c = byId(runGate(root), 'coverage');
+  assert.equal(c.level, 'error');
+  assert.match(c.detail, /alias @ext target \.\.\/\.\.\/elsewhere is outside the scanned root/);
+});
+
+test('resolver: import spelling that differs in case still matches the walked file on this platform', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import { A } from '../components/a';\nimport { B } from '../components/b';\n`,
+    'components/A.tsx': GOOD_RENDERER,
+    'components/B.tsx': GOOD_RENDERER,
+  });
+  const result = runGate(root);
+  if (process.platform === 'win32' || process.platform === 'darwin') {
+    assert.equal(byId(result, 'one-gpu-surface').level, 'error');
+  } else {
+    assert.equal(byId(result, 'coverage').level, 'error');
+  }
+});
+
+test('glass: an unrelated reduced-transparency string beside a different matchMedia call is not a gate', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'a/glass.tsx': `const note = 'prefers-reduced-transparency';\nconst m = matchMedia('(min-width: 1px)');\nexport const A = () => <LiquidGlass />;\n`,
+  });
+  assert.equal(byId(runGate(root), 'glass-gated').level, 'error');
+});
+
+test('glass: a stylesheet applying a displacement SVG is an ungated consumer; a loose substring is not a reference', () => {
+  const css = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'public/refract.svg': `<svg><feDisplacementMap scale="20"/></svg>`,
+    'app/globals.css': `.hero { filter: url(/refract.svg#x); }\n`,
+    'lib/notes.ts': `import { gpuPlan } from './glass-gate';\nconst doc = 'see refract.svg for details';\ngpuPlan();\n`,
+    'lib/glass-gate.ts': `export const gpuPlan = () => ({});\n`,
+  });
+  const check = byId(runGate(css), 'glass-gated');
+  assert.equal(check.level, 'error');
+  assert.match(check.detail, /refract\.svg via app[\\/]globals\.css/);
+});
+
+test('routes: a renderer in a slot layout or default beside a page renderer is two on that route', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children, overlay }) => <>{children}{overlay}</>;\n`,
+    'app/page.tsx': `import { Orb } from '../components/orb';\n`,
+    'app/@overlay/layout.tsx': `import { Bg } from '../../components/bg';\n`,
+    'app/@overlay/default.tsx': `export default () => null;\n`,
+    'components/orb.tsx': GOOD_RENDERER,
+    'components/bg.tsx': GOOD_RENDERER,
+  });
+  const check = byId(runGate(root), 'one-gpu-surface');
+  assert.equal(check.level, 'error');
+  assert.match(check.detail, /app \(2 renderer modules/);
+});
+
+test('motion score: the column must be reduced-motion and a separator row must follow the header', () => {
+  assert.equal(validMotionScore(`| Beat | Reduced cost |\n|---|---|\n| x | 0 |\n`), false);
+  assert.equal(validMotionScore(`| Beat | Reduced-motion state |\n| x | static |\n`), false);
+  assert.equal(validMotionScore(`| Beat | Reduced motion |\n|:---|:---|\n| reveal | static |\n`), true);
 });
 
 // --- DESIGN.md -----------------------------------------------------------------------------
@@ -236,7 +390,7 @@ test('parallel route slots render together and are counted as one route', () => 
   });
   const check = byId(runGate(root), 'one-gpu-surface');
   assert.equal(check.level, 'error');
-  assert.match(check.detail, /app \(2 renderer modules via 2 page/);
+  assert.match(check.detail, /app \(2 renderer modules via 3 route file/);
 });
 
 test('a helper that imports three for maths is not a renderer and owes no lifecycle', () => {
