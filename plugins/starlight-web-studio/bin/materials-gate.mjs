@@ -4,13 +4,14 @@
 //
 //   node materials-gate.mjs <repoDir> [--json]
 //
-// Owned here: design-md, glass-gated, gpu-lifecycle, one-gpu-surface, poster-first,
-// motion-scored, raw-colour. A static scan proves absence of a pattern, never runtime
-// behaviour: the one-surface budget and the gate's effect on renderer creation are enforced
-// in the materials wrapper, and this file says so in its own output.
+// Owned here: design-md, glass-gated, one-gpu-surface, gpu-lifecycle, poster-first,
+// motion-scored, raw-colour, coverage. A static scan proves a pattern is absent from shipped
+// source; it never proves a page behaves. PASS means every rule held AND every local import
+// was resolved: incomplete coverage is a failure, never a pass.
 //
-// Not covered, by design: raw WebGL written without a library, CDN script tags, and
-// refraction behind a build-time plugin. Declare those in DESIGN.md Do's and Don'ts.
+// Not covered, by design: raw WebGL written without a library, CDN script tags, refraction
+// behind a build-time plugin, and whether a gate call actually prevents renderer creation.
+// Those belong to the materials wrapper and the eye pass.
 
 import { readdirSync, readFileSync, statSync, lstatSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -35,36 +36,34 @@ const SECTION_ALIASES = {
 };
 
 const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', 'build', '.git', '.turbo', 'coverage', '.worktrees', 'out']);
-// Studio evidence holds prototypes and scores: scores count, prototypes are never judged as product code.
 const EVIDENCE_RE = /[\\/]\.studio[\\/]/;
-// Tests, fixtures and stories are not shipped; a string in a test must not fail the product.
-const NON_SHIPPING_RE = /[\\/](tests?|__tests__|fixtures?|__fixtures__|__mocks__|stories|e2e)[\\/]|\.(test|spec|stories)\.[cm]?[jt]sx?$/;
-const SOURCE_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.css', '.scss', '.html', '.astro', '.svelte', '.vue']);
+// Tests, fixtures and stories are not shipped; the pattern anchors at the root or a separator.
+const NON_SHIPPING_RE = /(^|[\\/])(tests?|__tests__|fixtures?|__fixtures__|__mocks__|stories|e2e)[\\/]|\.(test|spec|stories)\.[cm]?[jt]sx?$/;
+const JS_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.astro', '.svelte', '.vue']);
+const STYLE_EXT = new Set(['.css', '.scss', '.html']);
 const FILTER_EXT = new Set(['.svg']);
-const TOKEN_FILE_RE = /(^|[\\/])(tailwind\.config\.[cm]?[jt]s|globals?\.css|tokens?\.[cm]?[jt]s|theme\.[cm]?[jt]s|design\.sidecar\.json|DESIGN\.md|design\.md)$|[\\/]tokens?[\\/]/i;
+const TOKEN_FILE_RE = /(^|[\\/])(tailwind\.config\.[cm]?[jt]s|globals?\.css|tokens?\.[cm]?[jt]s|theme\.[cm]?[jt]s|design\.sidecar\.json|DESIGN\.md|design\.md)$|(^|[\\/])tokens?[\\/]/i;
 
-// Import forms a bundler honours: static, dynamic and CommonJS. Type-only imports ship nothing.
-function importRe(packages) {
-  return new RegExp(`(?:from\\s+|import\\(\\s*|require\\(\\s*)['"](?:${packages})(?:\\/[^'"]*)?['"]`);
-}
-const GPU_PACKAGES = 'three|@react-three\\/fiber|@react-three\\/drei|ogl|@paper-design\\/shaders(?:-react)?|liquidgl';
-const MOTION_PACKAGES = 'gsap|@gsap\\/react|lenis|motion|framer-motion';
-const GPU_IMPORT_RE = importRe(GPU_PACKAGES);
-const MOTION_IMPORT_RE = importRe(MOTION_PACKAGES);
-const TYPE_IMPORT_RE = /^\s*import\s+type\s.*$/gm;
+const GPU_PACKAGES = /^(three|@react-three\/fiber|@react-three\/drei|ogl|@paper-design\/shaders(-react)?|liquidgl)(\/|$)/;
+const MOTION_PACKAGES = /^(gsap|@gsap\/react|lenis|motion|framer-motion)(\/|$)/;
+// A renderer module creates a drawing surface. A helper that imports three for maths is not one.
+const RENDERER_RE = /new\s+(?:THREE\.)?(?:WebGLRenderer|WebGPURenderer|Renderer)\b|<Canvas\b|<(?:MeshGradient|GrainGradient|Dithering|Warp|DotOrbit|Waves|ShaderMount)\b|liquidGL\s*\(/;
 
-// CSS blur is the ladder's baseline tier and needs no gate. Refraction (SVG displacement, a
-// liquid-glass module, liquidGL) moves pixels and must be gated on device and preference.
+// CSS blur is the ladder's baseline tier and needs no gate. Refraction moves pixels and must
+// be gated on device and preference: an SVG displacement filter, a LiquidGlass component or
+// the liquidGL library.
 const GLASS_CSS_RE = /backdrop-filter/i;
-const GLASS_RE = /feDisplacementMap|liquid-?glass|liquidgl/i;
-// A gate is a call or an import, never a word in a comment.
-const GLASS_GATE_RE = /matchMedia\([^)]*reduced-transparency|gpuPlan\(|useGlassPlan\(|(?:from\s+|import\(\s*|require\(\s*)['"][^'"]*(?:glass-gate|@starlight\/materials)[^'"]*['"]/;
-const LIFECYCLE_RE = /IntersectionObserver|visibilitychange|document\.hidden/;
-const POSTER_RE = /poster|<noscript|fallback/i;
+const GLASS_JS_RE = /<feDisplacementMap\b|<LiquidGlass\w*\b|liquidGL\s*\(/;
+const GLASS_FILE_RE = /<feDisplacementMap\b/;
+const GLASS_GATE_CALL_RE = /\bgpuPlan\s*\(|\buseGlassPlan\s*\(/;
+const GLASS_GATE_MEDIA_RE = /prefers-reduced-transparency/;
+const GLASS_GATE_MODULE_RE = /(^|\/)glass-gate(\.[cm]?[jt]s)?$|^@starlight\/materials(\/|$)/;
+const LIFECYCLE_RE = /\bIntersectionObserver\b|document\.hidden|\bonvisibilitychange\b/;
+const POSTER_RE = /\bposter\b|<noscript|\bfallback\b/i;
 const COLOUR_RE = /#(?:[0-9a-f]{3}){1,2}\b|\b(?:rgb|hsl|oklch|oklab)a?\([^)]*\)/gi;
 const RAW_COLOUR_WARN_AT = 20;
 const LIST_CAP = 8;
-const IMPORT_DEPTH = 6;
+const IMPORT_DEPTH = 12;
 
 function listed(items) {
   return items.length > LIST_CAP ? `${items.slice(0, LIST_CAP).join(', ')} (+${items.length - LIST_CAP} more)` : items.join(', ');
@@ -73,12 +72,10 @@ function listed(items) {
 export function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
     if (SKIP_DIRS.has(name)) continue;
-    // Dot folders hold other worktrees, browser profiles and tool caches; only studio evidence counts.
     if (name.startsWith('.') && name !== '.studio') continue;
     const full = join(dir, name);
     let st;
     try { st = lstatSync(full); } catch { continue; }
-    // Junctions and symlinks can point at another repo or loop; a gate judges one tree.
     if (st.isSymbolicLink()) continue;
     if (st.isDirectory()) walk(full, out);
     else out.push(full);
@@ -86,7 +83,6 @@ export function walk(dir, out = []) {
   return out;
 }
 
-// Each check re-visits the same files; read each one once per run.
 const readCache = new Map();
 function read(file) {
   if (readCache.has(file)) return readCache.get(file);
@@ -96,21 +92,104 @@ function read(file) {
   return text;
 }
 
-// Pattern checks run on code, not on comments: a `// reduced-transparency` note gates nothing.
-const codeCache = new Map();
-export function stripComments(text) {
-  return text
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:\\])\/\/[^\n]*/g, '$1')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(TYPE_IMPORT_RE, '');
-}
-function code(file) {
-  if (!codeCache.has(file)) codeCache.set(file, stripComments(read(file)));
-  return codeCache.get(file);
+// --- lexer ---------------------------------------------------------------------------------
+// Walks the source once. Comments become a single space (so tokens never merge), string and
+// template literals become empty quotes (so a string can never impersonate a call), and every
+// string literal is kept beside its offset so import specifiers can still be read.
+export function lex(text) {
+  let code = '';
+  const strings = [];
+  const n = text.length;
+  let i = 0;
+  while (i < n) {
+    const c = text[i];
+    const d = text[i + 1];
+    if (c === '/' && d === '/') {
+      while (i < n && text[i] !== '\n') i += 1;
+      code += ' ';
+      continue;
+    }
+    if (c === '/' && d === '*') {
+      const end = text.indexOf('*/', i + 2);
+      i = end === -1 ? n : end + 2;
+      code += ' ';
+      continue;
+    }
+    if (c === '<' && text.startsWith('<!--', i)) {
+      const end = text.indexOf('-->', i + 4);
+      i = end === -1 ? n : end + 3;
+      code += ' ';
+      continue;
+    }
+    if (c === '"' || c === "'" || c === '`') {
+      const quote = c;
+      let j = i + 1;
+      let value = '';
+      let depth = 0;
+      while (j < n) {
+        const ch = text[j];
+        if (ch === '\\') { value += text[j + 1] ?? ''; j += 2; continue; }
+        if (quote === '`' && ch === '$' && text[j + 1] === '{') { depth += 1; j += 2; continue; }
+        if (quote === '`' && depth > 0 && ch === '}') { depth -= 1; j += 1; continue; }
+        if (ch === quote && depth === 0) break;
+        if (quote !== '`' && ch === '\n') break;
+        if (depth === 0) value += ch;
+        j += 1;
+      }
+      strings.push({ at: code.length, value, template: quote === '`' });
+      code += quote + quote;
+      i = j + 1;
+      continue;
+    }
+    code += c;
+    i += 1;
+  }
+  return { code, strings };
 }
 
-const isSource = (f) => SOURCE_EXT.has(extname(f));
+const lexCache = new Map();
+function lexed(file) {
+  if (!lexCache.has(file)) {
+    const ext = extname(file);
+    lexCache.set(file, JS_EXT.has(ext) ? lex(read(file)) : { code: stripStyleComments(read(file)), strings: [] });
+  }
+  return lexCache.get(file);
+}
+function stripStyleComments(text) {
+  return text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/<!--[\s\S]*?-->/g, ' ');
+}
+const code = (file) => lexed(file).code;
+
+// Import specifiers: `from "x"`, `import "x"`, `import("x")`, `require("x")`, with the
+// specifier read back from the lexer. Type-only imports (`import type …` and `import { type A,
+// type B }`) are dropped because they ship nothing.
+export function importsOf(file) {
+  const { code: src, strings } = lexed(file);
+  const out = [];
+  for (const s of strings) {
+    if (s.template) continue;
+    const before = src.slice(Math.max(0, s.at - 400), s.at);
+    let kind = null;
+    if (/\bfrom\s*$/.test(before)) kind = 'from';
+    else if (/\bimport\s*$/.test(before)) kind = 'side-effect';
+    else if (/\b(?:import|require)\s*\(\s*$/.test(before)) kind = 'call';
+    if (!kind) continue;
+    if (kind === 'from') {
+      const stmt = before.slice(before.lastIndexOf('import'));
+      if (/^import\s+type\b/.test(stmt)) continue;
+      const names = stmt.match(/\{([^}]*)\}/);
+      if (names) {
+        const specs = names[1].split(',').map((x) => x.trim()).filter(Boolean);
+        if (specs.length && specs.every((x) => /^type\s/.test(x))) continue;
+      }
+    }
+    out.push(s.value);
+  }
+  return out;
+}
+
+const isJs = (f) => JS_EXT.has(extname(f));
+const isStyle = (f) => STYLE_EXT.has(extname(f));
 
 function findDesignMd(root) {
   for (const name of ['DESIGN.md', 'design.md']) {
@@ -120,7 +199,6 @@ function findDesignMd(root) {
   return null;
 }
 
-// Tokens are YAML with at least one `key: value` line, in front matter or a yaml block.
 export function hasYamlTokens(text) {
   const front = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   const blocks = [...text.matchAll(/```ya?ml\r?\n([\s\S]*?)```/g)].map((m) => m[1]);
@@ -160,57 +238,53 @@ export function checkDesignMd(root) {
   return { id: 'design-md', level: 'info', ok: true, detail: `${rel}: ${canonical.length} spec sections, YAML tokens present; structure only, run npx @google/design.md lint for the schema` };
 }
 
+function isGated(file) {
+  const src = code(file);
+  if (GLASS_GATE_CALL_RE.test(src)) return true;
+  if (lexed(file).strings.some((s) => GLASS_GATE_MEDIA_RE.test(s.value)) && /\bmatchMedia\s*\(/.test(src)) return true;
+  return importsOf(file).some((spec) => GLASS_GATE_MODULE_RE.test(spec));
+}
+
 export function checkGlass(root, files) {
   const offenders = [];
+  const orphanSvgs = [];
   let cssBlur = 0;
   let refracting = 0;
+  const jsFiles = files.filter(isJs);
   for (const f of files) {
-    if (!isSource(f) && !FILTER_EXT.has(extname(f))) continue;
-    const text = code(f);
-    if (GLASS_CSS_RE.test(text)) cssBlur += 1;
-    if (!GLASS_RE.test(text)) continue;
-    refracting += 1;
-    if (!GLASS_GATE_RE.test(text)) offenders.push(relative(root, f));
-  }
-  return offenders.length
-    ? { id: 'glass-gated', level: 'error', ok: false, detail: `refracting glass with no gate call or gate import in code: ${listed(offenders)}` }
-    : { id: 'glass-gated', level: 'info', ok: true, detail: `${cssBlur} CSS blur file(s) (baseline tier, no gate needed), ${refracting} refracting glass file(s), each imports or calls a gate` };
-}
-
-function readAliases(root) {
-  const aliases = [];
-  for (const name of ['tsconfig.json', 'jsconfig.json']) {
-    const p = join(root, name);
-    if (!existsSync(p)) continue;
-    const text = read(p).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/,\s*([}\]])/g, '$1');
-    let paths;
-    try { paths = JSON.parse(text).compilerOptions?.paths ?? {}; } catch { paths = {}; }
-    for (const [key, targets] of Object.entries(paths)) {
-      if (!key.endsWith('/*') || !Array.isArray(targets)) continue;
-      const dirs = targets
-        .map((t) => resolve(root, String(t).replace(/\/?\*$/, '')))
-        .filter((d) => d === root || insideRoot(root, d));
-      if (dirs.length) aliases.push({ prefix: key.slice(0, -1), dirs });
+    const src = code(f);
+    if ((isJs(f) || isStyle(f)) && GLASS_CSS_RE.test(src)) cssBlur += 1;
+    if (isJs(f) || isStyle(f)) {
+      if (!GLASS_JS_RE.test(src)) continue;
+      refracting += 1;
+      if (!isGated(f)) offenders.push(relative(root, f));
+    } else if (FILTER_EXT.has(extname(f)) && GLASS_FILE_RE.test(src)) {
+      // An external filter inherits the gate of the code that references it.
+      refracting += 1;
+      const name = basename(f);
+      const consumers = jsFiles.filter((j) => lexed(j).strings.some((s) => s.value.includes(name)));
+      if (!consumers.length) orphanSvgs.push(relative(root, f));
+      else if (!consumers.every(isGated)) offenders.push(`${relative(root, f)} via ${consumers.filter((j) => !isGated(j)).map((j) => relative(root, j)).join(', ')}`);
     }
   }
-  if (!aliases.some((a) => a.prefix === '@/')) aliases.push({ prefix: '@/', dirs: [join(root, 'src'), root] });
-  return aliases;
+  if (offenders.length) {
+    return { id: 'glass-gated', level: 'error', ok: false, detail: `refracting glass with no gate call or gate import in the code that ships it: ${listed(offenders)}` };
+  }
+  const orphan = orphanSvgs.length ? `; ${orphanSvgs.length} displacement SVG(s) referenced by no source file, check CSS url() use by eye: ${listed(orphanSvgs)}` : '';
+  return { id: 'glass-gated', level: orphanSvgs.length ? 'warn' : 'info', ok: !orphanSvgs.length, detail: `${cssBlur} CSS blur file(s) (baseline tier, no gate needed), ${refracting} refracting glass file(s)${offenders.length ? '' : ', each gated in code'}${orphan}` };
 }
 
-// The resolver follows walk()'s one-tree rule: a tsconfig alias or a ../ chain that leaves the
-// scanned root is never touched, so a hostile config cannot make the gate open a UNC share.
+// --- module graph --------------------------------------------------------------------------
+
 export function insideRoot(root, candidate) {
   if (/^(\\\\|\/\/)/.test(candidate)) return false;
   const rel = relative(root, candidate);
   return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
 }
 
-// A junction inside the root can still point at a share, so every directory between the root
-// and a candidate is checked for a link before anything under it is stat'ed.
 const linkCache = new Map();
 export function pathHasLink(root, candidate) {
-  const rel = relative(root, candidate);
-  const parts = rel.split(/[\\/]/).filter(Boolean);
+  const parts = relative(root, candidate).split(/[\\/]/).filter(Boolean);
   let dir = root;
   for (const part of parts.slice(0, -1)) {
     dir = join(dir, part);
@@ -224,10 +298,35 @@ export function pathHasLink(root, candidate) {
   return false;
 }
 
+// tsconfig `paths` as TypeScript defines them: targets resolve against `baseUrl` when set, else
+// the config's directory; exact keys and `prefix/*` keys both count; longest key wins.
+export function readAliases(root) {
+  const aliases = [];
+  for (const name of ['tsconfig.json', 'jsconfig.json']) {
+    const p = join(root, name);
+    if (!existsSync(p)) continue;
+    const text = read(p).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/,\s*([}\]])/g, '$1');
+    let opts;
+    try { opts = JSON.parse(text).compilerOptions ?? {}; } catch { opts = {}; }
+    const base = opts.baseUrl ? resolve(root, opts.baseUrl) : root;
+    for (const [key, targets] of Object.entries(opts.paths ?? {})) {
+      if (!Array.isArray(targets)) continue;
+      const wildcard = key.endsWith('/*');
+      const dirs = targets
+        .map((t) => resolve(base, String(t).replace(/\/?\*$/, '')))
+        .filter((d) => d === root || insideRoot(root, d));
+      if (dirs.length) aliases.push({ key: wildcard ? key.slice(0, -1) : key, wildcard, dirs });
+    }
+  }
+  if (!aliases.some((a) => a.key === '@/')) aliases.push({ key: '@/', wildcard: true, dirs: [join(root, 'src'), root] });
+  return aliases.sort((a, b) => b.key.length - a.key.length);
+}
+
 function resolveModule(root, base) {
   if (!insideRoot(root, base) || pathHasLink(root, base)) return null;
   for (const ext of ['', '.tsx', '.ts', '.jsx', '.js', '.mjs', '/index.tsx', '/index.ts', '/index.js']) {
-    const candidate = base + ext;
+    // Normalised, so the path is byte-identical to the one walk() produced and set lookups hold.
+    const candidate = resolve(base + ext);
     if (ext.startsWith('/') && pathHasLink(root, candidate)) continue;
     let st;
     try { st = lstatSync(candidate); } catch { continue; }
@@ -236,21 +335,18 @@ function resolveModule(root, base) {
   return null;
 }
 
-// Local imports: relative, plus tsconfig path aliases. Unresolved ones are reported, not ignored.
-function localImports(root, file, text, aliases, unresolved) {
+function localImports(root, file, aliases, unresolved) {
   const out = [];
-  for (const m of text.matchAll(/(?:from\s+|import\(\s*|require\(\s*)['"]([^'"]+)['"]/g)) {
-    const spec = m[1];
+  for (const spec of importsOf(file)) {
     let candidates = [];
     if (spec.startsWith('.')) candidates = [resolve(dirname(file), spec)];
     else {
-      const alias = aliases.find((a) => spec.startsWith(a.prefix));
+      const alias = aliases.find((a) => (a.wildcard ? spec.startsWith(a.key) : spec === a.key));
       if (!alias) {
-        // `~/x` and `#x` are project-local by convention; a bare name is a package and is not ours to resolve.
         if (/^[~#]/.test(spec)) unresolved.add(spec);
         continue;
       }
-      candidates = alias.dirs.map((d) => join(d, spec.slice(alias.prefix.length)));
+      candidates = alias.dirs.map((d) => (alias.wildcard ? join(d, spec.slice(alias.key.length)) : d));
     }
     const hit = candidates.map((c) => resolveModule(root, c)).find(Boolean);
     if (hit) out.push(hit);
@@ -259,75 +355,105 @@ function localImports(root, file, text, aliases, unresolved) {
   return out;
 }
 
-// Transitive closure of local imports, depth-bounded, so a surface behind a barrel still counts.
-function reachable(root, entry, aliases, unresolved) {
+function reachable(root, entry, aliases, unresolved, state) {
   const seen = new Set([entry]);
   let frontier = [entry];
-  for (let depth = 0; depth < IMPORT_DEPTH && frontier.length; depth += 1) {
+  let depth = 0;
+  while (frontier.length) {
+    if (depth === IMPORT_DEPTH) { state.depthCut += frontier.length; break; }
     const next = [];
     for (const f of frontier) {
-      for (const dep of localImports(root, f, code(f), aliases, unresolved)) {
+      for (const dep of localImports(root, f, aliases, unresolved)) {
         if (!seen.has(dep)) { seen.add(dep); next.push(dep); }
       }
     }
     frontier = next;
+    depth += 1;
   }
   return seen;
 }
 
+// Next.js parallel routes: pages whose paths differ only by `@slot` segments render together.
+function routeKey(root, page) {
+  return relative(root, dirname(page)).split(/[\\/]/).filter((s) => !s.startsWith('@')).join('/');
+}
+
 export function checkGpuSurfaces(root, files) {
-  const gpuFiles = new Set(files.filter((f) => isSource(f) && GPU_IMPORT_RE.test(code(f))));
+  const gpuModules = new Set(files.filter((f) => isJs(f) && importsOf(f).some((s) => GPU_PACKAGES.test(s))));
+  const renderers = new Set([...gpuModules].filter((f) => RENDERER_RE.test(code(f))));
   const aliases = readAliases(root);
   const unresolved = new Set();
+  const state = { depthCut: 0 };
   const noLifecycle = [];
   const noPoster = [];
-  for (const f of gpuFiles) {
-    const text = code(f);
-    if (!LIFECYCLE_RE.test(text)) noLifecycle.push(relative(root, f));
-    if (!POSTER_RE.test(text)) noPoster.push(relative(root, f));
+  for (const f of renderers) {
+    const src = code(f);
+    // `addEventListener('visibilitychange', …)` carries the event name as a string argument.
+    const listens = /\baddEventListener\s*\(\s*''/.test(src) && lexed(f).strings.some((s) => s.value === 'visibilitychange');
+    if (!LIFECYCLE_RE.test(src) && !listens) noLifecycle.push(relative(root, f));
+    if (!POSTER_RE.test(src)) noPoster.push(relative(root, f));
   }
-  // A route's surfaces are its page plus every layout above it, and everything they reach.
   const pages = files.filter((f) => /(^|[\\/])page\.(tsx|jsx|ts|js)$/.test(f));
   const layouts = files.filter((f) => /(^|[\\/])layout\.(tsx|jsx|ts|js)$/.test(f));
-  const offenders = [];
+  const groups = new Map();
   for (const page of pages) {
-    const entries = [page, ...layouts.filter((l) => page.startsWith(dirname(l) + sep))];
-    const modules = new Set();
-    for (const e of entries) for (const m of reachable(root, e, aliases, unresolved)) modules.add(m);
-    const count = [...modules].filter((m) => gpuFiles.has(m)).length;
-    if (count > 1) offenders.push(`${relative(root, page)} (${count} GPU modules via page and layouts)`);
+    const key = routeKey(root, page);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(page);
   }
-  const coverage = unresolved.size ? `; ${unresolved.size} import specifier(s) unresolved, coverage incomplete: ${listed([...unresolved])}` : '';
+  const offenders = [];
+  for (const [key, groupPages] of groups) {
+    const modules = new Set();
+    for (const page of groupPages) {
+      const entries = [page, ...layouts.filter((l) => page.startsWith(dirname(l) + sep))];
+      for (const e of entries) for (const m of reachable(root, e, aliases, unresolved, state)) modules.add(m);
+    }
+    const count = [...modules].filter((m) => renderers.has(m)).length;
+    if (count > 1) offenders.push(`${key || '/'} (${count} renderer modules via ${groupPages.length} page(s) and layouts)`);
+  }
   const results = [];
   results.push(offenders.length
-    ? { id: 'one-gpu-surface', level: 'error', ok: false, detail: `a route reaches more than one GPU module (static count; the runtime budget lives in the materials wrapper): ${listed(offenders)}${coverage}` }
-    : { id: 'one-gpu-surface', level: 'info', ok: true, detail: `${gpuFiles.size} GPU module(s); no route reaches two (static count over ${pages.length} page(s) and ${layouts.length} layout(s)${coverage})` });
+    ? { id: 'one-gpu-surface', level: 'error', ok: false, detail: `a route reaches more than one renderer module (static count; the runtime budget is the wrapper's job): ${listed(offenders)}` }
+    : { id: 'one-gpu-surface', level: 'info', ok: true, detail: `${renderers.size} renderer module(s) among ${gpuModules.size} GPU-importing module(s); no route reaches two (static count over ${pages.length} page(s), ${groups.size} route(s), ${layouts.length} layout(s))` });
   results.push(noLifecycle.length
-    ? { id: 'gpu-lifecycle', level: 'error', ok: false, detail: `GPU modules that never pause off-screen or on a hidden tab (no IntersectionObserver or visibilitychange in code): ${listed(noLifecycle)}` }
-    : { id: 'gpu-lifecycle', level: 'info', ok: true, detail: 'every GPU module watches visibility, or there are none' });
+    ? { id: 'gpu-lifecycle', level: 'error', ok: false, detail: `renderer modules with no IntersectionObserver or visibilitychange in code (word-level check; that it pauses is verified by eye): ${listed(noLifecycle)}` }
+    : { id: 'gpu-lifecycle', level: 'info', ok: true, detail: 'every renderer module references visibility handling in code, or there are none; that it pauses is verified by eye' });
   results.push(noPoster.length
-    ? { id: 'poster-first', level: 'warn', ok: false, detail: `GPU modules with no poster, fallback or noscript reference in code; the no-script still must be checked by eye: ${listed(noPoster)}` }
-    : { id: 'poster-first', level: 'info', ok: true, detail: 'every GPU module names a poster or fallback; whether it paints first is checked by eye, not here' });
+    ? { id: 'poster-first', level: 'warn', ok: false, detail: `renderer modules with no poster, fallback or noscript reference; the no-script still must be checked by eye: ${listed(noPoster)}` }
+    : { id: 'poster-first', level: 'info', ok: true, detail: 'every renderer module names a poster or fallback; whether it paints first is checked by eye, not here' });
+  const gaps = [];
+  if (unresolved.size) gaps.push(`${unresolved.size} import specifier(s) unresolved: ${listed([...unresolved])}`);
+  if (state.depthCut) gaps.push(`${state.depthCut} module(s) beyond the ${IMPORT_DEPTH}-edge traversal limit`);
+  results.push(gaps.length
+    ? { id: 'coverage', level: 'error', ok: false, detail: `the route graph is incomplete, so the surface count above is not a pass: ${gaps.join('; ')}` }
+    : { id: 'coverage', level: 'info', ok: true, detail: 'every local import on every route resolved inside the scanned root' });
   return results;
 }
 
-// A score is a table with a beat per row and a reduced-motion column, not a file name.
+// A score is a markdown table whose header names a reduced-motion column and which carries at
+// least one beat row with that cell filled in.
 export function validMotionScore(text) {
-  const headerLine = text.split(/\r?\n/).find((l) => /^\s*\|/.test(l) && /reduced/i.test(l));
-  if (!headerLine) return false;
-  const rows = text.split(/\r?\n/).filter((l) => /^\s*\|/.test(l) && !/^\s*\|\s*-/.test(l));
-  return rows.length >= 2;
+  const lines = text.split(/\r?\n/).filter((l) => /^\s*\|/.test(l));
+  const cells = (l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+  const headerIdx = lines.findIndex((l) => cells(l).some((c) => /reduced/i.test(c)));
+  if (headerIdx === -1) return false;
+  const col = cells(lines[headerIdx]).findIndex((c) => /reduced/i.test(c));
+  return lines.slice(headerIdx + 1).some((l) => {
+    const row = cells(l);
+    if (row.every((c) => /^:?-{3,}:?$/.test(c) || c === '')) return false;
+    return Boolean(row[col]) && row.some((c, i) => i !== col && c);
+  });
 }
 
 export function checkMotionScore(root, product, allFiles = product) {
-  const motionFiles = product.filter((f) => isSource(f) && MOTION_IMPORT_RE.test(code(f)));
+  const motionFiles = product.filter((f) => isJs(f) && importsOf(f).some((s) => MOTION_PACKAGES.test(s)));
   if (!motionFiles.length) return { id: 'motion-scored', level: 'info', ok: true, detail: 'no motion library in use' };
   const scores = allFiles.filter((f) => basename(f).toLowerCase() === 'motion-score.md');
   const valid = scores.filter((f) => validMotionScore(read(f)));
   if (valid.length) {
     return { id: 'motion-scored', level: 'info', ok: true, detail: `${motionFiles.length} motion file(s), score at ${relative(root, valid[0])}; which beats a route ships is checked by the critic, not here` };
   }
-  const why = scores.length ? `${scores.length} motion-score.md found but none has a header with a reduced-motion column and at least one beat row` : 'no motion-score.md exists';
+  const why = scores.length ? `${scores.length} motion-score.md found but none has a reduced-motion column with a filled beat row` : 'no motion-score.md exists';
   return { id: 'motion-scored', level: 'error', ok: false, detail: `${motionFiles.length} file(s) import a motion library; ${why} (cinematic-motion skill, step 1)` };
 }
 
@@ -336,7 +462,8 @@ export function checkRawColour(root, files) {
   for (const f of files) {
     const rel = relative(root, f);
     if (!['.tsx', '.jsx'].includes(extname(f)) || TOKEN_FILE_RE.test(rel)) continue;
-    for (const m of code(f).matchAll(COLOUR_RE)) {
+    // Colour literals live in strings and in style objects; scan the raw text here on purpose.
+    for (const m of read(f).matchAll(COLOUR_RE)) {
       const key = m[0].toLowerCase();
       if (!seen.has(key)) seen.set(key, rel);
     }
@@ -348,11 +475,11 @@ export function checkRawColour(root, files) {
 
 export function runGate(root) {
   readCache.clear();
-  codeCache.clear();
+  lexCache.clear();
   linkCache.clear();
   let abs = resolve(root);
-  try { abs = realpathSync(abs); } catch { /* a root that cannot be resolved fails on walk() */ }
-  const files = walk(abs).filter((f) => isSource(f) || FILTER_EXT.has(extname(f)) || /\.md$/i.test(f));
+  try { abs = realpathSync(abs); } catch { /* an unresolvable root fails in walk() */ }
+  const files = walk(abs).filter((f) => isJs(f) || isStyle(f) || FILTER_EXT.has(extname(f)) || /\.md$/i.test(f));
   const product = files.filter((f) => !EVIDENCE_RE.test(f) && !NON_SHIPPING_RE.test(relative(abs, f)));
   const checks = [
     checkDesignMd(abs),
@@ -372,7 +499,7 @@ export function renderMarkdown(result) {
   for (const c of result.checks) {
     lines.push(`| ${c.id} | ${c.level} | ${c.ok ? 'ok' : 'FAIL'} | ${c.detail.replace(/\|/g, '\\|')} |`);
   }
-  lines.push('', `${result.errors} error(s), ${result.warns} warning(s). Static scan: it proves a pattern is absent, never that a page behaves.`);
+  lines.push('', `${result.errors} error(s), ${result.warns} warning(s). Static scan over lexed source: it proves a pattern is absent and the import graph complete, never that a page behaves.`);
   return lines.join('\n');
 }
 

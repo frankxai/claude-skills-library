@@ -11,7 +11,7 @@ network on 2026-10-20; nothing is planned.
 
 | Thing | Where | Proof |
 |---|---|---|
-| Starlight Web Studio: 11 agents, 8 skills, routed graph, model-free scanner | `plugins/starlight-web-studio` on `agent/claude/web-studio`, draft PR frankxai/claude-skills-library#77 | `node --test tests/*.test.mjs` passes 59 tests plus 19 for this gate (count printed by the run, 2026-10-20) |
+| Starlight Web Studio: 11 agents, 8 skills, routed graph, model-free scanner | `plugins/starlight-web-studio` on `agent/claude/web-studio`, draft PR frankxai/claude-skills-library#77 | `node --test tests/*.test.mjs` prints the count; 59 before this gate's suite was added (2026-10-20) |
 | Glass lab: three.js liquid glass vs CSS glass, capability gate, 8 ms frame budget, measured 0.05 to 0.40 ms per frame on Arc 140T | `examples/gpu-glass/` | `README.md` carries the measurement and the Codex review |
 | A complete R4 run on the frankx homepage: brief, three directions, decision, generated hero with provenance, motion score, GSAP and glass prototype, different-provider critique | `examples/frankx-homepage/` | nine files plus `media/` sidecars |
 | Eye pass of 25 live sites, phone and desktop | `starlight/logs/excellence/eye-pass-2026-10-20.md` | frankx 24/50, animelegends 36/50 |
@@ -101,13 +101,19 @@ deprecated but still available.
 
 - `bin/materials-gate.mjs`, model-free and static, exit 1 on error: `design-md`,
   `glass-gated`, `one-gpu-surface`, `gpu-lifecycle`, `poster-first`, `motion-scored`,
-  `raw-colour`. Nineteen tests in `tests/materials-gate.test.mjs`, including a subprocess
-  run from a path with spaces. It proves a pattern is absent in shipped code (tests, fixtures
-  and `.studio` prototypes excluded, comments and type-only imports stripped); it never
-  proves a page behaves. The one-surface budget at renderer creation, the gate's effect on
-  that creation, and the no-script poster are enforced and tested in the materials wrapper
-  (§3.2), not here. Raw WebGL without a library and CDN script tags are out of scope and
-  go in Do's and Don'ts. None of its rules overlaps the web-excellence table above.
+  `raw-colour`, `coverage`. The test count is printed by
+  `node --test tests/materials-gate.test.mjs`, never typed here. It lexes each source file
+  (comments become a space, strings become empty quotes, import specifiers are read back), so
+  a word in a string or a comment satisfies nothing. It resolves tsconfig `paths` against
+  `baseUrl`, follows barrels transitively, groups Next.js parallel slots with their route, and
+  counts renderer modules (ones that create a drawing surface), not every file that imports
+  three. PASS means every rule held and every local import resolved: an unresolved specifier
+  or a traversal cut is the `coverage` error, never a pass. What it cannot know, and says so in
+  its own output: whether a gate call prevents renderer creation, whether a poster paints
+  first, how many renderers one module creates at runtime. Those are to be enforced and tested
+  in the materials wrapper proposed in §3.2, which does not exist yet. Raw WebGL without a
+  library and CDN script tags are out of scope and go in Do's and Don'ts. None of its rules
+  overlaps the web-excellence table above.
 - Roles unchanged. The gpu-artist, motion-director and media-producer already own the three
   material lanes; the gate is what they were missing. Two skills to add next, not agents:
   `shot-planning` (shot list, lens, duration, continuity refs, delivery crops, routed to
@@ -139,8 +145,15 @@ First run of the gate on the two reference candidates (`node bin/materials-gate.
 
 | Repo | design-md | glass-gated | one-gpu-surface | gpu-lifecycle | poster-first | motion-scored | raw-colour |
 |---|---|---|---|---|---|---|---|
-| gencreator.ai (670 shipping files) | warn: prose, no YAML tokens | error: `LiquidGlassZoom.tsx`, `lib/brand-system.ts` have no gate call or import | ok: 6 GPU modules, no route reaches two over 76 pages and 1 layout; 1 specifier unresolved | error: 6 three.js scenes never pause off-screen | warn: the same 6 name no poster | error: 38 motion files, no score | warn: 180 colour literals (hex, rgb, hsl, oklch) |
-| starlight-intelligence-web (316 shipping files) | error: no DESIGN.md | ok: 10 CSS blur files, no refraction | ok: 0 GPU modules | ok | ok | error: 9 motion files, no score | ok: 14 |
+| gencreator.ai (668 shipping files) | warn: prose, no YAML tokens | ok: 4 CSS blur files, 0 refracting | ok: 6 renderer modules, no route reaches two over 76 pages, 76 routes, 1 layout; coverage complete | error: 6 three.js scenes never reference visibility handling | warn: the same 6 name no poster | error: 38 motion files, no score | warn: 180 colour literals (hex, rgb, hsl, oklch) |
+| starlight-intelligence-web (316 shipping files) | error: no DESIGN.md | ok: 10 CSS blur files, no refraction | ok: 0 GPU modules; coverage complete | ok | ok | error: 9 motion files, no score | ok: 14 |
+
+The first, regex-based cut of the gate reported two ungated refraction files on gencreator.ai
+(`LiquidGlassZoom.tsx`, `lib/brand-system.ts`). Both were name-only false positives: the
+component carries no displacement filter and is rendered nowhere, and the second hit was the
+prose string "liquid-glass cards" inside a token file. The lexer-based cut reports zero, which
+is the truth. A gate that fails on names manufactures work; that is why strings and comments
+now satisfy nothing and refraction is detected by a JSX tag, a filter element or a library call.
 
 So the proposed reference surface fails its own bar twice. That is the point of a gate that
 runs before anyone argues taste: PR 3 in §9 is now a measured list, not a wish.
@@ -203,7 +216,7 @@ building.
 
 | # | Repo | What | Gate |
 |---|---|---|---|
-| 1 | claude-skills-library (fold into #77) | this gate, this document, README row | 12 tests, Codex review |
+| 1 | claude-skills-library (fold into #77) | this gate, this document, README row | gate tests green, two Codex passes answered |
 | 2 | starlight-design-intelligence | `packages/materials` with `gate/` and `glass/` moved from the lab, a shadcn registry, its own `DESIGN.md` | gate passes on itself; one Next 16 example route measured on the slowest device |
 | 3 | gencreator-ai (reference surface) | `DESIGN.md` per spec, materials gate in CI, one glass card | gate green in CI |
 | 4 | starlight-intelligence-web | `/work` showcase from registries, Cache Components | registry row first; R4 run; craft receipt |

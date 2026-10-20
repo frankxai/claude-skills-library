@@ -26,14 +26,18 @@ node plugins/starlight-web-studio/bin/studio-doctor.mjs                         
 node plugins/starlight-web-studio/bin/studio-scan.mjs https://example.com          # markdown report
 node plugins/starlight-web-studio/bin/studio-scan.mjs https://example.com --json   # exit 1 on any P0
 node plugins/starlight-web-studio/bin/studio-sweep.mjs --targets targets.json --out .studio/sweeps
-node plugins/starlight-web-studio/bin/materials-gate.mjs <repo> [--json]         # DESIGN.md, gated glass, one GPU surface, motion score; exit 1 on error
+node plugins/starlight-web-studio/bin/materials-gate.mjs <repo> [--json]         # DESIGN.md, gated refraction, renderer count per route, motion score; exit 1 on error
 ```
 
-The materials gate is the rule set behind glass, GPU and GSAP as code: a repo needs a
-`DESIGN.md` in the [open spec's](https://github.com/google-labs-code/design.md) section order
-with tokens, every glass surface gated on reduced transparency, at most one GPU surface per
-page, a poster before any canvas, and a motion score before any motion library. The system it
-enforces is written up in [docs/living-materials-system-Claude-Fable-2026-10-20.md](docs/living-materials-system-Claude-Fable-2026-10-20.md).
+The materials gate is a static scan of lexed source (strings and comments cannot satisfy it).
+It fails a repo that has no `DESIGN.md` in the [open spec's](https://github.com/google-labs-code/design.md)
+section order with tokens, that ships refraction with no gate call or import in the code
+around it, whose route graph reaches two renderer modules (pages, layouts and parallel slots
+together), whose renderer modules never reference visibility handling, that imports a motion
+library with no valid motion score, or whose import graph it could not fully resolve. It does
+not know whether a gate call prevents renderer creation, whether a poster paints first, or
+how many renderers one module creates at runtime; those are the wrapper's and the eye pass's
+job. The system is written up in [docs/living-materials-system-Claude-Fable-2026-10-20.md](docs/living-materials-system-Claude-Fable-2026-10-20.md).
 
 ## The team
 
