@@ -5,7 +5,7 @@
 // Exit codes: 0 everything the studio uses is present · 1 degraded (it can run, some
 // evidence or independence will be missing) · 2 the scanner itself cannot run.
 
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -26,13 +26,24 @@ function skillInstalled(name, cwd) {
   return roots.some(r => existsSync(join(r, name, 'SKILL.md')));
 }
 
+// A Playwright package without a downloaded browser cannot take a screenshot, so both must exist.
+function chromiumInstalled() {
+  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) return existsSync(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE);
+  const caches = [
+    process.env.PLAYWRIGHT_BROWSERS_PATH,
+    process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, 'ms-playwright'),
+    join(homedir(), '.cache', 'ms-playwright'),
+    join(homedir(), 'Library', 'Caches', 'ms-playwright'),
+  ].filter(Boolean);
+  return caches.some(dir => existsSync(dir) && readdirSync(dir).some(name => /^chromium/.test(name)));
+}
+
 function playwrightAvailable(cwd) {
-  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE && existsSync(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE)) return true;
   const req = createRequire(join(cwd, 'package.json'));
-  for (const pkg of ['playwright', '@playwright/test', 'playwright-core']) {
-    try { req.resolve(pkg); return true; } catch { /* not in this project */ }
-  }
-  return onPath('playwright');
+  const hasPackage = ['playwright', '@playwright/test', 'playwright-core'].some(pkg => {
+    try { req.resolve(pkg); return true; } catch { return false; }
+  }) || onPath('playwright');
+  return hasPackage && chromiumInstalled();
 }
 
 export function check(cwd = process.cwd()) {

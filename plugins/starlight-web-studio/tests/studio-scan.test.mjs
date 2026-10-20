@@ -102,6 +102,32 @@ test('tag-like strings inside scripts are not read as tags', () => {
   assert.ok(!ids.includes('h1-multiple'));
 });
 
+test('robots paths are compared after RFC 9309 normalization', () => {
+  const robots = parseRobots('User-agent: *\nDisallow: /private\nDisallow: /café\nAllow: /a%2Fb');
+  assert.equal(isAllowed(robots, 'OAI-SearchBot', '/%70rivate'), false);
+  assert.equal(isAllowed(robots, 'OAI-SearchBot', '/caf%C3%A9/menu'), false);
+  assert.equal(isAllowed(robots, 'OAI-SearchBot', '/a/b'), true);
+});
+
+test('a JSON-LD tag written inside a script string is not JSON-LD', () => {
+  const html = CLEAN.replace('</body>', `<script>const example = '<script type="application/ld+json">{}';</script></body>`);
+  const ids = analyze({ url: 'u', html, ...fetched }).findings.map(f => f.id);
+  assert.ok(!ids.includes('jsonld-invalid'));
+  assert.ok(!ids.includes('jsonld-no-entity'));
+});
+
+test('commented-out tags do not count', () => {
+  const html = CLEAN.replace('</head>', '<!-- <meta name="robots" content="noindex"> --></head>')
+    .replace('<h2>Latest</h2>', '<h2>Latest</h2><!-- <h1>old</h1> -->');
+  const ids = analyze({ url: 'u', html, ...fetched }).findings.map(f => f.id);
+  assert.ok(!ids.includes('noindex'));
+  assert.ok(!ids.includes('h1-multiple'));
+});
+
+test('entities decode as a browser would', () => {
+  assert.equal(visibleText('<body><p>&copy; 2026 &#128; &amp;lt; &mdash; &unknown;</p></body>'), '© 2026 € &lt; — &unknown;');
+});
+
 test('opacity:0.0 and opacity: .0 count as hidden', () => {
   const hidden = '<p style="opacity:0.0">a</p><p style="opacity: .0">b</p><p style="opacity:0">c</p>';
   assert.ok(analyze({ url: 'u', html: CLEAN.replace('</main>', `${hidden}</main>`), ...fetched }).findings.some(f => f.id === 'ssr-hidden-content'));

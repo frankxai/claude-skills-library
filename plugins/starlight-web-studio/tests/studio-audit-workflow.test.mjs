@@ -71,6 +71,18 @@ test('duplicate or unsafe ids refuse to run before any agent starts', async () =
   assert.equal(unsafe.result.skipped, 'bad target ids');
 });
 
+test('ids that differ only in case refuse to run', async () => {
+  const { result, calls } = await run({ runId: 'r', targets: [{ id: 'Site', url: 'https://a.test' }, { id: 'site', url: 'https://b.test' }] });
+  assert.equal(result.skipped, 'bad target ids');
+  assert.equal(calls.length, 0);
+});
+
+test('a run without a runId refuses instead of overwriting earlier evidence', async () => {
+  const { result, calls } = await run({ targets: [{ id: 'one', url: 'https://one.test' }] });
+  assert.equal(result.skipped, 'no runId');
+  assert.equal(calls.length, 0);
+});
+
 test('no targets is a clean no-op', async () => {
   const { result, calls } = await run(undefined);
   assert.equal(result.skipped, 'no targets');

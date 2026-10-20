@@ -27,8 +27,10 @@ export function loadTargets(json) {
   const seen = new Set();
   for (const t of targets) {
     if (!/^[a-z0-9][a-z0-9._-]*$/i.test(t.id)) throw new Error(`target id "${t.id}" is not a safe folder name`);
-    if (seen.has(t.id)) throw new Error(`duplicate target id "${t.id}"; evidence folders would collide`);
-    seen.add(t.id);
+    // Case-insensitive: "Site" and "site" are one folder on Windows and macOS.
+    const key = t.id.toLowerCase();
+    if (seen.has(key)) throw new Error(`duplicate target id "${t.id}"; evidence folders would collide`);
+    seen.add(key);
   }
   return targets;
 }
@@ -143,7 +145,7 @@ async function main(argv) {
   const failed = results.filter(r => r.error);
   const ranked = rank(results);
   // Each run keeps its own files so same-day sweeps can be compared; latest.json points at the newest.
-  const runId = new Date().toISOString().slice(0, 16).replace(':', '');
+  const runId = new Date().toISOString().replace(/[:.]/g, '').slice(0, 20);
   await mkdir(outDir, { recursive: true });
   const machine = `machine-${runId}.jsonl`;
   const boardFile = `board-${runId}.md`;

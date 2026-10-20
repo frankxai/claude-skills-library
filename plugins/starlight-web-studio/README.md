@@ -17,7 +17,7 @@ claude plugin install starlight-web-studio@claude-skills-library
 |---|---|
 | `/studio <url or repo> [goal]` | The session becomes the director: signature brief, scout pass, a route, the right roles per phase, a decision with rejected options, build, critique, verify, hand-off. |
 | `/studio-sweep [targets]` | Scans every property, ranks where an hour of work moves the most, sends the scout to the top three, writes proposals, opens draft PRs only for low-risk hygiene. |
-| `/starlight-web-studio:studio-audit` | A workflow that audits many sites in parallel (measure, read copy and findability, critique) and ranks one proposal per site. Pass `{targets: [{id, url, repo}]}`. |
+| `/starlight-web-studio:studio-audit` | A workflow that audits many sites in parallel (measure, read copy and findability, critique) and ranks one proposal per site. Pass `{runId, targets: [{id, url, repo}]}`; `runId` names the evidence folder so runs never overwrite each other. |
 
 Any harness or CI job can run the scripts directly:
 

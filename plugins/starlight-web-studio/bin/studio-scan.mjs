@@ -26,20 +26,36 @@ const SLOP_WORDS = ['seamless', 'seamlessly', 'unleash', 'next-gen', 'next-gener
 
 const SEARCH_WORD_FLOOR = 150;
 
+// HTML maps numeric references 128-159 through windows-1252, as browsers do.
+const CP1252 = { 128: 0x20ac, 130: 0x201a, 131: 0x192, 132: 0x201e, 133: 0x2026, 134: 0x2020, 135: 0x2021, 136: 0x2c6,
+  137: 0x2030, 138: 0x160, 139: 0x2039, 140: 0x152, 142: 0x17d, 145: 0x2018, 146: 0x2019, 147: 0x201c, 148: 0x201d,
+  149: 0x2022, 150: 0x2013, 151: 0x2014, 152: 0x2dc, 153: 0x2122, 154: 0x161, 155: 0x203a, 156: 0x153, 158: 0x17e, 159: 0x178 };
+
+const NAMED = { nbsp: ' ', lt: '<', gt: '>', quot: '"', apos: "'", amp: '&', copy: '©', reg: '®', trade: '™', mdash: '—',
+  ndash: '–', hellip: '…', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', euro: '€', middot: '·', bull: '•', times: '×' };
+
 function codePoint(n) {
-  return Number.isInteger(n) && n > 0 && n <= 0x10ffff && !(n >= 0xd800 && n <= 0xdfff) ? String.fromCodePoint(n) : '�';
+  const mapped = CP1252[n] ?? n;
+  return Number.isInteger(mapped) && mapped > 0 && mapped <= 0x10ffff && !(mapped >= 0xd800 && mapped <= 0xdfff)
+    ? String.fromCodePoint(mapped) : '�';
 }
 
+// One pass, so "&amp;lt;" decodes to "&lt;" and not to "<".
 function decode(s) {
-  return s.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'").replace(/&#x([0-9a-f]+);/gi, (_, h) => codePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, n) => codePoint(+n)).replace(/&amp;/g, '&');
+  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, ref) => {
+    if (ref[0] === '#') return codePoint(ref[1].toLowerCase() === 'x' ? parseInt(ref.slice(2), 16) : +ref.slice(1));
+    return NAMED[ref.toLowerCase()] ?? m;
+  });
 }
 
-// Element searches run on markup with script and style bodies emptied, so a string
-// inside a script that looks like a tag is never mistaken for one.
+function withoutComments(html) {
+  return html.replace(/<!--[\s\S]*?-->/g, '');
+}
+
+// Element searches run on markup with comments removed and script and style bodies emptied,
+// so commented-out tags and tag-like strings inside scripts are never mistaken for real ones.
 function markupOnly(html) {
-  return html.replace(/<(script|style|template)\b([^>]*)>[\s\S]*?<\/\1>/gi, '<$1$2></$1>');
+  return withoutComments(html).replace(/<(script|style|template)\b([^>]*)>[\s\S]*?<\/\1>/gi, '<$1$2></$1>');
 }
 
 function stripTags(s) {
@@ -68,7 +84,8 @@ function linkRel(html, rel) {
 }
 
 export function visibleText(html) {
-  const body = html.match(/<body\b[^>]*>([\s\S]*)<\/body>/i)?.[1] ?? html;
+  const clean = withoutComments(html);
+  const body = clean.match(/<body\b[^>]*>([\s\S]*)<\/body>/i)?.[1] ?? clean;
   return stripTags(body.replace(/<(script|style|noscript|svg|template|head)\b[\s\S]*?<\/\1>/gi, ' '));
 }
 
@@ -96,6 +113,18 @@ export function parseRobots(txt) {
   return { groups, sitemaps };
 }
 
+// RFC 9309 2.2.2: compare paths after decoding percent-encoded unreserved ASCII and
+// percent-encoding everything outside ASCII, so "/%70rivate" matches "/private" and
+// "/café" matches "/caf%C3%A9". Encoded "/" and "%" keep their meaning.
+export function normalizePath(path) {
+  return path
+    .replace(/%([0-9a-f]{2})/gi, (m, hex) => {
+      const ch = String.fromCharCode(parseInt(hex, 16));
+      return /[A-Za-z0-9\-._~]/.test(ch) ? ch : m.toUpperCase();
+    })
+    .replace(/[^\x00-\x7F]/gu, ch => encodeURIComponent(ch));
+}
+
 function ruleRegex(path) {
   const anchored = path.endsWith('$');
   const body = (anchored ? path.slice(0, -1) : path).split('*').map(s => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*');
@@ -109,16 +138,22 @@ export function isAllowed(robots, agent, path = '/') {
   let groups = robots.groups.filter(g => g.agents.includes(name));
   if (!groups.length) groups = robots.groups.filter(g => g.agents.includes('*'));
   let best = null;
+  const target = normalizePath(path);
   for (const rule of groups.flatMap(g => g.rules)) {
-    if (!ruleRegex(rule.path).test(path)) continue;
-    const len = rule.path.replace(/\$$/, '').length;
+    const rulePath = normalizePath(rule.path);
+    if (!ruleRegex(rulePath).test(target)) continue;
+    const len = rulePath.replace(/\$$/, '').length;
     if (!best || len > best.len || (len === best.len && rule.allow)) best = { len, allow: rule.allow };
   }
   return best ? best.allow : true;
 }
 
 function jsonLd(html) {
-  const blocks = [...html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].map(m => m[1]);
+  // Walk top-level script elements only; a script tag written inside another script's string is
+  // part of that script's body, not an element of its own.
+  const blocks = [...withoutComments(html).matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(m => /type\s*=\s*["']application\/ld\+json["']/i.test(m[1]))
+    .map(m => m[2]);
   const types = new Set();
   let invalid = 0;
   const collect = node => {

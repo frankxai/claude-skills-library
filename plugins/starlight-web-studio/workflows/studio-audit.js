@@ -1,7 +1,7 @@
 export const meta = {
   name: 'studio-audit',
   description: 'Audit several sites in parallel: measure, read copy and findability, critique as a buyer, then rank proposals',
-  whenToUse: 'Portfolio-wide or multi-page design, copy, SEO and AEO review. Pass args: {targets: [{id, url, repo}]}.',
+  whenToUse: 'Portfolio-wide or multi-page design, copy, SEO and AEO review. Pass args: {runId: "2026-10-20T1530", targets: [{id, url, repo}]}.',
   phases: [
     { title: 'Measure', detail: 'site-scout: machine scan, screenshots, eye rubric' },
     { title: 'Read', detail: 'copy-chief and search-strategist, audit only' },
@@ -17,13 +17,20 @@ if (!targets.length) {
 }
 const ids = targets.map(t => t.id)
 const unsafe = ids.filter(id => !/^[a-z0-9][a-z0-9._-]*$/i.test(String(id || '')))
-const dupes = ids.filter((id, i) => ids.indexOf(id) !== i)
+// Case-insensitive: "Site" and "site" are one folder on Windows and macOS.
+const folded = ids.map(id => String(id || '').toLowerCase())
+const dupes = ids.filter((id, i) => folded.indexOf(folded[i]) !== i)
 if (unsafe.length || dupes.length) {
   log(`Refusing to run: evidence folders would be unsafe or collide (${[...unsafe, ...dupes].join(', ')}). Give every target a unique id.`)
   return { proposals: [], skipped: 'bad target ids', unsafe, dupes }
 }
-// Namespacing by run keeps a second audit from overwriting the first. Pass args.runId to name it.
-const run = String((args && args.runId) || 'latest').replace(/[^a-z0-9._-]/gi, '-')
+// Each run writes its own folders so a second audit never overwrites the first. The script cannot
+// read the clock, so the caller names the run (for example the date and time).
+if (!args.runId) {
+  log('Refusing to run: pass args.runId (for example "2026-10-20T1530") so this run does not overwrite an earlier one.')
+  return { proposals: [], skipped: 'no runId' }
+}
+const run = String(args.runId).replace(/[^a-z0-9._-]/gi, '-')
 
 const SCOUT = {
   type: 'object',

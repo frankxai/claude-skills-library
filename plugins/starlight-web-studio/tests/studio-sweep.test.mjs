@@ -49,6 +49,7 @@ test('targets load from an array or a properties graph, live only', () => {
 
 test('duplicate or unsafe ids are rejected before any evidence is written', () => {
   assert.throws(() => loadTargets([{ id: 'x', url: 'https://a.test' }, { id: 'x', url: 'https://b.test' }]), /duplicate/);
+  assert.throws(() => loadTargets([{ id: 'Site', url: 'https://a.test' }, { id: 'site', url: 'https://b.test' }]), /duplicate/);
   assert.throws(() => loadTargets([{ id: '../etc', url: 'https://a.test' }]), /safe folder/);
   assert.throws(() => loadTargets({ nope: true }), /array/);
 });
