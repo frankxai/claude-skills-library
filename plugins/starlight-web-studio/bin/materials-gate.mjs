@@ -746,6 +746,14 @@ function computeBindings(file, deps, lookup) {
       const k = local.get(m[2]) ?? (m[2].includes('.') ? null : kindOf(m[2]));
       if (k && !local.has(m[1])) local.set(m[1], k);
     }
+    // The same binding found from its `=`, so an annotation of any shape (an inline object
+    // type, a generic spanning lines) is crossed by the backward reader.
+    for (const m of src.matchAll(new RegExp(`(?<![=!<>])=(?![=>])\\s*\\(?\\s*(${ID}(?:\\.${ID})*)\\s*(?=;|\\r?\\n|$|\\}|\\)|\\bas\\b|\\bsatisfies\\b)`, 'gm'))) {
+      const k = local.get(m[1]) ?? (m[1].includes('.') ? null : kindOf(m[1]));
+      if (!k) continue;
+      const name = bindingNameBefore(src, m.index);
+      if (name && name !== 'default' && !local.has(name)) local.set(name, k);
+    }
     for (const m of src.matchAll(DESTRUCTURE_RE)) {
       for (const spec of m[1].split(',')) {
         const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?$/);
