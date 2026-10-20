@@ -857,6 +857,8 @@ test('.then(mount) with a locally declared callback binds its parameters; an und
     'DESIGN.md': GOOD_DESIGN,
     'app/one/page.jsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef(null);\n  useEffect(() => {\n    function mount({ WebGLRenderer: GL = null }) {\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    }\n    void import('three').then(mount);\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'app/five/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    void import('three').then(({ WebGLRenderer: GL = null, Scene = null }) => { new GL(); void Scene; });\n  }, []);\n  return null;\n}\n`,
+    'app/six/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void import('three').then(\n      ({ WebGLRenderer: GL = null }: typeof import('three')) => {\n        const renderer = new GL();\n        host.current?.appendChild(renderer.domElement);\n      }\n    );\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/seven/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    void import('three').then(({ WebGLRenderer: GL }: typeof import('three')) => { new GL(); });\n    void import('three').then((three: typeof import('three')) => { new three.WebGLRenderer(); });\n  }, []);\n  return null;\n}\n`,
     'app/two/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    const mount = ({ WebGLRenderer: GL }: { WebGLRenderer: typeof import('three').WebGLRenderer }) => { new GL(); };\n    void import('three').then(mount);\n  }, []);\n  return null;\n}\n`,
     'app/three/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    const mount = (three) => { new three.WebGLRenderer(); };\n    void import('three').then(mount);\n  }, []);\n  return null;\n}\n`,
     'app/four/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { mount } from '../../lib/handlers';\nexport default function Page() {\n  useEffect(() => { void import('three').then(mount); }, []);\n  return null;\n}\n`,
@@ -865,7 +867,7 @@ test('.then(mount) with a locally declared callback binds its parameters; an und
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two', 'three', 'five']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.(?:jsx|tsx)`));
+  for (const p of ['one', 'two', 'three', 'five', 'six', 'seven']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.(?:jsx|tsx)`));
   assert.match(byId(result, 'coverage').detail, /app[\\/]four[\\/]page\.tsx/);
   assert.equal(result.pass, false);
 });

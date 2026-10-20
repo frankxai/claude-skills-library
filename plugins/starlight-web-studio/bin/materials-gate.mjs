@@ -789,7 +789,7 @@ function computeBindings(file, deps, lookup) {
     // name here, which errs toward counting).
     const after = tokensAfter(src, s.at + 2, 200);
     // Arrow or function expression, anonymous or named: `({ A: B }) =>`, `function f({ A: B }) {`.
-    const thenDestructured = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?)?\\( ?\\{ ?([^{}]*)\\} ?\\) ?(?:=>|\\{)`));
+    const thenDestructured = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?)?\\( ?\\{ ?([^{}]*)\\} ?(?::[^=]*?)?\\) ?(?:=>|\\{)`));
     if (thenDestructured) {
       for (const spec of thenDestructured[1].split(',')) {
         const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?(?: ?=.*)?$`));
@@ -799,7 +799,7 @@ function computeBindings(file, deps, lookup) {
       }
       continue;
     }
-    const thenParam = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?\\( ?(${ID}) ?\\) ?\\{|\\(? ?(${ID}) ?\\)? ?=>)`));
+    const thenParam = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?\\( ?(${ID}) ?(?::[^=,)]*)?\\) ?\\{|\\(? ?(${ID}) ?(?::[^=,)]*)?\\)? ?=>)`));
     if (thenParam) { bindNamespace(thenParam[1] ?? thenParam[2]); continue; }
     // `.then(mount)`: the callback is declared elsewhere in the module; read its parameters
     // from that declaration. A callback the reader cannot find or read is a coverage gap.
