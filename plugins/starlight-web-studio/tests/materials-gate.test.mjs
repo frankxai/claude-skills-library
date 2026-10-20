@@ -819,11 +819,14 @@ test('a TypeScript as or satisfies suffix keeps the binding', () => {
     'DESIGN.md': GOOD_DESIGN,
     'app/one/page.tsx': `'use client';\nimport type { ComponentType } from 'react';\nimport { Canvas, type CanvasProps } from '@react-three/fiber';\nconst Scene = Canvas as ComponentType<CanvasProps>;\nexport default function Page() { return <Scene />; }\n`,
     'app/two/page.tsx': `import type { ComponentType } from 'react';\nimport { Canvas, type CanvasProps } from '@react-three/fiber';\nconst Scene = Canvas satisfies ComponentType<CanvasProps>;\nexport default () => <Scene />;\n`,
+    'app/three/page.tsx': `'use client';\nimport type { ComponentType } from 'react';\nimport { Canvas, type CanvasProps } from '@react-three/fiber';\nconst Scene = (Canvas as ComponentType<CanvasProps>);\nexport default function Page() { return <Scene />; }\n`,
+    'app/four/page.tsx': `import type { ComponentType } from 'react';\nimport { Canvas, type CanvasProps } from '@react-three/fiber';\nconst Scene = (Canvas satisfies ComponentType<CanvasProps>);\nexport default () => <Scene />;\n`,
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'four']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
   assert.equal(result.pass, false);
 });
 
