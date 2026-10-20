@@ -814,6 +814,19 @@ test('a known renderer passed through a wrapper call still binds: memo(Canvas), 
   assert.equal(result.pass, false);
 });
 
+test('a TypeScript as or satisfies suffix keeps the binding', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.tsx': `'use client';\nimport type { ComponentType } from 'react';\nimport { Canvas, type CanvasProps } from '@react-three/fiber';\nconst Scene = Canvas as ComponentType<CanvasProps>;\nexport default function Page() { return <Scene />; }\n`,
+    'app/two/page.tsx': `import type { ComponentType } from 'react';\nimport { Canvas, type CanvasProps } from '@react-three/fiber';\nconst Scene = Canvas satisfies ComponentType<CanvasProps>;\nexport default () => <Scene />;\n`,
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['one', 'two']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  assert.equal(result.pass, false);
+});
+
 test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

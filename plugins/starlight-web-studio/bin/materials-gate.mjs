@@ -625,7 +625,8 @@ export function loaderMember(rawBody, afterImport) {
 // An assignment that binds a whole expression, declared (`const R = GL;`, `export const R =
 // GL;`) or a class field (`R = GL;`), never a prefix of a longer expression
 // (`NS.Scene.displayName || 'div'`).
-const BINDING_RE = /(?:^|[;{}\n])\s*(?:export\s+)?(?:(?:const|let|var|readonly|static|private|public|protected)\s+)*([A-Za-z_$][\w$]*)\s*(?::\s*[\w$.<>\[\]|&, ]+)?\s*(?<![=!<>])=(?!=)\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*(?=;|\r?\n|$|\})/gm;
+// The bound value may carry a TypeScript `as …` or `satisfies …` suffix, which changes no binding.
+const BINDING_RE = /(?:^|[;{}\n])\s*(?:export\s+)?(?:(?:const|let|var|readonly|static|private|public|protected)\s+)*([A-Za-z_$][\w$]*)\s*(?::\s*[\w$.<>\[\]|&, ]+)?\s*(?<![=!<>])=(?!=)\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*(?=;|\r?\n|$|\}|\bas\b|\bsatisfies\b)/gm;
 const DESTRUCTURE_RE = /\{([^}]*)\}\s*=\s*([A-Za-z_$][\w$]*)\s*(?=;|\r?\n|$)/gm;
 
 // One module's bindings given a lookup for its dependencies' exports. Pure in the lookup, so
