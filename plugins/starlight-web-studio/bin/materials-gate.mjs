@@ -483,6 +483,58 @@ function importStatements(file) {
 
 const kindOf = (name) => { for (const [k, set] of Object.entries(RENDERER_KINDS)) if (set.has(name)) return k; return null; };
 
+// Index of the closer matching the opener at `open` in lexed code (strings are empty, so no
+// quote can unbalance it), or -1.
+function matchPair(src, open, opener = '(', closer = ')') {
+  let depth = 0;
+  for (let i = open; i < src.length; i += 1) {
+    if (src[i] === opener) depth += 1;
+    else if (src[i] === closer) { depth -= 1; if (depth === 0) return i; }
+  }
+  return -1;
+}
+const matchParen = (src, open) => matchPair(src, open, '(', ')');
+
+// Which export a loader resolves to. `body` is the loader argument with whitespace collapsed;
+// `afterImport` is the code right after the single `import('…')` in it. Returns the member
+// name, 'default', or null when the shape is not one the reader knows.
+const ID = '[A-Za-z_$][\\w$]*';
+function pickDestructured(list, wanted) {
+  const picked = list.split(',').map((x) => x.trim()).map((x) => x.match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`))).find((p) => p && (p[2] ?? p[1]) === wanted);
+  return picked ? picked[1] : null;
+}
+export function loaderMember(rawBody, afterImport) {
+  const body = rawBody.trim();
+  // Expression body: `() => import(x)` with an optional `.then(...)`, or `async () => (await import(x)).Member`.
+  if (new RegExp(`^(?:async ?)?\\(? ?\\)? ?=> ?import ?\\(`).test(body)) {
+    if (!/^\) ?\. ?then ?\(/.test(afterImport)) return /^\) ?\./.test(afterImport) ? null : 'default';
+    const plain = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?\\(? ?(${ID}) ?\\)? ?=> ?\\(? ?\\1 ?\\. ?(${ID})`));
+    if (plain) return plain[2];
+    const destructured = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?\\( ?\\{ ?([^}]*)\\} ?\\) ?=> ?\\(? ?(${ID})`));
+    if (destructured) return pickDestructured(destructured[1], destructured[2]);
+    return null;
+  }
+  const inline = body.match(new RegExp(`^(?:async ?)?\\(? ?\\)? ?=> ?\\( ?await import ?\\( ?'' ?\\) ?\\) ?\\. ?(${ID})`));
+  if (inline) return inline[1];
+  // Block body: `async () => { … await import(x) …; return …; }`, read inside the block only.
+  const blockStart = body.search(/=> ?\{/);
+  if (blockStart === -1) return null;
+  const open = body.indexOf('{', blockStart);
+  const close = matchPair(body, open, '{', '}');
+  if (close === -1) return null;
+  const block = body.slice(open + 1, close).trim();
+  const inlineReturn = block.match(new RegExp(`return ?\\( ?await import ?\\( ?'' ?\\) ?\\) ?\\. ?(${ID})`));
+  if (inlineReturn) return inlineReturn[1];
+  const ret = block.match(new RegExp(`return ?\\(? ?(${ID})(?: ?\\. ?(${ID}))? ?\\)? ?;? ?$`));
+  if (!ret) return null;
+  const [, head, prop] = ret;
+  const destructured = block.match(new RegExp(`(?:const|let|var) ?\\{ ?([^}]*)\\} ?= ?await import ?\\(`));
+  if (destructured && !prop) return pickDestructured(destructured[1], head);
+  const namespace = block.match(new RegExp(`(?:const|let|var) ?(${ID}) ?= ?await import ?\\(`));
+  if (namespace && namespace[1] === head) return prop ?? 'default';
+  return null;
+}
+
 // An assignment that binds a whole expression, declared (`const R = GL;`, `export const R =
 // GL;`) or a class field (`R = GL;`), never a prefix of a longer expression
 // (`NS.Scene.displayName || 'div'`).
@@ -512,33 +564,26 @@ function computeBindings(file, deps, lookup) {
     if (st.def) { const k = originKind(gpu, inner, 'default'); if (k) local.set(st.def, k); }
     for (const [origin, bound] of st.pairs) { const k = originKind(gpu, inner, origin); if (k) local.set(bound, k); }
   }
-  // `const Scene = dynamic(() => import('pkg').then(m => m.Canvas))` and React.lazy: the
-  // loaded member (or the default export) binds the declared name. Supported callbacks:
-  // none (default export), `m => m.Member`, `({ Member }) => Member`, `({ Member: X }) => X`.
-  // Any other `.then` shape is recorded as unsupported, which the solver reports as a gap.
+  // `const Scene = dynamic(loader)` and React.lazy: the loader's resolved member (or the
+  // module's default export) binds the declared name. Every dynamic()/lazy() declaration is
+  // examined; a loader whose body the reader cannot settle is recorded as unsupported, which
+  // the solver reports as a coverage gap, never guessed.
   const unsupported = new Set();
-  for (const s of strings) {
-    if (s.template) continue;
-    const before = tokensBefore(src, s.at, 200);
-    if (!/(?<![\w$.])import ?\($/.test(before)) continue;
-    const decl = before.match(/([A-Za-z_$][\w$]*) ?= ?(?:[A-Za-z_$][\w$]* ?\. ?)?(?:dynamic|lazy) ?\( ?(?:async ?)?\(? ?\)? ?=> ?import ?\($/);
-    if (!decl) continue;
-    const after = tokensAfter(src, s.at + 2, 200);
-    let member = 'default';
-    if (/^\) ?\. ?then ?\(/.test(after)) {
-      const plain = after.match(/^\) ?\. ?then ?\( ?(?:async ?)?\(? ?([A-Za-z_$][\w$]*) ?\)? ?=> ?\(? ?\1 ?\. ?([A-Za-z_$][\w$]*)/);
-      const destructured = after.match(/^\) ?\. ?then ?\( ?(?:async ?)?\( ?\{ ?([^}]*)\} ?\) ?=> ?\(? ?([A-Za-z_$][\w$]*)/);
-      if (plain) member = plain[2];
-      else if (destructured) {
-        const picked = destructured[1].split(',').map((x) => x.trim()).map((x) => x.match(/^([A-Za-z_$][\w$]*)(?: ?: ?([A-Za-z_$][\w$]*))?$/)).find((m) => m && (m[2] ?? m[1]) === destructured[2]);
-        if (picked) member = picked[1];
-        else { unsupported.add(decl[1]); continue; }
-      } else { unsupported.add(decl[1]); continue; }
-    }
-    const gpu = GPU_PACKAGES.test(s.value);
-    const target = gpu ? null : deps.get(s.value) ?? null;
+  for (const m of src.matchAll(/(?<![\w$.])([A-Za-z_$][\w$]*)\s*=\s*(?:[A-Za-z_$][\w$]*\s*\.\s*)?(?:dynamic|lazy)\s*\(/g)) {
+    const name = m[1];
+    const open = m.index + m[0].length - 1;
+    const close = matchParen(src, open);
+    if (close === -1) { unsupported.add(name); continue; }
+    const body = src.slice(open + 1, close);
+    const bodyStrings = strings.filter((s) => !s.template && s.at > open && s.at < close && /(?<![\w$.])import ?\($/.test(tokensBefore(src, s.at, 12)));
+    if (bodyStrings.length !== 1) { unsupported.add(name); continue; }
+    const spec = bodyStrings[0];
+    const member = loaderMember(body.replace(/\s+/g, ' '), tokensAfter(src, spec.at + 2, 200));
+    if (member === null) { unsupported.add(name); continue; }
+    const gpu = GPU_PACKAGES.test(spec.value);
+    const target = gpu ? null : deps.get(spec.value) ?? null;
     const k = originKind(gpu, target ? lookup(target) : null, member);
-    if (k) local.set(decl[1], k);
+    if (k) local.set(name, k);
   }
   // Variable, class-field and destructuring bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {
@@ -991,7 +1036,10 @@ function closure(root, entries, aliases, state) {
 // Next.js conventions. App Router: page, layout, template and default files; `(group)` adds no
 // segment; a slot subtree (including an intercepting `(.)seg`) takes its parent's key. Pages
 // Router: every file under pages/ except _app, _document and api/, with _app as the layout.
-const APP_ROUTE_FILE_RE = /(^|[\\/])(page|layout|template|default)\.(tsx|jsx|ts|js)$/;
+// loading, error and not-found render inside their layout in place of the page, so they are
+// alternatives to it, never additions.
+const APP_ROUTE_FILE_RE = /(^|[\\/])(page|layout|template|default|loading|error|not-found)\.(tsx|jsx|ts|js)$/;
+const ALTERNATIVE_FILE_RE = /(^|[\\/])(loading|error|not-found)\./;
 const PAGES_DIR_RE = /^(?:src[\\/])?pages[\\/]/;
 export function routeKey(root, file) {
   const segs = relative(root, dirname(file)).split(/[\\/]/).filter(Boolean);
@@ -1027,9 +1075,11 @@ function appRouterRoutes(root, files) {
   }
   const routes = [];
   for (const [key, members] of groups) {
-    const base = members.filter((f) => !/[\\/]@[^\\/]+[\\/]/.test(relative(root, f)));
-    if (!base.some((f) => /(^|[\\/])page\./.test(f))) continue;
-    const entries = new Set(base);
+    const base = members.filter((f) => !/[\\/]@[^\\/]+[\\/]/.test(relative(root, f)) && !ALTERNATIVE_FILE_RE.test(f));
+    const pages = base.filter((f) => /(^|[\\/])page\./.test(f));
+    if (!pages.length) continue;
+    const entries = new Set(base.filter((f) => !pages.includes(f)));
+    const fallbacks = [];
     const slots = new Map();
     for (const m of base) {
       let dir = dirname(m);
@@ -1038,6 +1088,7 @@ function appRouterRoutes(root, files) {
           if (f === m) continue;
           const fdir = dirname(f);
           if (fdir === dir && /(^|[\\/])(layout|template)\./.test(f)) entries.add(f);
+          else if (fdir === dir && ALTERNATIVE_FILE_RE.test(f)) fallbacks.push(f);
           else if (fdir.startsWith(dir + sep + '@')) {
             const slotRoot = fdir.slice(0, fdir.indexOf(sep, dir.length + 1) === -1 ? fdir.length : fdir.indexOf(sep, dir.length + 1));
             if (!slots.has(slotRoot)) slots.set(slotRoot, { always: new Set(), pages: [], defaults: [] });
@@ -1051,7 +1102,9 @@ function appRouterRoutes(root, files) {
         dir = dirname(dir);
       }
     }
-    const alternatives = [];
+    // The page itself, or any loading/error/not-found file of its segment or an ancestor's,
+    // fills the children position; the worst of them counts.
+    const alternatives = [[pages, ...[...new Set(fallbacks)].map((f) => [f])]];
     for (const slot of slots.values()) {
       for (const f of slot.always) entries.add(f);
       const options = slot.pages.length ? [...slot.pages.map((p) => [p]), slot.defaults] : [slot.defaults];

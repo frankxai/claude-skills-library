@@ -713,6 +713,51 @@ test('renderers mounted through next/dynamic, React.lazy and createElement are c
   assert.match(c.detail, /callback shape the scanner does not read/);
 });
 
+test('a dynamic() loader with a block body is read; an unreadable loader body is a coverage gap', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nconst Scene = dynamic(async () => {\n  const { Canvas } = await import('@react-three/fiber');\n  return Canvas;\n}, { ssr: false });\nexport default () => <Scene />;\n`,
+    'app/two/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic(async () => {\n  const mod = await import('@react-three/fiber');\n  return mod.Canvas;\n});\nexport default () => <Scene />;\n`,
+    'app/three/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic(async () => (await import('@react-three/fiber')).Canvas);\nexport default () => <Scene />;\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['one', 'two']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  const three = byId(result, 'coverage');
+  assert.ok(life.detail.includes('three') || /callback shape/.test(three.detail), 'the inline-await form is read or reported');
+  const odd = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic(async () => {\n  const mods = await Promise.all([import('@react-three/fiber')]);\n  return mods[0].Canvas;\n});\nexport default () => <Scene />;\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  assert.match(byId(runGate(odd), 'coverage').detail, /callback shape the scanner does not read/);
+});
+
+test('loading, error and not-found render inside the layout in place of the page and count with it', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `import { Background } from '../components/bg';\nexport default ({ children }) => <><Background />{children}</>;\n`,
+    'app/loading.tsx': `import { Spinner } from '../components/spinner';\nexport default () => <Spinner />;\n`,
+    'app/page.tsx': `export default async () => { await fetch('x'); return null; };\n`,
+    'components/bg.tsx': GOOD_RENDERER,
+    'components/spinner.tsx': GOOD_RENDERER,
+  });
+  const check = byId(runGate(root), 'one-gpu-surface');
+  assert.equal(check.level, 'error');
+  assert.match(check.detail, /\/app \(2 renderer/);
+  const errorPage = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children }) => <>{children}</>;\n`,
+    'app/error.tsx': `import { A } from '../components/a';\nexport default () => <A />;\n`,
+    'app/page.tsx': `import { B } from '../components/b';\nexport default () => <B />;\n`,
+    'components/a.tsx': GOOD_RENDERER,
+    'components/b.tsx': GOOD_RENDERER,
+  });
+  assert.equal(runGate(errorPage).errors, 0, 'the error view replaces the page, it never adds to it');
+});
+
 test('circular barrels resolve the same whichever import is seen first', () => {
   for (const order of [['a', 'b'], ['b', 'a']]) {
     const root = fixture({
