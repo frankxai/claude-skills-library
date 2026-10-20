@@ -524,7 +524,7 @@ function bindingNameBefore(src, eq) {
       if (c === '>' || c === ')' || c === '}' || c === ']') depth += 1;
       else if (c === '<' || c === '(' || c === '{' || c === '[') depth -= 1;
       else if (c === ':' && depth === 0) break;
-      else if ((c === ';' || c === '\n') && depth === 0) return null;
+      else if (c === ';' && depth === 0) return null;
       if (depth < 0) return null;
       j -= 1;
     }
@@ -703,7 +703,8 @@ function computeBindings(file, deps, lookup) {
       if (p && local.has(p[1])) { exports.set(p[2] ?? p[1], local.get(p[1])); conflicts.delete(p[2] ?? p[1]); }
     }
   }
-  for (const m of src.matchAll(/\bexport\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g)) {
+  // An exported declaration, annotated or not, exports whatever its name is bound to.
+  for (const m of src.matchAll(/\bexport\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*[:=]/g)) {
     if (local.has(m[1])) { exports.set(m[1], local.get(m[1])); conflicts.delete(m[1]); }
   }
   const dm = src.match(/\bexport\s+default\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;?/);

@@ -743,15 +743,30 @@ test('loader callees come from their import bindings: a renamed next/dynamic def
     'app/three/page.tsx': `import * as React from 'react';\nconst Scene = React.lazy(() => import('@react-three/fiber').then(({ Canvas }) => Canvas));\nexport default () => <Scene />;\n`,
     'app/four/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { CanvasProps } from '@react-three/fiber';\nconst Scene = dynamic<CanvasProps>(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n);\nexport default function Page() { return <Scene />; }\n`,
     'app/five/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic<Record<string, unknown>>(() => import('@react-three/fiber').then(m => m.Canvas));\nexport default () => <Scene />;\n`,
-    'app/six/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { CanvasProps, RootState } from '@react-three/fiber';\nconst Scene = dynamic<\n  CanvasProps & { onCreated?: (state: RootState) => void }\n>(() => import('@react-three/fiber').then(m => m.Canvas), {\n  ssr: false,\n});\nexport default function Page() { return <Scene />; }\n`,
-    'app/seven/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { ComponentType } from 'react';\nimport type { CanvasProps } from '@react-three/fiber';\nconst Scene: ComponentType<CanvasProps> = dynamic<CanvasProps>(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n);\nexport default function Page() { return <Scene />; }\n`,
-    'app/eight/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene: (p: { onReady: (s: string) => void }) => JSX.Element = dynamic(() => import('@react-three/fiber').then(m => m.Canvas));\nexport default () => <Scene />;\n`,
     'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'four', 'five']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  assert.equal(result.pass, false);
+});
+
+test('typed, multiline and exported loader bindings are read', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/six/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { CanvasProps, RootState } from '@react-three/fiber';\nconst Scene = dynamic<\n  CanvasProps & { onCreated?: (state: RootState) => void }\n>(() => import('@react-three/fiber').then(m => m.Canvas), {\n  ssr: false,\n});\nexport default function Page() { return <Scene />; }\n`,
+    'app/seven/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { ComponentType } from 'react';\nimport type { CanvasProps } from '@react-three/fiber';\nconst Scene: ComponentType<CanvasProps> = dynamic<CanvasProps>(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n);\nexport default function Page() { return <Scene />; }\n`,
+    'app/eight/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene: (p: { onReady: (s: string) => void }) => JSX.Element = dynamic(() => import('@react-three/fiber').then(m => m.Canvas));\nexport default () => <Scene />;\n`,
+    'app/nine/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { ComponentType } from 'react';\nimport type { CanvasProps } from '@react-three/fiber';\nconst Scene:\n  ComponentType<CanvasProps> = dynamic<CanvasProps>(\n    () => import('@react-three/fiber').then(m => m.Canvas),\n    { ssr: false }\n  );\nexport default function Page() { return <Scene />; }\n`,
+    'app/ten/page.tsx': `'use client';\nimport { Scene } from '../../components/scene';\nexport default function Page() { return <Scene />; }\n`,
+    'components/scene.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { ComponentType } from 'react';\nimport type { CanvasProps } from '@react-three/fiber';\nexport const Scene: ComponentType<CanvasProps> = dynamic<CanvasProps>(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n);\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['six', 'seven', 'eight', 'nine', 'ten']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(result.pass, false);
 });
 
