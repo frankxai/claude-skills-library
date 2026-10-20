@@ -601,7 +601,7 @@ function matchAngle(src, open) {
 // name, 'default', or null when the shape is not one the reader knows.
 const ID = '[A-Za-z_$][\\w$]*';
 function pickDestructured(list, wanted) {
-  const picked = list.split(',').map((x) => x.trim()).map((x) => x.match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`))).find((p) => p && (p[2] ?? p[1]) === wanted);
+  const picked = list.split(',').map((x) => x.trim()).map((x) => x.match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?(?: ?=.*)?$`))).find((p) => p && (p[2] ?? p[1]) === wanted);
   return picked ? picked[1] : null;
 }
 export function loaderMember(rawBody, afterImport) {
@@ -771,7 +771,7 @@ function computeBindings(file, deps, lookup) {
     const destructured = before.match(/\{ ?([^{}]*)\} ?= ?(?:await ?)?import ?\($/);
     if (destructured) {
       for (const spec of destructured[1].split(',')) {
-        const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`));
+        const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?(?: ?=.*)?$`));
         if (!p) continue;
         const k = originKind(gpu, inner, p[1]);
         if (k) local.set(p[2] ?? p[1], k);
@@ -792,7 +792,7 @@ function computeBindings(file, deps, lookup) {
     const thenDestructured = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?)?\\( ?\\{ ?([^{}]*)\\} ?\\) ?(?:=>|\\{)`));
     if (thenDestructured) {
       for (const spec of thenDestructured[1].split(',')) {
-        const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`));
+        const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?(?: ?=.*)?$`));
         if (!p) continue;
         const k = originKind(gpu, inner, p[1]);
         if (k) local.set(p[2] ?? p[1], k);
@@ -809,7 +809,7 @@ function computeBindings(file, deps, lookup) {
       if (params === null) { unsupported.add(`then:${thenRef[1]}`); continue; }
       if (params.destructured !== undefined) {
         for (const spec of params.destructured.split(',')) {
-          const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`));
+          const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?(?: ?=.*)?$`));
           if (!p) continue;
           const k = originKind(gpu, inner, p[1]);
           if (k) local.set(p[2] ?? p[1], k);
@@ -834,7 +834,7 @@ function computeBindings(file, deps, lookup) {
     }
     for (const m of src.matchAll(DESTRUCTURE_RE)) {
       for (const spec of m[1].split(',')) {
-        const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?$/);
+        const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?(?:\s*=.*)?$/);
         if (!p) continue;
         const k = local.get(`${m[2]}.${p[1]}`);
         if (k) local.set(p[2] ?? p[1], k);
