@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { Budget, GRADERS, MAKERS, budgetedGatewayCall, callCeilingUsd, costUsd, failedPatterns, laneSummary, parseGrade, pickGrader, verdict } from './run.mjs';
+import { Budget, GRADERS, MAKERS, budgetedGatewayCall, callCeilingUsd, costUsd, failedPatterns, laneSummary, parseGrade, pickGrader, selectCases, verdict } from './run.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const cases = JSON.parse(readFileSync(join(HERE, 'cases.json'), 'utf8')).cases;
@@ -93,4 +93,10 @@ test('a call above its reservation is recorded and stops later calls', async () 
   assert.ok(budget.spent > 0);
   assert.equal((await budgetedGatewayCall(budget, price, 'model', 'system', 'prompt',
     async () => { throw new Error('must not call'); })).status, 'skipped-budget');
+});
+
+test('SKILL narrows the run to one skill and refuses a name with no case', () => {
+  assert.deepEqual(selectCases(cases, 'ui-ux-design-expert').map((c) => c.skill), ['free-skills/ui-ux-design-expert']);
+  assert.equal(selectCases(cases, undefined).length, cases.length);
+  assert.throws(() => selectCases(cases, 'no-such-skill'), /matches no case/);
 });

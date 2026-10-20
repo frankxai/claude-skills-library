@@ -8,7 +8,10 @@ name: skill-eval
 on:
   pull_request:
     paths:
-      - 'evals/skill-eval/**'
+      - 'evals/**'
+      - 'free-skills/**/SKILL.md'
+      - 'scripts/eval-skill.mjs'
+      - 'scripts/tests/eval-skill.test.mjs'
       - '.github/workflows/skill-eval.yml'
   workflow_dispatch:
     inputs:
@@ -35,8 +38,7 @@ jobs:
         with:
           node-version: '22'
       - name: Unit tests (no network, no keys)
-        working-directory: evals/skill-eval
-        run: node --test run.test.mjs
+        run: node --test evals/skill-eval/run.test.mjs scripts/tests/eval-skill.test.mjs
 
   eval:
     needs: test
