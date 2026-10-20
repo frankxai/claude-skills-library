@@ -1,0 +1,40 @@
+{
+  "$schema": "https://frankx.ai/schemas/vis-provenance-sidecar.schema.json",
+  "schema_version": "1.0.0",
+  "asset": {
+    "asset_id": "sha256:2bdb4e3ad1f05b4d",
+    "media_type": "image",
+    "sha256": "2bdb4e3ad1f05b4dabec02cb5cc148cebfd453335298a5e3aa58bfcb9e9df687",
+    "local_path": "C:\\Users\\frank\\starlight\\repos\\claude-skills-library\\.worktrees\\web-studio\\plugins\\starlight-web-studio\\examples\\frankx-homepage\\media\\hero-390.webp",
+    "relative_path": "repos\\claude-skills-library\\.worktrees\\web-studio\\plugins\\starlight-web-studio\\examples\\frankx-homepage\\media\\hero-390.webp"
+  },
+  "generation": {
+    "provider": "openai-codex",
+    "model": "codex image_gen.imagegen (model and seed not exposed; non-reproducible); phone crop re-cut 2026-10-20 at left=0.47W from the accepted 1536x1024 v2 render",
+    "prompt": "Create a photorealistic website hero image, landscape, exactly 1536x1024 pixels (3:2).\n\nA quiet home studio at night, cinematic but natural, eye-level 35mm interior photography, fine film grain, real oak and subtle matte textures. Restrained near-black palette (#0a0a0b and #111113), one warm amber desk lamp balanced by low-saturation emerald (#10b981) and cyan (#06b6d4) city light.\n\nLAYOUT IS CRITICAL:\nThe LEFT 40% of the entire frame is a continuous plain dark matte plaster wall in deep shadow, calm empty negative space for a headline. No shelves, books, frames, plants, candles, decorations or objects on or in front of that wall. Keep the wall very dark with only barely visible plaster texture.\nA large floor-to-ceiling window occupies the RIGHT 55% of the frame, extending from the top of the image down behind the desk. Through it, a softly out-of-focus nighttime city skyline, understated emerald and cyan bokeh lights, no readable signs.\nA wide oak desktop runs horizontally along the BOTTOM FIFTH of the image, its surface and front edge confined to this low band. Keep its left section bare. On the right portion of the desk: exactly one closed laptop with a completely plain, unmarked lid with no logo of any kind; one open notebook with blank pages and one pen; one warm desk lamp at right casting a gentle pool of amber light. A violin resting upright on a discreet stand is at the far right edge of the frame. Keep all objects clear of the empty left 40% wall.\n\nNo chair anywhere, especially no chair in the foreground. No people. No additional desk accessories, keyboard, speaker, shelves, books, picture frames, plants or candles. No readable text, letters, UI, logos, brand marks or watermarks anywhere. No neon signs, no purple, no magenta, no holograms, no floating glowing orbs, no lens flare. Preserve the intimate, quiet home-studio-at-night mood.",
+    "negative_prompt": null,
+    "seed": null,
+    "settings": {
+      "brand": "frankx"
+    },
+    "output_paths": [
+      "C:\\Users\\frank\\starlight\\repos\\claude-skills-library\\.worktrees\\web-studio\\plugins\\starlight-web-studio\\examples\\frankx-homepage\\media\\hero-390.webp"
+    ],
+    "created_at": "2026-10-20T14:24:25.200Z"
+  },
+  "agent": {
+    "coding_agent": "Codex image generation, directed by Claude (Opus 5.5) as the web studio media producer",
+    "repo": "repos",
+    "session_ref": null,
+    "summary": "Visual asset generated for brand [frankx] via Codex image generation, directed by Claude (Opus 5.5) as the web studio media producer"
+  },
+  "evaluation": {
+    "brand": "frankx",
+    "status": "generated",
+    "notes": "Awaiting maker != checker review"
+  },
+  "rights": {
+    "rights_status": "generated-owned",
+    "license": "Proprietary Estate / frankxai"
+  }
+}
