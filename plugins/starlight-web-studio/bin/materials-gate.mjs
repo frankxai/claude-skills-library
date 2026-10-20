@@ -483,6 +483,20 @@ function importStatements(file) {
 
 const kindOf = (name) => { for (const [k, set] of Object.entries(RENDERER_KINDS)) if (set.has(name)) return k; return null; };
 
+// The first parameter of a callback declared in the module under `name`: a function
+// declaration, a const arrow, or a const function expression. Returns { destructured } for an
+// object pattern, { param } for a plain identifier, or null when not found or not readable.
+function declaredParams(src, name) {
+  const collapsed = src.replace(/\s+/g, ' ');
+  const head = `(?:function ?${name} ?|(?:const|let|var) ?${name} ?(?::[^=]*)?= ?(?:async ?)?(?:function ?(?:[A-Za-z_$][\\w$]* ?)?)?)`;
+  // A TypeScript annotation may follow either parameter form: `({ A }: Props) =>`, `(m: Mod) =>`.
+  const destructured = collapsed.match(new RegExp(`${head}\\( ?\\{ ?([^{}]*)\\} ?(?::[^=]*?)?[,)]`));
+  if (destructured) return { destructured: destructured[1] };
+  const plain = collapsed.match(new RegExp(`${head}\\(? ?([A-Za-z_$][\\w$]*) ?(?::[^=,)]*)?(?:[,)]|=>)`));
+  if (plain) return { param: plain[1] };
+  return null;
+}
+
 // Index of the closer matching the opener at `open` in lexed code (strings are empty, so no
 // quote can unbalance it), or -1.
 function matchPair(src, open, opener = '(', closer = ')') {
@@ -786,7 +800,22 @@ function computeBindings(file, deps, lookup) {
       continue;
     }
     const thenParam = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?\\( ?(${ID}) ?\\) ?\\{|\\(? ?(${ID}) ?\\)? ?=>)`));
-    if (thenParam) bindNamespace(thenParam[1] ?? thenParam[2]);
+    if (thenParam) { bindNamespace(thenParam[1] ?? thenParam[2]); continue; }
+    // `.then(mount)`: the callback is declared elsewhere in the module; read its parameters
+    // from that declaration. A callback the reader cannot find or read is a coverage gap.
+    const thenRef = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(${ID}) ?[,)]`));
+    if (thenRef) {
+      const params = declaredParams(src, thenRef[1]);
+      if (params === null) { unsupported.add(`then:${thenRef[1]}`); continue; }
+      if (params.destructured !== undefined) {
+        for (const spec of params.destructured.split(',')) {
+          const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`));
+          if (!p) continue;
+          const k = originKind(gpu, inner, p[1]);
+          if (k) local.set(p[2] ?? p[1], k);
+        }
+      } else if (params.param) bindNamespace(params.param);
+    }
   }
   // Variable, class-field, destructuring and wrapper bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {

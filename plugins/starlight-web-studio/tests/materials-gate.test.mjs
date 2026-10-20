@@ -852,6 +852,23 @@ test('a renderer bound from a literal dynamic import inside an effect is a rende
   assert.equal(result.pass, false);
 });
 
+test('.then(mount) with a locally declared callback binds its parameters; an undeclared callback is a gap', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.jsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef(null);\n  useEffect(() => {\n    function mount({ WebGLRenderer: GL }) {\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    }\n    void import('three').then(mount);\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/two/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    const mount = ({ WebGLRenderer: GL }: { WebGLRenderer: typeof import('three').WebGLRenderer }) => { new GL(); };\n    void import('three').then(mount);\n  }, []);\n  return null;\n}\n`,
+    'app/three/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    const mount = (three) => { new three.WebGLRenderer(); };\n    void import('three').then(mount);\n  }, []);\n  return null;\n}\n`,
+    'app/four/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { mount } from '../../lib/handlers';\nexport default function Page() {\n  useEffect(() => { void import('three').then(mount); }, []);\n  return null;\n}\n`,
+    'lib/handlers.ts': `export const mount = (m: unknown) => { void m; };\n`,
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.(?:jsx|tsx)`));
+  assert.match(byId(result, 'coverage').detail, /app[\\/]four[\\/]page\.tsx/);
+  assert.equal(result.pass, false);
+});
+
 test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,
