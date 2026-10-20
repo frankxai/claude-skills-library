@@ -128,6 +128,30 @@ test('entities decode as a browser would', () => {
   assert.equal(visibleText('<body><p>&copy; 2026 &#128; &amp;lt; &mdash; &unknown;</p></body>'), '© 2026 € &lt; — &unknown;');
 });
 
+test('"<!--" inside a script does not swallow the real tags after it', () => {
+  const html = CLEAN.replace('</head>', '<script>const marker="<!--";</script><meta name="robots" content="noindex"><!-- end --></head>');
+  assert.ok(analyze({ url: 'u', html, ...fetched }).findings.some(f => f.id === 'noindex'));
+});
+
+test('numeric references without a semicolon still decode', () => {
+  const html = CLEAN.replace('</head>', '<meta name="robots" content="&#110oindex"></head>');
+  assert.ok(analyze({ url: 'u', html, ...fetched }).findings.some(f => f.id === 'noindex'));
+});
+
+test('Sitemap lines do not split a robots group', () => {
+  const robots = parseRobots('User-agent: OAI-SearchBot\nSitemap: https://a.test/sitemap.xml\nUser-agent: Claude-SearchBot\nDisallow: /');
+  assert.equal(isAllowed(robots, 'OAI-SearchBot', '/'), false);
+  assert.equal(isAllowed(robots, 'Claude-SearchBot', '/'), false);
+  assert.deepEqual(robots.sitemaps, ['https://a.test/sitemap.xml']);
+});
+
+test('JSON-LD needs the real type attribute, quoted or not', () => {
+  const dataType = CLEAN.replace('type="application/ld+json"', 'data-type="application/ld+json"');
+  assert.ok(analyze({ url: 'u', html: dataType, ...fetched }).findings.some(f => f.id === 'jsonld-missing'));
+  const unquoted = CLEAN.replace('type="application/ld+json"', 'type=application/ld+json');
+  assert.deepEqual(analyze({ url: 'u', html: unquoted, ...fetched }).facts.jsonLdTypes, ['Organization', 'WebSite']);
+});
+
 test('opacity:0.0 and opacity: .0 count as hidden', () => {
   const hidden = '<p style="opacity:0.0">a</p><p style="opacity: .0">b</p><p style="opacity:0">c</p>';
   assert.ok(analyze({ url: 'u', html: CLEAN.replace('</main>', `${hidden}</main>`), ...fetched }).findings.some(f => f.id === 'ssr-hidden-content'));

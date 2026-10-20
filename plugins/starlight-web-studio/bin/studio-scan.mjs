@@ -41,21 +41,32 @@ function codePoint(n) {
 }
 
 // One pass, so "&amp;lt;" decodes to "&lt;" and not to "<".
+// Numeric references may omit the semicolon in HTML; named ones need it here.
 function decode(s) {
-  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, ref) => {
-    if (ref[0] === '#') return codePoint(ref[1].toLowerCase() === 'x' ? parseInt(ref.slice(2), 16) : +ref.slice(1));
-    return NAMED[ref.toLowerCase()] ?? m;
+  return s.replace(/&(#x[0-9a-f]+;?|#\d+;?|[a-z]+;)/gi, (m, ref) => {
+    const body = ref.replace(/;$/, '');
+    if (body[0] === '#') return codePoint(body[1].toLowerCase() === 'x' ? parseInt(body.slice(2), 16) : +body.slice(1));
+    return NAMED[body.toLowerCase()] ?? m;
   });
 }
 
-function withoutComments(html) {
-  return html.replace(/<!--[\s\S]*?-->/g, '');
+// One left-to-right pass over comments and raw-text elements, as an HTML tokenizer reads them:
+// whichever starts first wins, so "<!--" inside a script string and "<script>" inside a comment
+// are both inert. Returns the markup with comments removed and raw-text bodies emptied, plus
+// the script elements that really exist.
+export function tokenize(html) {
+  const scripts = [];
+  const markup = html.replace(/<!--[\s\S]*?(?:-->|$)|<(script|style|template|textarea|title)\b([^>]*)>([\s\S]*?)<\/\1\s*>/gi,
+    (m, tag, attrs, body) => {
+      if (!tag) return '';
+      if (tag.toLowerCase() === 'script') scripts.push({ attrs: ` ${attrs}`, body });
+      return tag.toLowerCase() === 'title' ? m : `<${tag}${attrs}></${tag}>`;
+    });
+  return { markup, scripts };
 }
 
-// Element searches run on markup with comments removed and script and style bodies emptied,
-// so commented-out tags and tag-like strings inside scripts are never mistaken for real ones.
 function markupOnly(html) {
-  return withoutComments(html).replace(/<(script|style|template)\b([^>]*)>[\s\S]*?<\/\1>/gi, '<$1$2></$1>');
+  return tokenize(html).markup;
 }
 
 function stripTags(s) {
@@ -84,7 +95,7 @@ function linkRel(html, rel) {
 }
 
 export function visibleText(html) {
-  const clean = withoutComments(html);
+  const clean = markupOnly(html);
   const body = clean.match(/<body\b[^>]*>([\s\S]*)<\/body>/i)?.[1] ?? clean;
   return stripTags(body.replace(/<(script|style|noscript|svg|template|head)\b[\s\S]*?<\/\1>/gi, ' '));
 }
@@ -106,8 +117,11 @@ export function parseRobots(txt) {
       lastWasAgent = true;
       continue;
     }
+    // Only rules close a run of user-agent lines; Sitemap and other extension records do not
+    // split a group (RFC 9309 2.2.4).
+    if (key !== 'allow' && key !== 'disallow') continue;
     lastWasAgent = false;
-    if (current && (key === 'allow' || key === 'disallow') && value) current.rules.push({ allow: key === 'allow', path: value });
+    if (current && value) current.rules.push({ allow: key === 'allow', path: value });
   }
   const sitemaps = (txt ?? '').split(/\r?\n/).map(l => l.match(/^\s*sitemap\s*:\s*(\S+)/i)?.[1]).filter(Boolean);
   return { groups, sitemaps };
@@ -149,11 +163,11 @@ export function isAllowed(robots, agent, path = '/') {
 }
 
 function jsonLd(html) {
-  // Walk top-level script elements only; a script tag written inside another script's string is
-  // part of that script's body, not an element of its own.
-  const blocks = [...withoutComments(html).matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-    .filter(m => /type\s*=\s*["']application\/ld\+json["']/i.test(m[1]))
-    .map(m => m[2]);
+  // Only script elements the tokenizer found, and only when the real `type` attribute says JSON-LD
+  // (quoted or not); `data-type` and friends do not count.
+  const blocks = tokenize(html).scripts
+    .filter(s => (attr(s.attrs, 'type') ?? '').trim().toLowerCase() === 'application/ld+json')
+    .map(s => s.body);
   const types = new Set();
   let invalid = 0;
   const collect = node => {

@@ -26,16 +26,34 @@ function skillInstalled(name, cwd) {
   return roots.some(r => existsSync(join(r, name, 'SKILL.md')));
 }
 
+const BROWSER_BINARY = /^(chrome|chrome\.exe|chromium|headless_shell|headless_shell\.exe|chrome-headless-shell(\.exe)?|Chromium)$/;
+
+// Looks a few levels down a Playwright revision folder for the browser binary itself, so an empty
+// or half-downloaded revision does not count.
+function hasBrowserBinary(dir, depth = 4) {
+  if (depth < 0 || !existsSync(dir)) return false;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isFile() && BROWSER_BINARY.test(entry.name)) return true;
+    if (entry.isDirectory() && hasBrowserBinary(join(dir, entry.name), depth - 1)) return true;
+  }
+  return false;
+}
+
 // A Playwright package without a downloaded browser cannot take a screenshot, so both must exist.
-function chromiumInstalled() {
-  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) return existsSync(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE);
+export function chromiumInstalled(env = process.env) {
+  if (env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) {
+    const path = env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
+    return existsSync(path) && /chrom|headless_shell/i.test(path.split(/[\\/]/).pop());
+  }
   const caches = [
-    process.env.PLAYWRIGHT_BROWSERS_PATH,
-    process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, 'ms-playwright'),
+    env.PLAYWRIGHT_BROWSERS_PATH,
+    env.LOCALAPPDATA && join(env.LOCALAPPDATA, 'ms-playwright'),
     join(homedir(), '.cache', 'ms-playwright'),
     join(homedir(), 'Library', 'Caches', 'ms-playwright'),
   ].filter(Boolean);
-  return caches.some(dir => existsSync(dir) && readdirSync(dir).some(name => /^chromium/.test(name)));
+  return caches.some(dir => existsSync(dir) && readdirSync(dir)
+    .filter(name => /^chromium/.test(name))
+    .some(name => hasBrowserBinary(join(dir, name))));
 }
 
 function playwrightAvailable(cwd) {

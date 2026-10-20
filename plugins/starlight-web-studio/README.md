@@ -106,7 +106,7 @@ skills, GreenSock's `gsap-skills`, and `humanizer`.
 ## Tests and evals
 
 ```bash
-node --test plugins/starlight-web-studio/tests/*.test.mjs    # 31 tests: scanner, RFC 9309 robots, sweep ranking, workflow
+node --test plugins/starlight-web-studio/tests/*.test.mjs    # 46 tests: scanner, RFC 9309 robots, sweep ranking, workflow
 claude plugin eval plugins/starlight-web-studio
 ```
 

@@ -83,6 +83,14 @@ test('a run without a runId refuses instead of overwriting earlier evidence', as
   assert.equal(calls.length, 0);
 });
 
+test('dot-segment and path-like run ids are refused, not rewritten', async () => {
+  for (const runId of ['..', '.', 'a/b', '../x', '.hidden']) {
+    const { result, calls } = await run({ runId, targets: [{ id: 'one', url: 'https://one.test' }] });
+    assert.equal(result.skipped, 'no runId', runId);
+    assert.equal(calls.length, 0);
+  }
+});
+
 test('no targets is a clean no-op', async () => {
   const { result, calls } = await run(undefined);
   assert.equal(result.skipped, 'no targets');

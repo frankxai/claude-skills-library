@@ -26,11 +26,13 @@ if (unsafe.length || dupes.length) {
 }
 // Each run writes its own folders so a second audit never overwrites the first. The script cannot
 // read the clock, so the caller names the run (for example the date and time).
-if (!args.runId) {
-  log('Refusing to run: pass args.runId (for example "2026-10-20T1530") so this run does not overwrite an earlier one.')
+// The run id becomes a folder name, so it is validated, never rewritten: "..", "." or a path
+// separator would point several targets at the same folder.
+const run = String(args.runId || '')
+if (!/^[a-z0-9][a-z0-9_-]*(\.[a-z0-9_-]+)*$/i.test(run)) {
+  log('Refusing to run: pass args.runId as letters, digits, "-" or "_" (for example "2026-10-20T1530") so this run does not overwrite an earlier one.')
   return { proposals: [], skipped: 'no runId' }
 }
-const run = String(args.runId).replace(/[^a-z0-9._-]/gi, '-')
 
 const SCOUT = {
   type: 'object',
