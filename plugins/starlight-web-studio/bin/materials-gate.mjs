@@ -569,7 +569,21 @@ function computeBindings(file, deps, lookup) {
   // examined; a loader whose body the reader cannot settle is recorded as unsupported, which
   // the solver reports as a coverage gap, never guessed.
   const unsupported = new Set();
-  for (const m of src.matchAll(/(?<![\w$.])([A-Za-z_$][\w$]*)\s*=\s*(?:[A-Za-z_$][\w$]*\s*\.\s*)?(?:dynamic|lazy)\s*\(/g)) {
+  // Loader callees come from their import bindings: the default import of next/dynamic under
+  // any name, React's lazy under any name, and `NS.lazy` through a React namespace; the
+  // literal names dynamic and lazy stay as a floor.
+  const loaders = new Set(['dynamic', 'lazy']);
+  for (const st of importStatements(file)) {
+    if (st.kind !== 'import') continue;
+    if (st.spec === 'next/dynamic' && st.def) loaders.add(st.def);
+    if (/^react(\/|$)/.test(st.spec)) {
+      for (const [origin, bound] of st.pairs) if (origin === 'lazy') loaders.add(bound);
+      if (st.ns) loaders.add(`${st.ns}.lazy`);
+      if (st.def) loaders.add(`${st.def}.lazy`);
+    }
+  }
+  const loaderAlt = [...loaders].map(escapeRe).join('|');
+  for (const m of src.matchAll(new RegExp(`(?<![\\w$.])(${ID})\\s*=\\s*(?:${loaderAlt})\\s*\\(`, 'g'))) {
     const name = m[1];
     const open = m.index + m[0].length - 1;
     const close = matchParen(src, open);

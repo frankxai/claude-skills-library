@@ -735,6 +735,20 @@ test('a dynamic() loader with a block body is read; an unreadable loader body is
   assert.match(byId(runGate(odd), 'coverage').detail, /callback shape the scanner does not read/);
 });
 
+test('loader callees come from their import bindings: a renamed next/dynamic default, a renamed lazy, React.lazy', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.tsx': `'use client';\nimport loadable from 'next/dynamic';\nconst Scene = loadable(async () => {\n  const { Canvas } = await import('@react-three/fiber');\n  return Canvas;\n}, { ssr: false });\nexport default function Page() { return <Scene />; }\n`,
+    'app/two/page.tsx': `import { lazy as defer } from 'react';\nconst Scene = defer(() => import('@react-three/fiber').then(m => m.Canvas));\nexport default () => <Scene />;\n`,
+    'app/three/page.tsx': `import * as React from 'react';\nconst Scene = React.lazy(() => import('@react-three/fiber').then(({ Canvas }) => Canvas));\nexport default () => <Scene />;\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+});
+
 test('loading, error and not-found render inside the layout in place of the page and count with it', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,
