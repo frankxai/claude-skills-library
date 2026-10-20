@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: agentic-orchestration--no-trigger
+description: "Should NOT trigger agentic-orchestration."
+tags: [agentic-orchestration, should-not-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Convert this CSS to Tailwind classes: .btn { padding: 8px 16px; border-radius: 4px; }"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?agentic-orchestration\""
+    min: 0
+    max: 0
+    arm: both

@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: verification-quality--outcome-a
+description: "Should trigger verification-quality; outcome graded."
+tags: [verification-quality, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Set up a verify-and-rollback loop for code my agents generate: a truth score with a threshold that triggers automatic rollback."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-quality\""
+  - name: rx-0
+    type: regex
+    pattern: "0\\.9"
+    flags: i
+  - name: judged-1
+    type: llm
+    criteria: "PASS only if it describes a numeric truth or quality score on a 0 to 1 scale, a stated rollback threshold (such as 0.95), and how rollback is executed (for example git revert or reset)."
