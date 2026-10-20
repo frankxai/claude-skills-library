@@ -355,20 +355,47 @@ const code = (file) => lexed(file).code;
 // expression (`import(name)`, `import('../x/' + name)`, `require(require.resolve(…))`) is
 // reported as dynamic so coverage fails closed. Type-only forms are dropped; a default or
 // namespace binding beside type names keeps the import.
+// The last `n` non-whitespace characters before `at` (whitespace runs collapsed to one space),
+// and the first `n` after, so no amount of spacing changes how a clause reads.
+function tokensBefore(src, at, n) {
+  let out = '';
+  let count = 0;
+  let j = at;
+  while (j > 0 && count < n) {
+    j -= 1;
+    const ch = src[j];
+    if (/\s/.test(ch)) { if (!out.startsWith(' ')) out = ' ' + out; continue; }
+    out = ch + out;
+    count += 1;
+  }
+  return out.replace(/^ /, '').replace(/ $/, '');
+}
+function tokensAfter(src, at, n) {
+  let out = '';
+  let count = 0;
+  let j = at;
+  while (j < src.length && count < n) {
+    const ch = src[j];
+    j += 1;
+    if (/\s/.test(ch)) { if (!out.endsWith(' ')) out += ' '; continue; }
+    out += ch;
+    count += 1;
+  }
+  return out.replace(/^ /, '');
+}
+
 export function importsOf(file) {
   const { code: src, strings } = lexed(file);
   const out = [];
   let dynamic = 0;
   for (const s of strings) {
-    // Classify by the tokens before the specifier with whitespace collapsed, so no amount of
-    // spacing between `import`, `(` and the literal changes the answer.
-    const before = src.slice(Math.max(0, s.at - 4000), s.at).replace(/\s+/g, ' ').replace(/ $/, '');
+    const before = tokensBefore(src, s.at, 64);
     let kind = null;
     if (/\bfrom$/.test(before)) kind = 'from';
     else if (/(?<![\w$.])import$/.test(before)) kind = 'side-effect';
     else if (/(?<![\w$.])(?:import|require) ?\($/.test(before)) kind = 'call';
     if (!kind) continue;
-    if (kind === 'call' && !/^\s*[,)]/.test(src.slice(s.at + 2, s.at + 40))) { dynamic += 1; continue; }
+    if (kind === 'call' && !/^[,)]/.test(tokensAfter(src, s.at + 2, 4))) { dynamic += 1; continue; }
     if (s.template) {
       if (s.pure) out.push(s.value);
       else dynamic += 1;
@@ -486,16 +513,28 @@ function computeBindings(file, deps, lookup) {
     for (const [origin, bound] of st.pairs) { const k = originKind(gpu, inner, origin); if (k) local.set(bound, k); }
   }
   // `const Scene = dynamic(() => import('pkg').then(m => m.Canvas))` and React.lazy: the
-  // loaded member (or the default export) binds the declared name.
+  // loaded member (or the default export) binds the declared name. Supported callbacks:
+  // none (default export), `m => m.Member`, `({ Member }) => Member`, `({ Member: X }) => X`.
+  // Any other `.then` shape is recorded as unsupported, which the solver reports as a gap.
+  const unsupported = new Set();
   for (const s of strings) {
     if (s.template) continue;
-    const before = src.slice(Math.max(0, s.at - 300), s.at).replace(/\s+/g, ' ');
+    const before = tokensBefore(src, s.at, 200);
     if (!/(?<![\w$.])import ?\($/.test(before)) continue;
-    const decl = before.match(/([A-Za-z_$][\w$]*)\s*=\s*(?:[A-Za-z_$][\w$]*\.)?(?:dynamic|lazy)\s*\(\s*(?:async\s*)?\(?\s*\)?\s*=>\s*import ?\($/);
+    const decl = before.match(/([A-Za-z_$][\w$]*) ?= ?(?:[A-Za-z_$][\w$]* ?\. ?)?(?:dynamic|lazy) ?\( ?(?:async ?)?\(? ?\)? ?=> ?import ?\($/);
     if (!decl) continue;
-    const after = src.slice(s.at + 2, s.at + 300).replace(/\s+/g, ' ');
-    const then = after.match(/^\s*\)\s*\.then\s*\(\s*(?:async\s*)?\(?\s*([A-Za-z_$][\w$]*)\s*\)?\s*=>\s*(?:\(\s*)?\1\.([A-Za-z_$][\w$]*)/);
-    const member = then ? then[2] : 'default';
+    const after = tokensAfter(src, s.at + 2, 200);
+    let member = 'default';
+    if (/^\) ?\. ?then ?\(/.test(after)) {
+      const plain = after.match(/^\) ?\. ?then ?\( ?(?:async ?)?\(? ?([A-Za-z_$][\w$]*) ?\)? ?=> ?\(? ?\1 ?\. ?([A-Za-z_$][\w$]*)/);
+      const destructured = after.match(/^\) ?\. ?then ?\( ?(?:async ?)?\( ?\{ ?([^}]*)\} ?\) ?=> ?\(? ?([A-Za-z_$][\w$]*)/);
+      if (plain) member = plain[2];
+      else if (destructured) {
+        const picked = destructured[1].split(',').map((x) => x.trim()).map((x) => x.match(/^([A-Za-z_$][\w$]*)(?: ?: ?([A-Za-z_$][\w$]*))?$/)).find((m) => m && (m[2] ?? m[1]) === destructured[2]);
+        if (picked) member = picked[1];
+        else { unsupported.add(decl[1]); continue; }
+      } else { unsupported.add(decl[1]); continue; }
+    }
     const gpu = GPU_PACKAGES.test(s.value);
     const target = gpu ? null : deps.get(s.value) ?? null;
     const k = originKind(gpu, target ? lookup(target) : null, member);
@@ -548,6 +587,7 @@ function computeBindings(file, deps, lookup) {
   const dm = src.match(/\bexport\s+default\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;?/);
   if (dm && local.has(dm[1])) exports.set('default', local.get(dm[1]));
   for (const e of conflicts) exports.delete(e);
+  for (const u of unsupported) conflicts.add(`dynamic:${u}`);
   return { local, exports, conflicts };
 }
 
@@ -1123,7 +1163,7 @@ export function checkGpuSurfaces(root, files) {
   if (state.unresolved.size) gaps.push(`${state.unresolved.size} import specifier(s) unresolved (a local path, alias or package that is not where it should be): ${listed([...state.unresolved])}`);
   if (state.dynamic.size) gaps.push(`${state.dynamic.size} file(s) load a module through an expression the scanner cannot follow (import(name), import('../x/' + name), require(require.resolve(…)), a substituted template): ${listed([...state.dynamic.keys()])}`);
   if (state.depthCut) gaps.push(`${state.depthCut} module(s) beyond the ${IMPORT_DEPTH}-edge traversal limit`);
-  if (state.propagationCut.size) gaps.push(`${state.propagationCut.size} module(s) whose re-exports could not be followed (a component that did not converge within ${FIXPOINT_ITERATIONS} iterations, exceeded ${COMPONENT_LIMIT} modules, or two star exports naming the same renderer differently): ${listed([...state.propagationCut])}`);
+  if (state.propagationCut.size) gaps.push(`${state.propagationCut.size} module(s) whose bindings could not be followed (a component that did not converge within ${FIXPOINT_ITERATIONS} iterations, exceeded ${COMPONENT_LIMIT} modules, two star exports naming the same renderer differently, or a dynamic() / lazy() callback shape the scanner does not read): ${listed([...state.propagationCut])}`);
   if (state.comboCut.size) gaps.push(`route(s) with more than ${COMBO_LIMIT} slot combinations, not enumerated: ${listed([...state.comboCut])}`);
   if (aliases.dropped.length) gaps.push(`tsconfig: ${listed(aliases.dropped)}`);
   if (lexIssues.length) gaps.push(`${lexIssues.length} file(s) the lexer could not read to the end: ${listed(lexIssues)}`);

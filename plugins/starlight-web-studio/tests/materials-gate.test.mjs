@@ -675,10 +675,10 @@ test('whitespace between from and the specifier does not hide an import', () => 
   assert.match(byId(runGate(root), 'gpu-lifecycle').detail, /app[\\/]page\.tsx/);
 });
 
-test('spacing before a loader paren does not hide a dynamic import or require', () => {
+test('spacing before a loader paren does not hide a dynamic import or require, however long', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,
-    'app/page.tsx': `const m = import${' '.repeat(80)}('./missing');\nconst r = require${' '.repeat(40)}('./also-missing');\n`,
+    'app/page.tsx': `const m = import${' '.repeat(5000)}('./missing');\nconst r = require${' '.repeat(5000)}('./also-missing');\n`,
   });
   const c = byId(runGate(root), 'coverage');
   assert.equal(c.level, 'error');
@@ -693,13 +693,24 @@ test('renderers mounted through next/dynamic, React.lazy and createElement are c
     'app/two/page.tsx': `'use client';\nimport { createElement } from 'react';\nimport { Canvas } from '@react-three/fiber';\nexport default function Page() { return createElement(Canvas); }\n`,
     'app/three/page.tsx': `import { lazy } from 'react';\nconst Glass = lazy(() => import('../../lib/glass'));\nexport default () => <Glass />;\n`,
     'lib/glass.tsx': `import { Canvas } from '@react-three/fiber';\nexport default Canvas;\n`,
+    'app/four/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nconst Scene = dynamic(\n  () => import('@react-three/fiber').then(({ Canvas }) => Canvas),\n  { ssr: false }\n);\nexport default function Page() { return <Scene />; }\n`,
+    'app/five/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic(() => import('@react-three/fiber').then(({ Canvas: C }) => C));\nexport default () => <Scene />;\n`,
     'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx|lib[\\\\/]glass\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'four', 'five']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  assert.doesNotMatch(life.detail, /lib[\\/]glass\.tsx/, 'a module that only re-exports Canvas mounts nothing');
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  const odd = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic(() => import('@react-three/fiber').then((m) => pick(m)));\nexport default () => <Scene />;\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const c = byId(runGate(odd), 'coverage');
+  assert.equal(c.level, 'error');
+  assert.match(c.detail, /callback shape the scanner does not read/);
 });
 
 test('circular barrels resolve the same whichever import is seen first', () => {
