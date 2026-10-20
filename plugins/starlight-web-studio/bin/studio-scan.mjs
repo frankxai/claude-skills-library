@@ -100,6 +100,40 @@ function meta(html, key) {
   return null;
 }
 
+// Directives whose names take a value after a colon; anything else before a colon in a header
+// line is a crawler name scoping the rest of the line.
+const VALUE_DIRECTIVES = new Set(['max-snippet', 'max-image-preview', 'max-video-preview', 'unavailable_after']);
+
+// True when a directive list says the page must not be indexed: "noindex", or "none"
+// (which means noindex, nofollow). "max-image-preview: none" is a preview limit, not this.
+export function directivesBlockIndex(list) {
+  return (list ?? '').toLowerCase().split(',').some(token => {
+    const name = token.split(':')[0].trim();
+    return name === 'noindex' || name === 'none';
+  });
+}
+
+function headerDirectives(value) {
+  const m = (value ?? '').match(/^\s*([a-z0-9_.-]+)\s*:\s*(.*)$/i);
+  return m && !VALUE_DIRECTIVES.has(m[1].toLowerCase()) ? m[2] : value;
+}
+
+// Every robots meta tag and every crawler-specific one (googlebot, bingbot, ...) counts, and
+// restrictions combine across tags, as search engines apply them. Returns the evidence or null.
+export function indexingBlocks(html, robotsHeader) {
+  for (const t of tags(html, 'meta')) {
+    const name = (attr(t, 'name') ?? '').toLowerCase();
+    if ((name === 'robots' || /bot$/.test(name)) && directivesBlockIndex(attr(t, 'content'))) {
+      return `meta ${name}="${attr(t, 'content')}"`;
+    }
+  }
+  const lines = (robotsHeader ?? '').split(/\r?\n/).filter(Boolean);
+  for (const line of lines) {
+    if (directivesBlockIndex(headerDirectives(line))) return `X-Robots-Tag: ${line}`;
+  }
+  return null;
+}
+
 function linkRel(html, rel) {
   return tags(html, 'link').filter(t => (attr(t, 'rel') ?? '').toLowerCase().split(/\s+/).includes(rel));
 }
@@ -216,13 +250,8 @@ export function analyze({ url, html: raw, status = 200, robotsTxt = null, robots
   const description = meta(html, 'description');
   if (!description) add('search', 'P1', 'description-missing', 'No meta description.', 'Write a 70-160 character description that answers "what is this and for whom".');
   else if (description.length < 70 || description.length > 165) add('search', 'P2', 'description-length', `Description is ${description.length} chars.`, 'Aim for 70-160 characters.');
-  // The page is unindexable if the meta tag or the X-Robots-Tag header says noindex or none
-  // ("none" means noindex, nofollow). A header token may be scoped to one crawler ("googlebot: noindex").
-  const blocksIndex = value => (value ?? '').toLowerCase().split(',')
-    .map(t => t.replace(/^[^:]*:\s*/, '').trim()).some(t => t === 'noindex' || t === 'none');
-  const robotsMeta = meta(html, 'robots');
-  if (blocksIndex(robotsMeta)) add('search', 'P0', 'noindex', `meta robots="${robotsMeta}"`, 'Remove noindex from a page meant to be found.');
-  else if (blocksIndex(robotsHeader)) add('search', 'P0', 'noindex', `X-Robots-Tag: ${robotsHeader}`, 'Remove the noindex response header from a page meant to be found.');
+  const indexBlock = indexingBlocks(html, robotsHeader);
+  if (indexBlock) add('search', 'P0', 'noindex', indexBlock, 'Remove noindex from a page meant to be found, unless it is deliberate (then accept the finding).');
   const canonical = linkRel(html, 'canonical').map(t => attr(t, 'href'))[0];
   if (!canonical) add('search', 'P1', 'canonical-missing', 'No rel=canonical.', 'Add an absolute canonical URL on the canonical host.');
   else if (!/^https?:\/\//i.test(canonical)) add('search', 'P2', 'canonical-relative', `canonical="${canonical}"`, 'Use an absolute canonical URL.');

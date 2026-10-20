@@ -162,6 +162,21 @@ test('noindex in the X-Robots-Tag header, and the "none" directive, are P0', () 
   assert.ok(!analyze({ url: 'u', html: CLEAN, ...fetched, robotsHeader: 'noarchive' }).findings.some(f => f.id === 'noindex'));
 });
 
+test('preview limits with "none" values are not noindex', () => {
+  const meta = analyze({ url: 'u', html: CLEAN.replace('</head>', '<meta name="robots" content="index,follow,max-image-preview:none"></head>'), ...fetched });
+  assert.ok(!meta.findings.some(f => f.id === 'noindex'));
+  const header = analyze({ url: 'u', html: CLEAN, ...fetched, robotsHeader: 'max-image-preview: none' });
+  assert.ok(!header.findings.some(f => f.id === 'noindex'));
+  assert.equal(header.score, header.max);
+});
+
+test('crawler-specific and repeated robots tags combine', () => {
+  const googlebot = analyze({ url: 'u', html: CLEAN.replace('</head>', '<meta name="googlebot" content="noindex"></head>'), ...fetched });
+  assert.ok(googlebot.findings.some(f => f.id === 'noindex' && /googlebot/.test(f.evidence)));
+  const twice = CLEAN.replace('</head>', '<meta name="robots" content="index,follow"><meta name="robots" content="noindex"></head>');
+  assert.ok(analyze({ url: 'u', html: twice, ...fetched }).findings.some(f => f.id === 'noindex'));
+});
+
 test('attribute text inside another quoted attribute is not an attribute', () => {
   const fake = CLEAN.replace('type="application/ld+json"', `data-note=' type="application/ld+json"'`);
   assert.ok(analyze({ url: 'u', html: fake, ...fetched }).findings.some(f => f.id === 'jsonld-missing'));
