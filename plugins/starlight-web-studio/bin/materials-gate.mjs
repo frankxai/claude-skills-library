@@ -494,6 +494,17 @@ function matchPair(src, open, opener = '(', closer = ')') {
   return -1;
 }
 const matchParen = (src, open) => matchPair(src, open, '(', ')');
+// Matching `>` for a type-argument `<`, where `=>` is an arrow and `>=` a comparison, not closers.
+function matchAngle(src, open) {
+  let depth = 0;
+  for (let i = open; i < src.length; i += 1) {
+    const c = src[i];
+    if (c === '<') depth += 1;
+    else if (c === '>' && src[i - 1] !== '=' && src[i + 1] !== '=') { depth -= 1; if (depth === 0) return i; }
+    else if (c === ';') return -1;
+  }
+  return -1;
+}
 
 // Which export a loader resolves to. `body` is the loader argument with whitespace collapsed;
 // `afterImport` is the code right after the single `import('…')` in it. Returns the member
@@ -583,11 +594,18 @@ function computeBindings(file, deps, lookup) {
     }
   }
   const loaderAlt = [...loaders].map(escapeRe).join('|');
-  // A TypeScript type argument may sit between the callee and its paren: `dynamic<Props>(…)`.
-  const typeArgs = '(?:<[^<>()]*(?:<[^<>()]*>[^<>()]*)*>)?';
-  for (const m of src.matchAll(new RegExp(`(?<![\\w$.])(${ID})\\s*=\\s*(?:${loaderAlt})\\s*${typeArgs}\\s*\\(`, 'g'))) {
+  // A TypeScript type argument may sit between the callee and its paren, `dynamic<Props>(…)`,
+  // and may itself contain function types whose `=>` is one token, not a closing bracket.
+  for (const m of src.matchAll(new RegExp(`(?<![\\w$.])(${ID})\\s*=\\s*(?:${loaderAlt})\\s*`, 'g'))) {
     const name = m[1];
-    const open = m.index + m[0].length - 1;
+    let open = m.index + m[0].length;
+    if (src[open] === '<') {
+      const closeAngle = matchAngle(src, open);
+      if (closeAngle === -1) { unsupported.add(name); continue; }
+      open = closeAngle + 1;
+      while (open < src.length && /\s/.test(src[open])) open += 1;
+    }
+    if (src[open] !== '(') continue;
     const close = matchParen(src, open);
     if (close === -1) { unsupported.add(name); continue; }
     const body = src.slice(open + 1, close);
