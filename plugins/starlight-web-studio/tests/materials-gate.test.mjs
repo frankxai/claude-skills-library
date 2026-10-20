@@ -796,6 +796,21 @@ test('semicolonless declarations: the loader binds to its own declaration, not t
   }
 });
 
+test('a known renderer passed through a wrapper call still binds: memo(Canvas), forwardRef, a default export, a namespace member', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.tsx': `'use client';\nimport { memo } from 'react';\nimport { Canvas } from '@react-three/fiber';\nconst Scene = memo(Canvas);\nexport default function Page() { return <Scene />; }\n`,
+    'app/two/page.tsx': `import { forwardRef } from 'react';\nimport * as R3F from '@react-three/fiber';\nconst Scene = forwardRef(R3F.Canvas);\nexport default () => <Scene />;\n`,
+    'app/three/page.tsx': `import { memo } from 'react';\nimport { Canvas } from '@react-three/fiber';\nexport default memo(Canvas);\n`,
+    'app/four/page.tsx': `import { Canvas } from '@react-three/fiber';\nconst label = formatLabel('Canvas');\nexport default () => <div>{label}</div>;\n`,
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  assert.doesNotMatch(life.detail, /app[\\/]four[\\/]page\.tsx/, 'a string argument is not a renderer');
+});
+
 test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

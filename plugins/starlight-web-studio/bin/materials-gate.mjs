@@ -710,8 +710,28 @@ function computeBindings(file, deps, lookup) {
     if (name === 'default') exports.set('default', k);
     else local.set(name, k);
   }
-  // Variable, class-field and destructuring bindings, two passes for one extra hop.
+  // A wrapper call around a known renderer tag (`memo(Canvas)`, `forwardRef(Scene)`,
+  // `withTheme(Canvas, opts)`) binds the declared name, or the default export, to a tag.
+  const wrapperBindings = () => {
+    for (const m of src.matchAll(new RegExp(`(?:(?<![=!<>])=(?![=>])|\\bexport\\s+default)\\s*(${ID}(?:\\s*\\.\\s*${ID})*)\\s*\\(`, 'g'))) {
+      const callee = m[1].replace(/\s+/g, '');
+      if (loaders.has(callee)) continue;
+      const open = m.index + m[0].length - 1;
+      const close = matchParen(src, open);
+      if (close === -1) continue;
+      const args = src.slice(open + 1, close);
+      const isTag = (ident) => local.get(ident) === 'tag' || RENDERER_KINDS.tag.has(ident) || (ident.includes('.') && local.get(ident) === 'tag');
+      const hit = [...args.matchAll(new RegExp(`(?<![\\w$.])(${ID}(?:\\.${ID})*)(?![\\w$(])`, 'g'))].some((a) => isTag(a[1]));
+      if (!hit) continue;
+      const name = m[0].startsWith('export') ? 'default' : bindingNameBefore(src, m.index);
+      if (!name) continue;
+      if (name === 'default') exports.set('default', 'tag');
+      else if (!local.has(name)) local.set(name, 'tag');
+    }
+  };
+  // Variable, class-field, destructuring and wrapper bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {
+    wrapperBindings();
     for (const m of src.matchAll(BINDING_RE)) {
       const k = local.get(m[2]) ?? (m[2].includes('.') ? null : kindOf(m[2]));
       if (k && !local.has(m[1])) local.set(m[1], k);
