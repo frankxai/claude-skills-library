@@ -786,6 +786,16 @@ test('a loader wrapped in memo, forwardRef or a custom HOC still binds; a loader
   assert.match(byId(result, 'coverage').detail, /app[\\/]three[\\/]page\.tsx/);
 });
 
+test('semicolonless declarations: the loader binds to its own declaration, not the previous one', () => {
+  const page = (semi) => `'use client'${semi}\nimport dynamic from 'next/dynamic'${semi}\nimport { memo } from 'react'${semi}\n\nconst title = 'Hero'${semi}\nconst Scene = memo(dynamic(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n))${semi}\nexport default function Page() {\n  return <main><h1>{title}</h1><Scene /></main>${semi}\n}\n`;
+  for (const semi of ['', ';']) {
+    const root = fixture({ 'DESIGN.md': GOOD_DESIGN, 'app/page.tsx': page(semi), 'node_modules/next/package.json': '{}' });
+    const result = runGate(root);
+    assert.equal(byId(result, 'gpu-lifecycle').level, 'error', `semi=${JSON.stringify(semi)}: ${JSON.stringify(result.checks)}`);
+    assert.equal(result.pass, false);
+  }
+});
+
 test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

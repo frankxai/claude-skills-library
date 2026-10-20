@@ -495,8 +495,10 @@ function matchPair(src, open, opener = '(', closer = ')') {
 }
 const matchParen = (src, open) => matchPair(src, open, '(', ')');
 
+const STATEMENT_START_RE = /^\s*(?:const|let|var|export|import|function|class|return|if|for|while|switch|try|throw|type|interface|enum|declare)\b/;
+
 // The statement enclosing position `at`: text from the nearest `;`, `{` or `}` at bracket
-// depth zero (reading backward) up to `at`. Null when brackets do not balance.
+// depth zero (reading backward), or a newline followed by a declaration keyword, up to `at`.
 function statementHead(src, at) {
   let depth = 0;
   let j = at - 1;
@@ -507,6 +509,8 @@ function statementHead(src, at) {
     else if ((c === '(' || c === '[') && depth > 0) depth -= 1;
     // An unmatched opener is a call or array the position sits inside; keep walking out.
     else if (depth === 0 && (c === ';' || c === '{' || c === '}')) break;
+    // Without semicolons, a line that begins with a declaration keyword starts a statement.
+    else if (depth === 0 && c === '\n' && STATEMENT_START_RE.test(src.slice(j + 1, j + 24))) break;
     j -= 1;
   }
   return { start: j + 1, text: src.slice(j + 1, at) };
