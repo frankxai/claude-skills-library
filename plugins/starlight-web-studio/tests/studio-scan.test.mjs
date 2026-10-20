@@ -152,6 +152,23 @@ test('JSON-LD needs the real type attribute, quoted or not', () => {
   assert.deepEqual(analyze({ url: 'u', html: unquoted, ...fetched }).facts.jsonLdTypes, ['Organization', 'WebSite']);
 });
 
+test('noindex in the X-Robots-Tag header, and the "none" directive, are P0', () => {
+  const header = analyze({ url: 'u', html: CLEAN, ...fetched, robotsHeader: 'noindex, nofollow' });
+  assert.ok(header.findings.some(f => f.id === 'noindex' && /X-Robots-Tag/.test(f.evidence)));
+  const scoped = analyze({ url: 'u', html: CLEAN, ...fetched, robotsHeader: 'googlebot: noindex' });
+  assert.ok(scoped.findings.some(f => f.id === 'noindex'));
+  const none = analyze({ url: 'u', html: CLEAN.replace('</head>', '<meta name="robots" content="none"></head>'), ...fetched });
+  assert.ok(none.findings.some(f => f.id === 'noindex'));
+  assert.ok(!analyze({ url: 'u', html: CLEAN, ...fetched, robotsHeader: 'noarchive' }).findings.some(f => f.id === 'noindex'));
+});
+
+test('attribute text inside another quoted attribute is not an attribute', () => {
+  const fake = CLEAN.replace('type="application/ld+json"', `data-note=' type="application/ld+json"'`);
+  assert.ok(analyze({ url: 'u', html: fake, ...fetched }).findings.some(f => f.id === 'jsonld-missing'));
+  const gt = CLEAN.replace('type="application/ld+json"', `data-note='>' type="application/ld+json"`);
+  assert.deepEqual(analyze({ url: 'u', html: gt, ...fetched }).facts.jsonLdTypes, ['Organization', 'WebSite']);
+});
+
 test('opacity:0.0 and opacity: .0 count as hidden', () => {
   const hidden = '<p style="opacity:0.0">a</p><p style="opacity: .0">b</p><p style="opacity:0">c</p>';
   assert.ok(analyze({ url: 'u', html: CLEAN.replace('</main>', `${hidden}</main>`), ...fetched }).findings.some(f => f.id === 'ssr-hidden-content'));

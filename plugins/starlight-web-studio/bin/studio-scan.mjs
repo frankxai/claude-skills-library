@@ -54,9 +54,12 @@ function decode(s) {
 // whichever starts first wins, so "<!--" inside a script string and "<script>" inside a comment
 // are both inert. Returns the markup with comments removed and raw-text bodies emptied, plus
 // the script elements that really exist.
+// An attribute list where ">" inside a quoted value does not end the tag.
+const ATTRS = `((?:[^>"']|"[^"]*"|'[^']*')*)`;
+
 export function tokenize(html) {
   const scripts = [];
-  const markup = html.replace(/<!--[\s\S]*?(?:-->|$)|<(script|style|template|textarea|title)\b([^>]*)>([\s\S]*?)<\/\1\s*>/gi,
+  const markup = html.replace(new RegExp(`<!--[\\s\\S]*?(?:-->|$)|<(script|style|template|textarea|title)\\b${ATTRS}>([\\s\\S]*?)<\\/\\1\\s*>`, 'gi'),
     (m, tag, attrs, body) => {
       if (!tag) return '';
       if (tag.toLowerCase() === 'script') scripts.push({ attrs: ` ${attrs}`, body });
@@ -73,13 +76,20 @@ function stripTags(s) {
   return decode(s.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 }
 
+// Walks the attribute list name by name, so text inside one quoted value is never read as
+// another attribute. Accepts a whole tag or just its attribute string.
 function attr(tag, name) {
-  const m = tag.match(new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i'));
-  return m ? decode(m[1] ?? m[2] ?? m[3] ?? '') : null;
+  const list = tag.replace(/^<[a-z0-9-]+/i, '').replace(/\/?>$/, '');
+  const re = /([^\s"'>\/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+  for (const m of list.matchAll(re)) {
+    if (m[1].toLowerCase() === name.toLowerCase()) return m[2] !== undefined || m[3] !== undefined || m[4] !== undefined
+      ? decode(m[2] ?? m[3] ?? m[4]) : '';
+  }
+  return null;
 }
 
 function tags(html, name) {
-  return html.match(new RegExp(`<${name}\\b[^>]*>`, 'gi')) ?? [];
+  return html.match(new RegExp(`<${name}\\b${ATTRS}>`, 'gi')) ?? [];
 }
 
 function meta(html, key) {
@@ -191,7 +201,7 @@ function allCapsRuns(text) {
   return (text.match(/\b[A-Z][A-Z0-9'’&-]{1,}(?:\s+[A-Z][A-Z0-9'’&-]{1,}){2,}\b/g) ?? []).filter(r => /[A-Z]{3}/.test(r));
 }
 
-export function analyze({ url, html: raw, status = 200, robotsTxt = null, robotsState = robotsTxt === null ? 'missing' : 'ok', llmsTxt = null, llmsContentType = null, sitemapOk = null, timing = {} }) {
+export function analyze({ url, html: raw, status = 200, robotsTxt = null, robotsState = robotsTxt === null ? 'missing' : 'ok', llmsTxt = null, llmsContentType = null, sitemapOk = null, robotsHeader = null, timing = {} }) {
   const html = markupOnly(raw);
   const findings = [];
   const add = (dimension, severity, id, evidence, fix) => findings.push({ dimension, severity, id, evidence, fix });
@@ -206,8 +216,13 @@ export function analyze({ url, html: raw, status = 200, robotsTxt = null, robots
   const description = meta(html, 'description');
   if (!description) add('search', 'P1', 'description-missing', 'No meta description.', 'Write a 70-160 character description that answers "what is this and for whom".');
   else if (description.length < 70 || description.length > 165) add('search', 'P2', 'description-length', `Description is ${description.length} chars.`, 'Aim for 70-160 characters.');
-  const robotsMeta = (meta(html, 'robots') ?? '').toLowerCase();
-  if (robotsMeta.includes('noindex')) add('search', 'P0', 'noindex', `meta robots="${robotsMeta}"`, 'Remove noindex from a page meant to be found.');
+  // The page is unindexable if the meta tag or the X-Robots-Tag header says noindex or none
+  // ("none" means noindex, nofollow). A header token may be scoped to one crawler ("googlebot: noindex").
+  const blocksIndex = value => (value ?? '').toLowerCase().split(',')
+    .map(t => t.replace(/^[^:]*:\s*/, '').trim()).some(t => t === 'noindex' || t === 'none');
+  const robotsMeta = meta(html, 'robots');
+  if (blocksIndex(robotsMeta)) add('search', 'P0', 'noindex', `meta robots="${robotsMeta}"`, 'Remove noindex from a page meant to be found.');
+  else if (blocksIndex(robotsHeader)) add('search', 'P0', 'noindex', `X-Robots-Tag: ${robotsHeader}`, 'Remove the noindex response header from a page meant to be found.');
   const canonical = linkRel(html, 'canonical').map(t => attr(t, 'href'))[0];
   if (!canonical) add('search', 'P1', 'canonical-missing', 'No rel=canonical.', 'Add an absolute canonical URL on the canonical host.');
   else if (!/^https?:\/\//i.test(canonical)) add('search', 'P2', 'canonical-relative', `canonical="${canonical}"`, 'Use an absolute canonical URL.');
@@ -363,6 +378,7 @@ export async function fetchPage(url) {
     llmsTxt: llms.body ?? null,
     llmsContentType: llms.type ?? null,
     sitemapOk: sitemap.state === 'ok' && /<(urlset|sitemapindex)\b/i.test(sitemap.body),
+    robotsHeader: page.res.headers.get('x-robots-tag'),
     timing: { ttfbMs: page.ttfbMs },
   };
 }
