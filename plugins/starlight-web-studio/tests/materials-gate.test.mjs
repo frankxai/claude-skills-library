@@ -770,6 +770,22 @@ test('typed, multiline and exported loader bindings are read', () => {
   assert.equal(result.pass, false);
 });
 
+test('a loader wrapped in memo, forwardRef or a custom HOC still binds; a loader in a statement with no binding is a gap', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport { memo } from 'react';\nexport default memo(dynamic(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n));\n`,
+    'app/two/page.tsx': `import dynamic from 'next/dynamic';\nimport { forwardRef } from 'react';\nconst Scene = forwardRef(withTheme(dynamic(() => import('@react-three/fiber').then(m => m.Canvas))));\nexport default () => <Scene />;\n`,
+    'app/three/page.tsx': `import dynamic from 'next/dynamic';\nregistry.register('scene', dynamic(() => import('@react-three/fiber').then(m => m.Canvas)));\nexport default () => null;\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  assert.match(life.detail, /app[\\/]one[\\/]page\.tsx/);
+  assert.match(life.detail, /app[\\/]two[\\/]page\.tsx/);
+  assert.match(byId(result, 'coverage').detail, /app[\\/]three[\\/]page\.tsx/);
+});
+
 test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

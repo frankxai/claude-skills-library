@@ -495,6 +495,36 @@ function matchPair(src, open, opener = '(', closer = ')') {
 }
 const matchParen = (src, open) => matchPair(src, open, '(', ')');
 
+// The statement enclosing position `at`: text from the nearest `;`, `{` or `}` at bracket
+// depth zero (reading backward) up to `at`. Null when brackets do not balance.
+function statementHead(src, at) {
+  let depth = 0;
+  let j = at - 1;
+  while (j >= 0) {
+    const c = src[j];
+    if (c === '>' && src[j - 1] === '=') { j -= 2; continue; }
+    if (c === ')' || c === ']') depth += 1;
+    else if ((c === '(' || c === '[') && depth > 0) depth -= 1;
+    // An unmatched opener is a call or array the position sits inside; keep walking out.
+    else if (depth === 0 && (c === ';' || c === '{' || c === '}')) break;
+    j -= 1;
+  }
+  return { start: j + 1, text: src.slice(j + 1, at) };
+}
+
+// Index of the first assignment `=` (not `==`, `=>`, `>=`, `<=`, `!=`) at bracket depth zero
+// between `from` and `to`, or -1.
+function assignmentIn(src, from, to) {
+  let depth = 0;
+  for (let i = from; i < to; i += 1) {
+    const c = src[i];
+    if (c === '(' || c === '[' || c === '{') depth += 1;
+    else if (c === ')' || c === ']' || c === '}') depth -= 1;
+    else if (c === '=' && depth === 0 && !/[=!<>]/.test(src[i - 1] ?? '') && !/[=>]/.test(src[i + 1] ?? '')) return i;
+  }
+  return -1;
+}
+
 // The identifier bound by the `=` at `eq`, reading backward past an optional TypeScript
 // annotation (`Scene: ComponentType<CanvasProps> = …`), where `=>` is one token and
 // brackets of every kind are balanced. Null when the left side is not a plain binding.
@@ -638,11 +668,22 @@ function computeBindings(file, deps, lookup) {
   const loaderAlt = [...loaders].map(escapeRe).join('|');
   // A TypeScript type argument may sit between the callee and its paren, `dynamic<Props>(…)`,
   // and may itself contain function types whose `=>` is one token, not a closing bracket.
-  // A loader bound by `=`, or used directly as the default export (`export default dynamic(…)`).
-  for (const m of src.matchAll(new RegExp(`(?:(?<![=!<>])=(?![=>])|\\bexport\\s+default)\\s*(?:${loaderAlt})\\s*`, 'g'))) {
-    const name = m[0].startsWith('export') ? 'default' : bindingNameBefore(src, m.index);
-    if (!name) continue;
+  // Every loader call, wherever it sits in an expression (`memo(dynamic(…))`, `withX(lazy(…))`),
+  // binds the name its enclosing statement declares or that statement's default export. A
+  // wrapper is assumed to render what it wraps. A statement whose head the reader cannot
+  // settle is a coverage gap.
+  for (const m of src.matchAll(new RegExp(`(?<![\\w$.])(?:${loaderAlt})\\s*`, 'g'))) {
     let open = m.index + m[0].length;
+    if (src[open] !== '(' && src[open] !== '<') continue;
+    const head = statementHead(src, m.index);
+    let name = null;
+    if (head === null) { unsupported.add(`loader@${m.index}`); continue; }
+    if (/^\s*export\s+default\b/.test(head.text)) name = 'default';
+    else {
+      const eq = assignmentIn(src, head.start, m.index);
+      name = eq === -1 ? null : bindingNameBefore(src, eq);
+    }
+    if (!name) { unsupported.add(`loader@${m.index}`); continue; }
     if (src[open] === '<') {
       const closeAngle = matchAngle(src, open);
       if (closeAngle === -1) { unsupported.add(name); continue; }
