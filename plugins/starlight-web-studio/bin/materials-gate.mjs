@@ -360,7 +360,10 @@ export function importsOf(file) {
   const out = [];
   let dynamic = 0;
   for (const s of strings) {
-    const before = src.slice(Math.max(0, s.at - 64), s.at);
+    // Classify by the token before the specifier, whatever whitespace separates them.
+    let end = s.at;
+    while (end > 0 && /\s/.test(src[end - 1])) end -= 1;
+    const before = src.slice(Math.max(0, end - 64), end);
     let kind = null;
     if (/\bfrom\s*$/.test(before)) kind = 'from';
     else if (/(?<![\w$.])import\s*$/.test(before)) kind = 'side-effect';
@@ -498,30 +501,39 @@ function computeBindings(file, deps, lookup) {
       }
     }
   }
-  // Exports last, so they can name anything bound above.
+  // Exports last, so they can name anything bound above. Star exports go in first; an
+  // explicit export of the same name wins, as the language rules. Two stars that disagree on
+  // a name make it ambiguous in the language and a conflict here.
+  const conflicts = new Set();
+  for (const { st, gpu, inner } of resolved) {
+    if (st.kind !== 'export' || !st.star || st.ns) continue;
+    const entries = gpu ? [...Object.entries(RENDERER_KINDS)].flatMap(([k, set]) => [...set].map((n) => [n, k])) : inner ? [...inner.exports] : [];
+    for (const [e, k] of entries) {
+      if (exports.has(e) && exports.get(e) !== k) conflicts.add(e);
+      else exports.set(e, k);
+    }
+  }
   for (const { st, gpu, inner } of resolved) {
     if (st.kind !== 'export') continue;
-    if (st.star) {
-      if (st.ns) {
-        if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) exports.set(`${st.ns}.${n}`, k);
-        else if (inner) for (const [e, k] of inner.exports) exports.set(`${st.ns}.${e}`, k);
-      } else if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) exports.set(n, k);
-      else if (inner) for (const [e, k] of inner.exports) exports.set(e, k);
+    if (st.star && st.ns) {
+      if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) exports.set(`${st.ns}.${n}`, k);
+      else if (inner) for (const [e, k] of inner.exports) exports.set(`${st.ns}.${e}`, k);
     }
-    for (const [origin, bound] of st.pairs) { const k = originKind(gpu, inner, origin); if (k) exports.set(bound, k); }
+    for (const [origin, bound] of st.pairs) { const k = originKind(gpu, inner, origin); if (k) { exports.set(bound, k); conflicts.delete(bound); } }
   }
   for (const m of src.matchAll(/\bexport\s*\{([^}]*)\}\s*(?!from)/g)) {
     for (const spec of m[1].split(',')) {
       const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s+as\s+([A-Za-z_$][\w$]*|default))?$/);
-      if (p && local.has(p[1])) exports.set(p[2] ?? p[1], local.get(p[1]));
+      if (p && local.has(p[1])) { exports.set(p[2] ?? p[1], local.get(p[1])); conflicts.delete(p[2] ?? p[1]); }
     }
   }
   for (const m of src.matchAll(/\bexport\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g)) {
-    if (local.has(m[1])) exports.set(m[1], local.get(m[1]));
+    if (local.has(m[1])) { exports.set(m[1], local.get(m[1])); conflicts.delete(m[1]); }
   }
   const dm = src.match(/\bexport\s+default\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;?/);
   if (dm && local.has(dm[1])) exports.set('default', local.get(dm[1]));
-  return { local, exports };
+  for (const e of conflicts) exports.delete(e);
+  return { local, exports, conflicts };
 }
 
 // Bindings of one module, solved per dependency component. The component is every module
@@ -549,9 +561,12 @@ function depsOf(file, resolveLocal) {
 }
 
 function sameBindings(a, b) {
-  if (a.local.size !== b.local.size || a.exports.size !== b.exports.size) return false;
+  const ac = a.conflicts ?? new Set();
+  const bc = b.conflicts ?? new Set();
+  if (a.local.size !== b.local.size || a.exports.size !== b.exports.size || ac.size !== bc.size) return false;
   for (const [k, v] of a.local) if (b.local.get(k) !== v) return false;
   for (const [k, v] of a.exports) if (b.exports.get(k) !== v) return false;
+  for (const c of ac) if (!bc.has(c)) return false;
   return true;
 }
 
@@ -584,8 +599,11 @@ export function rendererBindings(file, resolveLocal, state) {
       }
     }
   }
-  if (!converged) {
-    for (const f of component.values()) state?.propagationCut?.add(relative(state.root ?? '', f));
+  const conflicted = [...component].filter(([k]) => current.get(k).conflicts?.size);
+  if (!converged || conflicted.length) {
+    const flagged = converged ? conflicted.map(([, f]) => f) : [...component.values()];
+    for (const f of flagged) state?.propagationCut?.add(relative(state.root ?? '', f));
+    if (converged) for (const [k, v] of current) if (!v.conflicts?.size) bindingCache.set(k, v);
     return current.get(key);
   }
   for (const [k, v] of current) bindingCache.set(k, v);
@@ -1087,7 +1105,7 @@ export function checkGpuSurfaces(root, files) {
   if (state.unresolved.size) gaps.push(`${state.unresolved.size} import specifier(s) unresolved (a local path, alias or package that is not where it should be): ${listed([...state.unresolved])}`);
   if (state.dynamic.size) gaps.push(`${state.dynamic.size} file(s) load a module through an expression the scanner cannot follow (import(name), import('../x/' + name), require(require.resolve(…)), a substituted template): ${listed([...state.dynamic.keys()])}`);
   if (state.depthCut) gaps.push(`${state.depthCut} module(s) beyond the ${IMPORT_DEPTH}-edge traversal limit`);
-  if (state.propagationCut.size) gaps.push(`${state.propagationCut.size} module(s) whose re-export component did not converge within ${FIXPOINT_ITERATIONS} iterations or exceeded ${COMPONENT_LIMIT} modules, renderer names not followed: ${listed([...state.propagationCut])}`);
+  if (state.propagationCut.size) gaps.push(`${state.propagationCut.size} module(s) whose re-exports could not be followed (a component that did not converge within ${FIXPOINT_ITERATIONS} iterations, exceeded ${COMPONENT_LIMIT} modules, or two star exports naming the same renderer differently): ${listed([...state.propagationCut])}`);
   if (state.comboCut.size) gaps.push(`route(s) with more than ${COMBO_LIMIT} slot combinations, not enumerated: ${listed([...state.comboCut])}`);
   if (aliases.dropped.length) gaps.push(`tsconfig: ${listed(aliases.dropped)}`);
   if (lexIssues.length) gaps.push(`${lexIssues.length} file(s) the lexer could not read to the end: ${listed(lexIssues)}`);

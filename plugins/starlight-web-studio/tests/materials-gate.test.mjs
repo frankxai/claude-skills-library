@@ -643,6 +643,38 @@ test('an exported declaration is bound before the aliases that depend on it', ()
   assert.match(byId(runGate(root), 'gpu-lifecycle').detail, /app[\\/]page\.tsx/);
 });
 
+test('an explicit export beats a star export, in both import orders; two disagreeing stars are a coverage gap', () => {
+  const fromA = `import { X as Scene } from '../lib/a';`;
+  const fromB = `import { X as Unused } from '../lib/b';`;
+  for (const lines of [[fromA, fromB], [fromB, fromA]]) {
+    const root = fixture({
+      'DESIGN.md': GOOD_DESIGN,
+      'lib/a.ts': `export { Canvas as X } from '@react-three/fiber';\nexport * from './b';\n`,
+      'lib/b.ts': `export { WebGLRenderer as X } from 'three';\nexport * from './a';\n`,
+      'app/page.tsx': `${lines.join('\n')}\nexport default () => <Scene />;\n`,
+    });
+    const result = runGate(root);
+    assert.equal(byId(result, 'gpu-lifecycle').level, 'error', `${lines[0]}: ${JSON.stringify(result.checks)}`);
+    assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  }
+  const ambiguous = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'lib/one.ts': `export { Canvas as X } from '@react-three/fiber';\n`,
+    'lib/two.ts': `export { WebGLRenderer as X } from 'three';\n`,
+    'lib/index.ts': `export * from './one';\nexport * from './two';\n`,
+    'app/page.tsx': `import { X } from '../lib';\nexport default () => <X />;\n`,
+  });
+  assert.match(byId(runGate(ambiguous), 'coverage').detail, /two star exports naming the same renderer differently/);
+});
+
+test('whitespace between from and the specifier does not hide an import', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import { Canvas as Scene } from${' '.repeat(80)}'@react-three/fiber';\nexport default () => <Scene />;\n`,
+  });
+  assert.match(byId(runGate(root), 'gpu-lifecycle').detail, /app[\\/]page\.tsx/);
+});
+
 test('circular barrels resolve the same whichever import is seen first', () => {
   for (const order of [['a', 'b'], ['b', 'a']]) {
     const root = fixture({
