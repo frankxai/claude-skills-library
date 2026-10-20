@@ -770,6 +770,24 @@ test('typed, multiline and exported loader bindings are read', () => {
   assert.equal(result.pass, false);
 });
 
+test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nexport default dynamic(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n);\n`,
+    'app/two/page.tsx': `import Scene from '../../components/scene';\nexport default () => <Scene />;\n`,
+    'components/scene.tsx': `import { lazy } from 'react';\nexport default lazy(() => import('@react-three/fiber').then(({ Canvas }) => Canvas));\n`,
+    'lib/unused.tsx': `import dynamic from 'next/dynamic';\nexport default dynamic(() => import('@react-three/fiber').then(m => m.Canvas));\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  assert.match(life.detail, /app[\\/]one[\\/]page\.tsx/);
+  assert.match(life.detail, /app[\\/]two[\\/]page\.tsx/);
+  assert.doesNotMatch(life.detail, /lib[\\/]unused\.tsx/, 'a component module that mounts nothing is not a renderer');
+  assert.equal(result.pass, false);
+});
+
 test('loading, error and not-found render inside the layout in place of the page and count with it', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

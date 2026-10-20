@@ -638,8 +638,9 @@ function computeBindings(file, deps, lookup) {
   const loaderAlt = [...loaders].map(escapeRe).join('|');
   // A TypeScript type argument may sit between the callee and its paren, `dynamic<Props>(…)`,
   // and may itself contain function types whose `=>` is one token, not a closing bracket.
-  for (const m of src.matchAll(new RegExp(`(?<![=!<>])=(?![=>])\\s*(?:${loaderAlt})\\s*`, 'g'))) {
-    const name = bindingNameBefore(src, m.index);
+  // A loader bound by `=`, or used directly as the default export (`export default dynamic(…)`).
+  for (const m of src.matchAll(new RegExp(`(?:(?<![=!<>])=(?![=>])|\\bexport\\s+default)\\s*(?:${loaderAlt})\\s*`, 'g'))) {
+    const name = m[0].startsWith('export') ? 'default' : bindingNameBefore(src, m.index);
     if (!name) continue;
     let open = m.index + m[0].length;
     if (src[open] === '<') {
@@ -660,7 +661,9 @@ function computeBindings(file, deps, lookup) {
     const gpu = GPU_PACKAGES.test(spec.value);
     const target = gpu ? null : deps.get(spec.value) ?? null;
     const k = originKind(gpu, target ? lookup(target) : null, member);
-    if (k) local.set(name, k);
+    if (!k) continue;
+    if (name === 'default') exports.set('default', k);
+    else local.set(name, k);
   }
   // Variable, class-field and destructuring bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {
@@ -795,7 +798,9 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 // name, with or without a namespace prefix, including package names used directly.
 export function hasRendererExpression(file, resolveLocal = null, state = null) {
   const { code: src } = lexed(file);
-  const { local } = rendererBindings(file, resolveLocal, state);
+  const { local, exports } = rendererBindings(file, resolveLocal, state);
+  // A route file whose default export is a renderer tag is mounted by the framework itself.
+  if (exports.get('default') === 'tag' && isRouteFile(file)) return true;
   const names = { ctor: new Set(RENDERER_CTORS), tag: new Set(RENDERER_TAGS), call: new Set(RENDERER_CALLS) };
   for (const [name, kind] of local) names[kind].add(name);
   const alt = (set) => [...set].map(escapeRe).join('|');
@@ -1118,6 +1123,7 @@ function closure(root, entries, aliases, state) {
 // alternatives to it, never additions.
 const APP_ROUTE_FILE_RE = /(^|[\\/])(page|layout|template|default|loading|error|not-found)\.(tsx|jsx|ts|js)$/;
 const ALTERNATIVE_FILE_RE = /(^|[\\/])(loading|error|not-found)\./;
+const isRouteFile = (file) => APP_ROUTE_FILE_RE.test(file) || /(^|[\\/])pages[\\/].*\.(tsx|jsx|ts|js)$/.test(file);
 const PAGES_DIR_RE = /^(?:src[\\/])?pages[\\/]/;
 export function routeKey(root, file) {
   const segs = relative(root, dirname(file)).split(/[\\/]/).filter(Boolean);
