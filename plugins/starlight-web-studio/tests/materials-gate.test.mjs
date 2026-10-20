@@ -329,6 +329,89 @@ test('config and package gaps: a missing extends target is reported; pnpm layout
   assert.match(g.detail, /unresolved .*ghost-pkg/);
 });
 
+test('JSX text is not code: quoted copy, visible URLs and prose cannot hide an element or fake a gate', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'a/glass.tsx': `export default () => <p>'Look <LiquidGlass /> here'</p>;\n`,
+    'b/glass.tsx': `export default () => <p>https://example.com <LiquidGlass /></p>;\n`,
+    'c/glass.tsx': `export default () => <p>gpuPlan() <LiquidGlass /></p>;\n`,
+    'd/ok.tsx': `export default () => <a href="https://x.com/y" title='it"s'>{cond && <b>{"str"}</b>} text</a>;\nconst v = a < b && c > d;\n`,
+  });
+  const result = runGate(root);
+  const glass = byId(result, 'glass-gated');
+  assert.equal(glass.level, 'error');
+  for (const f of ['a', 'b', 'c']) assert.match(glass.detail, new RegExp(`${f}[\\\\/]glass\\.tsx`));
+  assert.doesNotMatch(glass.detail, /d[\\/]ok/);
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  const { code, strings } = lex(`const x = <A b="1">hi 'there' // not a comment</A>; const y = "s";`, { jsx: true });
+  assert.match(code, /<A b=""\s*>/);
+  assert.doesNotMatch(code, /there/);
+  assert.deepEqual(strings.map((s) => s.value), ['1', 's']);
+});
+
+test('renderers behind a local barrel, through a namespace tag, or in a reachable fixture folder are counted', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'lib/canvas.ts': `export { Canvas } from '@react-three/fiber';\n`,
+    'app/page.tsx': `import { Canvas } from '../lib/canvas';\nimport * as R3F from '@react-three/fiber';\nimport Scene from '../fixtures/scene';\nexport default () => <><Canvas /><R3F.Canvas /><Scene /></>;\n`,
+    'fixtures/scene.tsx': `import * as THREE from 'three';\nexport default () => { new THREE.WebGLRenderer(); return null; };\n`,
+  });
+  const result = runGate(root);
+  const surface = byId(result, 'one-gpu-surface');
+  assert.equal(surface.level, 'error');
+  assert.match(surface.detail, /2 renderer modules/);
+  assert.match(byId(result, 'gpu-lifecycle').detail, /app[\\/]page\.tsx/);
+  assert.match(byId(result, 'gpu-lifecycle').detail, /fixtures[\\/]scene\.tsx/);
+});
+
+test('a dynamic import that begins with a literal is not a static import', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `const Scene = import('../components/' + name);\nconst ok = import('../components/a');\n`,
+    'components/index.ts': `export const x = 1;\n`,
+    'components/a.tsx': `export const a = 1;\n`,
+  });
+  const c = byId(runGate(root), 'coverage');
+  assert.equal(c.level, 'error');
+  assert.match(c.detail, /cannot follow .*app[\\/]page\.tsx/);
+});
+
+test('Pages Router: a page composing two renderers fails, with _app as its layout', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'pages/_app.tsx': `import { Bg } from '../components/bg';\nexport default ({ Component }) => <><Bg /><Component /></>;\n`,
+    'pages/index.tsx': `import { Orb } from '../components/orb';\nexport default () => <Orb />;\n`,
+    'pages/api/hello.ts': `export default () => null;\n`,
+    'components/bg.tsx': GOOD_RENDERER,
+    'components/orb.tsx': GOOD_RENDERER,
+  });
+  const check = byId(runGate(root), 'one-gpu-surface');
+  assert.equal(check.level, 'error');
+  assert.match(check.detail, /pages\/index \(2 renderer/);
+});
+
+test('a slot page and its default are alternatives, never counted together', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children, modal }) => <>{children}{modal}</>;\n`,
+    'app/page.tsx': `export default () => null;\n`,
+    'app/@modal/page.tsx': `import { A } from '../../components/a';\n`,
+    'app/@modal/default.tsx': `import { B } from '../../components/b';\n`,
+    'components/a.tsx': GOOD_RENDERER,
+    'components/b.tsx': GOOD_RENDERER,
+  });
+  const result = runGate(root);
+  assert.equal(result.errors, 0, JSON.stringify(result.checks));
+});
+
+test('slash heuristics: whitespace before a property name, keyword-named methods', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'a/lens.ts': `import liquidGL from 'liquidgl';\nconst x = obj. in / liquidGL({}) / 2;\nconst y = obj.if(x) / liquidGL({}) / 2;\n`,
+  });
+  assert.match(byId(runGate(root), 'glass-gated').detail, /a[\\/]lens\.ts/);
+});
+
 // --- DESIGN.md -----------------------------------------------------------------------------
 
 test('a missing DESIGN.md is an error', () => {
@@ -476,7 +559,7 @@ test('parallel route slots render together and are counted as one route', () => 
   });
   const check = byId(runGate(root), 'one-gpu-surface');
   assert.equal(check.level, 'error');
-  assert.match(check.detail, /\/app \(2 renderer modules via 3 route file/);
+  assert.match(check.detail, /\/app \(2 renderer modules/);
 });
 
 test('a helper that imports three for maths is not a renderer and owes no lifecycle', () => {
@@ -581,7 +664,7 @@ test('colour literals in rgb and hsl form count, and only relative token paths a
   assert.match(check.detail, /25 distinct/);
 });
 
-test('tests and fixtures at the root or nested, root tooling, .studio prototypes, dot folders and build output are never product', () => {
+test('tests and fixtures at the root or nested, root tooling, .studio prototypes, dot folders and build output are never product unless imported', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,
     'scripts/check.cjs': `const m = require(process.argv[2]);\n`,

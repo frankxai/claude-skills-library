@@ -11,10 +11,10 @@
 // was resolved AND every file lexed cleanly AND every loading expression was one the scanner
 // understands: anything it could not read or follow is the `coverage` error, never a pass.
 //
-// Not covered, by design: raw WebGL without a library, CDN script tags, refraction behind a
-// build-time plugin, whether a gate call prevents renderer creation, and a renderer class
-// that reaches `new` through more than two bindings or a function return. Those belong to
-// the materials wrapper and the eye pass.
+// Documented heuristic limits, accepted because they are rare in shipped pages: a slash after
+// an object literal or after a keyword-named method call may be read as a regex start; a
+// renderer class that reaches `new` through a function return or more than two bindings is
+// not followed; a `<Tag>` immediately after an identifier is read as a comparison.
 
 import { readdirSync, readFileSync, statSync, lstatSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -41,9 +41,10 @@ const SECTION_ALIASES = {
 
 const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', 'build', '.git', '.turbo', 'coverage', '.worktrees', 'out']);
 const EVIDENCE_RE = /[\\/]\.studio[\\/]/;
-// Tests, fixtures and stories anywhere, and repo tooling at the root, are not shipped pages.
+// Not shipped unless a shipped file imports it: tests, fixtures, stories, root tooling.
 const NON_SHIPPING_RE = /(^|[\\/])(tests?|__tests__|fixtures?|__fixtures__|__mocks__|stories|e2e)[\\/]|^(scripts|tools|bin)[\\/]|\.(test|spec|stories)\.[cm]?[jt]sx?$/;
 const JS_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.astro', '.svelte', '.vue']);
+const JSX_EXT = new Set(['.tsx', '.jsx']);
 const STYLE_EXT = new Set(['.css', '.scss', '.html']);
 const FILTER_EXT = new Set(['.svg']);
 const TOKEN_FILE_RE = /(^|[\\/])(tailwind\.config\.[cm]?[jt]s|globals?\.css|tokens?\.[cm]?[jt]s|theme\.[cm]?[jt]s|design\.sidecar\.json|DESIGN\.md|design\.md)$|(^|[\\/])tokens?[\\/]/i;
@@ -54,9 +55,10 @@ const RENDERER_CTORS = ['WebGLRenderer', 'WebGPURenderer', 'Renderer'];
 const RENDERER_TAGS = ['Canvas', 'MeshGradient', 'GrainGradient', 'Dithering', 'Warp', 'DotOrbit', 'Waves', 'ShaderMount'];
 const RENDERER_CALLS = ['liquidGL'];
 const BUILTINS = new Set(builtinModules);
+const FRAMEWORK_VIRTUAL = new Set(['server-only', 'client-only']);
 
 const GLASS_CSS_RE = /backdrop-filter/i;
-const GLASS_JS_RE = /<feDisplacementMap\b|<LiquidGlass\w*\b|\bliquidGL\s*\(/;
+const GLASS_JS_RE = /<(?:[A-Za-z_$][\w$]*\.)?feDisplacementMap\b|<(?:[A-Za-z_$][\w$]*\.)?LiquidGlass\w*\b|\bliquidGL\s*\(/;
 const GLASS_FILE_RE = /<feDisplacementMap\b/;
 const GLASS_GATE_CALL_RE = /\bgpuPlan\s*\(|\buseGlassPlan\s*\(/;
 const GLASS_GATE_MODULE_RE = /(^|\/)glass-gate(\.[cm]?[jt]s)?$|^@starlight\/materials(\/|$)/;
@@ -99,23 +101,30 @@ function read(file) {
 }
 
 // --- lexer ---------------------------------------------------------------------------------
-// One recursive scanner over the source. Comments become a single space; string, template and
-// regex literals become empty placeholders; every string literal is kept beside its offset in
-// the emitted code so import specifiers can be read back. Template substitutions are scanned
-// by the same loop, so a regex brace or a comment inside `${}` cannot end the substitution.
+// One recursive scanner over the source. Comments become a single space; string, template
+// and regex literals become empty placeholders; every string literal is kept beside its
+// offset in the emitted code so import specifiers can be read back. Template substitutions
+// and JSX `{}` expressions are scanned by the same loop with the same rules.
 //
-// Two ambiguities a lexer cannot settle from syntax alone are settled by rules:
-// - a quote immediately after an identifier character (`Don't`) is an apostrophe, because
-//   JavaScript never lets a string literal follow an identifier; a quote with no closing
-//   quote on its line is an apostrophe for the same reason;
-// - a slash is a regex start when the previous significant token cannot end an expression:
-//   an operator, an opening bracket, a keyword that is not a property name, or a `)` that
-//   closed an `if`, `while`, `for` or `with` condition. After `<` it is a JSX closing tag.
+// In JSX files the scanner tracks tags: a `<Tag` that follows a token which cannot end an
+// expression opens a tag; attributes are lexed as code; between an opening tag and its
+// closing tag the content is text, where quotes, slashes and comment markers mean nothing
+// and nothing is emitted, so copy can neither hide an element nor fake a call. Tags are
+// emitted as `<Name` so renderer and glass tags stay visible.
+//
+// Two ambiguities a lexer cannot settle from syntax alone are settled by rules: a quote right
+// after an identifier character (`Don't`) or with no closing quote on its line is an
+// apostrophe; a slash is a regex start when the previous significant token cannot end an
+// expression (an operator, an opening bracket, a keyword that is not a property, or a `)`
+// that closed an `if`, `while`, `for` or `with` condition).
 const REGEX_PREV_CHARS = new Set(['(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '>', '~', '^']);
 const REGEX_PREV_WORDS = new Set(['return', 'typeof', 'case', 'do', 'else', 'in', 'of', 'instanceof', 'new', 'delete', 'void', 'throw', 'yield', 'await']);
-const CONTROL_WORDS = /\b(?:if|while|for|with)\s*$/;
+const CONTROL_WORDS = /(?<![\w$.])\b(?:if|while|for|with)\s*$/;
+const TAG_PREV_CHARS = new Set(['(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '>', '+', '-', '*', '%', '~', '^']);
+const TAG_PREV_WORDS = new Set(['return', 'case', 'do', 'else', 'yield', 'await', 'in', 'of']);
+const TAG_START_RE = /^<(?:>|\/|[A-Za-z_$][\w$.:-]*(?![\s]*(?:,|extends\b)))/;
 
-export function lex(text) {
+export function lex(text, { jsx = false } = {}) {
   const strings = [];
   const issues = [];
   const parens = [];
@@ -123,8 +132,12 @@ export function lex(text) {
   let code = '';
   const n = text.length;
 
+  function lastToken() {
+    return code.replace(/\s+$/, '');
+  }
+
   function regexCanStart() {
-    const t = code.replace(/\s+$/, '');
+    const t = lastToken();
     if (!t) return true;
     const last = t[t.length - 1];
     if (last === ')') return lastCloseWasControl;
@@ -133,7 +146,17 @@ export function lex(text) {
     if (REGEX_PREV_CHARS.has(last)) return true;
     const word = t.match(/([A-Za-z_$][\w$]*)$/);
     if (!word || !REGEX_PREV_WORDS.has(word[1])) return false;
-    return !t.slice(0, -word[1].length).endsWith('.');
+    return !/\.\s*$/.test(t.slice(0, -word[1].length));
+  }
+
+  function tagCanStart(i) {
+    if (!jsx || !TAG_START_RE.test(text.slice(i, i + 64))) return false;
+    const t = lastToken();
+    if (!t) return true;
+    const last = t[t.length - 1];
+    if (TAG_PREV_CHARS.has(last)) return true;
+    const word = t.match(/([A-Za-z_$][\w$]*)$/);
+    return Boolean(word && TAG_PREV_WORDS.has(word[1]));
   }
 
   function quoted(start, quote) {
@@ -169,8 +192,53 @@ export function lex(text) {
     return null;
   }
 
-  // Scans from i. In a substitution it returns at the `}` that closes it; otherwise at the end.
-  function scan(i, inSub) {
+  // JSX element starting at `<`. Attributes are code; children are text until the matching
+  // close. Returns the index after the element.
+  function element(i) {
+    const m = text.slice(i, i + 200).match(/^<(\/?)([A-Za-z_$][\w$.:-]*)?/);
+    const closing = m[1] === '/';
+    const name = m[2] ?? '';
+    code += closing ? '</' + name : '<' + name;
+    let j = i + m[0].length;
+    let selfClosing = false;
+    // attributes
+    while (j < n) {
+      const ch = text[j];
+      if (ch === '/' && text[j + 1] === '>') { selfClosing = true; j += 2; code += ' />'; break; }
+      if (ch === '>') { j += 1; code += '>'; break; }
+      if (ch === '"' || ch === "'") {
+        const s = quoted(j, ch);
+        if (s.closed) { strings.push({ at: code.length, value: s.value, template: false }); code += ch + ch; j = s.end; continue; }
+      }
+      if (ch === '{') { code += '{'; j = scan(j + 1, 'brace'); code += '}'; continue; }
+      if (ch === '/' && text[j + 1] === '/') { while (j < n && text[j] !== '\n') j += 1; continue; }
+      if (ch === '/' && text[j + 1] === '*') { const e = text.indexOf('*/', j + 2); j = e === -1 ? n : e + 2; continue; }
+      code += ch;
+      j += 1;
+    }
+    if (closing || selfClosing) return j;
+    // children: text, nested elements, expressions
+    while (j < n) {
+      const ch = text[j];
+      if (ch === '{') { code += ' {'; j = scan(j + 1, 'brace'); code += '} '; continue; }
+      if (ch === '<') {
+        if (text[j + 1] === '/') {
+          const close = text.slice(j, j + 200).match(/^<\/([A-Za-z_$][\w$.:-]*)?\s*>/);
+          if (close) { code += '</' + (close[1] ?? '') + '>'; return j + close[0].length; }
+        }
+        if (text.startsWith('<!--', j)) { const e = text.indexOf('-->', j + 4); j = e === -1 ? n : e + 3; continue; }
+        j = element(j);
+        continue;
+      }
+      j += 1;
+    }
+    issues.push(`unterminated JSX element <${name}>`);
+    return n;
+  }
+
+  // Scans from i. Mode 'brace' returns after the `}` that closes the expression it started
+  // in; mode 'top' returns at the end.
+  function scan(i, mode) {
     let depth = 0;
     while (i < n) {
       const c = text[i];
@@ -191,6 +259,10 @@ export function lex(text) {
         const end = text.indexOf('-->', i + 4);
         i = end === -1 ? n : end + 3;
         code += ' ';
+        continue;
+      }
+      if (c === '<' && tagCanStart(i)) {
+        i = element(i);
         continue;
       }
       if (c === '/' && regexCanStart()) {
@@ -214,7 +286,7 @@ export function lex(text) {
         i = templateLiteral(i);
         continue;
       }
-      if (inSub) {
+      if (mode === 'brace') {
         if (c === '{') depth += 1;
         else if (c === '}') {
           if (depth === 0) return i + 1;
@@ -226,7 +298,7 @@ export function lex(text) {
       code += c;
       i += 1;
     }
-    if (inSub) issues.push('unterminated template substitution');
+    if (mode === 'brace') issues.push('unterminated expression');
     return n;
   }
 
@@ -247,7 +319,7 @@ export function lex(text) {
         pure = false;
         value += '${}';
         code += ' ${';
-        j = scan(j + 2, true);
+        j = scan(j + 2, 'brace');
         code += '} ';
         continue;
       }
@@ -259,7 +331,7 @@ export function lex(text) {
     return n;
   }
 
-  scan(0, false);
+  scan(0, 'top');
   return { code, strings, issues };
 }
 
@@ -267,7 +339,7 @@ const lexCache = new Map();
 function lexed(file) {
   if (!lexCache.has(file)) {
     const ext = extname(file);
-    lexCache.set(file, JS_EXT.has(ext) ? lex(read(file)) : { code: stripStyleComments(read(file)), strings: [], issues: [] });
+    lexCache.set(file, JS_EXT.has(ext) ? lex(read(file), { jsx: JSX_EXT.has(ext) }) : { code: stripStyleComments(read(file)), strings: [], issues: [] });
   }
   return lexCache.get(file);
 }
@@ -276,11 +348,10 @@ function stripStyleComments(text) {
 }
 const code = (file) => lexed(file).code;
 
-// Import and re-export specifiers: `import … from "x"`, `export … from "x"`, `import "x"`,
-// `import("x")`, `require("x")`. A pure template specifier counts; any other loading
-// expression (`import(name)`, `require(require.resolve(…))`) is reported as dynamic so
-// coverage fails closed. Type-only forms ship nothing and are dropped; a default or namespace
-// binding beside type names keeps the import.
+// Import and re-export specifiers. A pure template specifier counts; any other loading
+// expression (`import(name)`, `import('../x/' + name)`, `require(require.resolve(…))`) is
+// reported as dynamic so coverage fails closed. Type-only forms are dropped; a default or
+// namespace binding beside type names keeps the import.
 export function importsOf(file) {
   const { code: src, strings } = lexed(file);
   const out = [];
@@ -292,6 +363,7 @@ export function importsOf(file) {
     else if (/\bimport\s*$/.test(before)) kind = 'side-effect';
     else if (/\b(?:import|require)\s*\(\s*$/.test(before)) kind = 'call';
     if (!kind) continue;
+    if (kind === 'call' && !/^\s*[,)]/.test(src.slice(s.at + 2, s.at + 40))) { dynamic += 1; continue; }
     if (s.template) {
       if (s.pure) out.push(s.value);
       else dynamic += 1;
@@ -312,21 +384,20 @@ export function importsOf(file) {
     }
     out.push(s.value);
   }
-  // A loading call whose argument is not a literal: `import(name)`, `require(require.resolve(x))`.
   for (const m of src.matchAll(/\b(?:import|require)\s*\(\s*([^\s'"`)])/g)) if (m[1]) dynamic += 1;
   return Object.assign(out, { dynamic });
 }
 
-// Renderer detection follows import aliases and up to two variable bindings:
-// `import { WebGLRenderer as GL }`, `const C = THREE.WebGLRenderer`, `const { Renderer: R } = ogl`.
-export function isRenderer(file) {
+// A renderer expression: `new WebGLRenderer()` (through a namespace, an import alias or up to
+// two variable bindings), a `<Canvas>` tag (with or without a namespace prefix), `liquidGL()`.
+export function hasRendererExpression(file) {
   const { code: src, strings } = lexed(file);
   const ctors = new Set(RENDERER_CTORS);
   const tags = new Set(RENDERER_TAGS);
   const calls = new Set(RENDERER_CALLS);
   for (const s of strings) {
-    if (!GPU_PACKAGES.test(s.value)) continue;
     const before = src.slice(Math.max(0, s.at - 400), s.at);
+    if (!/\bfrom\s*$/.test(before)) continue;
     const stmt = before.slice(before.lastIndexOf('import'));
     const names = stmt.match(/\{([^}]*)\}/);
     if (!names) continue;
@@ -343,7 +414,7 @@ export function isRenderer(file) {
     for (const m of src.matchAll(new RegExp(`\\b([A-Za-z_$][\\w$]*)\\s*=\\s*(?:[A-Za-z_$][\\w$]*\\.)?(${alt(ctors)})\\b(?!\\s*\\()`, 'g'))) ctors.add(m[1]);
     for (const m of src.matchAll(new RegExp(`\\b(${alt(ctors)})\\s*:\\s*([A-Za-z_$][\\w$]*)\\s*[,}]`, 'g'))) ctors.add(m[2]);
   }
-  return new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(ctors)})\\b|<(?:${alt(tags)})\\b|\\b(?:${alt(calls)})\\s*\\(`).test(src);
+  return new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(ctors)})\\b|<(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(tags)})\\b|\\b(?:${alt(calls)})\\s*\\(`).test(src);
 }
 
 const isJs = (f) => JS_EXT.has(extname(f));
@@ -487,8 +558,6 @@ function readJsonc(file) {
   try { return JSON.parse(stripJsonc(read(file))); } catch { return null; }
 }
 
-// compilerOptions with `extends` merged (child wins). A missing, cyclic, outside-root or
-// package-based parent is reported, never silently dropped.
 function compilerOptions(root, file, seen = new Set()) {
   const rel = relative(root, file);
   if (seen.has(norm(file))) return { opts: {}, dropped: [`${rel} extends itself in a cycle`] };
@@ -558,12 +627,8 @@ function packageName(spec) {
   const parts = spec.split('/');
   return spec.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
 }
-// `server-only` and `client-only` are compiler directives the framework provides, not installs.
-const FRAMEWORK_VIRTUAL = new Set(['server-only', 'client-only']);
 const isBuiltin = (spec) => spec.startsWith('node:') || BUILTINS.has(packageName(spec)) || FRAMEWORK_VIRTUAL.has(spec);
 
-// Installed packages: a top-level node_modules entry, or pnpm's content store under
-// node_modules/.pnpm where `@scope/name@1.2.3` is stored as `@scope+name@1.2.3`.
 function packageStore(root) {
   const nm = join(root, 'node_modules');
   if (!existsSync(nm)) return null;
@@ -610,9 +675,12 @@ function localImports(root, file, aliases, state) {
   return out;
 }
 
-function reachable(root, entry, aliases, state) {
-  const seen = new Map([[norm(entry), entry]]);
-  let frontier = [entry];
+// Transitive closure of local imports from a set of entries. Every reachable file counts,
+// whether or not its directory name looked like test or fixture code.
+function closure(root, entries, aliases, state) {
+  const seen = new Map();
+  let frontier = [];
+  for (const e of entries) if (!seen.has(norm(e))) { seen.set(norm(e), e); frontier.push(e); }
   let depth = 0;
   while (frontier.length) {
     if (depth === IMPORT_DEPTH) { state.depthCut += frontier.length; break; }
@@ -628,13 +696,11 @@ function reachable(root, entry, aliases, state) {
   return seen;
 }
 
-// Next.js app-router conventions. A route key is the URL-shaped path of a route file: route
-// groups `(name)` add no segment; everything inside an `@slot`, including an intercepting
-// `(.)segment`, renders beside the slot's parent and takes the parent's key. Entries for a
-// route are its own page/layout/template/default files, the layouts and templates of every
-// physical ancestor, and every route file inside a slot of any ancestor, because those render
-// at the same time.
-const ROUTE_FILE_RE = /(^|[\\/])(page|layout|template|default)\.(tsx|jsx|ts|js)$/;
+// Next.js conventions. App Router: page, layout, template and default files; `(group)` adds no
+// segment; a slot subtree (including an intercepting `(.)seg`) takes its parent's key. Pages
+// Router: every file under pages/ except _app, _document and api/, with _app as the layout.
+const APP_ROUTE_FILE_RE = /(^|[\\/])(page|layout|template|default)\.(tsx|jsx|ts|js)$/;
+const PAGES_DIR_RE = /^(?:src[\\/])?pages[\\/]/;
 export function routeKey(root, file) {
   const segs = relative(root, dirname(file)).split(/[\\/]/).filter(Boolean);
   const out = [];
@@ -646,76 +712,132 @@ export function routeKey(root, file) {
   return out.join('/');
 }
 
-function ancestorEntries(root, member, routeFiles) {
-  const out = [];
-  let dir = dirname(member);
-  while (insideRoot(root, dir) || dir === root) {
-    for (const f of routeFiles) {
-      if (f === member) continue;
-      const fdir = dirname(f);
-      if (fdir === dir && /(^|[\\/])(layout|template)\./.test(f)) out.push(f);
-      else if (fdir.startsWith(dir + sep + '@')) out.push(f);
-    }
-    if (dir === root) break;
-    dir = dirname(dir);
-  }
-  return out;
+function pagesRouterRoutes(root, files) {
+  const pageFiles = files.filter((f) => isJs(f) && PAGES_DIR_RE.test(relative(root, f)) && !/[\\/]api[\\/]/.test(relative(root, f)));
+  const app = pageFiles.filter((f) => /[\\/]_app\.[cm]?[jt]sx?$/.test(f));
+  const pages = pageFiles.filter((f) => !/[\\/]_(app|document|error)\.[cm]?[jt]sx?$/.test(f) && !/[\\/]_/.test(relative(root, f)));
+  return pages.map((p) => ({ key: relative(root, p).replace(/\\/g, '/').replace(/\.[cm]?[jt]sx?$/, ''), entries: [p, ...app], alternatives: [] }));
 }
 
-export function checkGpuSurfaces(root, files) {
-  const gpuModules = new Map();
-  for (const f of files) if (isJs(f) && importsOf(f).some((s) => GPU_PACKAGES.test(s))) gpuModules.set(norm(f), f);
-  const renderers = new Map([...gpuModules].filter(([, f]) => isRenderer(f)));
-  const aliases = readAliases(root);
-  const state = { unresolved: new Set(), unverified: new Set(), dynamic: new Map(), depthCut: 0, store: undefined };
-  const noLifecycle = [];
-  const noPoster = [];
-  for (const f of renderers.values()) {
-    const { code: src, strings } = lexed(f);
-    const listens = strings.some((s) => s.value === 'visibilitychange' && /\baddEventListener\s*\(\s*$/.test(src.slice(Math.max(0, s.at - 40), s.at)));
-    if (!LIFECYCLE_RE.test(src) && !listens) noLifecycle.push(relative(root, f));
-    if (!POSTER_RE.test(src)) noPoster.push(relative(root, f));
-  }
-  const routeFiles = files.filter((f) => ROUTE_FILE_RE.test(f));
-  const pages = routeFiles.filter((f) => /(^|[\\/])page\./.test(f));
+// A route's render set: its own files, every ancestor layout and template, and for every
+// slot of every ancestor the slot's always-on files (layouts, templates) plus one of its
+// alternatives (a page or, when none matched, the default), choosing the alternative that
+// reaches the most renderers so a false pass is never the result of picking the quiet one.
+function appRouterRoutes(root, files) {
+  const routeFiles = files.filter((f) => APP_ROUTE_FILE_RE.test(f));
   const groups = new Map();
   for (const f of routeFiles) {
     const key = routeKey(root, f);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(f);
   }
-  const offenders = [];
-  let routes = 0;
+  const routes = [];
   for (const [key, members] of groups) {
-    if (!members.some((f) => /(^|[\\/])page\./.test(f))) continue;
-    routes += 1;
-    const entries = new Map();
-    for (const m of members) {
-      entries.set(norm(m), m);
-      for (const a of ancestorEntries(root, m, routeFiles)) entries.set(norm(a), a);
+    const base = members.filter((f) => !/[\\/]@[^\\/]+[\\/]/.test(relative(root, f)));
+    if (!base.some((f) => /(^|[\\/])page\./.test(f))) continue;
+    const entries = new Set(base);
+    const slots = new Map();
+    for (const m of base) {
+      let dir = dirname(m);
+      for (;;) {
+        for (const f of routeFiles) {
+          if (f === m) continue;
+          const fdir = dirname(f);
+          if (fdir === dir && /(^|[\\/])(layout|template)\./.test(f)) entries.add(f);
+          else if (fdir.startsWith(dir + sep + '@')) {
+            const slotRoot = fdir.slice(0, fdir.indexOf(sep, dir.length + 1) === -1 ? fdir.length : fdir.indexOf(sep, dir.length + 1));
+            if (!slots.has(slotRoot)) slots.set(slotRoot, { always: new Set(), pages: [], defaults: [] });
+            const slot = slots.get(slotRoot);
+            if (/(^|[\\/])(layout|template)\./.test(f)) slot.always.add(f);
+            else if (/(^|[\\/])page\./.test(f)) slot.pages.push(f);
+            else slot.defaults.push(f);
+          }
+        }
+        if (dir === root || !insideRoot(root, dir)) break;
+        dir = dirname(dir);
+      }
     }
-    const modules = new Map();
-    for (const e of entries.values()) for (const [k, m] of reachable(root, e, aliases, state)) modules.set(k, m);
-    const count = [...modules.keys()].filter((k) => renderers.has(k)).length;
-    if (count > 1) offenders.push(`/${key} (${count} renderer modules via ${entries.size} route file(s))`);
+    const alternatives = [];
+    for (const slot of slots.values()) {
+      for (const f of slot.always) entries.add(f);
+      const options = slot.pages.length ? [...slot.pages.map((p) => [p]), slot.defaults] : [slot.defaults];
+      alternatives.push(options.filter((o) => o.length));
+    }
+    routes.push({ key: '/' + key, entries: [...entries], alternatives });
   }
-  // Every shipped file, not only route files, is checked for loading expressions the scanner
-  // cannot follow, so a dynamic import anywhere in the product is a coverage gap.
+  return routes;
+}
+
+export function checkGpuSurfaces(root, files) {
+  const aliases = readAliases(root);
+  const state = { unresolved: new Set(), unverified: new Set(), dynamic: new Map(), depthCut: 0, store: undefined };
+  // A renderer module has a renderer expression and reaches a GPU package directly or through
+  // a local barrel. Evaluated for every file the route graph reaches, product or not.
+  const gpuCache = new Map();
+  const isGpuDirect = (f) => {
+    const k = norm(f);
+    if (!gpuCache.has(k)) gpuCache.set(k, isJs(f) && importsOf(f).some((s) => GPU_PACKAGES.test(s)));
+    return gpuCache.get(k);
+  };
+  const gpuDirect = new Map();
+  for (const f of files) if (isGpuDirect(f)) gpuDirect.set(norm(f), f);
+  const rendererCache = new Map();
+  const isRendererModule = (f) => {
+    const k = norm(f);
+    if (rendererCache.has(k)) return rendererCache.get(k);
+    let result = false;
+    if (isJs(f) && hasRendererExpression(f)) {
+      result = isGpuDirect(f) || [...closure(root, [f], aliases, state).values()].some(isGpuDirect);
+    }
+    rendererCache.set(k, result);
+    return result;
+  };
+  const routes = [...appRouterRoutes(root, files), ...pagesRouterRoutes(root, files)];
+  const offenders = [];
+  const reachedRenderers = new Map();
+  for (const route of routes) {
+    const baseModules = closure(root, route.entries, aliases, state);
+    const chosen = new Map(baseModules);
+    for (const options of route.alternatives) {
+      let best = null;
+      for (const option of options) {
+        const mods = closure(root, option, aliases, state);
+        const n = [...mods.values()].filter(isRendererModule).length;
+        if (!best || n > best.n) best = { n, mods };
+      }
+      if (best) for (const [k, m] of best.mods) chosen.set(k, m);
+    }
+    const renderers = [...chosen.values()].filter(isRendererModule);
+    for (const r of renderers) reachedRenderers.set(norm(r), r);
+    if (renderers.length > 1) offenders.push(`${route.key} (${renderers.length} renderer modules: ${renderers.map((r) => relative(root, r)).join(', ')})`);
+  }
+  // Renderers that no route reaches still owe lifecycle and poster, since the route graph may
+  // be a subset of what ships (a library repo, a component package).
+  const allRenderers = new Map(reachedRenderers);
+  for (const f of files) if (isJs(f) && isRendererModule(f)) allRenderers.set(norm(f), f);
+  const noLifecycle = [];
+  const noPoster = [];
+  for (const f of allRenderers.values()) {
+    const { code: src, strings } = lexed(f);
+    const listens = strings.some((s) => s.value === 'visibilitychange' && /\baddEventListener\s*\(\s*$/.test(src.slice(Math.max(0, s.at - 40), s.at)));
+    if (!LIFECYCLE_RE.test(src) && !listens) noLifecycle.push(relative(root, f));
+    if (!POSTER_RE.test(src)) noPoster.push(relative(root, f));
+  }
   for (const f of files) if (isJs(f)) { const d = importsOf(f).dynamic; if (d) state.dynamic.set(relative(root, f), d); }
   const results = [];
   results.push(offenders.length
     ? { id: 'one-gpu-surface', level: 'error', ok: false, detail: `a route reaches more than one renderer module (static count; the runtime budget is the wrapper's job): ${listed(offenders)}` }
-    : { id: 'one-gpu-surface', level: 'info', ok: true, detail: `${renderers.size} renderer module(s) among ${gpuModules.size} GPU-importing module(s); no route reaches two (static count over ${pages.length} page(s), ${routes} route(s), ${routeFiles.length - pages.length} layout/template/default file(s))` });
+    : { id: 'one-gpu-surface', level: 'info', ok: true, detail: `${allRenderers.size} renderer module(s) among ${gpuDirect.size} GPU-importing module(s); no route reaches two (static count over ${routes.length} route(s))` });
   results.push(noLifecycle.length
     ? { id: 'gpu-lifecycle', level: 'error', ok: false, detail: `renderer modules with no IntersectionObserver or visibilitychange listener in code (word-level check; that it pauses is verified by eye): ${listed(noLifecycle)}` }
     : { id: 'gpu-lifecycle', level: 'info', ok: true, detail: 'every renderer module references visibility handling in code, or there are none; that it pauses is verified by eye' });
   results.push(noPoster.length
     ? { id: 'poster-first', level: 'warn', ok: false, detail: `renderer modules with no poster, fallback or noscript reference; the no-script still must be checked by eye: ${listed(noPoster)}` }
     : { id: 'poster-first', level: 'info', ok: true, detail: 'every renderer module names a poster or fallback; whether it paints first is checked by eye, not here' });
-  const lexIssues = files.filter((f) => isJs(f) && lexed(f).issues.length).map((f) => relative(root, f));
+  const lexIssues = files.filter((f) => isJs(f) && lexed(f).issues.length).map((f) => `${relative(root, f)} (${lexed(f).issues[0]})`);
   const gaps = [];
   if (state.unresolved.size) gaps.push(`${state.unresolved.size} import specifier(s) unresolved (a local path, alias or package that is not where it should be): ${listed([...state.unresolved])}`);
-  if (state.dynamic.size) gaps.push(`${state.dynamic.size} file(s) load a module through an expression the scanner cannot follow (import(name), require(require.resolve(…)), a substituted template): ${listed([...state.dynamic.keys()])}`);
+  if (state.dynamic.size) gaps.push(`${state.dynamic.size} file(s) load a module through an expression the scanner cannot follow (import(name), import('../x/' + name), require(require.resolve(…)), a substituted template): ${listed([...state.dynamic.keys()])}`);
   if (state.depthCut) gaps.push(`${state.depthCut} module(s) beyond the ${IMPORT_DEPTH}-edge traversal limit`);
   if (aliases.dropped.length) gaps.push(`tsconfig: ${listed(aliases.dropped)}`);
   if (lexIssues.length) gaps.push(`${lexIssues.length} file(s) the lexer could not read to the end: ${listed(lexIssues)}`);
@@ -790,7 +912,7 @@ export function runGate(root) {
 }
 
 export function renderMarkdown(result) {
-  const lines = [`# Materials gate: ${result.pass ? 'PASS' : 'FAIL'}`, '', `Root: ${result.root} (${result.scanned} shipping files scanned; tests, fixtures and .studio prototypes excluded)`, ''];
+  const lines = [`# Materials gate: ${result.pass ? 'PASS' : 'FAIL'}`, '', `Root: ${result.root} (${result.scanned} shipping files scanned; tests, fixtures and .studio prototypes excluded unless a shipped file imports them)`, ''];
   lines.push('| Check | Level | Result | Detail |', '|---|---|---|---|');
   for (const c of result.checks) {
     lines.push(`| ${c.id} | ${c.level} | ${c.ok ? 'ok' : 'FAIL'} | ${c.detail.replace(/\|/g, '\\|')} |`);
