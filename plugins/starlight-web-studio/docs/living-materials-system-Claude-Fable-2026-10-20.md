@@ -11,13 +11,13 @@ network on 2026-10-20; nothing is planned.
 
 | Thing | Where | Proof |
 |---|---|---|
-| Starlight Web Studio: 11 agents, 8 skills, routed graph, model-free scanner | `plugins/starlight-web-studio` on `agent/claude/web-studio`, draft PR frankxai/claude-skills-library#77 | `node --test tests/*.test.mjs` passes 59 tests plus 12 for this gate |
+| Starlight Web Studio: 11 agents, 8 skills, routed graph, model-free scanner | `plugins/starlight-web-studio` on `agent/claude/web-studio`, draft PR frankxai/claude-skills-library#77 | `node --test tests/*.test.mjs` passes 59 tests plus 19 for this gate (count printed by the run, 2026-10-20) |
 | Glass lab: three.js liquid glass vs CSS glass, capability gate, 8 ms frame budget, measured 0.05 to 0.40 ms per frame on Arc 140T | `examples/gpu-glass/` | `README.md` carries the measurement and the Codex review |
 | A complete R4 run on the frankx homepage: brief, three directions, decision, generated hero with provenance, motion score, GSAP and glass prototype, different-provider critique | `examples/frankx-homepage/` | nine files plus `media/` sidecars |
 | Eye pass of 25 live sites, phone and desktop | `starlight/logs/excellence/eye-pass-2026-10-20.md` | frankx 24/50, animelegends 36/50 |
 | Observatory: 17 routes, voice operator at `/operator` | `starlight-command-center/apps/observatory`, port 4321 | `preview_start` name `observatory` |
-| web-excellence lint pack vendored in 9 repos | `packs/web-excellence/ci/web-guidelines-lint.mjs` | rules `no-zoom`, `vh-not-dvh`, `hover-ungated`, manifest checks |
-| The audience: `claude-skills-library` | 40 stars, 792 unique humans in 14 days, 63% from Google (`gh api repos/frankxai/claude-skills-library/traffic/views`, 2026-09-19; re-run before quoting) | the one measured demand source |
+| web-excellence lint pack | `packs/web-excellence/ci/web-guidelines-lint.mjs` on this branch | eight rules in its table: `animate-layout-prop`, `block-paste`, `div-onclick`, `img-no-dims`, `keyframes-no-reduced-motion`, `no-zoom`, `outline-none`, `transition-all` (`grep` of the rule table, 2026-10-20); the dvh, hover-gating and manifest rules AGENTS.md §11.3 describes are on another branch and are not in this copy |
+| The audience: `claude-skills-library` | 792 unique visitors in the 14 days to 2026-09-19 (`gh api repos/frankxai/claude-skills-library/traffic/views`; "unique" is GitHub's count, not verified humans; star count and referrer share come from separate endpoints and are not re-measured here) | the one measured demand signal, which is interest, not willingness to pay |
 | Installable by a stranger: `@frankxai/mcp-doctor` 0.4.1 | npm | `npm view @frankxai/mcp-doctor version` |
 
 Where it should be shown: one route, not six. frankx.ai today ships `/gallery`, `/design-lab`,
@@ -92,15 +92,22 @@ packages/materials/
 
 Next.js 16 fit, from the [release post, read 2026-10-20](https://nextjs.org/blog/next-16): the
 poster renders in a Server Component; the material hydrates as a client island; route moves use
-React 19.2 View Transitions; the showcase uses Cache Components so cards are static until a
-receipt changes; `proxy.ts` replaces middleware (a `middleware.ts` fails the build).
+React 19.2 View Transitions; the showcase reads receipts at build time under Cache Components,
+so a changed receipt reaches the page on the next build or an explicit `updateTag()` call,
+never by itself; `proxy.ts` is the new name for `middleware.ts`, which the post lists as
+deprecated but still available.
 
 ### 3.3 The studio plugin (this PR)
 
-- `bin/materials-gate.mjs`, model-free, exit 1 on error: `design-md`, `glass-gated`,
-  `one-gpu-surface`, `poster-first`, `motion-scored`, `raw-colour`. Twelve tests in
-  `tests/materials-gate.test.mjs`. Viewport, dvh, zoom and hover gating stay with the
-  web-excellence linter; this gate does not repeat them.
+- `bin/materials-gate.mjs`, model-free and static, exit 1 on error: `design-md`,
+  `glass-gated`, `one-gpu-surface`, `gpu-lifecycle`, `poster-first`, `motion-scored`,
+  `raw-colour`. Nineteen tests in `tests/materials-gate.test.mjs`, including a subprocess
+  run from a path with spaces. It proves a pattern is absent in shipped code (tests, fixtures
+  and `.studio` prototypes excluded, comments and type-only imports stripped); it never
+  proves a page behaves. The one-surface budget at renderer creation, the gate's effect on
+  that creation, and the no-script poster are enforced and tested in the materials wrapper
+  (§3.2), not here. Raw WebGL without a library and CDN script tags are out of scope and
+  go in Do's and Don'ts. None of its rules overlaps the web-excellence table above.
 - Roles unchanged. The gpu-artist, motion-director and media-producer already own the three
   material lanes; the gate is what they were missing. Two skills to add next, not agents:
   `shot-planning` (shot list, lens, duration, continuity refs, delivery crops, routed to
@@ -113,25 +120,27 @@ receipt changes; `proxy.ts` replaces middleware (a `middleware.ts` fails the bui
 | Gate | Catches | Command | Runs |
 |---|---|---|---|
 | DESIGN.md lint | missing tokens, wrong section order | `npx @google/design.md lint DESIGN.md` | pre-commit and CI |
-| web-excellence lint | zoom, `100vh`, ungated hover, manifest, viewport | `node .claude/ci/web-guidelines-lint.mjs --changed` | every non-draft PR |
-| materials gate | ungated glass, two GPU surfaces, GSAP without a score, colour soup | `node bin/materials-gate.mjs <repo>` | every non-draft PR, and the studio builder before handoff |
+| web-excellence lint | zoom, layout-prop animation, paste blocking, div onclick, images without dimensions, keyframes without reduced motion, `outline: none`, `transition: all` | `node .claude/ci/web-guidelines-lint.mjs --changed` | every non-draft PR in the 9 repos that vendor it |
+| materials gate | ungated refraction, two GPU modules on a route, GPU without visibility handling, motion library without a score, colour soup | `node bin/materials-gate.mjs <repo>` | today: by hand; proposed: every non-draft PR and the `site-builder` handoff (neither wired yet) |
 | studio scan /30 | search, answer, mobile, access, craft, speed from server HTML | `node bin/studio-scan.mjs <url> --json` | daily sweep (`StarlightStudioSweep`, 07:10) |
 | eye rubric | layout, contrast over imagery, motion feel | scout screenshots at 375, 768, 1440 | R2 and up |
 | critic, different provider | the buyer's no | `codex --profile review` or Gemini via `different-provider-critic-recipe` | R3 and up; same-provider is recorded as missing |
 | craft receipt | research, bar, refinement diff, critique | `node tools/craft-receipt.mjs --product <id> --receipt <path>` | before `gh pr ready` |
 | PR gate | maker signing their own work | `node tools/pr-gate.mjs verify / signoff / merge` | merge |
 
-A rule without a row here is prose, not a rule (AGENTS.md §13). The ones in this table that
-exist today: all but the DESIGN.md lint wiring and the materials gate in CI, which are the next
-two PRs.
+A rule without a row here is prose, not a rule (AGENTS.md §13). Implemented and running on a
+trigger today: web-excellence lint, studio scan, the critic recipe, craft receipt, PR gate.
+Implemented, run by hand only: the materials gate. Proposed, not written: the DESIGN.md lint
+in pre-commit and CI, the materials gate in CI and in the builder's handoff. Running the
+gate's own tests is not gating a product.
 
 First run of the gate on the two reference candidates (`node bin/materials-gate.mjs <repo>`,
 2026-10-20, worktrees and dot folders excluded):
 
-| Repo | design-md | glass-gated | one-gpu-surface | poster-first | motion-scored | raw-colour |
-|---|---|---|---|---|---|---|
-| gencreator.ai | warn: prose, no YAML tokens | error: `LiquidGlassZoom.tsx`, `lib/brand-system.ts` ungated | ok, 6 GPU files | warn: 6 three.js scenes with no poster or visibility handling | error: 38 motion files, no score | warn: 77 raw hex colours |
-| starlight-intelligence-web | error: no DESIGN.md | ok: 10 CSS blur files, no refraction | ok | ok | error: 6 motion files, no score | ok: 14 |
+| Repo | design-md | glass-gated | one-gpu-surface | gpu-lifecycle | poster-first | motion-scored | raw-colour |
+|---|---|---|---|---|---|---|---|
+| gencreator.ai (670 shipping files) | warn: prose, no YAML tokens | error: `LiquidGlassZoom.tsx`, `lib/brand-system.ts` have no gate call or import | ok: 6 GPU modules, no route reaches two over 76 pages and 1 layout; 1 specifier unresolved | error: 6 three.js scenes never pause off-screen | warn: the same 6 name no poster | error: 38 motion files, no score | warn: 180 colour literals (hex, rgb, hsl, oklch) |
+| starlight-intelligence-web (316 shipping files) | error: no DESIGN.md | ok: 10 CSS blur files, no refraction | ok: 0 GPU modules | ok | ok | error: 9 motion files, no score | ok: 14 |
 
 So the proposed reference surface fails its own bar twice. That is the point of a gate that
 runs before anyone argues taste: PR 3 in §9 is now a measured list, not a wish.
@@ -159,7 +168,8 @@ pattern). Nothing is a factory until it has produced two artifacts through the g
 A vertical is one `DESIGN.md` profile plus one template plus one data pack, sold through the
 shadcn registry and Polar. The demand signal is already measured elsewhere:
 [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) holds 122k stars
-for a list of DESIGN.md files (`gh search repos`, 2026-10-20). Our edge is not another list; it
+for a list of DESIGN.md files (`gh search repos`, 2026-10-20); stars are interest in the format,
+not evidence anyone pays for a plugin. Our edge is not another list; it
 is profiles that ship with materials, gates and evals, and a studio that installs into the
 buyer's harness. The marketplace is the registry: `registry.json` entries with a `DESIGN.md`,
 components, a motion score and a gate receipt per item.
@@ -176,8 +186,11 @@ building.
 
 ## 8. Adoption, feedback, partnerships
 
-- Adoption pack for anyone: install the plugin, drop a `DESIGN.md`, add the two lint lines to
-  CI. Three commands, no estate dependencies.
+- Adoption pack for anyone, no estate dependencies:
+  `claude plugin install starlight-web-studio@claude-skills-library`, then
+  `npx @google/design.md lint DESIGN.md` and
+  `node <plugin>/bin/materials-gate.mjs .` as two CI steps. A clean-install smoke test of
+  that sequence on a fresh repo is owed before the pack is advertised.
 - Opinionated forks only where we add a gate the upstream lacks, with the licence read first:
   candidates are `liquidGL` (glass), `gsap-skills` (motion score), the shadcn registry template
   (material prop). No fork of a framework.
