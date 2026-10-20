@@ -360,14 +360,13 @@ export function importsOf(file) {
   const out = [];
   let dynamic = 0;
   for (const s of strings) {
-    // Classify by the token before the specifier, whatever whitespace separates them.
-    let end = s.at;
-    while (end > 0 && /\s/.test(src[end - 1])) end -= 1;
-    const before = src.slice(Math.max(0, end - 64), end);
+    // Classify by the tokens before the specifier with whitespace collapsed, so no amount of
+    // spacing between `import`, `(` and the literal changes the answer.
+    const before = src.slice(Math.max(0, s.at - 4000), s.at).replace(/\s+/g, ' ').replace(/ $/, '');
     let kind = null;
-    if (/\bfrom\s*$/.test(before)) kind = 'from';
-    else if (/(?<![\w$.])import\s*$/.test(before)) kind = 'side-effect';
-    else if (/(?<![\w$.])(?:import|require)\s*\(\s*$/.test(before)) kind = 'call';
+    if (/\bfrom$/.test(before)) kind = 'from';
+    else if (/(?<![\w$.])import$/.test(before)) kind = 'side-effect';
+    else if (/(?<![\w$.])(?:import|require) ?\($/.test(before)) kind = 'call';
     if (!kind) continue;
     if (kind === 'call' && !/^\s*[,)]/.test(src.slice(s.at + 2, s.at + 40))) { dynamic += 1; continue; }
     if (s.template) {
@@ -468,7 +467,7 @@ const DESTRUCTURE_RE = /\{([^}]*)\}\s*=\s*([A-Za-z_$][\w$]*)\s*(?=;|\r?\n|$)/gm;
 function computeBindings(file, deps, lookup) {
   const local = new Map();
   const exports = new Map();
-  const { code: src } = lexed(file);
+  const { code: src, strings } = lexed(file);
   const resolved = importStatements(file).map((st) => {
     const gpu = GPU_PACKAGES.test(st.spec);
     const target = gpu ? null : deps.get(st.spec) ?? null;
@@ -485,6 +484,22 @@ function computeBindings(file, deps, lookup) {
     }
     if (st.def) { const k = originKind(gpu, inner, 'default'); if (k) local.set(st.def, k); }
     for (const [origin, bound] of st.pairs) { const k = originKind(gpu, inner, origin); if (k) local.set(bound, k); }
+  }
+  // `const Scene = dynamic(() => import('pkg').then(m => m.Canvas))` and React.lazy: the
+  // loaded member (or the default export) binds the declared name.
+  for (const s of strings) {
+    if (s.template) continue;
+    const before = src.slice(Math.max(0, s.at - 300), s.at).replace(/\s+/g, ' ');
+    if (!/(?<![\w$.])import ?\($/.test(before)) continue;
+    const decl = before.match(/([A-Za-z_$][\w$]*)\s*=\s*(?:[A-Za-z_$][\w$]*\.)?(?:dynamic|lazy)\s*\(\s*(?:async\s*)?\(?\s*\)?\s*=>\s*import ?\($/);
+    if (!decl) continue;
+    const after = src.slice(s.at + 2, s.at + 300).replace(/\s+/g, ' ');
+    const then = after.match(/^\s*\)\s*\.then\s*\(\s*(?:async\s*)?\(?\s*([A-Za-z_$][\w$]*)\s*\)?\s*=>\s*(?:\(\s*)?\1\.([A-Za-z_$][\w$]*)/);
+    const member = then ? then[2] : 'default';
+    const gpu = GPU_PACKAGES.test(s.value);
+    const target = gpu ? null : deps.get(s.value) ?? null;
+    const k = originKind(gpu, target ? lookup(target) : null, member);
+    if (k) local.set(decl[1], k);
   }
   // Variable, class-field and destructuring bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {
@@ -549,11 +564,12 @@ const depsCache = new Map();
 function depsOf(file, resolveLocal) {
   const key = norm(file);
   if (!depsCache.has(key)) {
+    // Static statements and literal dynamic imports alike are binding edges.
     const map = new Map();
-    for (const st of importStatements(file)) {
-      if (GPU_PACKAGES.test(st.spec) || map.has(st.spec)) continue;
-      const target = resolveLocal ? resolveLocal(st.spec, file) : null;
-      if (target) map.set(st.spec, target);
+    for (const spec of [...importStatements(file).map((st) => st.spec), ...importsOf(file)]) {
+      if (GPU_PACKAGES.test(spec) || map.has(spec)) continue;
+      const target = resolveLocal ? resolveLocal(spec, file) : null;
+      if (target) map.set(spec, target);
     }
     depsCache.set(key, map);
   }
@@ -620,7 +636,9 @@ export function hasRendererExpression(file, resolveLocal = null, state = null) {
   const names = { ctor: new Set(RENDERER_CTORS), tag: new Set(RENDERER_TAGS), call: new Set(RENDERER_CALLS) };
   for (const [name, kind] of local) names[kind].add(name);
   const alt = (set) => [...set].map(escapeRe).join('|');
-  return new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.tag)})\\b|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src);
+  const tag = `(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.tag)})\\b`;
+  // A tag mounts through JSX or through element creation: createElement, jsx, jsxs, jsxDEV, h.
+  return new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:createElement|jsxs?|jsxDEV|h)\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src);
 }
 
 const isJs = (f) => JS_EXT.has(extname(f));

@@ -675,6 +675,33 @@ test('whitespace between from and the specifier does not hide an import', () => 
   assert.match(byId(runGate(root), 'gpu-lifecycle').detail, /app[\\/]page\.tsx/);
 });
 
+test('spacing before a loader paren does not hide a dynamic import or require', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `const m = import${' '.repeat(80)}('./missing');\nconst r = require${' '.repeat(40)}('./also-missing');\n`,
+  });
+  const c = byId(runGate(root), 'coverage');
+  assert.equal(c.level, 'error');
+  assert.match(c.detail, /\.\/missing/);
+  assert.match(c.detail, /\.\/also-missing/);
+});
+
+test('renderers mounted through next/dynamic, React.lazy and createElement are counted', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nconst Scene = dynamic(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n);\nexport default function Page() { return <Scene />; }\n`,
+    'app/two/page.tsx': `'use client';\nimport { createElement } from 'react';\nimport { Canvas } from '@react-three/fiber';\nexport default function Page() { return createElement(Canvas); }\n`,
+    'app/three/page.tsx': `import { lazy } from 'react';\nconst Glass = lazy(() => import('../../lib/glass'));\nexport default () => <Glass />;\n`,
+    'lib/glass.tsx': `import { Canvas } from '@react-three/fiber';\nexport default Canvas;\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx|lib[\\\\/]glass\\.tsx`));
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
 test('circular barrels resolve the same whichever import is seen first', () => {
   for (const order of [['a', 'b'], ['b', 'a']]) {
     const root = fixture({
