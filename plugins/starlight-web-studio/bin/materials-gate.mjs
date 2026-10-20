@@ -599,6 +599,11 @@ export function loaderMember(rawBody, afterImport) {
     if (plain) return plain[2];
     const destructured = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?\\( ?\\{ ?([^}]*)\\} ?\\) ?=> ?\\(? ?(${ID})`));
     if (destructured) return pickDestructured(destructured[1], destructured[2]);
+    // Function-expression callbacks: `function (m) { return m.Canvas; }`, `function ({ Canvas }) { return Canvas; }`.
+    const fnPlain = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?function ?(?:${ID} ?)?\\( ?(${ID}) ?\\) ?\\{ ?return ?\\(? ?\\1 ?\\. ?(${ID})`));
+    if (fnPlain) return fnPlain[2];
+    const fnDestructured = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?function ?(?:${ID} ?)?\\( ?\\{ ?([^}]*)\\} ?\\) ?\\{ ?return ?\\(? ?(${ID})`));
+    if (fnDestructured) return pickDestructured(fnDestructured[1], fnDestructured[2]);
     return null;
   }
   const inline = body.match(new RegExp(`^(?:async ?)?\\(? ?\\)? ?=> ?\\( ?await import ?\\( ?'' ?\\) ?\\) ?\\. ?(${ID})`));
@@ -769,7 +774,8 @@ function computeBindings(file, deps, lookup) {
     // callback's parameters for the whole module (a callback parameter is a module-wide
     // name here, which errs toward counting).
     const after = tokensAfter(src, s.at + 2, 200);
-    const thenDestructured = after.match(/^\) ?\. ?then ?\( ?(?:async ?)?\( ?\{ ?([^{}]*)\} ?\) ?=>/);
+    // Arrow or function expression, anonymous or named: `({ A: B }) =>`, `function f({ A: B }) {`.
+    const thenDestructured = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?)?\\( ?\\{ ?([^{}]*)\\} ?\\) ?(?:=>|\\{)`));
     if (thenDestructured) {
       for (const spec of thenDestructured[1].split(',')) {
         const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`));
@@ -779,8 +785,8 @@ function computeBindings(file, deps, lookup) {
       }
       continue;
     }
-    const thenParam = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?\\(? ?(${ID}) ?\\)? ?=>`));
-    if (thenParam) bindNamespace(thenParam[1]);
+    const thenParam = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?\\( ?(${ID}) ?\\) ?\\{|\\(? ?(${ID}) ?\\)? ?=>)`));
+    if (thenParam) bindNamespace(thenParam[1] ?? thenParam[2]);
   }
   // Variable, class-field, destructuring and wrapper bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {

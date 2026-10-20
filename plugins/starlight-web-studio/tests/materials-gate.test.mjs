@@ -839,11 +839,15 @@ test('a renderer bound from a literal dynamic import inside an effect is a rende
     'app/two/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    (async () => {\n      const mod = await import('three');\n      const r = new mod.WebGLRenderer();\n      void r;\n    })();\n  }, []);\n  return null;\n}\n`,
     'app/three/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    let renderer: { dispose(): void } | undefined;\n    void import('three').then(({ WebGLRenderer: GL }) => {\n      const r = new GL();\n      renderer = r;\n      host.current?.appendChild(r.domElement);\n    });\n    return () => renderer?.dispose();\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'app/four/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    import('three').then(three => {\n      const r = new three.WebGLRenderer();\n      void r;\n    });\n  }, []);\n  return null;\n}\n`,
+    'app/five/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    let renderer: { dispose(): void } | undefined;\n    void import('three').then(function ({ WebGLRenderer: GL }) {\n      const r = new GL();\n      renderer = r;\n      host.current?.appendChild(r.domElement);\n    });\n    return () => renderer?.dispose();\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/six/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    void import('three').then(function mount(three) {\n      const r = new three.WebGLRenderer();\n      void r;\n    });\n  }, []);\n  return null;\n}\n`,
+    'app/seven/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic(() => import('@react-three/fiber').then(function (m) { return m.Canvas; }));\nexport default () => <Scene />;\n`,
+    'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two', 'three', 'four']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'four', 'five', 'six', 'seven']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
   assert.equal(result.pass, false);
 });
