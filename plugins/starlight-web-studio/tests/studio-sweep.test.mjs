@@ -1,6 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadTargets, rank, heartbeatStatus } from '../bin/studio-sweep.mjs';
+import { loadTargets, rank, heartbeatStatus, applyAccepted } from '../bin/studio-sweep.mjs';
+
+test('an accepted finding stays on record but stops counting', () => {
+  const report = { score: 27, max: 30, scores: { search: 2, answer: 5 }, findings: [{ dimension: 'search', severity: 'P0', id: 'noindex' }] };
+  const out = applyAccepted(report, 'go', ['go:noindex', 'other:noindex']);
+  assert.equal(out.findings[0].severity, 'info');
+  assert.equal(out.findings[0].accepted, true);
+  assert.equal(out.scores.search, 5);
+  assert.equal(rank([{ target: { id: 'go', tier: 'tier-3' }, report: out }])[0].p0, 0);
+  assert.equal(applyAccepted(report, 'elsewhere', ['go:noindex']), report);
+});
 
 test('heartbeat status comes from what the sweep produced', () => {
   assert.equal(heartbeatStatus(0, 0), 'failed');

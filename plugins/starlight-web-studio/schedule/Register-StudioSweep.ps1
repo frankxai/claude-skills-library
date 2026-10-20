@@ -19,6 +19,8 @@ param(
   [string]$OutDir = 'C:\Users\frank\starlight\logs\excellence\sweeps',
   [string]$Heartbeat = 'C:\Users\frank\starlight\logs\heartbeats\heartbeat-studio-sweep.json',
   [string]$At = '07:10',
+  # Findings confirmed as intended, as id:finding. go.agenticincome.ai is a redirect utility; noindex is deliberate.
+  [string]$Accept = 'go-agenticincome:noindex',
   [string]$TaskName = 'StarlightStudioSweep',
   [switch]$Register,
   [switch]$Unregister
@@ -37,7 +39,7 @@ foreach ($path in @($Targets)) {
   if (-not (Test-Path $path)) { throw "Targets file not found: $path" }
 }
 
-$arguments = "`"$sweep`" --targets `"$Targets`" --out `"$OutDir`" --heartbeat `"$Heartbeat`""
+$arguments = "`"$sweep`" --targets `"$Targets`" --out `"$OutDir`" --heartbeat `"$Heartbeat`"" + $(if ($Accept) { " --accept $Accept" } else { '' })
 $action = New-ScheduledTaskAction -Execute $node -Argument $arguments
 $trigger = New-ScheduledTaskTrigger -Daily -At $At
 $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 15) -StartWhenAvailable -DontStopIfGoingOnBatteries
@@ -53,6 +55,6 @@ if (-not $Register) {
   return
 }
 
-Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
+Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Force `
   -Description 'Starlight Web Studio: model-free sweep of every live property; board and heartbeat under logs/.' | Out-Null
 "Registered $TaskName."

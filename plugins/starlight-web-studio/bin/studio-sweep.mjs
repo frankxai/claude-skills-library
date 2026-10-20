@@ -33,6 +33,18 @@ export function loadTargets(json) {
   return targets;
 }
 
+// A finding someone has confirmed as intended (for example noindex on a redirect utility) is kept
+// on record but stops counting, so a deliberate choice does not fail the run every day.
+export function applyAccepted(report, targetId, accepted) {
+  const keys = new Set(accepted.filter(a => a.startsWith(`${targetId}:`)).map(a => a.slice(targetId.length + 1)));
+  if (!keys.size) return report;
+  const findings = report.findings.map(f => (keys.has(f.id) ? { ...f, severity: 'info', accepted: true } : f));
+  const PENALTY = { P0: 3, P1: 1, P2: 0.5, info: 0 };
+  const scores = Object.fromEntries(Object.keys(report.scores).map(d => [d,
+    Math.max(0, 5 - findings.filter(f => f.dimension === d).reduce((n, f) => n + PENALTY[f.severity], 0))]));
+  return { ...report, findings, scores, score: Object.values(scores).reduce((a, b) => a + b, 0) };
+}
+
 // Any P0 outranks every property without one; within each band, opportunity is how much
 // is missing weighted by how much the property matters.
 export function rank(results) {
@@ -108,7 +120,7 @@ async function main(argv) {
   const targetsPath = arg(args, '--targets');
   const outDir = arg(args, '--out', '.studio');
   if (!targetsPath) {
-    console.error('usage: studio-sweep.mjs --targets <targets.json|properties.graph.json> [--out <dir>] [--only tier-1] [--heartbeat <file.json>]');
+    console.error('usage: studio-sweep.mjs --targets <targets.json|properties.graph.json> [--out <dir>] [--only tier-1] [--heartbeat <file.json>] [--accept <id>:<finding>[,...]]');
     return 2;
   }
   const only = arg(args, '--only');
@@ -123,8 +135,9 @@ async function main(argv) {
     console.error(`no live targets in ${targetsPath}`);
     return 2;
   }
+  const accepted = args.flatMap((a, i) => (a === '--accept' && args[i + 1] ? args[i + 1].split(',') : []));
   const results = await pool(targets, async target => {
-    try { return { target, report: await scanUrl(target.url) }; }
+    try { return { target, report: applyAccepted(await scanUrl(target.url), target.id, accepted) }; }
     catch (err) { return { target, error: err.message }; }
   });
   const failed = results.filter(r => r.error);
