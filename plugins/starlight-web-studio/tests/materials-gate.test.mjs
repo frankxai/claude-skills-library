@@ -599,6 +599,50 @@ test('exports populated after bindings: an exported alias, a destructured namesp
   for (const p of ['a', 'b', 'c']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
 });
 
+test('a renderer that needs propagation around a cycle is found in either query order, within bounded work', () => {
+  for (const order of [['a', 'b'], ['b', 'a']]) {
+    const root = fixture({
+      'DESIGN.md': GOOD_DESIGN,
+      'lib/a.ts': `export { Canvas as Seed } from '@react-three/fiber';\nexport { Seed as Scene } from './b';\n`,
+      'lib/b.ts': `export * from './a';\n`,
+      'app/page.tsx': `import { Scene } from '../lib/${order[0]}';\nimport { Seed } from '../lib/${order[1]}';\nexport default () => <Scene />;\n`,
+    });
+    const result = runGate(root);
+    assert.equal(byId(result, 'gpu-lifecycle').level, 'error', JSON.stringify(result.checks));
+    assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  }
+  const dense = { 'DESIGN.md': GOOD_DESIGN, 'app/page.tsx': `import { Scene } from '../lib/m0';\nexport default () => <Scene />;\n` };
+  for (let i = 0; i < 9; i += 1) {
+    const others = Array.from({ length: 9 }, (_, j) => j).filter((j) => j !== i).map((j) => `export * from './m${j}';`).join('\n');
+    dense[`lib/m${i}.ts`] = `${others}\n${i === 4 ? "export { Canvas as Scene } from '@react-three/fiber';" : ''}\n`;
+  }
+  const started = Date.now();
+  const result = runGate(fixture(dense));
+  assert.equal(byId(result, 'gpu-lifecycle').level, 'error', JSON.stringify(result.checks));
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  assert.ok(Date.now() - started < 5000, 'a nine-module fully connected barrel graph must solve in well under five seconds');
+});
+
+test('keywords are tokens: an identifier containing "export" does not start a clause; long type-only imports stay type-only', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import { Canvas as ReexportedScene } from '@react-three/fiber';\nexport default () => <ReexportedScene />;\n`,
+    'lib/types.ts': `import type {\n${Array.from({ length: 60 }, (_, i) => `  TypeNumber${i},`).join('\n')}\n} from 'three';\nexport const x = 1;\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'gpu-lifecycle').detail, /app[\\/]page\.tsx/);
+  assert.match(byId(result, 'one-gpu-surface').detail, /among 1 GPU-importing/);
+});
+
+test('an exported declaration is bound before the aliases that depend on it', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'lib/a.ts': `import { Canvas } from '@react-three/fiber';\nexport const First = Canvas;\nconst Second = First;\nexport { Second as Scene };\n`,
+    'app/page.tsx': `import { Scene } from '../lib/a';\nexport default () => <Scene />;\n`,
+  });
+  assert.match(byId(runGate(root), 'gpu-lifecycle').detail, /app[\\/]page\.tsx/);
+});
+
 test('circular barrels resolve the same whichever import is seen first', () => {
   for (const order of [['a', 'b'], ['b', 'a']]) {
     const root = fixture({

@@ -360,11 +360,11 @@ export function importsOf(file) {
   const out = [];
   let dynamic = 0;
   for (const s of strings) {
-    const before = src.slice(Math.max(0, s.at - 400), s.at);
+    const before = src.slice(Math.max(0, s.at - 64), s.at);
     let kind = null;
     if (/\bfrom\s*$/.test(before)) kind = 'from';
-    else if (/\bimport\s*$/.test(before)) kind = 'side-effect';
-    else if (/\b(?:import|require)\s*\(\s*$/.test(before)) kind = 'call';
+    else if (/(?<![\w$.])import\s*$/.test(before)) kind = 'side-effect';
+    else if (/(?<![\w$.])(?:import|require)\s*\(\s*$/.test(before)) kind = 'call';
     if (!kind) continue;
     if (kind === 'call' && !/^\s*[,)]/.test(src.slice(s.at + 2, s.at + 40))) { dynamic += 1; continue; }
     if (s.template) {
@@ -373,8 +373,8 @@ export function importsOf(file) {
       continue;
     }
     if (kind === 'from') {
-      const start = Math.max(before.lastIndexOf('import'), before.lastIndexOf('export'));
-      const stmt = before.slice(start);
+      const start = statementStart(file, s.at);
+      const stmt = start === -1 ? '' : src.slice(start, s.at);
       if (/^import\s+type\b/.test(stmt) || /^export\s+type\b/.test(stmt)) continue;
       if (/^import\b/.test(stmt)) {
         const hasDefaultOrNamespace = /^import\s+(?:[A-Za-z_$][\w$]*\s*,|\*\s+as\b|[A-Za-z_$][\w$]*\s+from)/.test(stmt);
@@ -399,12 +399,31 @@ export function importsOf(file) {
 // Propagation is bounded; hitting the bound is reported through `state` as a coverage gap,
 // never a silent pass.
 const RENDERER_KINDS = { ctor: new Set(RENDERER_CTORS), tag: new Set(RENDERER_TAGS), call: new Set(RENDERER_CALLS) };
-const PROPAGATION_DEPTH = 24;
 const bindingCache = new Map();
-const inProgress = new Map();
+
+// Positions of the `import` and `export` keywords as whole tokens, never substrings of an
+// identifier such as `ReexportedScene`. Shared by every clause reader.
+const keywordCache = new Map();
+function keywordPositions(file) {
+  if (!keywordCache.has(file)) {
+    keywordCache.set(file, [...code(file).matchAll(/(?<![\w$.])(?:import|export)(?![\w$])/g)].map((m) => m.index));
+  }
+  return keywordCache.get(file);
+}
+function statementStart(file, at) {
+  const positions = keywordPositions(file);
+  let lo = 0;
+  let hi = positions.length - 1;
+  let found = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (positions[mid] < at) { found = positions[mid]; lo = mid + 1; } else hi = mid - 1;
+  }
+  return found;
+}
 
 // Every `import … from`, `export … from` statement of a module, read whole: the statement
-// starts at the nearest `import` or `export` keyword before the specifier, however long the
+// starts at the nearest `import` or `export` token before the specifier, however long the
 // clause is. Combined default-plus-namespace (`import Scene, * as NS from`) is one statement.
 function importStatements(file) {
   const { code: src, strings } = lexed(file);
@@ -413,7 +432,7 @@ function importStatements(file) {
     if (s.template) continue;
     const before = src.slice(0, s.at);
     if (!/\bfrom\s*$/.test(before)) continue;
-    const start = Math.max(before.lastIndexOf('import'), before.lastIndexOf('export'));
+    const start = statementStart(file, s.at);
     if (start === -1) continue;
     const stmt = before.slice(start).replace(/\s+/g, ' ');
     if (/^(?:import|export) type\b/.test(stmt)) continue;
@@ -435,29 +454,22 @@ function importStatements(file) {
 
 const kindOf = (name) => { for (const [k, set] of Object.entries(RENDERER_KINDS)) if (set.has(name)) return k; return null; };
 
-// An assignment that binds a whole expression, declared (`const R = GL;`) or a class field
-// (`R = GL;`), never a prefix of a longer expression (`NS.Scene.displayName || 'div'`).
-const BINDING_RE = /(?:^|[;{}\n])\s*(?:(?:const|let|var|readonly|static|private|public|protected)\s+)*([A-Za-z_$][\w$]*)\s*(?::\s*[\w$.<>\[\]|&, ]+)?\s*(?<![=!<>])=(?!=)\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*(?=;|\r?\n|$|\})/gm;
+// An assignment that binds a whole expression, declared (`const R = GL;`, `export const R =
+// GL;`) or a class field (`R = GL;`), never a prefix of a longer expression
+// (`NS.Scene.displayName || 'div'`).
+const BINDING_RE = /(?:^|[;{}\n])\s*(?:export\s+)?(?:(?:const|let|var|readonly|static|private|public|protected)\s+)*([A-Za-z_$][\w$]*)\s*(?::\s*[\w$.<>\[\]|&, ]+)?\s*(?<![=!<>])=(?!=)\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*(?=;|\r?\n|$|\})/gm;
+const DESTRUCTURE_RE = /\{([^}]*)\}\s*=\s*([A-Za-z_$][\w$]*)\s*(?=;|\r?\n|$)/gm;
 
-function computeBindings(file, resolveLocal, state, depth, trail) {
+// One module's bindings given a lookup for its dependencies' exports. Pure in the lookup, so
+// the solver below can call it repeatedly until the component is stable.
+function computeBindings(file, deps, lookup) {
   const local = new Map();
   const exports = new Map();
-  const result = { local, exports, complete: true };
-  const key = norm(file);
-  if (depth > PROPAGATION_DEPTH) { state?.propagationCut?.add(relative(state.root ?? '', file)); result.complete = false; return result; }
-  inProgress.set(key, result);
   const { code: src } = lexed(file);
-  const statements = importStatements(file);
-  const resolved = statements.map((st) => {
+  const resolved = importStatements(file).map((st) => {
     const gpu = GPU_PACKAGES.test(st.spec);
-    const target = gpu ? null : resolveLocal ? resolveLocal(st.spec, file) : null;
-    let inner = null;
-    if (target) {
-      const tk = norm(target);
-      if (trail.has(tk)) { inner = inProgress.get(tk) ?? { exports: new Map() }; result.complete = false; }
-      else inner = rendererBindings(target, resolveLocal, state, depth + 1, new Set([...trail, key]));
-      if (inner && inner.complete === false) result.complete = false;
-    }
+    const target = gpu ? null : deps.get(st.spec) ?? null;
+    const inner = target ? lookup(target) : null;
     return { st, gpu, inner };
   });
   const originKind = (gpu, inner, name) => (gpu ? kindOf(name) : inner ? inner.exports.get(name) ?? null : null);
@@ -477,7 +489,7 @@ function computeBindings(file, resolveLocal, state, depth, trail) {
       const k = local.get(m[2]) ?? (m[2].includes('.') ? null : kindOf(m[2]));
       if (k && !local.has(m[1])) local.set(m[1], k);
     }
-    for (const m of src.matchAll(/\{([^}]*)\}\s*=\s*([A-Za-z_$][\w$]*)/g)) {
+    for (const m of src.matchAll(DESTRUCTURE_RE)) {
       for (const spec of m[1].split(',')) {
         const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?$/);
         if (!p) continue;
@@ -504,35 +516,80 @@ function computeBindings(file, resolveLocal, state, depth, trail) {
       if (p && local.has(p[1])) exports.set(p[2] ?? p[1], local.get(p[1]));
     }
   }
-  for (const m of src.matchAll(/\bexport\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*(?=;|\r?\n|$)/gm)) {
-    const k = local.get(m[2]) ?? (m[2].includes('.') ? null : kindOf(m[2]));
-    if (k) { local.set(m[1], k); exports.set(m[1], k); }
+  for (const m of src.matchAll(/\bexport\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g)) {
+    if (local.has(m[1])) exports.set(m[1], local.get(m[1]));
   }
   const dm = src.match(/\bexport\s+default\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;?/);
   if (dm && local.has(dm[1])) exports.set('default', local.get(dm[1]));
-  inProgress.delete(key);
-  return result;
+  return { local, exports };
 }
 
-// Bindings of one module. A module computed while a cycle is open is never cached; only the
-// outermost call iterates to a fixpoint (bounded), so the answer never depends on which import
-// was seen first. An unconverged cycle is a coverage gap.
-export function rendererBindings(file, resolveLocal, state, depth = 0, trail = new Set()) {
+// Bindings of one module, solved per dependency component. The component is every module
+// reachable from `file` through local import and re-export edges that is not yet cached,
+// bounded in size; it is solved by a worklist fixpoint that compares binding entries, so
+// cycles converge to the same answer whichever module is asked first, and each module is
+// computed at most once per iteration. A component that does not converge, or exceeds the
+// bound, is a coverage gap for every module in it.
+const COMPONENT_LIMIT = 2000;
+const FIXPOINT_ITERATIONS = 16;
+const EMPTY = { local: new Map(), exports: new Map() };
+const depsCache = new Map();
+function depsOf(file, resolveLocal) {
+  const key = norm(file);
+  if (!depsCache.has(key)) {
+    const map = new Map();
+    for (const st of importStatements(file)) {
+      if (GPU_PACKAGES.test(st.spec) || map.has(st.spec)) continue;
+      const target = resolveLocal ? resolveLocal(st.spec, file) : null;
+      if (target) map.set(st.spec, target);
+    }
+    depsCache.set(key, map);
+  }
+  return depsCache.get(key);
+}
+
+function sameBindings(a, b) {
+  if (a.local.size !== b.local.size || a.exports.size !== b.exports.size) return false;
+  for (const [k, v] of a.local) if (b.local.get(k) !== v) return false;
+  for (const [k, v] of a.exports) if (b.exports.get(k) !== v) return false;
+  return true;
+}
+
+export function rendererBindings(file, resolveLocal, state) {
   const key = norm(file);
   if (bindingCache.has(key)) return bindingCache.get(key);
-  let result = computeBindings(file, resolveLocal, state, depth, trail);
-  if (result.complete) { bindingCache.set(key, result); return result; }
-  if (trail.size > 0 || depth > PROPAGATION_DEPTH) return result;
-  for (let i = 0; i < 4; i += 1) {
-    const prev = result;
-    inProgress.set(key, prev);
-    result = computeBindings(file, resolveLocal, state, depth, trail);
-    inProgress.delete(key);
-    if (result.exports.size === prev.exports.size && result.local.size === prev.local.size) { result.complete = true; break; }
+  const component = new Map([[key, file]]);
+  const queue = [file];
+  let overflow = false;
+  while (queue.length) {
+    const f = queue.shift();
+    for (const target of depsOf(f, resolveLocal).values()) {
+      const tk = norm(target);
+      if (bindingCache.has(tk) || component.has(tk)) continue;
+      if (component.size >= COMPONENT_LIMIT) { overflow = true; break; }
+      component.set(tk, target);
+      queue.push(target);
+    }
+    if (overflow) break;
   }
-  if (!result.complete) { state?.propagationCut?.add(relative(state.root ?? '', file)); return result; }
-  bindingCache.set(key, result);
-  return result;
+  const current = new Map([...component.keys()].map((k) => [k, EMPTY]));
+  const lookup = (target) => bindingCache.get(norm(target)) ?? current.get(norm(target)) ?? EMPTY;
+  let converged = false;
+  if (!overflow) {
+    for (let i = 0; i < FIXPOINT_ITERATIONS && !converged; i += 1) {
+      converged = true;
+      for (const [k, f] of component) {
+        const next = computeBindings(f, depsOf(f, resolveLocal), lookup);
+        if (!sameBindings(next, current.get(k))) { converged = false; current.set(k, next); }
+      }
+    }
+  }
+  if (!converged) {
+    for (const f of component.values()) state?.propagationCut?.add(relative(state.root ?? '', f));
+    return current.get(key);
+  }
+  for (const [k, v] of current) bindingCache.set(k, v);
+  return bindingCache.get(key);
 }
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -933,7 +990,8 @@ export function checkGpuSurfaces(root, files) {
   const aliases = readAliases(root);
   const state = { unresolved: new Set(), unverified: new Set(), dynamic: new Map(), depthCut: 0, comboCut: new Set() };
   bindingCache.clear();
-  inProgress.clear();
+  depsCache.clear();
+  keywordCache.clear();
   // A renderer module has a renderer expression and reaches a GPU package directly or through
   // a local barrel. Evaluated for every file the route graph reaches, product or not.
   const gpuCache = new Map();
@@ -1029,7 +1087,7 @@ export function checkGpuSurfaces(root, files) {
   if (state.unresolved.size) gaps.push(`${state.unresolved.size} import specifier(s) unresolved (a local path, alias or package that is not where it should be): ${listed([...state.unresolved])}`);
   if (state.dynamic.size) gaps.push(`${state.dynamic.size} file(s) load a module through an expression the scanner cannot follow (import(name), import('../x/' + name), require(require.resolve(…)), a substituted template): ${listed([...state.dynamic.keys()])}`);
   if (state.depthCut) gaps.push(`${state.depthCut} module(s) beyond the ${IMPORT_DEPTH}-edge traversal limit`);
-  if (state.propagationCut.size) gaps.push(`${state.propagationCut.size} barrel chain(s) deeper than ${PROPAGATION_DEPTH} re-exports, renderer names not followed: ${listed([...state.propagationCut])}`);
+  if (state.propagationCut.size) gaps.push(`${state.propagationCut.size} module(s) whose re-export component did not converge within ${FIXPOINT_ITERATIONS} iterations or exceeded ${COMPONENT_LIMIT} modules, renderer names not followed: ${listed([...state.propagationCut])}`);
   if (state.comboCut.size) gaps.push(`route(s) with more than ${COMBO_LIMIT} slot combinations, not enumerated: ${listed([...state.comboCut])}`);
   if (aliases.dropped.length) gaps.push(`tsconfig: ${listed(aliases.dropped)}`);
   if (lexIssues.length) gaps.push(`${lexIssues.length} file(s) the lexer could not read to the end: ${listed(lexIssues)}`);
