@@ -739,6 +739,32 @@ function computeBindings(file, deps, lookup) {
       else if (!local.has(name)) local.set(name, 'tag');
     }
   };
+  // A literal dynamic import bound in place: `const { WebGLRenderer: GL } = await import('three')`
+  // binds GL; `const mod = await import('three')` binds `mod.WebGLRenderer` and the rest.
+  for (const s of strings) {
+    if (s.template) continue;
+    const before = tokensBefore(src, s.at, 200);
+    if (!/(?<![\w$.])import ?\($/.test(before)) continue;
+    const gpu = GPU_PACKAGES.test(s.value);
+    const target = gpu ? null : deps.get(s.value) ?? null;
+    const inner = target ? lookup(target) : null;
+    if (!gpu && !inner) continue;
+    const destructured = before.match(/\{ ?([^{}]*)\} ?= ?(?:await ?)?import ?\($/);
+    if (destructured) {
+      for (const spec of destructured[1].split(',')) {
+        const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`));
+        if (!p) continue;
+        const k = originKind(gpu, inner, p[1]);
+        if (k) local.set(p[2] ?? p[1], k);
+      }
+      continue;
+    }
+    const ns = before.match(new RegExp(`(${ID}) ?= ?await ?import ?\\($`));
+    if (ns) {
+      if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) local.set(`${ns[1]}.${n}`, k);
+      else for (const [e, k] of inner.exports) local.set(`${ns[1]}.${e}`, k);
+    }
+  }
   // Variable, class-field, destructuring and wrapper bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {
     wrapperBindings();
