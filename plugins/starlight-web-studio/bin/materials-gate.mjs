@@ -12,7 +12,7 @@
 // Not covered, by design: raw WebGL written without a library, CDN script tags, and
 // refraction behind a build-time plugin. Declare those in DESIGN.md Do's and Don'ts.
 
-import { readdirSync, readFileSync, statSync, lstatSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, lstatSync, existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, relative, dirname, resolve, extname, basename, sep, isAbsolute } from 'node:path';
 
@@ -205,10 +205,30 @@ export function insideRoot(root, candidate) {
   return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
 }
 
+// A junction inside the root can still point at a share, so every directory between the root
+// and a candidate is checked for a link before anything under it is stat'ed.
+const linkCache = new Map();
+export function pathHasLink(root, candidate) {
+  const rel = relative(root, candidate);
+  const parts = rel.split(/[\\/]/).filter(Boolean);
+  let dir = root;
+  for (const part of parts.slice(0, -1)) {
+    dir = join(dir, part);
+    if (!linkCache.has(dir)) {
+      let isLink = false;
+      try { isLink = lstatSync(dir).isSymbolicLink(); } catch { isLink = true; }
+      linkCache.set(dir, isLink);
+    }
+    if (linkCache.get(dir)) return true;
+  }
+  return false;
+}
+
 function resolveModule(root, base) {
-  if (!insideRoot(root, base)) return null;
+  if (!insideRoot(root, base) || pathHasLink(root, base)) return null;
   for (const ext of ['', '.tsx', '.ts', '.jsx', '.js', '.mjs', '/index.tsx', '/index.ts', '/index.js']) {
     const candidate = base + ext;
+    if (ext.startsWith('/') && pathHasLink(root, candidate)) continue;
     let st;
     try { st = lstatSync(candidate); } catch { continue; }
     if (st.isFile()) return candidate;
@@ -329,7 +349,9 @@ export function checkRawColour(root, files) {
 export function runGate(root) {
   readCache.clear();
   codeCache.clear();
-  const abs = resolve(root);
+  linkCache.clear();
+  let abs = resolve(root);
+  try { abs = realpathSync(abs); } catch { /* a root that cannot be resolved fails on walk() */ }
   const files = walk(abs).filter((f) => isSource(f) || FILTER_EXT.has(extname(f)) || /\.md$/i.test(f));
   const product = files.filter((f) => !EVIDENCE_RE.test(f) && !NON_SHIPPING_RE.test(relative(abs, f)));
   const checks = [

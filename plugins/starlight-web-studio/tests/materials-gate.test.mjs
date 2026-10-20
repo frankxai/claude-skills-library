@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, symlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { runGate, checkDesignMd, hasYamlTokens, validMotionScore, stripComments, insideRoot, SECTION_ORDER } from '../bin/materials-gate.mjs';
+import { runGate, checkDesignMd, hasYamlTokens, validMotionScore, stripComments, insideRoot, pathHasLink, SECTION_ORDER } from '../bin/materials-gate.mjs';
 
 const GATE = fileURLToPath(new URL('../bin/materials-gate.mjs', import.meta.url));
 
@@ -247,6 +247,20 @@ test('alias targets and ../ imports that leave the scanned root are never resolv
   assert.equal(check.ok, true, check.detail);
   assert.match(check.detail, /^0 GPU module/);
   assert.match(check.detail, /unresolved, coverage incomplete/);
+});
+
+test('a candidate under a junction or symlink inside the root is never stat-ed', () => {
+  const outside = fixture({ 'orb.tsx': `import * as THREE from 'three';\n` });
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import { A } from '../linked/orb';\n`,
+  });
+  symlinkSync(outside, join(root, 'linked'), 'junction');
+  assert.equal(pathHasLink(root, join(root, 'linked', 'orb.tsx')), true);
+  assert.equal(pathHasLink(root, join(root, 'app', 'page.tsx')), false);
+  const check = byId(runGate(root), 'one-gpu-surface');
+  assert.match(check.detail, /^0 GPU module/);
+  assert.match(check.detail, /unresolved, coverage incomplete: \.\.\/linked\/orb/);
 });
 
 test('the CLI runs from a path with spaces, prints a report and exits 1 on a failing repo', () => {
