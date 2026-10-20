@@ -858,6 +858,20 @@ function computeBindings(file, deps, lookup) {
       }
       continue;
     }
+    // `const GL = (await import('three')).WebGLRenderer` binds GL to the member. The same
+    // expression used without a binding (`new (await import('three')).WebGLRenderer()`) or
+    // with a member the reader cannot name is a coverage gap.
+    if (/\( ?await ?import ?\($/.test(before)) {
+      const outer = src.slice(0, s.at).search(/\(\s*await\s+import\s*\(\s*$/);
+      const member = tokensAfter(src, s.at + 2, 200).match(new RegExp(`^\\) ?\\)(?: ?as ?[\\w$.<>, ]+?)? ?\\. ?(${ID})(?![\\w$])`));
+      let eq = outer - 1;
+      while (eq >= 0 && /\s/.test(src[eq])) eq -= 1;
+      const name = member && src[eq] === '=' ? bindingNameBefore(src, eq) : null;
+      if (!name) { unsupported.add(`member@${s.at}`); continue; }
+      const k = originKind(gpu, inner, member[1]);
+      if (k) local.set(name, k);
+      continue;
+    }
     const bindNamespace = (name) => {
       if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) local.set(`${name}.${n}`, k);
       else for (const [e, k] of inner.exports) local.set(`${name}.${e}`, k);

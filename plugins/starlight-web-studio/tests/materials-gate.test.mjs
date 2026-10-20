@@ -881,13 +881,25 @@ test('inline callbacks with balanced parameter annotations and return annotation
     'app/four/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void import('three').then<void>(({ WebGLRenderer: GL }) => {\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    });\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'app/five/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    async function mount() {\n      const { WebGLRenderer: GL }: typeof import('three') =\n        await import('three');\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    }\n    void mount();\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'app/six/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    (async () => {\n      const mod: typeof import('three') = await import('three');\n      new mod.WebGLRenderer();\n    })();\n  }, []);\n  return null;\n}\n`,
+    'app/seven/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void (async () => {\n      const GL = (await import('three')).WebGLRenderer;\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    })();\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two', 'three', 'four', 'five', 'six']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'four', 'five', 'six', 'seven']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
+test('a renderer constructed straight off an awaited import, with no binding, fails coverage', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    (async () => { new (await import('three')).WebGLRenderer(); })();\n  }, []);\n  return null;\n}\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  assert.equal(result.pass, false, JSON.stringify(result.checks));
+  assert.equal(byId(result, 'coverage').ok, false, byId(result, 'coverage').detail);
 });
 
 test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
