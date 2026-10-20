@@ -494,6 +494,48 @@ function matchPair(src, open, opener = '(', closer = ')') {
   return -1;
 }
 const matchParen = (src, open) => matchPair(src, open, '(', ')');
+
+// The identifier bound by the `=` at `eq`, reading backward past an optional TypeScript
+// annotation (`Scene: ComponentType<CanvasProps> = …`), where `=>` is one token and
+// brackets of every kind are balanced. Null when the left side is not a plain binding.
+function bindingNameBefore(src, eq) {
+  let j = eq - 1;
+  const skipWs = () => { while (j >= 0 && /\s/.test(src[j])) j -= 1; };
+  const readIdent = () => {
+    const end = j;
+    while (j >= 0 && /[\w$]/.test(src[j])) j -= 1;
+    return src.slice(j + 1, end + 1);
+  };
+  skipWs();
+  if (j < 0) return null;
+  const first = /[\w$]/.test(src[j]) ? readIdent() : null;
+  skipWs();
+  // A bare identifier before `=` is the name only when a statement boundary or a declaration
+  // keyword precedes it; otherwise it is the tail of an annotation such as `JSX.Element`.
+  const atBoundary = j < 0 || /[;{}\n]/.test(src[j]) || /(?:const|let|var|static|readonly|public|private|protected|declare|export)\s*$/.test(src.slice(Math.max(0, j - 12), j + 1));
+  if (first && atBoundary) return /^[A-Za-z_$]/.test(first) ? first : null;
+  if (first && src[j] === ':') j -= 1;
+  else {
+    // Walk back through the annotation to the `:` at depth zero, then read the name before it.
+    let depth = 0;
+    while (j >= 0) {
+      const c = src[j];
+      if (c === '>' && src[j - 1] === '=') { j -= 2; continue; }
+      if (c === '>' || c === ')' || c === '}' || c === ']') depth += 1;
+      else if (c === '<' || c === '(' || c === '{' || c === '[') depth -= 1;
+      else if (c === ':' && depth === 0) break;
+      else if ((c === ';' || c === '\n') && depth === 0) return null;
+      if (depth < 0) return null;
+      j -= 1;
+    }
+    if (j < 0 || src[j] !== ':') return null;
+    j -= 1;
+  }
+  skipWs();
+  if (j < 0 || !/[\w$]/.test(src[j])) return null;
+  const name = readIdent();
+  return /^[A-Za-z_$]/.test(name) ? name : null;
+}
 // Matching `>` for a type-argument `<`, where `=>` is an arrow and `>=` a comparison, not closers.
 function matchAngle(src, open) {
   let depth = 0;
@@ -596,8 +638,9 @@ function computeBindings(file, deps, lookup) {
   const loaderAlt = [...loaders].map(escapeRe).join('|');
   // A TypeScript type argument may sit between the callee and its paren, `dynamic<Props>(…)`,
   // and may itself contain function types whose `=>` is one token, not a closing bracket.
-  for (const m of src.matchAll(new RegExp(`(?<![\\w$.])(${ID})\\s*=\\s*(?:${loaderAlt})\\s*`, 'g'))) {
-    const name = m[1];
+  for (const m of src.matchAll(new RegExp(`(?<![=!<>])=(?![=>])\\s*(?:${loaderAlt})\\s*`, 'g'))) {
+    const name = bindingNameBefore(src, m.index);
+    if (!name) continue;
     let open = m.index + m[0].length;
     if (src[open] === '<') {
       const closeAngle = matchAngle(src, open);

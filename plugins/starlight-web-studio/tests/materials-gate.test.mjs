@@ -744,12 +744,14 @@ test('loader callees come from their import bindings: a renamed next/dynamic def
     'app/four/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { CanvasProps } from '@react-three/fiber';\nconst Scene = dynamic<CanvasProps>(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n);\nexport default function Page() { return <Scene />; }\n`,
     'app/five/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic<Record<string, unknown>>(() => import('@react-three/fiber').then(m => m.Canvas));\nexport default () => <Scene />;\n`,
     'app/six/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { CanvasProps, RootState } from '@react-three/fiber';\nconst Scene = dynamic<\n  CanvasProps & { onCreated?: (state: RootState) => void }\n>(() => import('@react-three/fiber').then(m => m.Canvas), {\n  ssr: false,\n});\nexport default function Page() { return <Scene />; }\n`,
+    'app/seven/page.tsx': `'use client';\nimport dynamic from 'next/dynamic';\nimport type { ComponentType } from 'react';\nimport type { CanvasProps } from '@react-three/fiber';\nconst Scene: ComponentType<CanvasProps> = dynamic<CanvasProps>(\n  () => import('@react-three/fiber').then(m => m.Canvas),\n  { ssr: false }\n);\nexport default function Page() { return <Scene />; }\n`,
+    'app/eight/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene: (p: { onReady: (s: string) => void }) => JSX.Element = dynamic(() => import('@react-three/fiber').then(m => m.Canvas));\nexport default () => <Scene />;\n`,
     'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two', 'three', 'four', 'five', 'six']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(result.pass, false);
 });
 
