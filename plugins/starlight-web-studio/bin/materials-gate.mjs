@@ -713,10 +713,18 @@ function computeBindings(file, deps, lookup) {
   // A wrapper call around a known renderer tag (`memo(Canvas)`, `forwardRef(Scene)`,
   // `withTheme(Canvas, opts)`) binds the declared name, or the default export, to a tag.
   const wrapperBindings = () => {
-    for (const m of src.matchAll(new RegExp(`(?:(?<![=!<>])=(?![=>])|\\bexport\\s+default)\\s*(${ID}(?:\\s*\\.\\s*${ID})*)\\s*\\(`, 'g'))) {
+    for (const m of src.matchAll(new RegExp(`(?:(?<![=!<>])=(?![=>])|\\bexport\\s+default)\\s*(${ID}(?:\\s*\\.\\s*${ID})*)\\s*`, 'g'))) {
       const callee = m[1].replace(/\s+/g, '');
       if (loaders.has(callee)) continue;
-      const open = m.index + m[0].length - 1;
+      // A type argument may sit between the callee and its paren: `memo<typeof Canvas>(Canvas)`.
+      let open = m.index + m[0].length;
+      if (src[open] === '<') {
+        const closeAngle = matchAngle(src, open);
+        if (closeAngle === -1) continue;
+        open = closeAngle + 1;
+        while (open < src.length && /\s/.test(src[open])) open += 1;
+      }
+      if (src[open] !== '(') continue;
       const close = matchParen(src, open);
       if (close === -1) continue;
       const args = src.slice(open + 1, close);

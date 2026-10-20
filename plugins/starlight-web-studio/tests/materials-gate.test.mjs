@@ -803,12 +803,15 @@ test('a known renderer passed through a wrapper call still binds: memo(Canvas), 
     'app/two/page.tsx': `import { forwardRef } from 'react';\nimport * as R3F from '@react-three/fiber';\nconst Scene = forwardRef(R3F.Canvas);\nexport default () => <Scene />;\n`,
     'app/three/page.tsx': `import { memo } from 'react';\nimport { Canvas } from '@react-three/fiber';\nexport default memo(Canvas);\n`,
     'app/four/page.tsx': `import { Canvas } from '@react-three/fiber';\nconst label = formatLabel('Canvas');\nexport default () => <div>{label}</div>;\n`,
+    'app/five/page.tsx': `'use client';\nimport { memo } from 'react';\nimport { Canvas } from '@react-three/fiber';\nconst Scene = memo<typeof Canvas>(Canvas);\nexport default function Page() { return <Scene />; }\n`,
+    'app/six/page.tsx': `import { memo } from 'react';\nimport { Canvas } from '@react-three/fiber';\nexport default memo<typeof Canvas>(Canvas);\n`,
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'five', 'six']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.doesNotMatch(life.detail, /app[\\/]four[\\/]page\.tsx/, 'a string argument is not a renderer');
+  assert.equal(result.pass, false);
 });
 
 test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
