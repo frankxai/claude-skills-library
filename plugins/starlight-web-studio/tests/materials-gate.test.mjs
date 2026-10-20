@@ -412,6 +412,93 @@ test('slash heuristics: whitespace before a property name, keyword-named methods
   assert.match(byId(runGate(root), 'glass-gated').detail, /a[\\/]lens\.ts/);
 });
 
+test('JSX text in a .js page is text too; a descriptive generic name is not a tag', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.js': `export default () => <p>gpuPlan() <LiquidGlass /></p>;\n`,
+    'lib/id.tsx': `const id = <Type,>(x: Type) => x;\nexport default () => <div />;\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'glass-gated').detail, /app[\\/]page\.js/);
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
+test('a renamed barrel export is still a renderer', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'lib/scene.ts': `export { Canvas as Scene } from '@react-three/fiber';\n`,
+    'lib/index.ts': `export { Scene as Stage } from './scene';\n`,
+    'app/page.tsx': `import { Stage as View } from '../lib';\nexport default () => <View />;\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'one-gpu-surface').detail, /^1 renderer module/);
+  assert.match(byId(result, 'gpu-lifecycle').detail, /app[\\/]page\.tsx/);
+});
+
+test('a fixture a page imports is judged for glass and motion like any component', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import G from '../fixtures/glass';\nimport M from '../fixtures/motion';\nexport default () => <><G /><M /></>;\n`,
+    'fixtures/glass.tsx': `export default () => <LiquidGlass />;\n`,
+    'fixtures/motion.tsx': `import gsap from 'gsap';\nexport default () => null;\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'glass-gated').detail, /fixtures[\\/]glass\.tsx/);
+  assert.equal(byId(result, 'motion-scored').level, 'error');
+});
+
+test('slot selection counts overlap with the page: the default that adds a renderer wins', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children, modal }) => <>{children}{modal}</>;\n`,
+    'app/foo/page.tsx': `import { A } from '../../components/a';\n`,
+    'app/@modal/page.tsx': `import { A } from '../../components/a';\n`,
+    'app/@modal/default.tsx': `import { B } from '../../components/b';\n`,
+    'components/a.tsx': GOOD_RENDERER,
+    'components/b.tsx': GOOD_RENDERER,
+  });
+  assert.match(byId(runGate(root), 'one-gpu-surface').detail, /\/app\/foo \(2 renderer/);
+});
+
+test('Pages Router: _error composes with _app', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'pages/_app.tsx': `import { Bg } from '../components/bg';\n`,
+    'pages/_error.tsx': `import { Orb } from '../components/orb';\n`,
+    'pages/index.tsx': `export default () => null;\n`,
+    'components/bg.tsx': GOOD_RENDERER,
+    'components/orb.tsx': GOOD_RENDERER,
+  });
+  assert.match(byId(runGate(root), 'one-gpu-surface').detail, /pages\/_error \(2 renderer/);
+});
+
+test('TypeScript ESM .js specifiers resolve to .ts sources; a nested package has its own node_modules', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import { A } from '../lib/types.js';\nimport { B } from '../lib/b.jsx';\nimport { S } from '../packages/mcp/server';\nimport { U } from '../packages/uninstalled/index';\n`,
+    'lib/types.ts': `export const A = 1;\n`,
+    'lib/b.tsx': GOOD_RENDERER,
+    'packages/mcp/server.ts': `import { Server } from '@modelcontextprotocol/sdk';\nexport const S = 1;\n`,
+    'packages/mcp/node_modules/@modelcontextprotocol/sdk/package.json': '{}',
+    'packages/uninstalled/package.json': '{}',
+    'packages/uninstalled/index.ts': `import x from 'some-sdk';\nexport const U = 1;\n`,
+  });
+  const result = runGate(root);
+  const c = byId(result, 'coverage');
+  assert.equal(c.level, 'warn', c.detail);
+  assert.match(c.detail, /no node_modules exists: some-sdk/);
+  assert.doesNotMatch(c.detail, /modelcontextprotocol/);
+  assert.match(byId(result, 'one-gpu-surface').detail, /^1 renderer module/);
+});
+
+test('a spaced keyword-named method call is division, not a control condition', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'a/lens.ts': `import liquidGL from 'liquidgl';\nconst y = obj. if(x) / liquidGL({}) / 2;\n`,
+  });
+  assert.match(byId(runGate(root), 'glass-gated').detail, /a[\\/]lens\.ts/);
+});
+
 // --- DESIGN.md -----------------------------------------------------------------------------
 
 test('a missing DESIGN.md is an error', () => {
