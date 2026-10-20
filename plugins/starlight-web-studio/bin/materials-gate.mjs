@@ -399,23 +399,26 @@ export function importsOf(file) {
 // Propagation is bounded; hitting the bound is reported through `state` as a coverage gap,
 // never a silent pass.
 const RENDERER_KINDS = { ctor: new Set(RENDERER_CTORS), tag: new Set(RENDERER_TAGS), call: new Set(RENDERER_CALLS) };
-const PROPAGATION_DEPTH = 8;
+const PROPAGATION_DEPTH = 24;
 const bindingCache = new Map();
-const ident = /^[A-Za-z_$][\w$]*$/;
+const inProgress = new Map();
 
+// Every `import … from`, `export … from` statement of a module, read whole: the statement
+// starts at the nearest `import` or `export` keyword before the specifier, however long the
+// clause is. Combined default-plus-namespace (`import Scene, * as NS from`) is one statement.
 function importStatements(file) {
   const { code: src, strings } = lexed(file);
   const out = [];
   for (const s of strings) {
     if (s.template) continue;
-    const before = src.slice(Math.max(0, s.at - 400), s.at);
+    const before = src.slice(0, s.at);
     if (!/\bfrom\s*$/.test(before)) continue;
     const start = Math.max(before.lastIndexOf('import'), before.lastIndexOf('export'));
     if (start === -1) continue;
     const stmt = before.slice(start).replace(/\s+/g, ' ');
     if (/^(?:import|export) type\b/.test(stmt)) continue;
     const kind = stmt.startsWith('export') ? 'export' : 'import';
-    const star = stmt.match(/^(?:import|export)\s*\*\s*(?:as\s+([A-Za-z_$][\w$]*))?\s*from/);
+    const star = stmt.match(/(?:^(?:import|export)\s*|,\s*)\*\s*(?:as\s+([A-Za-z_$][\w$]*))?\s*from/);
     const def = stmt.match(/^import\s+([A-Za-z_$][\w$]*)\s*(?:,|from)/);
     const named = stmt.match(/\{([^}]*)\}/);
     const pairs = [];
@@ -430,44 +433,47 @@ function importStatements(file) {
   return out;
 }
 
-export function rendererBindings(file, resolveLocal, state, depth = 0, seen = new Set()) {
-  const key = norm(file);
-  if (bindingCache.has(key)) return bindingCache.get(key);
+const kindOf = (name) => { for (const [k, set] of Object.entries(RENDERER_KINDS)) if (set.has(name)) return k; return null; };
+
+// An assignment that binds a whole expression, declared (`const R = GL;`) or a class field
+// (`R = GL;`), never a prefix of a longer expression (`NS.Scene.displayName || 'div'`).
+const BINDING_RE = /(?:^|[;{}\n])\s*(?:(?:const|let|var|readonly|static|private|public|protected)\s+)*([A-Za-z_$][\w$]*)\s*(?::\s*[\w$.<>\[\]|&, ]+)?\s*(?<![=!<>])=(?!=)\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*(?=;|\r?\n|$|\})/gm;
+
+function computeBindings(file, resolveLocal, state, depth, trail) {
   const local = new Map();
   const exports = new Map();
-  const result = { local, exports };
-  if (depth > PROPAGATION_DEPTH) { state?.propagationCut?.add(relative(state.root ?? '', file)); return result; }
-  if (seen.has(key)) return result;
-  seen.add(key);
+  const result = { local, exports, complete: true };
+  const key = norm(file);
+  if (depth > PROPAGATION_DEPTH) { state?.propagationCut?.add(relative(state.root ?? '', file)); result.complete = false; return result; }
+  inProgress.set(key, result);
   const { code: src } = lexed(file);
-  const kindOf = (name) => { for (const [k, set] of Object.entries(RENDERER_KINDS)) if (set.has(name)) return k; return null; };
-  for (const st of importStatements(file)) {
+  const statements = importStatements(file);
+  const resolved = statements.map((st) => {
     const gpu = GPU_PACKAGES.test(st.spec);
     const target = gpu ? null : resolveLocal ? resolveLocal(st.spec, file) : null;
-    const inner = target ? rendererBindings(target, resolveLocal, state, depth + 1, seen) : null;
-    const originKind = (name) => (gpu ? kindOf(name) : inner ? inner.exports.get(name) ?? null : null);
-    const sink = st.kind === 'import' ? local : exports;
-    if (st.star) {
-      if (st.ns) {
-        if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) sink.set(`${st.ns}.${n}`, k);
-        else if (inner) for (const [e, k] of inner.exports) sink.set(`${st.ns}.${e}`, k);
-      } else if (st.kind === 'export') {
-        if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) exports.set(n, k);
-        else if (inner) for (const [e, k] of inner.exports) exports.set(e, k);
-      }
+    let inner = null;
+    if (target) {
+      const tk = norm(target);
+      if (trail.has(tk)) { inner = inProgress.get(tk) ?? { exports: new Map() }; result.complete = false; }
+      else inner = rendererBindings(target, resolveLocal, state, depth + 1, new Set([...trail, key]));
+      if (inner && inner.complete === false) result.complete = false;
     }
-    if (st.def) { const k = originKind('default'); if (k) local.set(st.def, k); }
-    for (const [origin, bound] of st.pairs) { const k = originKind(origin); if (k) sink.set(bound, k); }
-  }
-  // Separate import-then-export, default export, and variable bindings.
-  for (const m of src.matchAll(/\bexport\s*\{([^}]*)\}\s*(?!from)/g)) {
-    for (const spec of m[1].split(',')) {
-      const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s+as\s+([A-Za-z_$][\w$]*|default))?$/);
-      if (p && local.has(p[1])) exports.set(p[2] ?? p[1], local.get(p[1]));
+    return { st, gpu, inner };
+  });
+  const originKind = (gpu, inner, name) => (gpu ? kindOf(name) : inner ? inner.exports.get(name) ?? null : null);
+  // Imports first, so later re-exports and bindings can see them.
+  for (const { st, gpu, inner } of resolved) {
+    if (st.kind !== 'import') continue;
+    if (st.star && st.ns) {
+      if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) local.set(`${st.ns}.${n}`, k);
+      else if (inner) for (const [e, k] of inner.exports) local.set(`${st.ns}.${e}`, k);
     }
+    if (st.def) { const k = originKind(gpu, inner, 'default'); if (k) local.set(st.def, k); }
+    for (const [origin, bound] of st.pairs) { const k = originKind(gpu, inner, origin); if (k) local.set(bound, k); }
   }
+  // Variable, class-field and destructuring bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {
-    for (const m of src.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)\s*;?/g)) {
+    for (const m of src.matchAll(BINDING_RE)) {
       const k = local.get(m[2]) ?? (m[2].includes('.') ? null : kindOf(m[2]));
       if (k && !local.has(m[1])) local.set(m[1], k);
     }
@@ -475,14 +481,56 @@ export function rendererBindings(file, resolveLocal, state, depth = 0, seen = ne
       for (const spec of m[1].split(',')) {
         const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?$/);
         if (!p) continue;
-        // Only a destructuring from a bound GPU namespace (`const { Renderer: R } = ogl`) counts.
         const k = local.get(`${m[2]}.${p[1]}`);
         if (k) local.set(p[2] ?? p[1], k);
       }
     }
   }
-  const dm = src.match(/\bexport\s+default\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)\s*;?/);
+  // Exports last, so they can name anything bound above.
+  for (const { st, gpu, inner } of resolved) {
+    if (st.kind !== 'export') continue;
+    if (st.star) {
+      if (st.ns) {
+        if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) exports.set(`${st.ns}.${n}`, k);
+        else if (inner) for (const [e, k] of inner.exports) exports.set(`${st.ns}.${e}`, k);
+      } else if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) exports.set(n, k);
+      else if (inner) for (const [e, k] of inner.exports) exports.set(e, k);
+    }
+    for (const [origin, bound] of st.pairs) { const k = originKind(gpu, inner, origin); if (k) exports.set(bound, k); }
+  }
+  for (const m of src.matchAll(/\bexport\s*\{([^}]*)\}\s*(?!from)/g)) {
+    for (const spec of m[1].split(',')) {
+      const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s+as\s+([A-Za-z_$][\w$]*|default))?$/);
+      if (p && local.has(p[1])) exports.set(p[2] ?? p[1], local.get(p[1]));
+    }
+  }
+  for (const m of src.matchAll(/\bexport\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*(?=;|\r?\n|$)/gm)) {
+    const k = local.get(m[2]) ?? (m[2].includes('.') ? null : kindOf(m[2]));
+    if (k) { local.set(m[1], k); exports.set(m[1], k); }
+  }
+  const dm = src.match(/\bexport\s+default\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;?/);
   if (dm && local.has(dm[1])) exports.set('default', local.get(dm[1]));
+  inProgress.delete(key);
+  return result;
+}
+
+// Bindings of one module. A module computed while a cycle is open is never cached; only the
+// outermost call iterates to a fixpoint (bounded), so the answer never depends on which import
+// was seen first. An unconverged cycle is a coverage gap.
+export function rendererBindings(file, resolveLocal, state, depth = 0, trail = new Set()) {
+  const key = norm(file);
+  if (bindingCache.has(key)) return bindingCache.get(key);
+  let result = computeBindings(file, resolveLocal, state, depth, trail);
+  if (result.complete) { bindingCache.set(key, result); return result; }
+  if (trail.size > 0 || depth > PROPAGATION_DEPTH) return result;
+  for (let i = 0; i < 4; i += 1) {
+    const prev = result;
+    inProgress.set(key, prev);
+    result = computeBindings(file, resolveLocal, state, depth, trail);
+    inProgress.delete(key);
+    if (result.exports.size === prev.exports.size && result.local.size === prev.local.size) { result.complete = true; break; }
+  }
+  if (!result.complete) { state?.propagationCut?.add(relative(state.root ?? '', file)); return result; }
   bindingCache.set(key, result);
   return result;
 }
@@ -885,6 +933,7 @@ export function checkGpuSurfaces(root, files) {
   const aliases = readAliases(root);
   const state = { unresolved: new Set(), unverified: new Set(), dynamic: new Map(), depthCut: 0, comboCut: new Set() };
   bindingCache.clear();
+  inProgress.clear();
   // A renderer module has a renderer expression and reaches a GPU package directly or through
   // a local barrel. Evaluated for every file the route graph reaches, product or not.
   const gpuCache = new Map();
@@ -950,10 +999,10 @@ export function checkGpuSurfaces(root, files) {
     for (const r of renderers) reachedRenderers.set(norm(r), r);
     if (renderers.length > 1) offenders.push(`${route.key} (${renderers.length} renderer modules: ${renderers.map((r) => relative(root, r)).join(', ')})`);
   }
-  // Renderers that no route reaches still owe lifecycle and poster, since the route graph may
-  // be a subset of what ships (a library repo, a component package).
+  // Every renderer that ships owes lifecycle and poster: those in any route's alternatives,
+  // and those in product files no route reaches (a library repo, a component package).
   const allRenderers = new Map(reachedRenderers);
-  for (const f of files) if (isJs(f) && isRendererModule(f)) allRenderers.set(norm(f), f);
+  for (const f of [...reached.values(), ...files]) if (isJs(f) && isRendererModule(f)) allRenderers.set(norm(f), f);
   const noLifecycle = [];
   const noPoster = [];
   for (const f of allRenderers.values()) {

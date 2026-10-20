@@ -552,6 +552,79 @@ test('remapped .mts and .cts sources are scanned', () => {
   assert.equal(byId(result, 'gpu-lifecycle').level, 'error');
 });
 
+test('lifecycle is judged for a renderer reached only through an unchosen slot alternative', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children, modal }) => <>{children}{modal}</>;\n`,
+    'app/page.tsx': `export default () => null;\n`,
+    'app/@modal/page.tsx': `import A from '../../fixtures/a';\nexport default () => <A />;\n`,
+    'app/@modal/default.tsx': `import B from '../../fixtures/b';\nexport default () => <B />;\n`,
+    'fixtures/a.tsx': `import { Canvas } from '@react-three/fiber';\nexport default () => <Canvas fallback={null} onCreated={() => new IntersectionObserver(() => {})} />;\n`,
+    'fixtures/b.tsx': `import { Canvas } from '@react-three/fiber';\nexport default () => <Canvas />;\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'gpu-lifecycle').detail, /fixtures[\\/]b\.tsx/);
+  assert.equal(result.errors > 0, true);
+});
+
+test('whole import clauses: combined default-plus-namespace, and a re-export statement longer than 400 characters', () => {
+  const names = Array.from({ length: 80 }, (_, i) => `constant${i}`);
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'lib/x.ts': `export { Canvas as default, Canvas as Globe } from '@react-three/fiber';\n`,
+    'app/one/page.tsx': `import Scene, * as NS from '../../lib/x';\nexport default () => <NS.Globe />;\n`,
+    'lib/y.ts': `export { Canvas as Scene } from '@react-three/fiber';\n${names.map((n) => `export const ${n} = 1;`).join('\n')}\n`,
+    'lib/index.ts': `export { Scene, ${names.join(', ')} } from './y';\n`,
+    'app/two/page.tsx': `import { Scene } from '../../lib';\nexport default () => <Scene />;\n`,
+  });
+  const life = byId(runGate(root), 'gpu-lifecycle');
+  assert.equal(life.level, 'error');
+  assert.match(life.detail, /app[\\/]one[\\/]page\.tsx/);
+  assert.match(life.detail, /app[\\/]two[\\/]page\.tsx/);
+});
+
+test('exports populated after bindings: an exported alias, a destructured namespace member, an exported const', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'lib/x.ts': `export { Canvas as Scene } from '@react-three/fiber';\n`,
+    'lib/a.ts': `import { Canvas } from '@react-three/fiber';\nconst Local = Canvas;\nexport { Local };\n`,
+    'lib/b.ts': `import * as NS from './x';\nconst { Scene: Local } = NS;\nexport { Local };\n`,
+    'lib/c.ts': `import { Canvas } from '@react-three/fiber';\nexport const Scene = Canvas;\n`,
+    'app/a/page.tsx': `import { Local } from '../../lib/a';\nexport default () => <Local />;\n`,
+    'app/b/page.tsx': `import { Local } from '../../lib/b';\nexport default () => <Local />;\n`,
+    'app/c/page.tsx': `import { Scene } from '../../lib/c';\nexport default () => <Scene />;\n`,
+  });
+  const life = byId(runGate(root), 'gpu-lifecycle');
+  assert.equal(life.level, 'error');
+  for (const p of ['a', 'b', 'c']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+});
+
+test('circular barrels resolve the same whichever import is seen first', () => {
+  for (const order of [['a', 'b'], ['b', 'a']]) {
+    const root = fixture({
+      'DESIGN.md': GOOD_DESIGN,
+      'lib/a.ts': `export * from './b';\nexport { Canvas as Scene } from '@react-three/fiber';\n`,
+      'lib/b.ts': `export * from './a';\n`,
+      'app/page.tsx': `import { Scene as A } from '../lib/${order[0]}';\nimport { Scene as B } from '../lib/${order[1]}';\nexport default () => <B />;\n`,
+    });
+    const result = runGate(root);
+    assert.equal(byId(result, 'gpu-lifecycle').level, 'error', JSON.stringify(result.checks));
+    assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  }
+});
+
+test('a renderer class bound in a class field is still a renderer; a prefix of a longer expression is not', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'lib/view.ts': `import { WebGLRenderer as GL } from 'three';\nclass View {\n  R = GL;\n  mount() { return new this.R(); }\n}\n`,
+    'lib/label.tsx': `import * as NS from './x';\nconst Label = NS.Scene.displayName || 'div';\nexport default () => <Label />;\n`,
+    'lib/x.ts': `export { Canvas as Scene } from '@react-three/fiber';\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'one-gpu-surface').detail, /^1 renderer module/);
+  assert.match(byId(result, 'gpu-lifecycle').detail, /lib[\\/]view\.ts/);
+});
+
 test('a spaced keyword-named method call is division, not a control condition', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,
