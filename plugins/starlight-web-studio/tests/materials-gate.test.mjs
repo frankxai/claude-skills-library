@@ -891,6 +891,36 @@ test('inline callbacks with balanced parameter annotations and return annotation
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 
+test('concurrent literal imports through Promise.all bind by position', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void (async () => {\n      const [{ WebGLRenderer: GL, PerspectiveCamera }, { OrbitControls }] =\n        await Promise.all([\n          import('three'),\n          import('three/addons/controls/OrbitControls.js'),\n        ]);\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n      const controls = new OrbitControls(new PerspectiveCamera(), renderer.domElement);\n      void controls;\n    })();\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/ns/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    (async () => {\n      const [gsap, three] = await Promise.all([import('gsap'), import('three')]);\n      void gsap;\n      new three.WebGLRenderer();\n    })();\n  }, []);\n  return null;\n}\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  assert.match(life.detail, /app[\\/]page\.tsx/);
+  assert.match(life.detail, /app[\\/]ns[\\/]page\.tsx/);
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
+test('a Promise.all shape the reader cannot follow, and a stray awaited import, fail coverage', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    Promise.all([import('three')]).then(([three]) => { new three.WebGLRenderer(); });\n  }, []);\n  return null;\n}\n`,
+    'app/two/page.tsx': `'use client';\nimport { useEffect } from 'react';\nfunction mount(mod: typeof import('three')) { new mod.WebGLRenderer(); }\nexport default function Page() {\n  useEffect(() => {\n    (async () => { mount(await import('three')); })();\n  }, []);\n  return null;\n}\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  assert.equal(result.pass, false, JSON.stringify(result.checks));
+  const cov = byId(result, 'coverage');
+  assert.equal(cov.ok, false, cov.detail);
+  assert.match(cov.detail, /app[\\/]page\.tsx/);
+  assert.match(cov.detail, /app[\\/]two[\\/]page\.tsx/);
+});
+
 test('a renderer constructed straight off an awaited import, with no binding, fails coverage', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

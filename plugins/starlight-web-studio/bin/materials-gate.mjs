@@ -878,6 +878,44 @@ function computeBindings(file, deps, lookup) {
     };
     const ns = before.match(new RegExp(`(${ID}) ?(?::[^=]*?)?= ?await ?import ?\\($`));
     if (ns) { bindNamespace(ns[1]); continue; }
+    const bindSpecs = (list) => {
+      for (const spec of list.split(',')) {
+        const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?(?: ?=.*)?$`));
+        if (!p) continue;
+        const k = originKind(gpu, inner, p[1]);
+        if (k) local.set(p[2] ?? p[1], k);
+      }
+    };
+    // `const [{ WebGLRenderer: GL }, { OrbitControls }] = await Promise.all([import('three'),
+    // import('three/addons/…')])`: the n-th array element binds the n-th import. Earlier
+    // imports in the array read as `import('')` because the lexer blanks string bodies. Any
+    // other Promise.all shape is a coverage gap.
+    if (/Promise ?\. ?all/.test(before)) {
+      const all = before.match(/\[ ?([^[\]]*?) ?\] ?(?::[^=]*?)?= ?await ?Promise ?\. ?all ?\( ?\[ ?((?:import ?\( ?'' ?\) ?, ?)*)import ?\($/);
+      const ordinal = all ? (all[2].match(/import/g) ?? []).length : -1;
+      const elements = [];
+      if (all) {
+        let depth = 0;
+        let cur = '';
+        for (const c of all[1]) {
+          if (c === '{' || c === '[' || c === '(') depth += 1;
+          else if (c === '}' || c === ']' || c === ')') depth -= 1;
+          if (c === ',' && depth === 0) { elements.push(cur.trim()); cur = ''; } else cur += c;
+        }
+        elements.push(cur.trim());
+      }
+      const el = elements[ordinal];
+      const obj = el?.match(/^\{ ?([^{}]*)\}$/);
+      if (obj) bindSpecs(obj[1]);
+      else if (el && new RegExp(`^${ID}$`).test(el)) bindNamespace(el);
+      else unsupported.add(`all@${s.at}`);
+      continue;
+    }
+    // A side-effect statement (`{ await import('./sentry.config') }`) binds nothing and the
+    // route graph already follows the module. Any other awaited literal import
+    // (`foo(await import('x'))`, `return await import('x')`) is a coverage gap, not a pass.
+    if (/(?:^|[;{}]) ?await ?import ?\($/.test(before)) continue;
+    if (/await ?import ?\($/.test(before)) { unsupported.add(`await@${s.at}`); continue; }
     // `import('three').then(({ WebGLRenderer: GL }) => …)` and `.then(m => …)` bind the
     // callback's parameters for the whole module (a callback parameter is a module-wide
     // name here, which errs toward counting).
