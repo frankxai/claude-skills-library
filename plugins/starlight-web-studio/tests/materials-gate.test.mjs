@@ -491,6 +491,67 @@ test('TypeScript ESM .js specifiers resolve to .ts sources; a nested package has
   assert.match(byId(result, 'one-gpu-surface').detail, /^1 renderer module/);
 });
 
+test('barrel forms: default re-export, namespace import, separate import-then-export, a four-module chain', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'lib/a.ts': `export { Canvas as default } from '@react-three/fiber';\n`,
+    'lib/b.ts': `import { Canvas } from '@react-three/fiber';\nexport { Canvas as Scene };\n`,
+    'lib/c1.ts': `export { Canvas as C1 } from '@react-three/fiber';\n`,
+    'lib/c2.ts': `export { C1 as C2 } from './c1';\n`,
+    'lib/c3.ts': `export * from './c2';\n`,
+    'lib/c4.ts': `import { C2 } from './c3';\nconst Deep = C2;\nexport default Deep;\n`,
+    'app/one/page.tsx': `import Scene from '../../lib/a';\nexport default () => <Scene />;\n`,
+    'app/two/page.tsx': `import * as R from '../../lib/b';\nexport default () => <R.Scene />;\n`,
+    'app/three/page.tsx': `import Deep from '../../lib/c4';\nexport default () => <Deep />;\n`,
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error');
+  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
+test('an unchosen slot default still ships: its glass and motion are judged', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children, modal }) => <>{children}{modal}</>;\n`,
+    'app/page.tsx': `export default () => null;\n`,
+    'app/foo/page.tsx': `export default () => null;\n`,
+    'app/@modal/page.tsx': `export default () => null;\n`,
+    'app/@modal/default.tsx': `import G from '../../fixtures/glass';\nexport default () => <G />;\n`,
+    'fixtures/glass.tsx': `import gsap from 'gsap';\nexport default () => <LiquidGlass />;\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'glass-gated').detail, /fixtures[\\/]glass\.tsx/);
+  assert.equal(byId(result, 'motion-scored').level, 'error');
+});
+
+test('cross-slot combinations are enumerated: a left default and a right page can coexist', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/layout.tsx': `export default ({ children, left, right }) => <>{children}{left}{right}</>;\n`,
+    'app/foo/page.tsx': `export default () => null;\n`,
+    'app/@left/page.tsx': `import { A } from '../../components/a';\n`,
+    'app/@left/default.tsx': `import { B } from '../../components/b';\n`,
+    'app/@right/foo/page.tsx': `import { A } from '../../../components/a';\n`,
+    'components/a.tsx': GOOD_RENDERER,
+    'components/b.tsx': GOOD_RENDERER,
+  });
+  assert.match(byId(runGate(root), 'one-gpu-surface').detail, /\/app\/foo \(2 renderer/);
+});
+
+test('remapped .mts and .cts sources are scanned', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `import { S } from '../lib/setup.mjs';\nimport { T } from '../lib/other.cjs';\n`,
+    'lib/setup.mts': `import { WebGLRenderer } from 'three';\nexport const S = new WebGLRenderer();\n`,
+    'lib/other.cts': `import { Renderer } from 'ogl';\nexport const T = new Renderer();\n`,
+  });
+  const result = runGate(root);
+  assert.match(byId(result, 'one-gpu-surface').detail, /\/app \(2 renderer/);
+  assert.equal(byId(result, 'gpu-lifecycle').level, 'error');
+});
+
 test('a spaced keyword-named method call is division, not a control condition', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

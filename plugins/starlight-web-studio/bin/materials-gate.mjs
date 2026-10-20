@@ -43,7 +43,7 @@ const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', 'build', '.git', '.t
 const EVIDENCE_RE = /[\\/]\.studio[\\/]/;
 // Not shipped unless a shipped file imports it: tests, fixtures, stories, root tooling.
 const NON_SHIPPING_RE = /(^|[\\/])(tests?|__tests__|fixtures?|__fixtures__|__mocks__|stories|e2e)[\\/]|^(scripts|tools|bin)[\\/]|\.(test|spec|stories)\.[cm]?[jt]sx?$/;
-const JS_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.astro', '.svelte', '.vue']);
+const JS_EXT = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.astro', '.svelte', '.vue']);
 // JSX is lexed wherever Next.js accepts it. `.ts` is excluded: it has no JSX and `<T>x` casts.
 const JSX_EXT = new Set(['.tsx', '.jsx', '.js', '.mjs', '.cjs']);
 const STYLE_EXT = new Set(['.css', '.scss', '.html']);
@@ -391,81 +391,113 @@ export function importsOf(file) {
   return Object.assign(out, { dynamic });
 }
 
-// Names a module exports that denote renderer constructors, tags or calls: its own re-exports
-// from a GPU package (`export { Canvas as Scene } from '@react-three/fiber'`, `export *`) and,
-// through `resolveLocal`, the same from local barrels it re-exports, two levels deep.
-function exportedRendererNames(file, resolveLocal, depth = 0, seen = new Set()) {
-  const result = { ctors: new Map(), tags: new Map(), calls: new Map() };
-  if (depth > 2 || seen.has(norm(file))) return result;
-  seen.add(norm(file));
+// --- renderer bindings ----------------------------------------------------------------------
+// For one module: which local names denote a renderer constructor, tag or call, and which of
+// its exports do. Bindings come from GPU-package imports (named, aliased, namespace), from
+// local modules through `resolveLocal` (named, default, namespace, re-exports, `export *`,
+// separate import-then-export, `export default X`), and from up to two variable bindings.
+// Propagation is bounded; hitting the bound is reported through `state` as a coverage gap,
+// never a silent pass.
+const RENDERER_KINDS = { ctor: new Set(RENDERER_CTORS), tag: new Set(RENDERER_TAGS), call: new Set(RENDERER_CALLS) };
+const PROPAGATION_DEPTH = 8;
+const bindingCache = new Map();
+const ident = /^[A-Za-z_$][\w$]*$/;
+
+function importStatements(file) {
   const { code: src, strings } = lexed(file);
-  const add = (kind, exported, origin) => { if (RENDERER_SETS[kind].has(origin)) result[kind].set(exported, origin); };
+  const out = [];
   for (const s of strings) {
+    if (s.template) continue;
     const before = src.slice(Math.max(0, s.at - 400), s.at);
     if (!/\bfrom\s*$/.test(before)) continue;
-    const stmt = before.slice(before.lastIndexOf('export'));
-    if (!/^export\b/.test(stmt) || before.lastIndexOf('export') < before.lastIndexOf('import')) continue;
-    const gpu = GPU_PACKAGES.test(s.value);
-    const local = !gpu && resolveLocal ? resolveLocal(s.value, file) : null;
-    const inner = local ? exportedRendererNames(local, resolveLocal, depth + 1, seen) : null;
-    if (/^export\s*\*\s*from/.test(stmt)) {
-      if (gpu) for (const kind of ['ctors', 'tags', 'calls']) for (const n of RENDERER_SETS[kind]) result[kind].set(n, n);
-      else if (inner) for (const kind of ['ctors', 'tags', 'calls']) for (const [e, o] of inner[kind]) result[kind].set(e, o);
-      continue;
+    const start = Math.max(before.lastIndexOf('import'), before.lastIndexOf('export'));
+    if (start === -1) continue;
+    const stmt = before.slice(start).replace(/\s+/g, ' ');
+    if (/^(?:import|export) type\b/.test(stmt)) continue;
+    const kind = stmt.startsWith('export') ? 'export' : 'import';
+    const star = stmt.match(/^(?:import|export)\s*\*\s*(?:as\s+([A-Za-z_$][\w$]*))?\s*from/);
+    const def = stmt.match(/^import\s+([A-Za-z_$][\w$]*)\s*(?:,|from)/);
+    const named = stmt.match(/\{([^}]*)\}/);
+    const pairs = [];
+    if (named) {
+      for (const spec of named[1].split(',')) {
+        const m = spec.trim().match(/^(?:type\s+)?([A-Za-z_$][\w$]*)(?:\s+as\s+([A-Za-z_$][\w$]*|default))?$/);
+        if (m) pairs.push([m[1], m[2] ?? m[1]]);
+      }
     }
-    const names = stmt.match(/\{([^}]*)\}/);
-    if (!names) continue;
-    for (const spec of names[1].split(',')) {
-      const m = spec.trim().match(/^(?:type\s+)?([A-Za-z_$][\w$]*)(?:\s+as\s+([A-Za-z_$][\w$]*))?$/);
-      if (!m) continue;
-      const [, origin, exported = origin] = m;
-      if (gpu) for (const kind of ['ctors', 'tags', 'calls']) add(kind, exported, origin);
-      else if (inner) for (const kind of ['ctors', 'tags', 'calls']) if (inner[kind].has(origin)) result[kind].set(exported, inner[kind].get(origin));
+    out.push({ kind, spec: s.value, star: Boolean(star), ns: star ? star[1] ?? null : null, def: def ? def[1] : null, pairs });
+  }
+  return out;
+}
+
+export function rendererBindings(file, resolveLocal, state, depth = 0, seen = new Set()) {
+  const key = norm(file);
+  if (bindingCache.has(key)) return bindingCache.get(key);
+  const local = new Map();
+  const exports = new Map();
+  const result = { local, exports };
+  if (depth > PROPAGATION_DEPTH) { state?.propagationCut?.add(relative(state.root ?? '', file)); return result; }
+  if (seen.has(key)) return result;
+  seen.add(key);
+  const { code: src } = lexed(file);
+  const kindOf = (name) => { for (const [k, set] of Object.entries(RENDERER_KINDS)) if (set.has(name)) return k; return null; };
+  for (const st of importStatements(file)) {
+    const gpu = GPU_PACKAGES.test(st.spec);
+    const target = gpu ? null : resolveLocal ? resolveLocal(st.spec, file) : null;
+    const inner = target ? rendererBindings(target, resolveLocal, state, depth + 1, seen) : null;
+    const originKind = (name) => (gpu ? kindOf(name) : inner ? inner.exports.get(name) ?? null : null);
+    const sink = st.kind === 'import' ? local : exports;
+    if (st.star) {
+      if (st.ns) {
+        if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) sink.set(`${st.ns}.${n}`, k);
+        else if (inner) for (const [e, k] of inner.exports) sink.set(`${st.ns}.${e}`, k);
+      } else if (st.kind === 'export') {
+        if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) exports.set(n, k);
+        else if (inner) for (const [e, k] of inner.exports) exports.set(e, k);
+      }
+    }
+    if (st.def) { const k = originKind('default'); if (k) local.set(st.def, k); }
+    for (const [origin, bound] of st.pairs) { const k = originKind(origin); if (k) sink.set(bound, k); }
+  }
+  // Separate import-then-export, default export, and variable bindings.
+  for (const m of src.matchAll(/\bexport\s*\{([^}]*)\}\s*(?!from)/g)) {
+    for (const spec of m[1].split(',')) {
+      const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s+as\s+([A-Za-z_$][\w$]*|default))?$/);
+      if (p && local.has(p[1])) exports.set(p[2] ?? p[1], local.get(p[1]));
     }
   }
-  return result;
-}
-const RENDERER_SETS = { ctors: new Set(RENDERER_CTORS), tags: new Set(RENDERER_TAGS), calls: new Set(RENDERER_CALLS) };
-
-// A renderer expression: `new WebGLRenderer()` (through a namespace, an import alias, a local
-// barrel's renamed export, or up to two variable bindings), a `<Canvas>` tag (with or without
-// a namespace prefix), `liquidGL()`.
-export function hasRendererExpression(file, resolveLocal = null) {
-  const { code: src, strings } = lexed(file);
-  const ctors = new Set(RENDERER_CTORS);
-  const tags = new Set(RENDERER_TAGS);
-  const calls = new Set(RENDERER_CALLS);
-  for (const s of strings) {
-    const before = src.slice(Math.max(0, s.at - 400), s.at);
-    if (!/\bfrom\s*$/.test(before)) continue;
-    const stmt = before.slice(before.lastIndexOf('import'));
-    if (!/^import\b/.test(stmt)) continue;
-    const names = stmt.match(/\{([^}]*)\}/);
-    if (!names) continue;
-    const gpu = GPU_PACKAGES.test(s.value);
-    const local = !gpu && resolveLocal ? resolveLocal(s.value, file) : null;
-    const exported = local ? exportedRendererNames(local, resolveLocal) : null;
-    for (const spec of names[1].split(',')) {
-      const m = spec.trim().match(/^(?:type\s+)?([A-Za-z_$][\w$]*)(?:\s+as\s+([A-Za-z_$][\w$]*))?$/);
-      if (!m) continue;
-      const [, origin, bound = origin] = m;
-      if (gpu) {
-        if (ctors.has(origin)) ctors.add(bound);
-        if (tags.has(origin)) tags.add(bound);
-        if (calls.has(origin)) calls.add(bound);
-      } else if (exported) {
-        if (exported.ctors.has(origin)) ctors.add(bound);
-        if (exported.tags.has(origin)) tags.add(bound);
-        if (exported.calls.has(origin)) calls.add(bound);
+  for (let pass = 0; pass < 2; pass += 1) {
+    for (const m of src.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)\s*;?/g)) {
+      const k = local.get(m[2]) ?? (m[2].includes('.') ? null : kindOf(m[2]));
+      if (k && !local.has(m[1])) local.set(m[1], k);
+    }
+    for (const m of src.matchAll(/\{([^}]*)\}\s*=\s*([A-Za-z_$][\w$]*)/g)) {
+      for (const spec of m[1].split(',')) {
+        const p = spec.trim().match(/^([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?$/);
+        if (!p) continue;
+        // Only a destructuring from a bound GPU namespace (`const { Renderer: R } = ogl`) counts.
+        const k = local.get(`${m[2]}.${p[1]}`);
+        if (k) local.set(p[2] ?? p[1], k);
       }
     }
   }
-  const alt = (set) => [...set].join('|');
-  for (let pass = 0; pass < 2; pass += 1) {
-    for (const m of src.matchAll(new RegExp(`\\b([A-Za-z_$][\\w$]*)\\s*=\\s*(?:[A-Za-z_$][\\w$]*\\.)?(${alt(ctors)})\\b(?!\\s*\\()`, 'g'))) ctors.add(m[1]);
-    for (const m of src.matchAll(new RegExp(`\\b(${alt(ctors)})\\s*:\\s*([A-Za-z_$][\\w$]*)\\s*[,}]`, 'g'))) ctors.add(m[2]);
-  }
-  return new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(ctors)})\\b|<(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(tags)})\\b|\\b(?:${alt(calls)})\\s*\\(`).test(src);
+  const dm = src.match(/\bexport\s+default\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)\s*;?/);
+  if (dm && local.has(dm[1])) exports.set('default', local.get(dm[1]));
+  bindingCache.set(key, result);
+  return result;
+}
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// A renderer expression in one module: `new X()`, `<X>` or `X()` where X is a bound renderer
+// name, with or without a namespace prefix, including package names used directly.
+export function hasRendererExpression(file, resolveLocal = null, state = null) {
+  const { code: src } = lexed(file);
+  const { local } = rendererBindings(file, resolveLocal, state);
+  const names = { ctor: new Set(RENDERER_CTORS), tag: new Set(RENDERER_TAGS), call: new Set(RENDERER_CALLS) };
+  for (const [name, kind] of local) names[kind].add(name);
+  const alt = (set) => [...set].map(escapeRe).join('|');
+  return new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.tag)})\\b|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src);
 }
 
 const isJs = (f) => JS_EXT.has(extname(f));
@@ -673,7 +705,7 @@ function resolveModule(root, base) {
     try { st = lstatSync(candidate); } catch { continue; }
     if (st.isFile()) return candidate;
   }
-  for (const ext of ['', '.tsx', '.ts', '.jsx', '.js', '.mjs', '/index.tsx', '/index.ts', '/index.js']) {
+  for (const ext of ['', '.tsx', '.ts', '.jsx', '.js', '.mjs', '.mts', '.cjs', '.cts', '/index.tsx', '/index.ts', '/index.js']) {
     const candidate = resolve(base + ext);
     if (ext.startsWith('/') && pathHasLink(root, candidate)) continue;
     let st;
@@ -851,7 +883,8 @@ function appRouterRoutes(root, files) {
 
 export function checkGpuSurfaces(root, files) {
   const aliases = readAliases(root);
-  const state = { unresolved: new Set(), unverified: new Set(), dynamic: new Map(), depthCut: 0 };
+  const state = { unresolved: new Set(), unverified: new Set(), dynamic: new Map(), depthCut: 0, comboCut: new Set() };
+  bindingCache.clear();
   // A renderer module has a renderer expression and reaches a GPU package directly or through
   // a local barrel. Evaluated for every file the route graph reaches, product or not.
   const gpuCache = new Map();
@@ -868,12 +901,14 @@ export function checkGpuSurfaces(root, files) {
     const hits = localImports(root, from, aliases, state, spec);
     return hits[0] ?? null;
   };
+  state.propagationCut = new Set();
+  state.root = root;
   const rendererCache = new Map();
   const isRendererModule = (f) => {
     const k = norm(f);
     if (rendererCache.has(k)) return rendererCache.get(k);
     let result = false;
-    if (isJs(f) && hasRendererExpression(f, resolveLocal)) {
+    if (isJs(f) && hasRendererExpression(f, resolveLocal, state)) {
       result = isGpuDirect(f) || [...closure(root, [f], aliases, state).values()].some(isGpuDirect);
     }
     rendererCache.set(k, result);
@@ -883,22 +918,35 @@ export function checkGpuSurfaces(root, files) {
   const offenders = [];
   const reachedRenderers = new Map();
   const reached = new Map();
+  const COMBO_LIMIT = 256;
   for (const route of routes) {
-    const chosen = closure(root, route.entries, aliases, state);
-    // Each slot adds the alternative that leaves the most renderers in the combined set, so an
-    // alternative overlapping the page can never hide one that does not.
-    for (const options of route.alternatives) {
-      let best = null;
-      for (const option of options) {
-        const mods = new Map(chosen);
-        for (const [k, m] of closure(root, option, aliases, state)) mods.set(k, m);
-        const n = [...mods.values()].filter(isRendererModule).length;
-        if (!best || n > best.n) best = { n, mods };
-      }
-      if (best) for (const [k, m] of best.mods) chosen.set(k, m);
+    const base = closure(root, route.entries, aliases, state);
+    // Every alternative ships (a full reload renders a slot's default), so all of them join
+    // the shipped set. The surface count takes the worst combination across slots.
+    const optionClosures = route.alternatives.map((options) => options.map((option) => closure(root, option, aliases, state)));
+    for (const options of optionClosures) for (const mods of options) for (const [k, m] of mods) reached.set(k, m);
+    for (const [k, m] of base) reached.set(k, m);
+    const combos = optionClosures.reduce((n, options) => n * Math.max(1, options.length), 1);
+    let worst = { n: -1, mods: base };
+    if (combos > COMBO_LIMIT) {
+      state.comboCut.add(`${route.key} (${combos} slot combinations)`);
+    } else {
+      const walkCombos = (i, acc) => {
+        if (i === optionClosures.length) {
+          const n = [...acc.values()].filter(isRendererModule).length;
+          if (n > worst.n) worst = { n, mods: acc };
+          return;
+        }
+        const options = optionClosures[i].length ? optionClosures[i] : [new Map()];
+        for (const mods of options) {
+          const next = new Map(acc);
+          for (const [k, m] of mods) next.set(k, m);
+          walkCombos(i + 1, next);
+        }
+      };
+      walkCombos(0, new Map(base));
     }
-    for (const [k, m] of chosen) reached.set(k, m);
-    const renderers = [...chosen.values()].filter(isRendererModule);
+    const renderers = [...worst.mods.values()].filter(isRendererModule);
     for (const r of renderers) reachedRenderers.set(norm(r), r);
     if (renderers.length > 1) offenders.push(`${route.key} (${renderers.length} renderer modules: ${renderers.map((r) => relative(root, r)).join(', ')})`);
   }
@@ -932,6 +980,8 @@ export function checkGpuSurfaces(root, files) {
   if (state.unresolved.size) gaps.push(`${state.unresolved.size} import specifier(s) unresolved (a local path, alias or package that is not where it should be): ${listed([...state.unresolved])}`);
   if (state.dynamic.size) gaps.push(`${state.dynamic.size} file(s) load a module through an expression the scanner cannot follow (import(name), import('../x/' + name), require(require.resolve(…)), a substituted template): ${listed([...state.dynamic.keys()])}`);
   if (state.depthCut) gaps.push(`${state.depthCut} module(s) beyond the ${IMPORT_DEPTH}-edge traversal limit`);
+  if (state.propagationCut.size) gaps.push(`${state.propagationCut.size} barrel chain(s) deeper than ${PROPAGATION_DEPTH} re-exports, renderer names not followed: ${listed([...state.propagationCut])}`);
+  if (state.comboCut.size) gaps.push(`route(s) with more than ${COMBO_LIMIT} slot combinations, not enumerated: ${listed([...state.comboCut])}`);
   if (aliases.dropped.length) gaps.push(`tsconfig: ${listed(aliases.dropped)}`);
   if (lexIssues.length) gaps.push(`${lexIssues.length} file(s) the lexer could not read to the end: ${listed(lexIssues)}`);
   const soft = state.unverified.size ? `${state.unverified.size} bare specifier(s) assumed to be packages because no node_modules exists: ${listed([...state.unverified])}` : '';
