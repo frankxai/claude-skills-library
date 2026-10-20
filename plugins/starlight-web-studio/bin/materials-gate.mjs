@@ -759,11 +759,28 @@ function computeBindings(file, deps, lookup) {
       }
       continue;
     }
+    const bindNamespace = (name) => {
+      if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) local.set(`${name}.${n}`, k);
+      else for (const [e, k] of inner.exports) local.set(`${name}.${e}`, k);
+    };
     const ns = before.match(new RegExp(`(${ID}) ?= ?await ?import ?\\($`));
-    if (ns) {
-      if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) local.set(`${ns[1]}.${n}`, k);
-      else for (const [e, k] of inner.exports) local.set(`${ns[1]}.${e}`, k);
+    if (ns) { bindNamespace(ns[1]); continue; }
+    // `import('three').then(({ WebGLRenderer: GL }) => …)` and `.then(m => …)` bind the
+    // callback's parameters for the whole module (a callback parameter is a module-wide
+    // name here, which errs toward counting).
+    const after = tokensAfter(src, s.at + 2, 200);
+    const thenDestructured = after.match(/^\) ?\. ?then ?\( ?(?:async ?)?\( ?\{ ?([^{}]*)\} ?\) ?=>/);
+    if (thenDestructured) {
+      for (const spec of thenDestructured[1].split(',')) {
+        const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?$`));
+        if (!p) continue;
+        const k = originKind(gpu, inner, p[1]);
+        if (k) local.set(p[2] ?? p[1], k);
+      }
+      continue;
     }
+    const thenParam = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?\\(? ?(${ID}) ?\\)? ?=>`));
+    if (thenParam) bindNamespace(thenParam[1]);
   }
   // Variable, class-field, destructuring and wrapper bindings, two passes for one extra hop.
   for (let pass = 0; pass < 2; pass += 1) {

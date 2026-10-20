@@ -837,11 +837,13 @@ test('a renderer bound from a literal dynamic import inside an effect is a rende
     'DESIGN.md': GOOD_DESIGN,
     'app/one/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    let renderer: { domElement: HTMLElement; dispose(): void } | null = null;\n    async function mount() {\n      const { WebGLRenderer: GL } = await import('three');\n      renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    }\n    mount();\n    return () => renderer?.dispose();\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'app/two/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    (async () => {\n      const mod = await import('three');\n      const r = new mod.WebGLRenderer();\n      void r;\n    })();\n  }, []);\n  return null;\n}\n`,
+    'app/three/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    let renderer: { dispose(): void } | undefined;\n    void import('three').then(({ WebGLRenderer: GL }) => {\n      const r = new GL();\n      renderer = r;\n      host.current?.appendChild(r.domElement);\n    });\n    return () => renderer?.dispose();\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/four/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    import('three').then(three => {\n      const r = new three.WebGLRenderer();\n      void r;\n    });\n  }, []);\n  return null;\n}\n`,
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'four']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
   assert.equal(result.pass, false);
 });
