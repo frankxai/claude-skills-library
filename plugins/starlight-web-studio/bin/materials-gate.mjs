@@ -583,7 +583,9 @@ function computeBindings(file, deps, lookup) {
     }
   }
   const loaderAlt = [...loaders].map(escapeRe).join('|');
-  for (const m of src.matchAll(new RegExp(`(?<![\\w$.])(${ID})\\s*=\\s*(?:${loaderAlt})\\s*\\(`, 'g'))) {
+  // A TypeScript type argument may sit between the callee and its paren: `dynamic<Props>(…)`.
+  const typeArgs = '(?:<[^<>()]*(?:<[^<>()]*>[^<>()]*)*>)?';
+  for (const m of src.matchAll(new RegExp(`(?<![\\w$.])(${ID})\\s*=\\s*(?:${loaderAlt})\\s*${typeArgs}\\s*\\(`, 'g'))) {
     const name = m[1];
     const open = m.index + m[0].length - 1;
     const close = matchParen(src, open);
