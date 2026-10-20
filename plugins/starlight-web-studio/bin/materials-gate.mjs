@@ -964,14 +964,22 @@ function computeBindings(file, deps, lookup) {
       const name = bindingNameBefore(src, m.index);
       if (name && name !== 'default' && !local.has(name)) local.set(name, k);
     }
-    // A constructor chosen at runtime, `const R = navigator.gpu ? GPU : GL` or `GPU ?? GL`,
-    // is a renderer when either branch is one (`?.` is optional chaining, not a ternary).
-    for (const m of src.matchAll(new RegExp(`(?<![=!<>])=(?![=>])[^;\\n]*?(?:\\?(?!\\.)|\\?\\?|\\|\\|)\\s*(${ID}(?:\\.${ID})*)\\s*(?::\\s*(${ID}(?:\\.${ID})*))?\\s*(?=;|\\r?\\n|$|\\)|\\})`, 'gm'))) {
-      const kinds = [m[1], m[2]].filter(Boolean).map((b) => local.get(b) ?? (b.includes('.') ? null : kindOf(b)));
-      const k = kinds.find(Boolean);
-      if (!k) continue;
-      const name = bindingNameBefore(src, m.index);
-      if (name && name !== 'default' && !local.has(name)) local.set(name, k);
+    // A constructor chosen at runtime, `const R = navigator.gpu ? GPU : GL`, `GPU ?? GL` or
+    // `GL || custom`, is a renderer when either operand is one. The operator may open the
+    // next line, as formatters write it; `?.` is optional chaining, not a ternary.
+    const MEMBER = `${ID}(?:\\.${ID})*`;
+    const selections = [
+      new RegExp(`(?<![=!<>])=(?![=>])[^;\\n]*?(?:\\r?\\n\\s*)?\\?(?!\\.)\\s*(${MEMBER})\\s*:\\s*(${MEMBER})\\s*(?=;|\\r?\\n|$|\\)|\\})`, 'gm'),
+      new RegExp(`(?<![=!<>])=(?![=>])[^;\\n]*?(?:(${MEMBER})\\s*)?(?:\\r?\\n\\s*)?(?:\\?\\?|\\|\\|)\\s*(${MEMBER})?[^;\\n]*?(?=;|\\r?\\n|$|\\})`, 'gm'),
+    ];
+    for (const re of selections) {
+      for (const m of src.matchAll(re)) {
+        const kinds = [m[1], m[2]].filter(Boolean).map((b) => local.get(b) ?? (b.includes('.') ? null : kindOf(b)));
+        const k = kinds.find(Boolean);
+        if (!k) continue;
+        const name = bindingNameBefore(src, m.index);
+        if (name && name !== 'default' && !local.has(name)) local.set(name, k);
+      }
     }
     for (const m of src.matchAll(DESTRUCTURE_RE)) {
       for (const spec of m[1].split(',')) {

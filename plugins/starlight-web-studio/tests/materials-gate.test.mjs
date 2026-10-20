@@ -911,13 +911,16 @@ test('a constructor chosen by a ternary or a coalescing fallback is still a rend
     'DESIGN.md': GOOD_DESIGN,
     'app/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void (async () => {\n      const [{ WebGLRenderer: GL }, { WebGPURenderer: GPU }] =\n        await Promise.all([\n          import('three'),\n          import('three/webgpu'),\n        ]);\n      const ActiveRenderer = navigator.gpu ? GPU : GL;\n      const renderer = new ActiveRenderer();\n      host.current?.appendChild(renderer.domElement);\n    })();\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'app/two/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGLRenderer } from 'three';\nexport default function Page() {\n  useEffect(() => {\n    const Chosen = (window as any).__renderer ?? WebGLRenderer;\n    new Chosen();\n  }, []);\n  return null;\n}\n`,
+    'app/three/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer = GPU ?? (window as any).customRenderer;\n    new ActiveRenderer();\n  }, []);\n  return null;\n}\n`,
+    'app/four/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer = GPU || (window as any).customRenderer;\n    new ActiveRenderer();\n  }, []);\n  return null;\n}\n`,
+    'app/five/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGLRenderer as GL } from 'three';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer = navigator.gpu\n      ? GPU\n      : GL;\n    const renderer = new ActiveRenderer();\n    document.body.appendChild(renderer.domElement);\n  }, []);\n  return null;\n}\n`,
     'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
   assert.match(life.detail, /app[\\/]page\.tsx/);
-  assert.match(life.detail, /app[\\/]two[\\/]page\.tsx/);
+  for (const p of ['two', 'three', 'four', 'five']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 
