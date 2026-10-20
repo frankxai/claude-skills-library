@@ -872,6 +872,21 @@ test('.then(mount) with a locally declared callback binds its parameters; an und
   assert.equal(result.pass, false);
 });
 
+test('inline callbacks with balanced parameter annotations and return annotations bind', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/one/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void import('three').then((three: typeof import('three')) => {\n      const GL = three.WebGLRenderer;\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    });\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/two/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void import('three').then(\n      ({ WebGLRenderer: GL }: typeof import('three')): void => {\n        const renderer = new GL();\n        host.current?.appendChild(renderer.domElement);\n      }\n    );\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/three/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic(() => import('@react-three/fiber').then((m: typeof import('@react-three/fiber')): typeof m.Canvas => m.Canvas));\nexport default () => <Scene />;\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
 test('a loader used directly as a default export: a page Next mounts, and a component a page imports', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

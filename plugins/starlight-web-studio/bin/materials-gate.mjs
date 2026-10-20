@@ -395,6 +395,8 @@ export function importsOf(file) {
     else if (/(?<![\w$.])import$/.test(before)) kind = 'side-effect';
     else if (/(?<![\w$.])(?:import|require) ?\($/.test(before)) kind = 'call';
     if (!kind) continue;
+    // `typeof import('x')` is a type reference, not a load.
+    if (kind === 'call' && /typeof import ?\($/.test(before)) continue;
     if (kind === 'call' && !/^[,)]/.test(tokensAfter(src, s.at + 2, 4))) { dynamic += 1; continue; }
     if (s.template) {
       if (s.pure) out.push(s.value);
@@ -482,6 +484,69 @@ function importStatements(file) {
 }
 
 const kindOf = (name) => { for (const [k, set] of Object.entries(RENDERER_KINDS)) if (set.has(name)) return k; return null; };
+
+// The head of a callback written inline after `import('x')`: `text` starts right after the
+// import's closing quote (whitespace collapsed). Returns null when there is no `.then(`,
+// { unsupported: true } when the callback shape is not readable, otherwise
+// { destructured } or { param } for the first parameter plus `body`, the text after `=>`
+// or the block's `{`. Parameter and return annotations are skipped as balanced text.
+function parseThenCallback(text) {
+  const m = text.match(/^\) ?\. ?then ?\( ?(?:async ?)?(?:function ?(?:[A-Za-z_$][\w$]* ?)?)?/);
+  if (!m) return null;
+  let i = m[0].length;
+  const skipBalanced = (stopAt) => {
+    let depth = 0;
+    while (i < text.length) {
+      const c = text[i];
+      if (c === '(' || c === '[' || c === '{' || (c === '<' && text[i - 1] !== '=')) depth += 1;
+      else if (c === ')' || c === ']' || c === '}' || (c === '>' && text[i - 1] !== '=')) { if (depth === 0) return true; depth -= 1; }
+      else if (depth === 0 && stopAt(i)) return true;
+      i += 1;
+    }
+    return false;
+  };
+  let params = null;
+  if (text[i] === '(') {
+    const open = i;
+    i += 1;
+    if (!skipBalanced(() => false)) return { unsupported: true };
+    params = text.slice(open + 1, i);
+    i += 1;
+  } else {
+    const ident = text.slice(i).match(/^([A-Za-z_$][\w$]*) ?(?==>)/);
+    if (!ident) return { unsupported: true };
+    params = ident[1];
+    i += ident[1].length;
+  }
+  // Optional return annotation, then `=>` or the block's `{`.
+  const rest = text.slice(i).replace(/^ /, '');
+  let k = 0;
+  if (rest[k] === ':') {
+    k += 1;
+    let depth = 0;
+    while (k < rest.length) {
+      const c = rest[k];
+      if (c === '(' || c === '[' || c === '{' || (c === '<' && rest[k - 1] !== '=')) depth += 1;
+      else if (c === ')' || c === ']' || c === '}' || (c === '>' && rest[k - 1] !== '=')) depth -= 1;
+      else if (depth === 0 && (rest.startsWith('=>', k) || c === '{')) break;
+      k += 1;
+    }
+  }
+  const tail = rest.slice(k).replace(/^ /, '');
+  let body;
+  if (tail.startsWith('=>')) body = tail.slice(2).replace(/^ /, '');
+  else if (tail.startsWith('{')) body = tail.slice(1).replace(/^ /, '');
+  else return { unsupported: true };
+  const p = params.trim();
+  if (p.startsWith('{')) {
+    const close = p.indexOf('}');
+    if (close === -1) return { unsupported: true };
+    return { destructured: p.slice(1, close), body };
+  }
+  const ident = p.match(/^([A-Za-z_$][\w$]*)/);
+  if (!ident) return { unsupported: true };
+  return { param: ident[1], body };
+}
 
 // The first parameter of a callback declared in the module under `name`: a function
 // declaration, a const arrow, or a const function expression. Returns { destructured } for an
@@ -609,16 +674,16 @@ export function loaderMember(rawBody, afterImport) {
   // Expression body: `() => import(x)` with an optional `.then(...)`, or `async () => (await import(x)).Member`.
   if (new RegExp(`^(?:async ?)?\\(? ?\\)? ?=> ?import ?\\(`).test(body)) {
     if (!/^\) ?\. ?then ?\(/.test(afterImport)) return /^\) ?\./.test(afterImport) ? null : 'default';
-    const plain = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?\\(? ?(${ID}) ?\\)? ?=> ?\\(? ?\\1 ?\\. ?(${ID})`));
-    if (plain) return plain[2];
-    const destructured = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?\\( ?\\{ ?([^}]*)\\} ?\\) ?=> ?\\(? ?(${ID})`));
-    if (destructured) return pickDestructured(destructured[1], destructured[2]);
-    // Function-expression callbacks: `function (m) { return m.Canvas; }`, `function ({ Canvas }) { return Canvas; }`.
-    const fnPlain = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?function ?(?:${ID} ?)?\\( ?(${ID}) ?\\) ?\\{ ?return ?\\(? ?\\1 ?\\. ?(${ID})`));
-    if (fnPlain) return fnPlain[2];
-    const fnDestructured = afterImport.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?function ?(?:${ID} ?)?\\( ?\\{ ?([^}]*)\\} ?\\) ?\\{ ?return ?\\(? ?(${ID})`));
-    if (fnDestructured) return pickDestructured(fnDestructured[1], fnDestructured[2]);
-    return null;
+    const cb = parseThenCallback(afterImport);
+    if (!cb || cb.unsupported) return null;
+    // The callback's result: `m.Member`, `Member`, or `return` of either.
+    const value = cb.body.replace(/^return ?/, '').replace(/^\(? ?/, '');
+    if (cb.param) {
+      const member = value.match(new RegExp(`^${cb.param} ?\\. ?(${ID})`));
+      return member ? member[1] : null;
+    }
+    const returned = value.match(new RegExp(`^(${ID})`));
+    return returned ? pickDestructured(cb.destructured, returned[1]) : null;
   }
   const inline = body.match(new RegExp(`^(?:async ?)?\\(? ?\\)? ?=> ?\\( ?await import ?\\( ?'' ?\\) ?\\) ?\\. ?(${ID})`));
   if (inline) return inline[1];
@@ -719,7 +784,7 @@ function computeBindings(file, deps, lookup) {
     const close = matchParen(src, open);
     if (close === -1) { unsupported.add(name); continue; }
     const body = src.slice(open + 1, close);
-    const bodyStrings = strings.filter((s) => !s.template && s.at > open && s.at < close && /(?<![\w$.])import ?\($/.test(tokensBefore(src, s.at, 12)));
+    const bodyStrings = strings.filter((s) => !s.template && s.at > open && s.at < close && /(?<!typeof )(?<![\w$.])import ?\($/.test(tokensBefore(src, s.at, 20)));
     if (bodyStrings.length !== 1) { unsupported.add(name); continue; }
     const spec = bodyStrings[0];
     const member = loaderMember(body.replace(/\s+/g, ' '), tokensAfter(src, spec.at + 2, 200));
@@ -763,7 +828,7 @@ function computeBindings(file, deps, lookup) {
   for (const s of strings) {
     if (s.template) continue;
     const before = tokensBefore(src, s.at, 200);
-    if (!/(?<![\w$.])import ?\($/.test(before)) continue;
+    if (!/(?<![\w$.])import ?\($/.test(before) || /typeof import ?\($/.test(before)) continue;
     const gpu = GPU_PACKAGES.test(s.value);
     const target = gpu ? null : deps.get(s.value) ?? null;
     const inner = target ? lookup(target) : null;
@@ -787,11 +852,15 @@ function computeBindings(file, deps, lookup) {
     // `import('three').then(({ WebGLRenderer: GL }) => …)` and `.then(m => …)` bind the
     // callback's parameters for the whole module (a callback parameter is a module-wide
     // name here, which errs toward counting).
-    const after = tokensAfter(src, s.at + 2, 200);
-    // Arrow or function expression, anonymous or named: `({ A: B }) =>`, `function f({ A: B }) {`.
-    const thenDestructured = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?)?\\( ?\\{ ?([^{}]*)\\} ?(?::[^=]*?)?\\) ?(?:=>|\\{)`));
-    if (thenDestructured) {
-      for (const spec of thenDestructured[1].split(',')) {
+    const after = tokensAfter(src, s.at + 2, 400);
+    // `.then(mount)`: the callback is declared elsewhere in the module; read its parameters
+    // from that declaration. A callback the reader cannot find or read is a coverage gap.
+    const thenRef = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(${ID}) ?[,)]`));
+    // Inline arrow or function expression, with any parameter or return annotation.
+    const inline = thenRef ? null : parseThenCallback(after);
+    if (inline && inline.unsupported) { unsupported.add(`then@${s.at}`); continue; }
+    if (inline && inline.destructured !== undefined) {
+      for (const spec of inline.destructured.split(',')) {
         const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?(?: ?=.*)?$`));
         if (!p) continue;
         const k = originKind(gpu, inner, p[1]);
@@ -799,11 +868,7 @@ function computeBindings(file, deps, lookup) {
       }
       continue;
     }
-    const thenParam = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(?:async ?)?(?:function ?(?:${ID} ?)?\\( ?(${ID}) ?(?::[^=,)]*)?\\) ?\\{|\\(? ?(${ID}) ?(?::[^=,)]*)?\\)? ?=>)`));
-    if (thenParam) { bindNamespace(thenParam[1] ?? thenParam[2]); continue; }
-    // `.then(mount)`: the callback is declared elsewhere in the module; read its parameters
-    // from that declaration. A callback the reader cannot find or read is a coverage gap.
-    const thenRef = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(${ID}) ?[,)]`));
+    if (inline && inline.param) { bindNamespace(inline.param); continue; }
     if (thenRef) {
       const params = declaredParams(src, thenRef[1]);
       if (params === null) { unsupported.add(`then:${thenRef[1]}`); continue; }
