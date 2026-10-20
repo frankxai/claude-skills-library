@@ -878,12 +878,15 @@ test('inline callbacks with balanced parameter annotations and return annotation
     'app/one/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void import('three').then((three: typeof import('three')) => {\n      const GL = three.WebGLRenderer;\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    });\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'app/two/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void import('three').then(\n      ({ WebGLRenderer: GL }: typeof import('three')): void => {\n        const renderer = new GL();\n        host.current?.appendChild(renderer.domElement);\n      }\n    );\n  }, []);\n  return <div ref={host} />;\n}\n`,
     'app/three/page.tsx': `import dynamic from 'next/dynamic';\nconst Scene = dynamic(() => import('@react-three/fiber').then((m: typeof import('@react-three/fiber')): typeof m.Canvas => m.Canvas));\nexport default () => <Scene />;\n`,
+    'app/four/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    void import('three').then<void>(({ WebGLRenderer: GL }) => {\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    });\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/five/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    async function mount() {\n      const { WebGLRenderer: GL }: typeof import('three') =\n        await import('three');\n      const renderer = new GL();\n      host.current?.appendChild(renderer.domElement);\n    }\n    void mount();\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'app/six/page.tsx': `'use client';\nimport { useEffect } from 'react';\nexport default function Page() {\n  useEffect(() => {\n    (async () => {\n      const mod: typeof import('three') = await import('three');\n      new mod.WebGLRenderer();\n    })();\n  }, []);\n  return null;\n}\n`,
     'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
-  for (const p of ['one', 'two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['one', 'two', 'three', 'four', 'five', 'six']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 

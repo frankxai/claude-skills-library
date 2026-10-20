@@ -490,7 +490,21 @@ const kindOf = (name) => { for (const [k, set] of Object.entries(RENDERER_KINDS)
 // { unsupported: true } when the callback shape is not readable, otherwise
 // { destructured } or { param } for the first parameter plus `body`, the text after `=>`
 // or the block's `{`. Parameter and return annotations are skipped as balanced text.
-function parseThenCallback(text) {
+// `.then<void>(…)`: a balanced type argument after `then` is dropped before parsing.
+function stripThenTypeArgs(text) {
+  const head = text.match(/^(\) ?\. ?then) ?</);
+  if (!head) return text;
+  let depth = 0;
+  for (let i = head[0].length - 1; i < text.length; i += 1) {
+    const c = text[i];
+    if (c === '<') depth += 1;
+    else if (c === '>' && text[i - 1] !== '=') { depth -= 1; if (depth === 0) return head[1] + text.slice(i + 1); }
+  }
+  return text;
+}
+
+function parseThenCallback(rawText) {
+  const text = stripThenTypeArgs(rawText);
   const m = text.match(/^\) ?\. ?then ?\( ?(?:async ?)?(?:function ?(?:[A-Za-z_$][\w$]* ?)?)?/);
   if (!m) return null;
   let i = m[0].length;
@@ -833,7 +847,8 @@ function computeBindings(file, deps, lookup) {
     const target = gpu ? null : deps.get(s.value) ?? null;
     const inner = target ? lookup(target) : null;
     if (!gpu && !inner) continue;
-    const destructured = before.match(/\{ ?([^{}]*)\} ?= ?(?:await ?)?import ?\($/);
+    // An annotation may sit between the pattern (or name) and `=`: `{ A }: Mod = await import(…)`.
+    const destructured = before.match(/\{ ?([^{}]*)\} ?(?::[^=]*?)?= ?(?:await ?)?import ?\($/);
     if (destructured) {
       for (const spec of destructured[1].split(',')) {
         const p = spec.trim().match(new RegExp(`^(${ID})(?: ?: ?(${ID}))?(?: ?=.*)?$`));
@@ -847,12 +862,12 @@ function computeBindings(file, deps, lookup) {
       if (gpu) for (const [k, set] of Object.entries(RENDERER_KINDS)) for (const n of set) local.set(`${name}.${n}`, k);
       else for (const [e, k] of inner.exports) local.set(`${name}.${e}`, k);
     };
-    const ns = before.match(new RegExp(`(${ID}) ?= ?await ?import ?\\($`));
+    const ns = before.match(new RegExp(`(${ID}) ?(?::[^=]*?)?= ?await ?import ?\\($`));
     if (ns) { bindNamespace(ns[1]); continue; }
     // `import('three').then(({ WebGLRenderer: GL }) => …)` and `.then(m => …)` bind the
     // callback's parameters for the whole module (a callback parameter is a module-wide
     // name here, which errs toward counting).
-    const after = tokensAfter(src, s.at + 2, 400);
+    const after = stripThenTypeArgs(tokensAfter(src, s.at + 2, 400));
     // `.then(mount)`: the callback is declared elsewhere in the module; read its parameters
     // from that declaration. A callback the reader cannot find or read is a coverage gap.
     const thenRef = after.match(new RegExp(`^\\) ?\\. ?then ?\\( ?(${ID}) ?[,)]`));
