@@ -1,6 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadTargets, rank } from '../bin/studio-sweep.mjs';
+import { loadTargets, rank, heartbeatStatus } from '../bin/studio-sweep.mjs';
+
+test('heartbeat status comes from what the sweep produced', () => {
+  assert.equal(heartbeatStatus(0, 0), 'failed');
+  assert.equal(heartbeatStatus(0, 5), 'failed');
+  assert.equal(heartbeatStatus(20, 2), 'degraded');
+  assert.equal(heartbeatStatus(24, 0), 'ok');
+});
 
 const report = (score, p0 = 0) => ({ score, max: 30, findings: Array.from({ length: p0 }, () => ({ severity: 'P0' })) });
 

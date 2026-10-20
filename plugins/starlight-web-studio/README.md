@@ -86,6 +86,15 @@ file. An HTML page served at `/llms.txt` is a defect.
 | page PR | draft, marked for design approval | copy rewrite, new section, motion |
 | human | never alone | new routes, prices, DNS, external sends, paid generation, merging |
 
+## Scheduling the sweep
+
+The studio never registers its own schedule. `schedule/Register-StudioSweep.ps1` stages a
+daily Windows task: run it with no switches to see the exact task, add `-Register` to turn it
+on, `-Unregister` to remove it. Each run writes a board, the machine scores and a heartbeat
+(`--heartbeat <file>`) whose status is `ok`, `degraded` or `failed` from what the run produced,
+not from its exit code. The script points at the plugin copy it lives in; re-run it after
+moving or reinstalling the plugin.
+
 ## Works with
 
 The repo's own `design.md` and `taste.md` outrank every skill here. The studio
@@ -97,7 +106,7 @@ skills, GreenSock's `gsap-skills`, and `humanizer`.
 ## Tests and evals
 
 ```bash
-node --test plugins/starlight-web-studio/tests/*.test.mjs    # 30 tests: scanner, RFC 9309 robots, sweep ranking, workflow
+node --test plugins/starlight-web-studio/tests/*.test.mjs    # 31 tests: scanner, RFC 9309 robots, sweep ranking, workflow
 claude plugin eval plugins/starlight-web-studio
 ```
 

@@ -5,8 +5,8 @@
 //
 // Exit codes: 0 swept · 1 at least one property has a P0 · 2 bad arguments · 3 every fetch failed.
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { scanUrl } from './studio-scan.mjs';
 
@@ -68,6 +68,29 @@ export function board(ranked, failed, date) {
   return lines.join('\n');
 }
 
+// Status is derived from what the run produced, never from the exit code alone: a sweep that
+// scanned nothing is failed, one that lost some properties is degraded.
+export function heartbeatStatus(scanned, failed) {
+  if (!scanned) return 'failed';
+  return failed ? 'degraded' : 'ok';
+}
+
+async function writeHeartbeat(path, { ranked, failed, board }) {
+  const body = {
+    ts: new Date().toISOString(),
+    source: 'studio-sweep',
+    status: heartbeatStatus(ranked.length, failed.length),
+    scanned: ranked.length,
+    failed: failed.map(f => f.target.id),
+    p0: ranked.filter(r => r.p0).map(r => r.target.id),
+    board,
+  };
+  await mkdir(dirname(path), { recursive: true });
+  const tmp = `${path}.tmp`;
+  await writeFile(tmp, JSON.stringify(body, null, 2) + '\n');
+  await rename(tmp, path);
+}
+
 async function pool(items, worker) {
   const out = new Array(items.length);
   let next = 0;
@@ -85,7 +108,7 @@ async function main(argv) {
   const targetsPath = arg(args, '--targets');
   const outDir = arg(args, '--out', '.studio');
   if (!targetsPath) {
-    console.error('usage: studio-sweep.mjs --targets <targets.json|properties.graph.json> [--out <dir>] [--only tier-1]');
+    console.error('usage: studio-sweep.mjs --targets <targets.json|properties.graph.json> [--out <dir>] [--only tier-1] [--heartbeat <file.json>]');
     return 2;
   }
   const only = arg(args, '--only');
@@ -118,6 +141,8 @@ async function main(argv) {
   await writeFile(join(outDir, 'latest.json'), JSON.stringify({ runId, machine, board: boardFile, scanned: ranked.length, failed: failed.length }, null, 2) + '\n');
   console.log(md.split('\n## Findings')[0]);
   console.log(`\nwrote ${join(outDir, boardFile)} and ${machine} (${ranked.length} scanned, ${failed.length} failed)`);
+  const heartbeat = arg(args, '--heartbeat');
+  if (heartbeat) await writeHeartbeat(heartbeat, { ranked, failed, board: join(outDir, boardFile) });
   if (!ranked.length) return 3;
   return ranked.some(r => r.p0) ? 1 : 0;
 }
