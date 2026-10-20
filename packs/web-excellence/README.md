@@ -9,9 +9,10 @@ It is three things:
 1. **Eleven vendored skills** from the best public sources (Vercel, Emil Kowalski,
    nextlevelbuilder, arvindrk, Leonxlnx) — pinned to commits, re-syncable, MIT.
    See [SOURCES.md](SOURCES.md) for provenance and the assessment of each.
-2. **Three native skills** that fill what none of them do: sequencing
-   (`web-release-gate`), measurement (`core-web-vitals`), and evidence
-   (`visual-proof`).
+2. **Five native skills** that fill what none of them do: sequencing
+   (`web-release-gate`), measurement (`core-web-vitals`), evidence
+   (`visual-proof`), one governed shader or 3D surface per page
+   (`gpu-surface`), and dependency upkeep with a peer check (`web-steward`).
 3. **Three hooks** that make the sequence the default instead of a suggestion.
 
 ## Install
@@ -108,12 +109,18 @@ gating), so the installer reports the difference instead.
 
 ```bash
 python3 packs/web-excellence/tests/test_hooks.py
+node --test packs/web-excellence/tests/peer-check.test.mjs
 ```
 
 22 checks, no dependencies: gate path matching, fire-once-per-session, stop
 blocks-then-never-again, no chaining, opt-out, case-insensitive contract
 detection, `0600` state file, path-traversal-safe session ids, and the linter's
 ratchet semantics both ways.
+
+`peer-check.test.mjs` runs offline, and CI picks it up through the
+`packs/*/tests/*.test.mjs` glob. It covers the semver range parser against the
+peer ranges npm packages actually declare, the drift classes (a `0.x` minor
+counts as breaking), and the pnpm importer reader.
 
 ## Cloud sessions
 
@@ -157,8 +164,8 @@ packs/web-excellence/
 ├── settings.snippet.json  the hooks block install.sh merges
 ├── ci/                    the model-free linter + its workflow
 ├── hooks/                 the three hooks
-├── tests/                 test_hooks.py — run it after touching a hook
-└── skills/                14 skills — 11 vendored, 3 native
+├── tests/                 test_hooks.py (hooks) and peer-check.test.mjs (web-steward)
+└── skills/                16 skills — 11 vendored, 5 native
 ```
 
 Vendored skills are verbatim copies. Never hand-edit one — `sync-upstream.sh`

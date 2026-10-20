@@ -3,7 +3,8 @@
 Every third-party skill in this pack is a **verbatim copy** of an upstream directory,
 pinned to a commit. Nothing is hand-edited after vendoring — the next
 `./sync-upstream.sh` overwrites it. Local behavior lives in the native skills
-(`web-release-gate`, `core-web-vitals`, `visual-proof`) and in `hooks/`.
+(`web-release-gate`, `core-web-vitals`, `visual-proof`, `gpu-surface`,
+`web-steward`) and in `hooks/`.
 
 All upstreams are MIT-licensed. Each vendored skill directory carries the
 upstream `LICENSE` as `UPSTREAM-LICENSE`.
@@ -24,7 +25,7 @@ upstream `LICENSE` as `UPSTREAM-LICENSE`.
 | `image-to-code` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) `skills/image-to-code-skill` | MIT | `e988add20dab` | 2026-07-27 |
 | `brandkit` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) `skills/brandkit` | MIT | `e988add20dab` | 2026-07-27 |
 
-Native to this pack (not vendored): `web-release-gate` `core-web-vitals` `visual-proof` 
+Native to this pack (not vendored): `web-release-gate` `core-web-vitals` `visual-proof` `gpu-surface` `web-steward` 
 
 <!-- PINS:END -->
 
@@ -48,14 +49,16 @@ decision this pack encodes.
 | ~~pick-ui-library~~ (Emil Kowalski) | Curated library picks per task. | **Skipped.** Useful, but it is a shopping list, not a quality gate, and the FrankX stacks are already chosen (Framer Motion + GSAP + Lenis + Tailwind + shadcn). Add it later if the stack opens up. |
 | ~~taste-skill / minimalist / brutalist / soft~~ (Leonxlnx) | Whole-aesthetic instruction sets that impose their own look. | **Skipped deliberately.** The FrankX properties have a locked aesthetic in `design.md` + `taste.md`. Importing a competing style skill is how a site drifts. |
 
-## What none of them do — hence the three native skills
+## What none of them do — hence the native skills
 
 The upstream set is strong on *judgment* and weak on *proof*. Nothing in it:
 
 - sequences the others, or refuses to let work be called done (`web-release-gate`)
 - measures anything — no Core Web Vitals, no bundle budget, no Lighthouse (`core-web-vitals`)
 - produces before/after visual evidence at real breakpoints in both themes (`visual-proof`)
-- knows your tokens exist (all three native skills read `design.md` / `taste.md` / `tailwind.config.js` when present)
+- governs a shader or 3D surface: whether the page earns one, one per page, a designed reduced-motion still (`gpu-surface`)
+- keeps dependencies honest: unmet peers read from the lockfile, drift against the registry, one upgrade branch with proof (`web-steward`)
+- knows your tokens exist (the native skills read `design.md` / `taste.md` / `tailwind.config.js` when present)
 
 ## Known risk: `web-design-guidelines` fetches live, unpinned rules
 
