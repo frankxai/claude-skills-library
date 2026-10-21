@@ -914,13 +914,15 @@ test('a constructor chosen by a ternary or a coalescing fallback is still a rend
     'app/three/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer = GPU ?? (window as any).customRenderer;\n    new ActiveRenderer();\n  }, []);\n  return null;\n}\n`,
     'app/four/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer = GPU || (window as any).customRenderer;\n    new ActiveRenderer();\n  }, []);\n  return null;\n}\n`,
     'app/five/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGLRenderer as GL } from 'three';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer = navigator.gpu\n      ? GPU\n      : GL;\n    const renderer = new ActiveRenderer();\n    document.body.appendChild(renderer.domElement);\n  }, []);\n  return null;\n}\n`,
+    'app/six/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGLRenderer as GL } from 'three';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer =\n      navigator.gpu\n        ? GPU\n        : GL;\n    const renderer = new ActiveRenderer();\n    document.body.appendChild(renderer.domElement);\n  }, []);\n  return null;\n}\n`,
+    'app/seven/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGLRenderer as GL } from 'three';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer =\n      (window as any).customRenderer ??\n      GL;\n    new ActiveRenderer();\n  }, []);\n  return null;\n}\n`,
     'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
   assert.match(life.detail, /app[\\/]page\.tsx/);
-  for (const p of ['two', 'three', 'four', 'five']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  for (const p of ['two', 'three', 'four', 'five', 'six', 'seven']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 

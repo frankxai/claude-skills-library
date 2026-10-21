@@ -969,8 +969,8 @@ function computeBindings(file, deps, lookup) {
     // next line, as formatters write it; `?.` is optional chaining, not a ternary.
     const MEMBER = `${ID}(?:\\.${ID})*`;
     const selections = [
-      new RegExp(`(?<![=!<>])=(?![=>])[^;\\n]*?(?:\\r?\\n\\s*)?\\?(?!\\.)\\s*(${MEMBER})\\s*:\\s*(${MEMBER})\\s*(?=;|\\r?\\n|$|\\)|\\})`, 'gm'),
-      new RegExp(`(?<![=!<>])=(?![=>])[^;\\n]*?(?:(${MEMBER})\\s*)?(?:\\r?\\n\\s*)?(?:\\?\\?|\\|\\|)\\s*(${MEMBER})?[^;\\n]*?(?=;|\\r?\\n|$|\\})`, 'gm'),
+      new RegExp(`(?<![=!<>])=(?![=>])\\s*[^;\\n]*?(?:\\r?\\n\\s*)?\\?(?!\\.)\\s*(${MEMBER})\\s*:\\s*(${MEMBER})\\s*(?=;|\\r?\\n|$|\\)|\\})`, 'gm'),
+      new RegExp(`(?<![=!<>])=(?![=>])\\s*[^;\\n]*?(?:(${MEMBER})\\s*)?(?:\\r?\\n\\s*)?(?:\\?\\?|\\|\\|)\\s*(${MEMBER})?[^;\\n]*?(?=;|\\r?\\n|$|\\})`, 'gm'),
     ];
     for (const re of selections) {
       for (const m of src.matchAll(re)) {
