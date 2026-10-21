@@ -1117,8 +1117,13 @@ export function hasRendererExpression(file, resolveLocal = null, state = null) {
   for (const [name, kind] of local) names[kind].add(name);
   const alt = (set) => [...set].map(escapeRe).join('|');
   const tag = `(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.tag)})\\b`;
-  // A tag mounts through JSX or through element creation: createElement, jsx, jsxs, jsxDEV, h.
-  if (new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:createElement|jsxs?|jsxDEV|h)\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src)) return true;
+  // A tag mounts through JSX or through element creation: createElement, jsx, jsxs, jsxDEV, h,
+  // or a local alias of one (`import { createElement as el }`, `const { jsx: j } = runtime`,
+  // `const el = React.createElement`).
+  const factories = new Set(['createElement', 'jsx', 'jsxs', 'jsxDEV', 'h']);
+  for (const m of src.matchAll(/(?<![\w$.])(?:createElement|jsxs?|jsxDEV|h)\s*(?:as|:)\s*([A-Za-z_$][\w$]*)/g)) factories.add(m[1]);
+  for (const m of src.matchAll(/([A-Za-z_$][\w$]*)\s*=\s*(?:[A-Za-z_$][\w$]*\.)?(?:createElement|jsxs?|jsxDEV)(?![\w$])/g)) factories.add(m[1]);
+  if (new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(factories)})\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src)) return true;
   // `new (navigator.gpu ? GPU : GL)()`: a constructor chosen inside the parenthesis is a
   // renderer when any name in it is one.
   const ctor = new RegExp(`(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})(?![\\w$])`);

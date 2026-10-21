@@ -953,6 +953,23 @@ test('a constructor chosen inside the parenthesis after new is a renderer', () =
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 
+test('a local alias of an element factory still mounts a renderer tag', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.jsx': `'use client';\nimport { createElement as el } from 'react';\nimport { Canvas as Scene } from '@react-three/fiber';\nexport default function Page() {\n  return el(Scene, {}, el('mesh'));\n}\n`,
+    'app/two/page.jsx': `'use client';\nimport React from 'react';\nimport { Canvas } from '@react-three/fiber';\nconst make = React.createElement;\nexport default function Page() {\n  return make(Canvas, null);\n}\n`,
+    'app/three/page.jsx': `'use client';\nimport * as runtime from 'react/jsx-runtime';\nimport { Canvas } from '@react-three/fiber';\nconst { jsx: j } = runtime;\nexport default function Page() {\n  return j(Canvas, {});\n}\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  assert.match(life.detail, /app[\\/]page\.jsx/);
+  assert.match(life.detail, /app[\\/]two[\\/]page\.jsx/);
+  assert.match(life.detail, /app[\\/]three[\\/]page\.jsx/);
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
 test('a Promise.all shape the reader cannot follow, and a stray awaited import, fail coverage', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,
