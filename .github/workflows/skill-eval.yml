@@ -106,16 +106,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       LIFT_SKILLS: ui-ux-design-expert book-publishing excellence-book-writing
+      APPROVED_SHA: ${{ vars.LIFT_APPROVED_SHA }}
     steps:
+      # pull_request checks out the merge commit by default; run the approved head instead.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Confirm the checkout is the approved revision
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "$APPROVED_SHA" ]; then
+            echo "::error::checked out $actual but LIFT_APPROVED_SHA is $APPROVED_SHA"
+            exit 1
+          fi
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code@2.1.303
       - name: Lift runs
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         # One skill failing must not hide the others' results; each exit code is recorded,
         # and the step fails afterwards if any skill did not produce a comparable result.
         run: |
