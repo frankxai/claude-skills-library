@@ -968,9 +968,11 @@ function computeBindings(file, deps, lookup) {
     // `GL || custom`, is a renderer when either operand is one. The operator may open the
     // next line, as formatters write it; `?.` is optional chaining, not a ternary.
     const MEMBER = `${ID}(?:\\.${ID})*`;
+    // An operand may be parenthesised and carry a TypeScript assertion: `(GPU as typeof GL)`.
+    const OPERAND = `\\(?\\s*(${MEMBER})(?:\\s+as\\s+[\\w$.<>\\[\\]| ]+?)?\\s*\\)?`;
     const selections = [
-      new RegExp(`(?<![=!<>])=(?![=>])\\s*[^;\\n]*?(?:\\r?\\n\\s*)?\\?(?!\\.)\\s*(${MEMBER})\\s*:\\s*(${MEMBER})\\s*(?=;|\\r?\\n|$|\\)|\\})`, 'gm'),
-      new RegExp(`(?<![=!<>])=(?![=>])\\s*[^;\\n]*?(?:(${MEMBER})\\s*)?(?:\\r?\\n\\s*)?(?:\\?\\?|\\|\\|)\\s*(${MEMBER})?[^;\\n]*?(?=;|\\r?\\n|$|\\})`, 'gm'),
+      new RegExp(`(?<![=!<>])=(?![=>])\\s*[^;\\n]*?(?:\\r?\\n\\s*)?\\?(?!\\.)\\s*${OPERAND}\\s*:\\s*${OPERAND}\\s*(?=;|\\r?\\n|$|\\)|\\})`, 'gm'),
+      new RegExp(`(?<![=!<>])=(?![=>])\\s*[^;\\n]*?(?:${OPERAND}\\s*)?(?:\\r?\\n\\s*)?(?:\\?\\?|\\|\\|)\\s*(?:${OPERAND})?[^;\\n]*?(?=;|\\r?\\n|$|\\})`, 'gm'),
     ];
     for (const re of selections) {
       for (const m of src.matchAll(re)) {

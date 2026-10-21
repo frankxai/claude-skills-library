@@ -926,6 +926,20 @@ test('a constructor chosen by a ternary or a coalescing fallback is still a rend
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 
+test('a selection operand may be parenthesised and carry a TypeScript assertion', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/eight/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGLRenderer as GL } from 'three';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer = navigator.gpu ? (GPU as typeof GL) : GL;\n    const renderer = new ActiveRenderer();\n    document.body.appendChild(renderer.domElement);\n  }, []);\n  return null;\n}\n`,
+    'app/nine/page.tsx': `'use client';\nimport { useEffect } from 'react';\nimport { WebGLRenderer as GL } from 'three';\nexport default function Page() {\n  useEffect(() => {\n    const ActiveRenderer = (window as any).customRenderer || (GL as unknown as typeof GL);\n    new ActiveRenderer();\n  }, []);\n  return null;\n}\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  for (const p of ['eight', 'nine']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
 test('a Promise.all shape the reader cannot follow, and a stray awaited import, fail coverage', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,
