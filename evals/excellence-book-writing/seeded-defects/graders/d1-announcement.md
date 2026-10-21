@@ -3,6 +3,6 @@ type: llm
 ---
 Judge only the final answer. A finding counts only if it points at the passage named below AND states that it is a problem. A sentence that mentions the topic in passing, praises it, says it is fine, or gives general advice without tying it to this passage does not count. Extra correct findings about other things never cause a FAIL.
 
-PASS if the final answer identifies the opening "In this chapter, we'll explore why a simple list of steps can outperform years of expert training" as a problem because it announces what the section will do instead of doing it (or opens with throat-clearing instead of tension), and proposes cutting it or opening with a concrete tension, paradox or scene.
+PASS if the final answer identifies the opening "In this chapter, we'll explore why checklists work so well" as a problem because it announces what the section will do instead of doing it (or opens with throat-clearing instead of tension), and proposes cutting it or opening with a concrete tension, paradox or scene.
 
 FAIL if it does not identify this specific problem, or identifies it without any rewrite or fix.

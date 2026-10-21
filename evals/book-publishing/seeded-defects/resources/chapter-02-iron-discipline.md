@@ -21,7 +21,7 @@ Discipline works like a training block. You load it, you recover, you load it ag
 
 ## When the Fire Fades
 
-Motivation runs out by the second week. Plan for it. Before the block starts, write the exact time, the exact place and the exact first movement. When the fire fades, the plan still stands.
+Motivation fades. Plan for it. Before the block starts, write the exact time, the exact place and the exact first movement. When the fire fades, the plan still stands.
 
 When you hit a wall, stop forcing it. Align your energy with the universe and the right vibes will carry you through.
 
