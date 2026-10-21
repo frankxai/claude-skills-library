@@ -11,17 +11,17 @@ command serves one of those two.
 
 ## Order of work
 
-1. Land what is already built (`/ship`). Value that is not merged and live is zero.
-2. Capture demand where traffic already is (`/demand`).
-3. Make one excellent piece for the brand in rotation (`/piece`).
-4. Package and harvest (`/pack`, `/harvest`) when the first three are clear.
+1. Land what is already built (`/starlight-revenue-team:ship`). Value that is not merged and live is zero.
+2. Capture demand where traffic already is (`/starlight-revenue-team:demand`).
+3. Make one excellent piece for the brand in rotation (`/starlight-revenue-team:piece`).
+4. Package and harvest (`/starlight-revenue-team:pack`, `/starlight-revenue-team:harvest`) when the first three are clear.
 
 One brand at a time. Add the next brand only after the current one holds a score
 of 26 or more for two weeks.
 
 ## Maker and checker
 
-The provider that made a thing never scores it. `/critic` gets the score from a
+The provider that made a thing never scores it. `/starlight-revenue-team:critic` gets the score from a
 different provider (Codex, Gemini or another) and `bin/rubric-check.mjs` marks a
 same-provider score `missing-independent`. A relayed review from the maker's own
 session is not a sign-off.
@@ -45,23 +45,26 @@ Ship at 26 or more. Revise at 22 to 25. Restart below 22.
 
 These stop the command and hand the step to a person, every time:
 
-- merging without an independent sign-off on the current head
+- merging, unless the repo's own merge gate passes with an independent sign-off
+  on the current head and the operator enabled gate merges (`allowGateMerge`)
 - publishing, posting, sending, emailing, or scheduling a send
-- spending money or running a paid generator
+- spending money, running a paid generator, or calling a metered tool
 - changing a price, a checkout, or a payment setting
 - registering a schedule or cron (print the snippet, never register it)
 - deleting a public route or anything with traffic
 
 ## Paid tools
 
-Built-in tools first. A metered tool (scraper, SEO suite, enrichment) only after a
-named built-in call failed. On a quota or payment error, report it and stop.
+Built-in tools first. A metered tool (scraper, SEO suite, enrichment) needs two
+things: a named built-in call that failed, and the operator's yes in this
+conversation for that tool and that run. On a quota or payment error, report it
+and stop.
 
 ## Wiring into an existing collective
 
 When the environment already runs specialist agents, the commands prefer them:
-a revenue or marketing lead for `/demand`, a skill foundry for `/pack`, a design
-corps for page critique, a polish agent for `/piece`. The plugin's own agents
+a revenue or marketing lead for `/starlight-revenue-team:demand`, a skill foundry for `/starlight-revenue-team:pack`, a design
+corps for page critique, a polish agent for `/starlight-revenue-team:piece`. The plugin's own agents
 (`content-critic`, `harvester`, `ship-steward`) are the fallback, so the team
 works in a fresh install too.
 

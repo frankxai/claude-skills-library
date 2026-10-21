@@ -5,8 +5,10 @@ argument-hint: <owner/repo> [path inside the repo]
 
 Load the `revenue-protocol` skill. Dispatch the `harvester` agent on: $ARGUMENTS
 
-1. Run `node "${CLAUDE_PLUGIN_ROOT}/bin/harvest-license.mjs" <owner/repo>` and report
-   the JSON it prints.
+1. Run `node "${CLAUDE_PLUGIN_ROOT}/bin/harvest-license.mjs" <owner/repo> [path]` and
+   report the JSON it prints. The verdict holds only for the `sha` it names.
+   - needs-review: the path carries its own licence files, or could not be listed.
+     Read them; copy nothing until a person decides.
    - permissive (MIT, Apache-2.0, BSD, ISC, CC0): text may be adapted, with a row in
      `THIRD_PARTY_NOTICES.md` naming the repo, commit, licence and files.
    - copyleft or none-unknown: copy no text. Write from the principles and credit

@@ -12,14 +12,14 @@ Work in `.studio/pieces/<brand>-<slug>/` and keep every stage's file.
    Without a named piece to beat, stop and find one.
 2. `sources.md`: start from the operator's own material (their notes, transcripts,
    published work). Research supplies evidence, never the angle. Use the harness's
-   built-in web search first; a paid scraper only after a built-in call failed, and
-   name that call.
+   built-in web search first. A paid scraper needs a built-in call that failed, named,
+   and the operator's yes in this conversation before it runs.
 3. `draft.md`: written for the channel in the brief. If the environment has a voice
    or polish agent (for example `content-polisher` or `social-content-generator`),
    use it; otherwise write it yourself.
 4. `refined.md`: a separate pass whose only job is cutting and sharpening. Save the
    diff between draft and refined as `refinement.diff`.
-5. Run `/critic` on `refined.md`. It writes `score.json`, checked by
+5. Run `/starlight-revenue-team:critic` on `refined.md`. It writes `score.json`, checked by
    `bin/rubric-check.mjs`.
    - ship (26 or more, independent): continue
    - revise (22 to 25): one more refinement pass, then score again

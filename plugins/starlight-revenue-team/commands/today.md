@@ -13,12 +13,12 @@ Focus, if given: $ARGUMENTS
    or the `STUDIO_RULINGS_URL` environment variable. If neither is set, say so and
    treat every pending decision as not approved.
 3. Read capacity: plan usage if the harness exposes it, free memory, and open pull
-   requests against the repo's budget. Over budget means `/ship` comes before any
+   requests against the repo's budget. Over budget means `/starlight-revenue-team:ship` comes before any
    new work.
 4. Pick at most three actions, in this order of preference:
-   - a pull request that can land today (`/ship`)
-   - a demand gap on a surface with traffic (`/demand`)
-   - one content piece for the brand currently in rotation (`/piece`)
+   - a pull request that can land today (`/starlight-revenue-team:ship`)
+   - a demand gap on a surface with traffic (`/starlight-revenue-team:demand`)
+   - one content piece for the brand currently in rotation (`/starlight-revenue-team:piece`)
    - a pack or harvest only when the three above are clear
    Execute only what the rulings approve. A ruling of hold or reject stops that item.
 5. Dispatch each action by running its command. Never run two writers in one

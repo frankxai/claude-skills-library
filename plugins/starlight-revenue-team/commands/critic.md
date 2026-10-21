@@ -8,11 +8,13 @@ Load the `revenue-protocol` skill. Dispatch the `content-critic` agent on: $ARGU
 If the maker provider is not given, read it from the commit trailer, the PR branch
 prefix or the piece's folder, and say where it came from.
 
-The critic returns a score as JSON:
+The critic returns a score as JSON. `criteria` is the independent provider's
+score exactly as returned; `secondOpinion` is the critic's own pass:
 
 ```json
 {
-  "target": "<path or url>",
+  "target": "refined.md",
+  "targetSha256": "<sha256 of the file that was scored>",
   "makerProvider": "anthropic",
   "scorerProvider": "openai",
   "criteria": {
@@ -23,11 +25,17 @@ The critic returns a score as JSON:
     "craft": { "score": 4, "reason": "..." },
     "brandFit": { "score": 5, "reason": "..." }
   },
-  "total": 27
+  "total": 27,
+  "secondOpinion": { "provider": "anthropic", "criteria": { "...": "same six" } }
 }
 ```
 
+Providers are named by company: anthropic, openai, google, xai, mistral,
+deepseek, meta (harness names such as claude, codex or gemini are accepted as
+aliases).
+
 Save it beside the target as `score.json`, then run
 `node "${CLAUDE_PLUGIN_ROOT}/bin/rubric-check.mjs" score.json` and report its verdict
-exactly as printed. Exit 0 is ship, 2 is revise, restart or missing-independent,
-1 is an invalid score file.
+exactly as printed. The checker uses the lower of the two totals, and refuses a
+score whose target changed after scoring. Exit 0 is ship, 2 is revise, restart or
+missing-independent, 1 is an invalid score file.

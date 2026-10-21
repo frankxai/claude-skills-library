@@ -12,7 +12,11 @@ You harvest one thing at a time and leave a trail anyone can audit.
 
 1. Licence: run `node "${CLAUDE_PLUGIN_ROOT}/bin/harvest-license.mjs" <owner/repo>`.
    Its `copy` field decides whether any text may be adapted. Record the result.
-2. Pin the source: the commit SHA you read from (`gh api repos/<owner>/<repo>/commits/HEAD --jq .sha`).
+   Pass the path you want as the second argument, so licence files inside that
+   path are checked too.
+2. Pin the source: read files only at the `sha` the script printed
+   (`gh api "repos/<owner>/<repo>/contents/<path>?ref=<sha>"`). If the script printed
+   no sha, or `needs-review`, copy nothing.
 3. Inventory what you already have with the same job. Prefer improving an existing
    skill over adding a near duplicate.
 4. Adapt. Keep the parts that are specific and testable. Cut generic advice. Add this

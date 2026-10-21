@@ -58,7 +58,10 @@ function main() {
     envRulings: Boolean(process.env.STUDIO_RULINGS_URL),
   };
   const missing = summarize(report);
-  console.log(JSON.stringify({ ...report, missing }, null, 2));
+  const notes = report.providers.length
+    ? [`found on PATH, not verified signed in: ${report.providers.join(', ')}; the critic confirms one answers before scoring`]
+    : [];
+  console.log(JSON.stringify({ ...report, missing, notes }, null, 2));
   return report.providers.length ? 0 : 1;
 }
 
