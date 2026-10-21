@@ -33,6 +33,8 @@ The script stages a throwaway plugin in your temp folder (manifest, the skill fr
 
 Requirements: Claude Code 2.1.269 or later, Git 2.31 or later, and a signed-in `claude` CLI (`claude auth status` should say `"loggedIn": true`). The eval runs Claude as you, on your plan. Keep the ceiling.
 
+In CI, adding the `run-lift-eval` label to a PR runs the lift lane for the skills listed in `LIFT_SKILLS` in `.github/workflows/skill-eval.yml`, on the plan behind the `CLAUDE_CODE_OAUTH_TOKEN` repository secret, and uploads the scorecards as the `lift-scorecards` artifact. Nothing else triggers it. Copy the scorecards into the branch by hand; the job has read-only repository access. The label is the trust boundary: the job runs that PR's own `scripts/eval-skill.mjs` with the token in its environment, so add it only after reviewing the head revision. Fork PRs are skipped, and the job fails if the token is missing or any skill's result is not comparable.
+
 ## Run the cross-model lane
 
 ```bash
@@ -55,6 +57,8 @@ AI_GATEWAY_API_KEY=... MAX_USD=2 SKILL=ui-ux-design-expert node run.mjs
 | Skill | Lift cases | Last lift run | Cross-model case |
 |---|---|---|---|
 | ui-ux-design-expert | seeded-defects, clean-form | none yet | yes |
+| book-publishing | seeded-defects, clean-chapter, no-trigger | none yet | no |
+| excellence-book-writing | seeded-defects, clean-section, no-trigger | none yet | no |
 | feynman-thinking, langgraph-patterns, mcp-architecture | outcome-a, outcome-b, no-trigger | 2026-10-06, partial and self-graded (`_runs/`) | yes |
 | agentic-orchestration, ai-architect-review, hooks-automation, loop-designer | outcome-a, outcome-b, no-trigger | 2026-10-06, partial and self-graded (`_runs/`) | no |
 | model-routing, todo-discipline, verification-quality | outcome-a, outcome-b, no-trigger | never ran (cost ceiling hit first) | no |

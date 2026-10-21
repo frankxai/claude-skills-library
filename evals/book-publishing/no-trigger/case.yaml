@@ -4,7 +4,7 @@ description: "Should NOT trigger book-publishing: a near miss that mentions a PD
 tags: [book-publishing, should-not-trigger]
 runs: 2
 execution:
-  prompt: "Write a one-line git commit message for a change that fixes the PDF export of invoices, then a one-sentence note for the code reviewer."
+  prompt: "Write a one-line git commit message for a change that fixes the PDF export of invoices, then a one-sentence note for the teammate who approves it."
   max_turns: 4
   allowed_tools: [Skill, Read]
 graders:
