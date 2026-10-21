@@ -73,9 +73,17 @@ test('cli rejects bad input with exit 1 before any network call', () => {
 });
 
 test('doctor cli prints its report as JSON', () => {
-  const out = execFileSync(process.execPath, [fileURLToPath(new URL('../bin/team-doctor.mjs', import.meta.url))], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+  let out;
+  let status = 0;
+  try {
+    out = execFileSync(process.execPath, [fileURLToPath(new URL('../bin/team-doctor.mjs', import.meta.url))], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  } catch (err) {
+    out = String(err.stdout);
+    status = err.status;
+  }
   const r = JSON.parse(out.slice(out.indexOf('{')));
   assert.ok(Array.isArray(r.providers) && Array.isArray(r.missing) && Array.isArray(r.notes));
+  assert.equal(status, r.providers.length ? 0 : 1);
 });
 
 test('doctor names every missing capability and is quiet when all are present', () => {

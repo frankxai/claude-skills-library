@@ -56,7 +56,9 @@ function checkCriteria(criteria, label) {
 }
 
 // targetDigest: the sha256 of the scored file when it exists locally, else undefined.
-export function checkScore(score, { targetDigest } = {}) {
+// expectedCommit: the target's real revision, resolved by the caller (for example a
+// PR's head SHA from gh); a targetCommit only binds the score when it matches this.
+export function checkScore(score, { targetDigest, expectedCommit } = {}) {
   if (!isPlainObject(score)) return { ok: false, errors: ['score must be a JSON object'] };
   const errors = [];
 
@@ -88,13 +90,16 @@ export function checkScore(score, { targetDigest } = {}) {
 
   if (score.targetCommit !== undefined && !COMMIT.test(String(score.targetCommit))) {
     errors.push('targetCommit must be a full 40-character commit SHA');
+  } else if (score.targetCommit !== undefined && expectedCommit !== undefined && String(score.targetCommit).toLowerCase() !== String(expectedCommit).toLowerCase()) {
+    errors.push('targetCommit does not match the current revision of the target: it changed after it was scored');
   }
 
   if (errors.length) return { ok: false, errors };
 
   // A ship verdict must say exactly what was scored: a local file whose digest
   // matched, or a full commit SHA for a PR or deployed page.
-  const bound = targetDigest !== undefined || COMMIT.test(String(score.targetCommit ?? ''));
+  const commitBound = COMMIT.test(String(score.targetCommit ?? '')) && expectedCommit !== undefined;
+  const bound = targetDigest !== undefined || commitBound;
   const independent = maker !== scorer;
   const total = second ? Math.min(primary.total, second.total) : primary.total;
   let verdict;
@@ -120,8 +125,10 @@ function digestOfTarget(score, scoreFile) {
 
 function main(argv) {
   const file = argv[2];
-  if (!file) {
-    console.error('usage: rubric-check.mjs <score.json>');
+  const flag = argv.indexOf('--expect-commit');
+  const expectedCommit = flag > 2 ? argv[flag + 1] : undefined;
+  if (!file || file.startsWith('--') || (flag > 2 && !COMMIT.test(String(expectedCommit)))) {
+    console.error('usage: rubric-check.mjs <score.json> [--expect-commit <40-char sha>]');
     return 1;
   }
   let parsed;
@@ -131,7 +138,7 @@ function main(argv) {
     console.error(`cannot read ${file}: ${err.message}`);
     return 1;
   }
-  const result = checkScore(parsed, { targetDigest: digestOfTarget(parsed, file) });
+  const result = checkScore(parsed, { targetDigest: digestOfTarget(parsed, file), expectedCommit });
   console.log(JSON.stringify(result, null, 2));
   return exitCodeFor(result);
 }

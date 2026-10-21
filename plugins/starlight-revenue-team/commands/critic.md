@@ -36,7 +36,9 @@ deepseek, meta (harness names such as claude, codex or gemini are accepted as
 aliases).
 
 Save it beside the target as `score.json`, then run
-`node "${CLAUDE_PLUGIN_ROOT}/bin/rubric-check.mjs" score.json` and report its verdict
+`node "${CLAUDE_PLUGIN_ROOT}/bin/rubric-check.mjs" score.json` and report its verdict.
+For a PR or deployed page scored by commit, resolve the real revision yourself and
+pass it: `--expect-commit $(gh pr view <n> --json headRefOid -q .headRefOid)`. Report the verdict
 exactly as printed. The checker uses the lower of the two totals, and refuses a
 score whose target changed after scoring. A score pinned to neither a file digest
 nor a full commit SHA returns `unbound-target` and cannot ship. Exit 0 is ship, 2 is revise, restart or
