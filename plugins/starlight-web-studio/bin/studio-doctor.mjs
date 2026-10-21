@@ -5,7 +5,7 @@
 // Exit codes: 0 everything the studio uses is present · 1 degraded (it can run, some
 // evidence or independence will be missing) · 2 the scanner itself cannot run.
 
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -51,9 +51,12 @@ export function chromiumInstalled(env = process.env) {
     join(homedir(), '.cache', 'ms-playwright'),
     join(homedir(), 'Library', 'Caches', 'ms-playwright'),
   ].filter(Boolean);
-  return caches.some(dir => existsSync(dir) && readdirSync(dir)
+  // A remote layout can put the executable straight in the cache root (/opt/pw-browsers/chromium).
+  return caches.some(dir => existsSync(dir) && statSync(dir).isDirectory() && readdirSync(dir)
     .filter(name => /^chromium/.test(name))
-    .some(name => hasBrowserBinary(join(dir, name))));
+    .some(name => (statSync(join(dir, name)).isDirectory()
+      ? hasBrowserBinary(join(dir, name))
+      : /^chromium(?:-browser)?(?:\.exe)?$/i.test(name))));
 }
 
 function playwrightAvailable(cwd) {

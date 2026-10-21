@@ -120,7 +120,7 @@ skills, GreenSock's `gsap-skills`, and `humanizer`.
 ## Tests and evals
 
 ```bash
-node --test plugins/starlight-web-studio/tests/*.test.mjs    # 171 tests: scanner and its network guard, RFC 9309 robots, sweep, workflow, GPU gate, materials gate
+node --test plugins/starlight-web-studio/tests/*.test.mjs    # 176 tests: scanner and its network guard, RFC 9309 robots, sweep, workflow, GPU gate, materials gate
 claude plugin eval plugins/starlight-web-studio
 ```
 

@@ -28,3 +28,9 @@ test('an explicit executable must exist and look like Chromium', () => {
   assert.equal(chromiumInstalled({ PLAYWRIGHT_CHROMIUM_EXECUTABLE: join(dir, 'chrome.exe') }), true);
   assert.equal(chromiumInstalled({ PLAYWRIGHT_CHROMIUM_EXECUTABLE: join(dir, 'missing', 'chrome.exe') }), false);
 });
+
+test('a Chromium executable directly in the browsers path counts, without crashing on it', () => {
+  const cache = fresh();
+  writeFileSync(join(cache, 'chromium'), '');
+  assert.equal(chromiumInstalled({ PLAYWRIGHT_BROWSERS_PATH: cache }), true);
+});

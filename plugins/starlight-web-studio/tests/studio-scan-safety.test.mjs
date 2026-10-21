@@ -170,3 +170,45 @@ test('a body that trickles past the deadline is cut off', async () => {
     assert.ok(Date.now() - started < 1500);
   } finally { server.close(); }
 });
+
+test('a URL that http.request rejects leaves no timer behind to crash the process later', async () => {
+  const uncaught = [];
+  const onUncaught = (err) => uncaught.push(err);
+  process.on('uncaughtException', onUncaught);
+  try {
+    await assert.rejects(pinnedFetch('http://%zz@example.com/', { pin: { address: '127.0.0.1', family: 4 }, timeoutMs: 50 }));
+    await new Promise(r => setTimeout(r, 150));
+    assert.deepEqual(uncaught, []);
+  } finally { process.off('uncaughtException', onUncaught); }
+});
+
+test('IPv6 is allowed only in global unicast: site-local, discard, documentation and tunnels are refused', () => {
+  for (const ip of ['fec0::1', 'feff::1', '100::1', '2001:db8::1', '2001::1', '2001:10::1', '2002:7f00:1::1', '2002:c0a8:101::1', '3fff::1', '4000::1']) {
+    assert.equal(isPublicAddress(ip), false, ip);
+  }
+  for (const ip of ['2606:4700::1111', '2a00:1450:4001::1', '2002:5db8:d822::1']) assert.equal(isPublicAddress(ip), true, ip);
+});
+
+test('the first declared sitemap that answers counts; a dead first entry is not a missing sitemap', async () => {
+  const { fn, calls } = stubFetch({
+    'https://site.test/': { body: page(`<p>${words(10)}</p>`) },
+    'https://site.test/robots.txt': { body: 'User-agent: *\nAllow: /\nSitemap: https://site.test/old.xml\nSitemap: https://site.test/sitemap-index.xml', headers: { 'content-type': 'text/plain' } },
+    'https://site.test/sitemap-index.xml': { body: '<?xml version="1.0"?><sitemapindex></sitemapindex>', headers: { 'content-type': 'application/xml' } },
+  });
+  const r = await fetchPage('https://site.test/', { fetch: fn, lookup: publicLookup });
+  assert.equal(r.sitemapOk, true);
+  assert.ok(calls.includes('https://site.test/old.xml'));
+});
+
+test('time to first byte is taken when the headers arrive, not when a slow body ends', async () => {
+  const { server, port } = await localServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.write('<html lang="en">');
+    setTimeout(() => res.end('<title>slow body</title></html>'), req.url === '/' ? 400 : 0);
+  });
+  const lookup = async () => [{ address: '127.0.0.1', family: 4 }];
+  try {
+    const r = await fetchPage(`http://slow.test:${port}/`, { lookup, allowPrivate: true });
+    assert.ok(r.timing.ttfbMs < 300, `ttfb ${r.timing.ttfbMs} ms`);
+  } finally { server.close(); }
+});

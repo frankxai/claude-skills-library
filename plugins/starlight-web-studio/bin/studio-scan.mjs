@@ -420,11 +420,17 @@ export function isPublicAddress(ip) {
     const lo = parseInt(hexMapped[2], 16);
     return ipv4IsPublic(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
   }
-  const first = parseInt(v6.split(':')[0] || '0', 16);
-  if ((first & 0xfe00) === 0xfc00) return false;
-  if ((first & 0xffc0) === 0xfe80) return false;
-  if ((first & 0xff00) === 0xff00) return false;
-  return !v6.startsWith('2001:db8:') && !v6.startsWith('64:ff9b:');
+  // Allowlist, not blocklist: only global unicast (2000::/3) reaches the public internet. Inside
+  // it, refuse documentation, Teredo and ORCHID, and judge 6to4 by the IPv4 address it wraps.
+  const [head, tail = ''] = v6.split('::');
+  const h = head ? head.split(':') : [];
+  const t = v6.includes('::') && tail ? tail.split(':') : [];
+  const g = [...h, ...Array(v6.includes('::') ? 8 - h.length - t.length : 0).fill('0'), ...t].map((x) => parseInt(x || '0', 16));
+  if ((g[0] & 0xe000) !== 0x2000) return false;
+  if (g[0] === 0x2001 && (g[1] === 0x0db8 || g[1] === 0 || (g[1] & 0xfff0) === 0x0010)) return false;
+  if (g[0] === 0x3fff && g[1] < 0x1000) return false;
+  if (g[0] === 0x2002) return ipv4IsPublic(`${g[1] >> 8}.${g[1] & 255}.${g[2] >> 8}.${g[2] & 255}`);
+  return true;
 }
 
 // Resolves one hop and returns the address the connection must use. Every address the name
@@ -451,12 +457,12 @@ export function pinnedFetch(target, { headers = {}, timeoutMs = 15000, pin }) {
     return options?.all ? cb(null, [pin]) : cb(null, pin.address, pin.family);
   };
   return new Promise((resolve, reject) => {
-    // One deadline for the whole exchange, so a trickling or stalled body cannot outlive it.
-    const deadline = setTimeout(() => req.destroy(new Error(`timed out after ${timeoutMs} ms`)), timeoutMs);
-    const fail = (err) => { clearTimeout(deadline); req.destroy(); reject(err); };
-    const req = (u.protocol === 'https:' ? https : http).request(u, {
-      method: 'GET', lookup, headers: { ...headers, 'accept-encoding': 'gzip, deflate, br' },
-    }, (res) => {
+    let req = null;
+    let deadline = null;
+    const sent = performance.now();
+    const fail = (err) => { clearTimeout(deadline); req?.destroy(); reject(err); };
+    const onResponse = (res) => {
+      const headersMs = performance.now() - sent;
       const encoding = String(res.headers['content-encoding'] ?? '').toLowerCase();
       const decoder = encoding === 'gzip' ? [zlib.createGunzip()]
         : encoding === 'deflate' ? [zlib.createInflate()]
@@ -479,12 +485,24 @@ export function pinnedFetch(target, { headers = {}, timeoutMs = 15000, pin }) {
         const status = res.statusCode ?? 0;
         return resolve({
           status,
+          headersMs,
           ok: status >= 200 && status < 300,
           headers: { get: (name) => { const v = res.headers[name.toLowerCase()]; return Array.isArray(v) ? v.join(', ') : (v ?? null); } },
           text: async () => body,
         });
       });
-    });
+    };
+    // Build the request first: a malformed URL throws here, and must not leave a live timer behind.
+    try {
+      req = (u.protocol === 'https:' ? https : http).request(u, {
+        method: 'GET', lookup, headers: { ...headers, 'accept-encoding': 'gzip, deflate, br' },
+      }, onResponse);
+    } catch (err) {
+      reject(err);
+      return;
+    }
+    // One deadline for the whole exchange, so a trickling or stalled body cannot outlive it.
+    deadline = setTimeout(() => req.destroy(new Error(`timed out after ${timeoutMs} ms`)), timeoutMs);
     req.on('error', fail);
     req.end();
   });
@@ -496,6 +514,7 @@ async function get(url, { timeoutMs = 15000, fetch: injected, lookup, allowPriva
   let current = new URL(url).href;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
     const pin = await resolveTarget(current, { lookup, allowPrivate });
+    const hopStart = performance.now();
     // Tests inject a fetch stub so they never touch the network; production always pins.
     const res = injected
       ? await injected(current, { headers, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) })
@@ -506,7 +525,8 @@ async function get(url, { timeoutMs = 15000, fetch: injected, lookup, allowPriva
       current = new URL(location, current).href;
       continue;
     }
-    const ttfbMs = Math.round(performance.now() - started);
+    // First byte is when the headers arrived, not when a slow body finished buffering.
+    const ttfbMs = Math.round((res.headersMs === undefined ? performance.now() : hopStart + res.headersMs) - started);
     const body = await res.text();
     return { res, url: current, body, ttfbMs };
   }
@@ -531,8 +551,13 @@ export async function fetchPage(url, opts = {}) {
   const page = await get(url, opts);
   const origin = new URL(page.url).origin;
   const [robots, llms] = await Promise.all([optional(`${origin}/robots.txt`, opts), optional(`${origin}/llms.txt`, opts)]);
-  const declared = parseRobots(robots.body).sitemaps[0];
-  const sitemap = await optional(declared ?? `${origin}/sitemap.xml`, opts);
+  // The first declared sitemap that answers counts (at most three are tried); none declared means /sitemap.xml.
+  const declared = parseRobots(robots.body).sitemaps.slice(0, 3);
+  let sitemapOk = false;
+  for (const candidate of declared.length ? declared : [`${origin}/sitemap.xml`]) {
+    const sitemap = await optional(candidate, opts);
+    if (sitemap.state === 'ok' && /<(urlset|sitemapindex)\b/i.test(sitemap.body)) { sitemapOk = true; break; }
+  }
   return {
     url: page.url,
     html: page.body,
@@ -541,7 +566,7 @@ export async function fetchPage(url, opts = {}) {
     robotsState: robots.state,
     llmsTxt: llms.body ?? null,
     llmsContentType: llms.type ?? null,
-    sitemapOk: sitemap.state === 'ok' && /<(urlset|sitemapindex)\b/i.test(sitemap.body),
+    sitemapOk,
     robotsHeader: page.res.headers.get('x-robots-tag'),
     timing: { ttfbMs: page.ttfbMs },
   };
