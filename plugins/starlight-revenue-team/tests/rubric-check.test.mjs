@@ -10,7 +10,8 @@ import { checkScore, exitCodeFor, canonicalProvider, CRITERIA } from '../bin/rub
 
 const CLI = fileURLToPath(new URL('../bin/rubric-check.mjs', import.meta.url));
 const scores = (values) => Object.fromEntries(CRITERIA.map((name, i) => [name, { score: values[i], reason: 'r' }]));
-const base = (values, extra = {}) => ({ makerProvider: 'anthropic', scorerProvider: 'openai', criteria: scores(values), ...extra });
+const SHA = 'a'.repeat(40);
+const base = (values, extra = {}) => ({ makerProvider: 'anthropic', scorerProvider: 'openai', targetCommit: SHA, criteria: scores(values), ...extra });
 
 function runCli(score, files = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'rubric-'));
@@ -60,6 +61,13 @@ test('a harsher second opinion pulls the verdict down', () => {
   assert.equal(r.verdict, 'restart');
 });
 
+test('a score not pinned to a file digest or full commit cannot ship', () => {
+  const unpinned = base([5, 5, 5, 5, 5, 5]);
+  delete unpinned.targetCommit;
+  assert.equal(checkScore(unpinned).verdict, 'unbound-target');
+  assert.equal(checkScore(base([5, 5, 5, 5, 5, 5], { targetCommit: 'abc123' })).ok, false);
+});
+
 test('a total that disagrees with the criteria is invalid', () => {
   assert.equal(checkScore(base([5, 5, 5, 5, 5, 5], { total: 29 })).ok, false);
 });
@@ -85,7 +93,9 @@ test('cli exit codes: 0 ship, 2 revise, 1 invalid json', () => {
 test('cli binds the score to the scored file by digest', () => {
   const body = 'the final piece';
   const digest = createHash('sha256').update(body).digest('hex');
-  assert.equal(runCli(base([5, 5, 5, 5, 5, 5], { target: 'piece.md', targetSha256: digest }), { 'piece.md': body }), 0);
-  assert.equal(runCli(base([5, 5, 5, 5, 5, 5], { target: 'piece.md', targetSha256: digest }), { 'piece.md': 'edited after scoring' }), 1);
-  assert.equal(runCli(base([5, 5, 5, 5, 5, 5], { target: 'piece.md' }), { 'piece.md': body }), 1);
+  const local = (extra) => { const s = base([5, 5, 5, 5, 5, 5], extra); delete s.targetCommit; return s; };
+  assert.equal(runCli(local({ target: 'piece.md', targetSha256: digest }), { 'piece.md': body }), 0);
+  assert.equal(runCli(local({ target: 'piece.md', targetSha256: digest }), { 'piece.md': 'edited after scoring' }), 1);
+  assert.equal(runCli(local({ target: 'piece.md' }), { 'piece.md': body }), 1);
+  assert.equal(runCli(local({ target: 'gone.md' })), 2);
 });

@@ -39,17 +39,45 @@ export function harvest(repo, path, gh) {
   }
   const spdx = gh(['api', `repos/${repo}/license?ref=${sha}`, '--jq', '.license.spdx_id']);
   const base = { repo, path: path || null, sha, spdx, ...classify(spdx) };
-  if (!path) return base;
-
-  const listing = gh(['api', `repos/${repo}/contents/${path.replace(/\/$/, '')}?ref=${sha}`, '--jq', '.[]?.name']);
-  if (listing === null) {
-    return { ...base, copy: false, class: 'needs-review', action: 'could not list the selected path at this commit; copy nothing until it is checked' };
+  if (!base.copy) return base;
+  if (!path) {
+    return { ...base, copy: false, class: 'needs-path', action: 'name the path you will adapt; a root licence alone does not prove every file under it is covered' };
   }
-  const ownLicences = listing.split('\n').map((s) => s.trim()).filter((name) => LICENCE_FILE.test(name));
-  if (ownLicences.length) {
-    return { ...base, copy: false, class: 'needs-review', pathLicenceFiles: ownLicences, action: 'the selected path carries its own licence files; read them before adapting anything' };
+  const review = (action, extra = {}) => ({ ...base, copy: false, class: 'needs-review', ...extra, action });
+
+  const tree = gh(['api', `repos/${repo}/git/trees/${sha}?recursive=1`, '--jq', '{truncated, paths: [.tree[].path]}']);
+  let parsed = null;
+  try {
+    parsed = tree ? JSON.parse(tree) : null;
+  } catch {
+    parsed = null;
+  }
+  if (!parsed || parsed.truncated || !Array.isArray(parsed.paths)) {
+    return review('could not read the full file tree at this commit; copy nothing until it is checked');
+  }
+  const dir = path.replace(/\/$/, '');
+  if (!parsed.paths.some((p) => p === dir || p.startsWith(`${dir}/`))) {
+    return review('the selected path does not exist at this commit');
+  }
+  const overrides = licenceFilesAffecting(parsed.paths, dir);
+  if (overrides.length) {
+    return review('licence files above or inside the selected path may override the root licence; read them before adapting anything', { pathLicenceFiles: overrides });
   }
   return base;
+}
+
+// Licence files in an ancestor folder of the path (they govern it) or anywhere
+// under it (they govern part of it). The root licence is the repo licence, which
+// the licence endpoint already reported.
+export function licenceFilesAffecting(paths, dir) {
+  return paths.filter((p) => {
+    const parts = p.split('/');
+    const name = parts.pop();
+    if (!LICENCE_FILE.test(name)) return false;
+    const parent = parts.join('/');
+    if (parent === '') return false;
+    return dir === parent || dir.startsWith(`${parent}/`) || parent.startsWith(`${dir}/`);
+  });
 }
 
 function ghRunner(args) {

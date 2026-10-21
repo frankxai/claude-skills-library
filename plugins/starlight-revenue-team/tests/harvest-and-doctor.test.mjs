@@ -24,32 +24,40 @@ test('repo slugs and paths are validated', () => {
   for (const bad of ['../x', 'skills/../secrets', '/abs', 'a b', 'x?ref=evil']) assert.equal(isSafePath(bad), false, bad);
 });
 
-test('the verdict is bound to the resolved commit', () => {
-  const r = harvest('o/r', undefined, fakeGh({ 'repos/o/r/commits/HEAD': 'abc123', 'repos/o/r/license?ref=abc123': 'MIT' }));
+const TREE = (paths, truncated = false) => JSON.stringify({ truncated, paths });
+const gh = (extra = {}) => fakeGh({ 'repos/o/r/commits/HEAD': 'abc123', 'repos/o/r/license?ref=abc123': 'MIT', ...extra });
+const treeKey = 'repos/o/r/git/trees/abc123?recursive=1';
+
+test('a permissive verdict is bound to the resolved commit and a named path', () => {
+  const r = harvest('o/r', 'skills/edit', gh({ [treeKey]: TREE(['LICENSE', 'skills/edit/SKILL.md']) }));
   assert.equal(r.sha, 'abc123');
   assert.equal(r.copy, true);
 });
 
 test('no resolvable commit means copy nothing', () => {
-  const r = harvest('o/r', undefined, fakeGh({ 'repos/o/r/license?ref=abc123': 'MIT' }));
+  const r = harvest('o/r', 'skills/edit', fakeGh({ 'repos/o/r/license?ref=abc123': 'MIT' }));
   assert.equal(r.sha, null);
   assert.equal(r.copy, false);
 });
 
-test('a path with its own licence file needs review even under a permissive root', () => {
-  const r = harvest('o/r', 'vendor/thing', fakeGh({
-    'repos/o/r/commits/HEAD': 'abc123',
-    'repos/o/r/license?ref=abc123': 'MIT',
-    'repos/o/r/contents/vendor/thing?ref=abc123': 'index.js\nLICENSE.txt',
-  }));
-  assert.equal(r.class, 'needs-review');
-  assert.equal(r.copy, false);
-  assert.deepEqual(r.pathLicenceFiles, ['LICENSE.txt']);
+test('without a path a permissive root is not enough', () => {
+  assert.equal(harvest('o/r', undefined, gh()).class, 'needs-path');
 });
 
-test('a path that cannot be listed is not approved', () => {
-  const r = harvest('o/r', 'missing', fakeGh({ 'repos/o/r/commits/HEAD': 'abc123', 'repos/o/r/license?ref=abc123': 'MIT' }));
-  assert.equal(r.copy, false);
+test('licence files above or inside the path need review', () => {
+  const above = harvest('o/r', 'vendor/lib/x', gh({ [treeKey]: TREE(['LICENSE', 'vendor/LICENSE', 'vendor/lib/x/a.js']) }));
+  assert.equal(above.class, 'needs-review');
+  assert.deepEqual(above.pathLicenceFiles, ['vendor/LICENSE']);
+  const inside = harvest('o/r', 'skills', gh({ [treeKey]: TREE(['skills/a/SKILL.md', 'skills/b/COPYING']) }));
+  assert.deepEqual(inside.pathLicenceFiles, ['skills/b/COPYING']);
+  const sibling = harvest('o/r', 'skills/a', gh({ [treeKey]: TREE(['skills/a/SKILL.md', 'skills/b/LICENSE']) }));
+  assert.equal(sibling.copy, true);
+});
+
+test('a truncated tree, an unreadable tree or a missing path is not approved', () => {
+  assert.equal(harvest('o/r', 'skills/a', gh({ [treeKey]: TREE(['skills/a/x'], true) })).copy, false);
+  assert.equal(harvest('o/r', 'skills/a', gh()).copy, false);
+  assert.equal(harvest('o/r', 'skills/zzz', gh({ [treeKey]: TREE(['skills/a/x']) })).copy, false);
 });
 
 test('cli rejects bad input with exit 1 before any network call', () => {
@@ -62,6 +70,12 @@ test('cli rejects bad input with exit 1 before any network call', () => {
     }
     assert.equal(status, 1, args.join(' '));
   }
+});
+
+test('doctor cli prints its report as JSON', () => {
+  const out = execFileSync(process.execPath, [fileURLToPath(new URL('../bin/team-doctor.mjs', import.meta.url))], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+  const r = JSON.parse(out.slice(out.indexOf('{')));
+  assert.ok(Array.isArray(r.providers) && Array.isArray(r.missing) && Array.isArray(r.notes));
 });
 
 test('doctor names every missing capability and is quiet when all are present', () => {

@@ -14,6 +14,7 @@ import { pathToFileURL } from 'node:url';
 export const CRITERIA = ['sourceTruth', 'saysSomethingNew', 'voice', 'readerOutcome', 'craft', 'brandFit'];
 export const SHIP_AT = 26;
 export const REVISE_AT = 22;
+const COMMIT = /^[0-9a-f]{40}$/i;
 
 // Aliases map harness and model names to the company that serves them, so
 // "claude" and "anthropic" are recognised as the same provider.
@@ -85,12 +86,20 @@ export function checkScore(score, { targetDigest } = {}) {
     else if (score.targetSha256.toLowerCase() !== targetDigest) errors.push('targetSha256 does not match the target: it changed after it was scored');
   }
 
+  if (score.targetCommit !== undefined && !COMMIT.test(String(score.targetCommit))) {
+    errors.push('targetCommit must be a full 40-character commit SHA');
+  }
+
   if (errors.length) return { ok: false, errors };
 
+  // A ship verdict must say exactly what was scored: a local file whose digest
+  // matched, or a full commit SHA for a PR or deployed page.
+  const bound = targetDigest !== undefined || COMMIT.test(String(score.targetCommit ?? ''));
   const independent = maker !== scorer;
   const total = second ? Math.min(primary.total, second.total) : primary.total;
   let verdict;
   if (!independent) verdict = 'missing-independent';
+  else if (!bound) verdict = 'unbound-target';
   else if (total >= SHIP_AT) verdict = 'ship';
   else if (total >= REVISE_AT) verdict = 'revise';
   else verdict = 'restart';

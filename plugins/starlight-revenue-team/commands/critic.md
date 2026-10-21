@@ -15,6 +15,7 @@ score exactly as returned; `secondOpinion` is the critic's own pass:
 {
   "target": "refined.md",
   "targetSha256": "<sha256 of the file that was scored>",
+  "targetCommit": "<full 40-character SHA, for a PR or deployed page instead of a file>",
   "makerProvider": "anthropic",
   "scorerProvider": "openai",
   "criteria": {
@@ -37,5 +38,6 @@ aliases).
 Save it beside the target as `score.json`, then run
 `node "${CLAUDE_PLUGIN_ROOT}/bin/rubric-check.mjs" score.json` and report its verdict
 exactly as printed. The checker uses the lower of the two totals, and refuses a
-score whose target changed after scoring. Exit 0 is ship, 2 is revise, restart or
+score whose target changed after scoring. A score pinned to neither a file digest
+nor a full commit SHA returns `unbound-target` and cannot ship. Exit 0 is ship, 2 is revise, restart or
 missing-independent, 1 is an invalid score file.

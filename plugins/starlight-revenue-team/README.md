@@ -47,9 +47,9 @@ own provider as missing. Details in `skills/revenue-protocol/SKILL.md`.
 ## Gates
 
 No command publishes, posts, sends, spends, calls a metered tool without your
-yes, changes a price, or registers a schedule. `/ship` hands the merge to you by
-default; it runs your repo's own merge gate only if you set `"allowGateMerge": true`
-in `.studio/config.json` and that gate passes with an independent sign-off.
+yes, changes a price, or registers a schedule. `/ship` hands the merge to you; it runs
+your repo's merge gate only after you say yes to that PR in the conversation and the
+gate, run from the base branch, passes with an independent sign-off.
 
 Installed plugin commands are namespaced: `/starlight-revenue-team:ship` and so on.
 The short names above are used for reading.

@@ -21,7 +21,9 @@ shortcut around a gate.
    Report CI results instead, or say a sandboxed run is needed.
 5. Review: collect a review from a provider that is not the branch's maker, using
    the `content-critic` recipe on the diff. List findings P0 to P2.
-6. Gate: if `tools/pr-gate.mjs` exists, run `verify` and quote its output.
+6. Gate: if `tools/pr-gate.mjs` exists, run `verify` from a checkout of the base
+   branch and quote its output. If the PR changes the gate itself, report that and
+   do not run it.
 
 Use Bash only for `gh`, `git` reads and the gate's `verify`. Do not kill processes,
 change services, edit files, push, or merge. Read and report only.
