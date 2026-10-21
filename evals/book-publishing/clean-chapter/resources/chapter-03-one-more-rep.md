@@ -7,7 +7,7 @@
 
 Every set has a moment where the bar slows down. Your mind says the set is over. Your body usually has one more. Training lives in the gap between those two answers.
 
-The rep after you wanted to stop is the one that teaches you the most. The others confirm what you already knew you could do. Chase the confirming reps and you stay the same. Chase the one more and you change.
+The rep after you wanted to stop is the one you came for. The others confirm what you already knew you could do. Chase the confirming reps and you stay the same. Chase the one more and you change.
 
 ## How Long the Forge Takes
 

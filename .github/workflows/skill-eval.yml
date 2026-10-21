@@ -7,9 +7,11 @@ name: skill-eval
 #
 # The lift lane (scripts/eval-skill.mjs, with-skill vs no-skill baseline) runs only when
 # someone adds the run-lift-eval label to a PR. It spends the plan behind
-# CLAUDE_CODE_OAUTH_TOKEN, so it never fires on an ordinary push. The label is the trust
-# boundary: the job runs the PR head's scripts/eval-skill.mjs with that token in its
-# environment, so whoever adds the label must have reviewed that revision. Fork PRs are skipped.
+# CLAUDE_CODE_OAUTH_TOKEN, so it never fires on an ordinary push. The job runs the PR head's
+# own scripts/eval-skill.mjs with that token in its environment, so it also requires the
+# repository variable LIFT_APPROVED_SHA to equal the PR's head SHA: set it after reviewing that
+# exact revision, then add the label. Any later push changes the SHA and the job stays off.
+# Fork PRs are skipped.
 
 on:
   pull_request:
@@ -33,7 +35,7 @@ permissions:
 
 concurrency:
   # A labeled run (the paid lift lane) gets its own group so a later push cannot cancel it.
-  group: skill-eval-${{ github.ref }}-${{ github.event.action == 'labeled' && 'lift' || 'ci' }}
+  group: skill-eval-${{ github.ref }}-${{ github.event.action == 'labeled' && github.event.label.name || 'ci' }}
   cancel-in-progress: true
 
 jobs:
@@ -99,15 +101,16 @@ jobs:
       github.event_name == 'pull_request' &&
       github.event.action == 'labeled' &&
       github.event.label.name == 'run-lift-eval' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      vars.LIFT_APPROVED_SHA == github.event.pull_request.head.sha
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       LIFT_SKILLS: ui-ux-design-expert book-publishing excellence-book-writing
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
       - name: Install Claude Code
@@ -128,7 +131,7 @@ jobs:
             echo "::error::at least one skill did not produce a comparable lift result (see lift-exits.txt)"
             exit 1
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: lift-scorecards
