@@ -2,7 +2,7 @@
 
 Not shown to the model under test. The runner never stages files named `KEY.md`, and the case exposes only `resources/`. The same facts appear in the judge rubrics in `graders/`, which only the judge sees.
 
-The review is an editorial pass against the anti-patterns in `free-skills/excellence-book-writing/SKILL.md`. The study figures (Haynes et al., *NEJM* 2009: 1.5% to 0.8% deaths, 11.0% to 7.0% major complications, eight hospitals, nearly 7,700 operations) are accurate and declared out of scope, so the case tests prose judgment, not fact-checking.
+The review is an editorial pass against the anti-patterns in `free-skills/excellence-book-writing/SKILL.md`. The study figures (Haynes et al., *NEJM* 2009: 1.5% to 0.8% deaths, 11.0% to 7.0% inpatient complications, eight hospitals, nearly 7,700 patients) are accurate and declared out of scope, so the case tests prose judgment, not fact-checking.
 
 | # | Problem | Where | Section of the skill | Grader |
 |---|---|---|---|---|
@@ -19,4 +19,4 @@ Unlike the book-publishing suite, every problem here is one a strong general edi
 
 Checked on purpose and not problems: the study paragraph is accurate and sourced, and the operating-room sentence ("a dozen people, hundreds of instruments") is a fair, concrete description.
 
-Revision 1, 2026-10-21.
+Revision 2, 2026-10-21: a Codex review caught that revision 1 misdated the study (2008 and 2009; it ran October 2007 to September 2008), called its outcome "major" rather than "inpatient" complications, and counted operations rather than patients; all corrected in both fixtures and the clean grader. The opening sentence also lost an ungrounded comparison ("outperform years of expert training") so the fixture holds one sweeping claim, not two.
