@@ -1100,7 +1100,10 @@ test('a bare front-matter delimiter is not tokens; a key: value line is', () => 
 
 test('spec aliases resolve to canonical sections', () => {
   const root = fixture({ 'DESIGN.md': `---\nname: x\n---\n## Brand & Style\n## Layout & Spacing\n## Elevation\n` });
-  assert.equal(checkDesignMd(root).ok, true);
+  const result = checkDesignMd(root);
+  // Three aliased sections resolve, so they are not reported missing; the other five are (a warning).
+  assert.equal(result.level, 'warn', result.detail);
+  assert.match(result.detail, /missing spec sections: Colors, Typography, Shapes, Components, Do's and Don'ts$/);
   assert.equal(SECTION_ORDER[0], 'Overview');
 });
 
@@ -1373,4 +1376,22 @@ test('two renderers in an app with no Next.js route graph fail coverage instead 
 test('a single renderer with no route graph cannot exceed one surface, so coverage still passes', () => {
   const root = fixture({ 'src/App.tsx': `import { OrbA } from './a';\nexport default () => OrbA();\n`, 'src/a.tsx': ORB('OrbA') });
   assert.equal(byId(runGate(root), 'coverage').ok, true);
+});
+
+test('two <Canvas> in one module on one route are two surfaces, not one', () => {
+  const twin = `import { Canvas } from '@react-three/fiber';\nconst io = new IntersectionObserver(() => {}); const poster = '/p.jpg';\nexport default function Page() { return <><Canvas /><Canvas /></>; }\n`;
+  const single = twin.replace('<Canvas /><Canvas />', '<Canvas />');
+  const surfaces = (src) => byId(runGate(fixture({ 'DESIGN.md': GOOD_DESIGN, 'app/page.tsx': src })), 'one-gpu-surface');
+  assert.equal(surfaces(twin).level, 'error', surfaces(twin).detail);
+  assert.match(surfaces(twin).detail, /2 renderer expressions/);
+  assert.equal(surfaces(single).ok, true, surfaces(single).detail);
+});
+
+test('DESIGN.md with tokens but no spec sections fails; a partial set warns', () => {
+  const none = byId(runGate(fixture({ 'DESIGN.md': '---\nfoo: bar\n---\n' })), 'design-md');
+  assert.equal(none.level, 'error');
+  assert.match(none.detail, /none of the spec sections/);
+  const partial = byId(runGate(fixture({ 'DESIGN.md': '---\ncolors:\n  primary: "#000"\n---\n## Overview\nx\n## Colors\ny\n' })), 'design-md');
+  assert.equal(partial.level, 'warn');
+  assert.match(partial.detail, /missing spec sections: Typography/);
 });

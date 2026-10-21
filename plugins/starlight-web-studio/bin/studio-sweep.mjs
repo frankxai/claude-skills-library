@@ -150,14 +150,19 @@ async function main(argv) {
   const ranked = rank(results);
   // Each run keeps its own files so same-day sweeps can be compared; latest.json points at the newest.
   const runId = new Date().toISOString().replace(/[:.]/g, '').slice(0, 20);
-  await mkdir(outDir, { recursive: true });
   const machine = `machine-${runId}.jsonl`;
   const boardFile = `board-${runId}.md`;
-  await writeFile(join(outDir, machine), results.filter(r => r.report)
-    .map(r => JSON.stringify({ id: r.target.id, tier: r.target.tier, ...r.report })).join('\n') + '\n');
   const md = board(ranked, failed, runId);
-  await writeFile(join(outDir, boardFile), md);
-  await writeFile(join(outDir, 'latest.json'), JSON.stringify({ runId, machine, board: boardFile, scanned: ranked.length, failed: failed.length }, null, 2) + '\n');
+  // A run that scanned but could not save its board is a failed run, whatever the scans said.
+  try {
+    await mkdir(outDir, { recursive: true });
+    await writeFile(join(outDir, machine), results.filter(r => r.report)
+      .map(r => JSON.stringify({ id: r.target.id, tier: r.target.tier, ...r.report })).join('\n') + '\n');
+    await writeFile(join(outDir, boardFile), md);
+    await writeFile(join(outDir, 'latest.json'), JSON.stringify({ runId, machine, board: boardFile, scanned: ranked.length, failed: failed.length }, null, 2) + '\n');
+  } catch (err) {
+    return failEarly(`could not write the board to ${outDir}: ${err.message}`);
+  }
   console.log(md.split('\n## Findings')[0]);
   console.log(`\nwrote ${join(outDir, boardFile)} and ${machine} (${ranked.length} scanned, ${failed.length} failed)`);
   if (heartbeat) await writeHeartbeat(heartbeat, { ranked, failed, board: join(outDir, boardFile) });

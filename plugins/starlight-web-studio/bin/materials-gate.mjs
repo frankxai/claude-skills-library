@@ -1109,10 +1109,16 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 // A renderer expression in one module: `new X()`, `<X>` or `X()` where X is a bound renderer
 // name, with or without a namespace prefix, including package names used directly.
 export function hasRendererExpression(file, resolveLocal = null, state = null) {
+  return rendererExpressionCount(file, resolveLocal, state) > 0;
+}
+
+// How many renderer expressions a module holds: each `new Renderer()`, each mounted renderer tag
+// or factory call. Two `<Canvas>` in one file are two surfaces, so the route count sums these
+// rather than counting modules. Exclusive branches (`a ? <Canvas/> : <Canvas/>`) count twice:
+// the static count stays conservative.
+export function rendererExpressionCount(file, resolveLocal = null, state = null) {
   const { code: src } = lexed(file);
   const { local, exports } = rendererBindings(file, resolveLocal, state);
-  // A route file whose default export is a renderer tag is mounted by the framework itself.
-  if (exports.get('default') === 'tag' && isRouteFile(file)) return true;
   const names = { ctor: new Set(RENDERER_CTORS), tag: new Set(RENDERER_TAGS), call: new Set(RENDERER_CALLS) };
   for (const [name, kind] of local) names[kind].add(name);
   const alt = (set) => [...set].map(escapeRe).join('|');
@@ -1125,16 +1131,18 @@ export function hasRendererExpression(file, resolveLocal = null, state = null) {
   for (const m of src.matchAll(/([A-Za-z_$][\w$]*)\s*=\s*(?:[A-Za-z_$][\w$]*\.)?(?:createElement|jsxs?|jsxDEV)(?![\w$])/g)) factories.add(m[1]);
   // A factory call may carry a type argument, `el<CanvasProps>(Scene, {})`, nested two deep.
   const typeArgs = '(?:<[^<>()]*(?:<[^<>()]*>[^<>()]*)*>)?';
-  if (new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(factories)})\\s*${typeArgs}\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src)) return true;
+  let count = [...src.matchAll(new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(factories)})\\s*${typeArgs}\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`, 'g'))].length;
   // `new (navigator.gpu ? GPU : GL)()`: a constructor chosen inside the parenthesis is a
   // renderer when any name in it is one.
   const ctor = new RegExp(`(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})(?![\\w$])`);
   for (const m of src.matchAll(/(?<![\w$.])new\s*\(/g)) {
     const open = m.index + m[0].length - 1;
     const close = matchParen(src, open);
-    if (close !== -1 && ctor.test(src.slice(open + 1, close))) return true;
+    if (close !== -1 && ctor.test(src.slice(open + 1, close))) count += 1;
   }
-  return false;
+  // A route file whose default export is a renderer tag is mounted by the framework itself.
+  if (count === 0 && exports.get('default') === 'tag' && isRouteFile(file)) count = 1;
+  return count;
 }
 
 const isJs = (f) => JS_EXT.has(extname(f));
@@ -1181,8 +1189,16 @@ export function checkDesignMd(root) {
     if (duplicates.length) parts.push(`duplicate sections: ${duplicates.join(', ')}`);
     return { id: 'design-md', level: 'error', ok: false, detail: `${parts.join('; ')} (${rel})` };
   }
+  // Tokens alone are not a design contract: no spec section at all fails; a partial set warns.
+  if (!canonical.length) {
+    return { id: 'design-md', level: 'error', ok: false, detail: `${rel} has none of the spec sections (${SECTION_ORDER.join(', ')})` };
+  }
+  const missing = SECTION_ORDER.filter((h) => !seen.has(h));
   if (!hasYamlTokens(text)) {
     return { id: 'design-md', level: 'warn', ok: false, detail: `${rel} has prose but no YAML tokens (a key: value line in front matter or a yaml block); run: npx @google/design.md lint ${basename(file)}` };
+  }
+  if (missing.length) {
+    return { id: 'design-md', level: 'warn', ok: false, detail: `${rel} is missing spec sections: ${missing.join(', ')}` };
   }
   return { id: 'design-md', level: 'info', ok: true, detail: `${rel}: ${canonical.length} spec sections, YAML tokens present; structure only, run npx @google/design.md lint for the schema` };
 }
@@ -1562,6 +1578,12 @@ export function checkGpuSurfaces(root, files) {
     rendererCache.set(k, result);
     return result;
   };
+  const instanceCache = new Map();
+  const instances = (f) => {
+    const k = norm(f);
+    if (!instanceCache.has(k)) instanceCache.set(k, isRendererModule(f) ? rendererExpressionCount(f, resolveLocal, state) : 0);
+    return instanceCache.get(k);
+  };
   const routes = [...appRouterRoutes(root, files), ...pagesRouterRoutes(root, files)];
   const offenders = [];
   const reachedRenderers = new Map();
@@ -1581,7 +1603,7 @@ export function checkGpuSurfaces(root, files) {
     } else {
       const walkCombos = (i, acc) => {
         if (i === optionClosures.length) {
-          const n = [...acc.values()].filter(isRendererModule).length;
+          const n = [...acc.values()].reduce((sum, m) => sum + instances(m), 0);
           if (n > worst.n) worst = { n, mods: acc };
           return;
         }
@@ -1596,7 +1618,8 @@ export function checkGpuSurfaces(root, files) {
     }
     const renderers = [...worst.mods.values()].filter(isRendererModule);
     for (const r of renderers) reachedRenderers.set(norm(r), r);
-    if (renderers.length > 1) offenders.push(`${route.key} (${renderers.length} renderer modules: ${renderers.map((r) => relative(root, r)).join(', ')})`);
+    const surfaces = renderers.reduce((sum, r) => sum + instances(r), 0);
+    if (surfaces > 1) offenders.push(`${route.key} (${renderers.length} renderer module${renderers.length === 1 ? '' : 's'}, ${surfaces} renderer expressions: ${renderers.map((r) => `${relative(root, r)}${instances(r) > 1 ? ` ×${instances(r)}` : ''}`).join(', ')})`);
   }
   // Every renderer that ships owes lifecycle and poster: those in any route's alternatives,
   // and those in product files no route reaches (a library repo, a component package).
@@ -1632,7 +1655,7 @@ export function checkGpuSurfaces(root, files) {
   if (state.comboCut.size) gaps.push(`route(s) with more than ${COMBO_LIMIT} slot combinations, not enumerated: ${listed([...state.comboCut])}`);
   // Only Next.js app/ and pages/ routers are read. With two or more renderers and no route found,
   // "no route reaches two" was proved over nothing (a Vite, Astro or SvelteKit app), so it fails closed.
-  if (!routes.length && allRenderers.size > 1) gaps.push(`no route graph found (only Next.js app/ and pages/ routers are read), so ${allRenderers.size} renderer modules could not be counted per page: ${listed([...allRenderers.values()].map((f) => relative(root, f)))}`);
+  if (!routes.length && [...allRenderers.values()].reduce((sum, f) => sum + instances(f), 0) > 1) gaps.push(`no route graph found (only Next.js app/ and pages/ routers are read), so ${allRenderers.size} renderer modules could not be counted per page: ${listed([...allRenderers.values()].map((f) => relative(root, f)))}`);
   if (aliases.dropped.length) gaps.push(`tsconfig: ${listed(aliases.dropped)}`);
   if (lexIssues.length) gaps.push(`${lexIssues.length} file(s) the lexer could not read to the end: ${listed(lexIssues)}`);
   const soft = state.unverified.size ? `${state.unverified.size} bare specifier(s) assumed to be packages because no node_modules exists: ${listed([...state.unverified])}` : '';

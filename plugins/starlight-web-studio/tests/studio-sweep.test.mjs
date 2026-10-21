@@ -72,3 +72,23 @@ test('duplicate or unsafe ids are rejected before any evidence is written', () =
   assert.throws(() => loadTargets([{ id: '../etc', url: 'https://a.test' }]), /safe folder/);
   assert.throws(() => loadTargets({ nope: true }), /array/);
 });
+
+test('a sweep whose board cannot be written marks the heartbeat failed, not ok', async () => {
+  const { mkdtempSync, writeFileSync, readFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { execFileSync } = await import('node:child_process');
+  const dir = mkdtempSync(join(tmpdir(), 'sweep-'));
+  const hb = join(dir, 'hb.json');
+  writeFileSync(hb, JSON.stringify({ status: 'ok' }));
+  // A loopback target is refused without a network call; --out is a file, so the board write fails.
+  writeFileSync(join(dir, 'targets.json'), JSON.stringify([{ id: 'local', url: 'http://127.0.0.1:1/' }]));
+  writeFileSync(join(dir, 'not-a-dir'), 'x');
+  const script = new URL('../bin/studio-sweep.mjs', import.meta.url);
+  let code = 0;
+  try { execFileSync(process.execPath, [script.pathname.replace(/^\/([A-Z]:)/, '$1'), '--targets', join(dir, 'targets.json'), '--out', join(dir, 'not-a-dir'), '--heartbeat', hb], { stdio: 'ignore' }); }
+  catch (err) { code = err.status; }
+  assert.equal(code, 2);
+  const beat = JSON.parse(readFileSync(hb, 'utf8'));
+  assert.equal(beat.status, 'failed');
+});

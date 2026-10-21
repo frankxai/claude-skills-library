@@ -35,9 +35,9 @@ if ($Unregister) {
 
 $sweep = Join-Path $PSScriptRoot '..\bin\studio-sweep.mjs' | Resolve-Path
 $node = (Get-Command node -CommandType Application).Source
-foreach ($path in @($Targets)) {
-  if (-not (Test-Path $path)) { throw "Targets file not found: $path" }
-}
+$targetsFound = Test-Path $Targets
+# The dry run always prints the task; only registering needs the targets file to exist.
+if ($Register -and -not $targetsFound) { throw "Targets file not found: $Targets (pass -Targets <file>)" }
 
 $arguments = "`"$sweep`" --targets `"$Targets`" --out `"$OutDir`" --heartbeat `"$Heartbeat`"" + $(if ($Accept) { " --accept $Accept" } else { '' })
 $action = New-ScheduledTaskAction -Execute $node -Argument $arguments
@@ -50,6 +50,7 @@ $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minu
 "Heartbeat: $Heartbeat (status ok, degraded or failed from the run's own output)"
 
 if (-not $Register) {
+  if (-not $targetsFound) { "Warning:   targets file not found: $Targets. Pass -Targets <file> before -Register." }
   ''
   'Dry run. Nothing was registered. Re-run with -Register to turn it on.'
   return

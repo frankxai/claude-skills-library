@@ -69,6 +69,12 @@ Baseline (2026-10-21, e7d9889): gencreator.ai → one-gpu-surface ok (6 renderer
 GPU-importing, 76 routes), coverage ok, 2 errors 3 warnings. starlight-intelligence-web →
 one-gpu-surface ok (0 of 0, 38 routes), coverage warn (no node_modules), 2 errors 1 warning.
 
+Revised 2026-10-21 by Claude Opus 5.5 after the Codex review of PR 77: a DESIGN.md with tokens
+but none of the eight spec headings is now an error. gencreator.ai reads 3 errors 2 warnings
+(design-md moved from warn to error; every other line is unchanged). starlight-intelligence-web
+has since grown to 57 routes and a dynamic-import coverage error; the e7d9889 gate reads that
+checkout identically, so that change is the repo, not the gate.
+
 ### 4. Land PR 77 through the gate (not Claude)
 
 ```
