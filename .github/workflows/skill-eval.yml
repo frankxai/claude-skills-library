@@ -7,7 +7,9 @@ name: skill-eval
 #
 # The lift lane (scripts/eval-skill.mjs, with-skill vs no-skill baseline) runs only when
 # someone adds the run-lift-eval label to a PR. It spends the plan behind
-# CLAUDE_CODE_OAUTH_TOKEN, so it never fires on an ordinary push.
+# CLAUDE_CODE_OAUTH_TOKEN, so it never fires on an ordinary push. The label is the trust
+# boundary: the job runs the PR head's scripts/eval-skill.mjs with that token in its
+# environment, so whoever adds the label must have reviewed that revision. Fork PRs are skipped.
 
 on:
   pull_request:
@@ -30,7 +32,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: skill-eval-${{ github.ref }}
+  # A labeled run (the paid lift lane) gets its own group so a later push cannot cancel it.
+  group: skill-eval-${{ github.ref }}-${{ github.event.action == 'labeled' && 'lift' || 'ci' }}
   cancel-in-progress: true
 
 jobs:
@@ -95,7 +98,8 @@ jobs:
     if: >-
       github.event_name == 'pull_request' &&
       github.event.action == 'labeled' &&
-      github.event.label.name == 'run-lift-eval'
+      github.event.label.name == 'run-lift-eval' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -109,12 +113,21 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code@2.1.303
       - name: Lift runs
-        # One skill failing must not hide the others' results; each exit code is recorded.
+        # One skill failing must not hide the others' results; each exit code is recorded,
+        # and the step fails afterwards if any skill did not produce a comparable result.
         run: |
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "::error::CLAUDE_CODE_OAUTH_TOKEN is empty; the lift lane cannot authenticate."
+            exit 1
+          fi
           for s in $LIFT_SKILLS; do
-            node scripts/eval-skill.mjs "$s" --runs 3 --max-cost-usd 5 --model claude-sonnet-5-5               --by "github-actions run ${{ github.run_id }}" && code=0 || code=$?
+            node scripts/eval-skill.mjs "$s" --runs 3 --max-cost-usd 5 --model claude-sonnet-5-5 --by "github-actions run ${{ github.run_id }}" && code=0 || code=$?
             echo "$s exit $code" | tee -a lift-exits.txt
           done
+          if grep -qv ' exit 0$' lift-exits.txt; then
+            echo "::error::at least one skill did not produce a comparable lift result (see lift-exits.txt)"
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -123,4 +136,4 @@ jobs:
             lift-exits.txt
             evals/*/SCORECARD.md
             evals/*/results/
-          if-no-files-found: warn
+          if-no-files-found: error

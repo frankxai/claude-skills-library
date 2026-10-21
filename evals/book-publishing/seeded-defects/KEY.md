@@ -8,7 +8,7 @@ The review is a pre-publication quality gate against the rules in `free-skills/b
 |---|---|---|---|---|---|
 | 1 | Emoji in book content | "You may never do less" | Universal rule 1, no emoji | `d1-emoji` | no |
 | 2 | Hashtags | last line | Universal rule 2, no hashtags | `d2-hashtags` | no |
-| 3 | AI-sounding phrases | "Let's delve into", "It's important to note that" | Universal rule 3 | `d3-ai-phrases` | no |
+| 3 | AI-sounding phrases | "Let's delve into", "It's important to note that", "In conclusion" | Universal rule 3 | `d3-ai-phrases` | no |
 | 4 | Spiritual / manifestation language | "Align your energy with the universe … vibes" | Spartan rule: no spiritual language, no manifestation talk, no "vibes" | `d4-spiritual` | partly |
 | 5 | Eight-sentence paragraph | "Iron Is Built in Sets" | Spartan rule: paragraphs max 4 sentences | `d5-paragraph-length` | yes |
 | 6 | Ends with "Conclusion" instead of "The Standard" | last section | Spartan rule: every chapter ends with "The Standard" | `d6-standard-section` | yes |
@@ -19,4 +19,4 @@ The last column is the design: five problems a careful editor finds without the 
 
 Checked on purpose and not problems: every other paragraph has four sentences or fewer, the protocol is concrete (floor, sets, distances, a four-week block), and the training metaphors fit the book.
 
-Revision 1, 2026-10-21.
+Revision 2, 2026-10-21: after a Codex review, "Motivation runs out by the second week" became "Motivation fades" so the fixture holds one unsourced claim, not two; `d3` also accepts "In conclusion"; `d4` accepts deleting the sentence; `d8` accepts removing the epigraph.

@@ -10,7 +10,7 @@ Judge only the final answer. The chapter under review was written to the Spartan
 - it uses training metaphors (reps, sets, the bar, the forge) and gives a concrete protocol with numbers;
 - it ends with a section headed "The Standard" that states one non-negotiable takeaway;
 - the epigraph is a real Marcus Aurelius line (*Meditations* 5.20), correctly attributed with its translator;
-- the one statistic (median 66 days, range 18 to 254, Lally and colleagues, *European Journal of Social Psychology*, 2010) is accurate and carries its source;
+- the one statistic (a modelled median of 66 days, estimates from 18 to 254 days, for the participants whose progress could be modelled; Lally and colleagues, *European Journal of Social Psychology*, 2010) is stated with its qualifier and carries its source;
 - headings use H1 for the title and H2 for sections, and the epigraph is a blockquote.
 
 The complete source of the chapter follows. Treat it as ground truth.
@@ -25,11 +25,11 @@ The complete source of the chapter follows. Treat it as ground truth.
 
 Every set has a moment where the bar slows down. Your mind says the set is over. Your body usually has one more. Training lives in the gap between those two answers.
 
-The rep after you wanted to stop is the only rep that teaches you anything new. The others confirm what you already knew you could do. Chase the confirming reps and you stay the same. Chase the one more and you change.
+The rep after you wanted to stop is the one that teaches you the most. The others confirm what you already knew you could do. Chase the confirming reps and you stay the same. Chase the one more and you change.
 
 ## How Long the Forge Takes
 
-Habits do not lock in after three weeks. In a study of 96 volunteers, Phillippa Lally and colleagues at University College London found that a new daily behaviour took a median of 66 days to become automatic, with individual times ranging from 18 to 254 days (*European Journal of Social Psychology*, 2010). Missing a single day did not reset the process. Plan for a ten-week block, not a three-week one.
+Habits do not lock in after three weeks. Phillippa Lally and colleagues at University College London followed volunteers through a twelve-week habit study; for the participants whose progress could be modelled, the estimated time to near-full automaticity had a median of 66 days and ran from 18 to 254 days (*European Journal of Social Psychology*, 2010). Missing a single day did not materially change the process. Plan for a ten-week block, not a three-week one.
 
 ## The One More Protocol
 

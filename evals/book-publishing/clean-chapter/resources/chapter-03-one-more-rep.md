@@ -7,11 +7,11 @@
 
 Every set has a moment where the bar slows down. Your mind says the set is over. Your body usually has one more. Training lives in the gap between those two answers.
 
-The rep after you wanted to stop is the only rep that teaches you anything new. The others confirm what you already knew you could do. Chase the confirming reps and you stay the same. Chase the one more and you change.
+The rep after you wanted to stop is the one that teaches you the most. The others confirm what you already knew you could do. Chase the confirming reps and you stay the same. Chase the one more and you change.
 
 ## How Long the Forge Takes
 
-Habits do not lock in after three weeks. In a study of 96 volunteers, Phillippa Lally and colleagues at University College London found that a new daily behaviour took a median of 66 days to become automatic, with individual times ranging from 18 to 254 days (*European Journal of Social Psychology*, 2010). Missing a single day did not reset the process. Plan for a ten-week block, not a three-week one.
+Habits do not lock in after three weeks. Phillippa Lally and colleagues at University College London followed volunteers through a twelve-week habit study; for the participants whose progress could be modelled, the estimated time to near-full automaticity had a median of 66 days and ran from 18 to 254 days (*European Journal of Social Psychology*, 2010). Missing a single day did not materially change the process. Plan for a ten-week block, not a three-week one.
 
 ## The One More Protocol
 
