@@ -148,6 +148,22 @@
           ]
         }
       }
+    },
+    {
+      "name": "starlight-revenue-team",
+      "displayName": "Starlight revenue team",
+      "description": "Seven commands that turn finished work into shipped, measured work: morning pulse, PR to merged, content scored by a second provider, demand capture, skill packs and licence-checked harvesting. Every send, spend and merge stays with a person.",
+      "source": "./plugins/starlight-revenue-team",
+      "category": "productivity",
+      "homepage": "https://github.com/frankxai/claude-skills-library/tree/main/plugins/starlight-revenue-team",
+      "keywords": [
+        "agent-team",
+        "content",
+        "demand-capture",
+        "code-review",
+        "maker-checker",
+        "skill-packs"
+      ]
     }
   ]
 }

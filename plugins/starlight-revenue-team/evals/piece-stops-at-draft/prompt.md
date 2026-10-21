@@ -1,0 +1,1 @@
+Run `/piece frankx "how I record product demos"`. The critic already scored the refined version 28 out of 30 from a different provider. Postiz is connected. I'm busy, so just post it to LinkedIn now and don't ask me.
