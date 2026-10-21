@@ -4,6 +4,7 @@
 #   ./install.sh /path/to/repo              # skills + hooks + settings merge
 #   ./install.sh /path/to/repo --dry-run    # show what would change
 #   ./install.sh /path/to/repo --skills-only
+#   ./install.sh /path/to/repo --no-agents   # skip the three web workers
 #   ./install.sh /path/to/repo --no-db      # skip ui-ux-pro-max (~1.8 MB of CSV)
 #
 # From anywhere, without cloning first:
@@ -17,19 +18,20 @@ set -euo pipefail
 PACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${1:-}"
 shift || true
-DRY=0; SKILLS_ONLY=0; NO_DB=0; NO_CI=0
+DRY=0; SKILLS_ONLY=0; NO_DB=0; NO_CI=0; NO_AGENTS=0
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
     --skills-only) SKILLS_ONLY=1 ;;
     --no-db) NO_DB=1 ;;
     --no-ci) NO_CI=1 ;;
+    --no-agents) NO_AGENTS=1 ;;
     *) echo "unknown flag: $a" >&2; exit 2 ;;
   esac
 done
 
 if [ -z "$TARGET" ] || [ ! -d "$TARGET" ]; then
-  echo "usage: install.sh <path-to-repo> [--dry-run] [--skills-only] [--no-db] [--no-ci]" >&2
+  echo "usage: install.sh <path-to-repo> [--dry-run] [--skills-only] [--no-db] [--no-ci] [--no-agents]" >&2
   exit 2
 fi
 TARGET="$(cd "$TARGET" && pwd)"
@@ -61,6 +63,32 @@ for src in "$PACK_DIR"/skills/*/; do
   fi
   run cp -R "$src" "$DEST_SKILLS/$name"
 done
+
+# ---------------------------------------------------------------- agents
+# Compiled in agentic-creator-os and vendored here (see SOURCES.md). A local
+# copy that differs is set aside outside .claude/agents/, because the harness
+# loads agent files from subdirectories there too and would see two agents
+# with one name.
+if [ $NO_AGENTS -eq 0 ] && [ $SKILLS_ONLY -eq 0 ] && [ -d "$PACK_DIR/agents" ]; then
+  DEST_AGENTS="$TARGET/.claude/agents"
+  run mkdir -p "$DEST_AGENTS"
+  for src in "$PACK_DIR"/agents/*.md; do
+    name="$(basename "$src")"
+    dest="$DEST_AGENTS/$name"
+    if [ -f "$dest" ] && cmp -s "$src" "$dest"; then
+      say "  ok     agent ${name%.md}"
+      continue
+    fi
+    if [ -f "$dest" ]; then
+      say "  update agent ${name%.md} (previous copy → .claude/agents.replaced/$name)"
+      run mkdir -p "$TARGET/.claude/agents.replaced"
+      run mv "$dest" "$TARGET/.claude/agents.replaced/$name"
+    else
+      say "  add    agent ${name%.md}"
+    fi
+    run cp "$src" "$dest"
+  done
+fi
 
 if [ $SKILLS_ONLY -eq 1 ]; then
   say "done (skills only — hooks not installed, so nothing enforces the gate)"
@@ -169,7 +197,7 @@ fi
 # ---------------------------------------------------------------- gitignore
 # Line by line, so a repo installed by an older version picks up new entries.
 GI="$TARGET/.gitignore"
-IGNORES=(.visual-proof/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/')
+IGNORES=(.visual-proof/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/' .claude/agents.replaced/)
 if [ $DRY -eq 1 ]; then
   say "  would: ensure ${IGNORES[*]} are gitignored"
 else

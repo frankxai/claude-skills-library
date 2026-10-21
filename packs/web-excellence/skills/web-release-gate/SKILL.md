@@ -22,6 +22,11 @@ Two failure modes it exists to prevent:
 
 Run them in order. Skip a phase only by saying which one and why.
 
+When the pack's agents are installed, `worker-web-builder` runs these phases
+as the maker and `worker-visual-qa` judges the result. The caller dispatches the
+judge, so the maker never reviews its own work. Without them, run the phases
+yourself and treat phase 5 as your own review.
+
 ### 1. Capture — what exists now
 
 Before touching anything visual, capture the current state at desktop **and**
