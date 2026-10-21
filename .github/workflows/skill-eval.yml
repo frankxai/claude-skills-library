@@ -4,9 +4,14 @@ name: skill-eval
 # conservative local call-reservation limit, not a provider-enforced hard cap.
 # The monthly schedule is inert until the repository variable
 # SKILL_EVAL_SCHEDULE_ENABLED is set to "true" (estate rule: crons stay off until approved).
+#
+# The lift lane (scripts/eval-skill.mjs, with-skill vs no-skill baseline) runs only when
+# someone adds the run-lift-eval label to a PR. It spends the plan behind
+# CLAUDE_CODE_OAUTH_TOKEN, so it never fires on an ordinary push.
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
     paths:
       - 'evals/**'
       - 'free-skills/**/SKILL.md'
@@ -83,4 +88,39 @@ jobs:
         with:
           name: skill-eval-scorecard
           path: evals/skill-eval/scorecards/
+          if-no-files-found: warn
+
+  lift:
+    needs: test
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'run-lift-eval'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      LIFT_SKILLS: ui-ux-design-expert book-publishing excellence-book-writing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@2.1.303
+      - name: Lift runs
+        # One skill failing must not hide the others' results; each exit code is recorded.
+        run: |
+          for s in $LIFT_SKILLS; do
+            node scripts/eval-skill.mjs "$s" --runs 3 --max-cost-usd 5 --model claude-sonnet-5-5               --by "github-actions run ${{ github.run_id }}" && code=0 || code=$?
+            echo "$s exit $code" | tee -a lift-exits.txt
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lift-scorecards
+          path: |
+            lift-exits.txt
+            evals/*/SCORECARD.md
+            evals/*/results/
           if-no-files-found: warn
