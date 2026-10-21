@@ -5,9 +5,12 @@
 // studio rubric. A clean scan is necessary, never sufficient.
 //
 // Exit codes: 0 scanned, no P0 · 1 scanned, at least one P0 · 3 page could not be fetched
-// · 4 fetched but the analysis threw (a scanner bug; the message says so).
+// (or was refused: private addresses need --allow-private) · 4 fetched but the analysis threw
+// (a scanner bug; the message says so).
 
 import { readFile } from 'node:fs/promises';
+import { lookup as dnsLookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 import { pathToFileURL } from 'node:url';
 
 export const DIMENSIONS = ['search', 'answer', 'mobile', 'access', 'craft', 'speed'];
@@ -219,7 +222,8 @@ function jsonLd(html) {
     if (!node || typeof node !== 'object') return;
     const t = node['@type'];
     (Array.isArray(t) ? t : t ? [t] : []).forEach(x => types.add(String(x)));
-    if (node['@graph']) collect(node['@graph']);
+    // Entities nest: an Article's publisher or author is an Organization or Person in its own right.
+    for (const [key, value] of Object.entries(node)) if (key !== '@type' && value && typeof value === 'object') collect(value);
   };
   for (const b of blocks) {
     try { collect(JSON.parse(b)); } catch { invalid += 1; }
@@ -302,7 +306,8 @@ export function analyze({ url, html: raw, status = 200, robotsTxt = null, robots
   if (!viewport) add('mobile', 'P0', 'viewport-missing', 'No viewport meta.', 'Add width=device-width, initial-scale=1, viewport-fit=cover.');
   else {
     if (!viewport.includes('width=device-width')) add('mobile', 'P1', 'viewport-width', `viewport="${viewport}"`, 'Use width=device-width.');
-    if (viewport.includes('user-scalable=no') || viewport.includes('user-scalable=0') || /maximum-scale=1(?![.\d])|maximum-scale=1\.0(?!\d)/.test(viewport)) {
+    const maxScale = Number.parseFloat(viewport.match(/maximum-scale=([\d.]+)/)?.[1] ?? 'NaN');
+    if (viewport.includes('user-scalable=no') || viewport.includes('user-scalable=0') || maxScale <= 1) {
       add('mobile', 'P1', 'zoom-disabled', `viewport="${viewport}"`, 'Never disable zoom; fix input font-size (16px) instead.');
     }
     if (!viewport.includes('viewport-fit=cover')) add('mobile', 'P2', 'viewport-fit', 'viewport-fit=cover not set.', 'Set viewportFit: "cover" or every env(safe-area-inset-*) resolves to 0.');
@@ -315,10 +320,18 @@ export function analyze({ url, html: raw, status = 200, robotsTxt = null, robots
   const imgs = tags(html, 'img');
   const noAlt = imgs.filter(t => attr(t, 'alt') === null).length;
   if (noAlt) add('access', noAlt > 3 ? 'P1' : 'P2', 'img-alt-missing', `${noAlt} of ${imgs.length} <img> have no alt attribute.`, 'Give every image alt text, or alt="" when decorative.');
+  const named = t => ['aria-label', 'aria-labelledby', 'title'].some(n => (attr(t, n) ?? '').trim());
   const emptyLinks = [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)]
-    .filter(m => !stripTags(m[2]) && !/aria-label|title=/i.test(m[1]) && !/<img\b[^>]*alt\s*=\s*["'][^"']+/i.test(m[2]) && !/aria-label/i.test(m[2])).length;
+    .filter(m => !stripTags(m[2]) && !named(m[1])
+      && !tags(m[2], 'img').some(t => (attr(t, 'alt') ?? '').trim())
+      && !tags(m[2], 'svg').some(named)).length;
   if (emptyLinks) add('access', 'P1', 'link-no-name', `${emptyLinks} links have no accessible name.`, 'Give icon links an aria-label or visually hidden text.');
-  if (!/href\s*=\s*["']#(main|content|main-content|skip)/i.test(html)) add('access', 'P2', 'skip-link-missing', 'No skip link to main content.', 'Add a skip link as the first focusable element.');
+  // A skip link is the first focusable element in the body and points at an element that exists.
+  const body = html.slice(html.search(/<body\b/i) + 1 || 0);
+  const firstFocusable = body.match(new RegExp(`<(?:a|button|input|select|textarea)\\b${ATTRS}>`, 'i'))?.[0] ?? '';
+  const skipTarget = /^<a\b/i.test(firstFocusable) ? (attr(firstFocusable, 'href') ?? '').match(/^#(.+)/)?.[1] : null;
+  const targetExists = skipTarget && tags(html, '[a-z][a-z0-9-]*').some(t => attr(t, 'id') === skipTarget);
+  if (!targetExists) add('access', 'P2', 'skip-link-missing', 'No skip link to main content.', 'Add a skip link as the first focusable element, pointing at the id of the main region.');
 
   // craft
   const caps = allCapsRuns(text);
@@ -371,35 +384,98 @@ export function analyze({ url, html: raw, status = 200, robotsTxt = null, robots
 
 const UA = 'Mozilla/5.0 (compatible; StarlightWebStudio/0.1; +https://github.com/frankxai/claude-skills-library)';
 
-async function get(url, timeoutMs = 15000) {
-  const started = performance.now();
-  const res = await fetch(url, { headers: { 'user-agent': UA, accept: 'text/html,text/plain,*/*' }, redirect: 'follow', signal: AbortSignal.timeout(timeoutMs) });
-  const ttfbMs = Math.round(performance.now() - started);
-  const body = await res.text();
-  return { res, body, ttfbMs };
+const MAX_REDIRECTS = 5;
+
+function ipv4IsPublic(ip) {
+  const [a, b, c] = ip.split('.').map(Number);
+  if (a === 0 || a === 10 || a === 127 || a >= 224) return false;
+  if (a === 100 && b >= 64 && b <= 127) return false;
+  if (a === 169 && b === 254) return false;
+  if (a === 172 && b >= 16 && b <= 31) return false;
+  if (a === 192 && b === 168) return false;
+  if (a === 192 && b === 0 && (c === 0 || c === 2)) return false;
+  if (a === 198 && (b === 18 || b === 19)) return false;
+  if (a === 198 && b === 51 && c === 100) return false;
+  if (a === 203 && b === 0 && c === 113) return false;
+  return true;
 }
 
-// Absent (4xx) and unreachable (5xx, timeout, network) mean different things for robots.txt.
-async function optional(url) {
+// The pages we scan are chosen by strangers' robots.txt and redirects as much as by us, so any
+// address that is not plainly on the public internet is refused unless the caller opts in.
+export function isPublicAddress(ip) {
+  const version = isIP(ip);
+  if (version === 4) return ipv4IsPublic(ip);
+  if (version !== 6) return false;
+  const v6 = ip.toLowerCase();
+  if (v6 === '::' || v6 === '::1') return false;
+  const dotted = v6.match(/^::(?:ffff:)?(\d+\.\d+\.\d+\.\d+)$/);
+  if (dotted) return ipv4IsPublic(dotted[1]);
+  const hexMapped = v6.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (hexMapped) {
+    const hi = parseInt(hexMapped[1], 16);
+    const lo = parseInt(hexMapped[2], 16);
+    return ipv4IsPublic(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+  }
+  const first = parseInt(v6.split(':')[0] || '0', 16);
+  if ((first & 0xfe00) === 0xfc00) return false;
+  if ((first & 0xffc0) === 0xfe80) return false;
+  if ((first & 0xff00) === 0xff00) return false;
+  return !v6.startsWith('2001:db8:') && !v6.startsWith('64:ff9b:');
+}
+
+// Checks every hop before connecting. Residual: DNS can change between this lookup and the
+// connection (rebinding); closing that needs a pinned-address dispatcher.
+async function assertFetchable(target, { lookup = dnsLookup, allowPrivate = false } = {}) {
+  const u = new URL(target);
+  if (!/^https?:$/.test(u.protocol)) throw new Error(`refused ${u.protocol} URL: only http and https are fetched`);
+  if (allowPrivate) return;
+  const host = u.hostname.replace(/^\[|\]$/g, '');
+  const addresses = isIP(host) ? [host] : (await lookup(host, { all: true })).map(a => a.address);
+  const bad = addresses.length ? addresses.find(a => !isPublicAddress(a)) : 'no address';
+  if (bad) throw new Error(`refused ${u.host}: it resolves to a private or reserved address (${bad}); pass --allow-private to scan it`);
+}
+
+async function get(url, { timeoutMs = 15000, fetch: doFetch = fetch, lookup, allowPrivate } = {}) {
+  const started = performance.now();
+  let current = new URL(url).href;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+    await assertFetchable(current, { lookup, allowPrivate });
+    const res = await doFetch(current, { headers: { 'user-agent': UA, accept: 'text/html,text/plain,*/*' }, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
+    const location = res.headers.get('location');
+    if (res.status >= 300 && res.status < 400 && location) {
+      await res.body?.cancel();
+      current = new URL(location, current).href;
+      continue;
+    }
+    const ttfbMs = Math.round(performance.now() - started);
+    const body = await res.text();
+    return { res, url: current, body, ttfbMs };
+  }
+  throw new Error(`refused ${url}: more than ${MAX_REDIRECTS} redirects`);
+}
+
+// Absent (4xx) and unreachable (5xx, timeout, network, refused) mean different things for robots.txt.
+async function optional(url, opts) {
   try {
-    const { res, body } = await get(url, 8000);
+    const { res, body } = await get(url, { ...opts, timeoutMs: 8000 });
     if (res.ok) return { state: 'ok', body, type: res.headers.get('content-type') ?? '' };
     return { state: res.status >= 500 ? 'unreachable' : 'missing' };
   } catch { return { state: 'unreachable' }; }
 }
 
-export async function scanUrl(url) {
-  return analyze(await fetchPage(url));
+export async function scanUrl(url, opts) {
+  return analyze(await fetchPage(url, opts));
 }
 
-export async function fetchPage(url) {
-  const page = await get(url);
-  const origin = new URL(page.res.url).origin;
-  const [robots, llms] = await Promise.all([optional(`${origin}/robots.txt`), optional(`${origin}/llms.txt`)]);
+// opts: { allowPrivate, fetch, lookup }; the last two exist so tests never touch the network.
+export async function fetchPage(url, opts = {}) {
+  const page = await get(url, opts);
+  const origin = new URL(page.url).origin;
+  const [robots, llms] = await Promise.all([optional(`${origin}/robots.txt`, opts), optional(`${origin}/llms.txt`, opts)]);
   const declared = parseRobots(robots.body).sitemaps[0];
-  const sitemap = await optional(declared ?? `${origin}/sitemap.xml`);
+  const sitemap = await optional(declared ?? `${origin}/sitemap.xml`, opts);
   return {
-    url: page.res.url,
+    url: page.url,
     html: page.body,
     status: page.res.status,
     robotsTxt: robots.body ?? null,
@@ -423,17 +499,18 @@ export function toMarkdown(r) {
 async function main(argv) {
   const args = argv.slice(2);
   const json = args.includes('--json');
+  const allowPrivate = args.includes('--allow-private');
   const fileIdx = args.indexOf('--html');
   const url = args.find(a => /^https?:\/\//.test(a));
   if (!url && fileIdx < 0) {
-    console.error('usage: studio-scan.mjs <url> [--json]   |   studio-scan.mjs --html <file> [--json]');
+    console.error('usage: studio-scan.mjs <url> [--json] [--allow-private]   |   studio-scan.mjs --html <file> [--json]');
     return 3;
   }
   let input;
   try {
     input = fileIdx >= 0
       ? { url: `file:${args[fileIdx + 1]}`, html: await readFile(args[fileIdx + 1], 'utf8') }
-      : await fetchPage(url);
+      : await fetchPage(url, { allowPrivate });
   } catch (err) {
     console.error(`could not fetch ${url ?? args[fileIdx + 1]}: ${err.message}`);
     return 3;

@@ -107,7 +107,8 @@ const results = await pipeline(
   (read, t) => !read.scout ? { target: t, ...read, critique: null } : agent(
     `${where(t)} Critique the live page as it is today, as the buyer who declined. Inputs: .studio/${t.id}/${run}/audit.md, copy.md, search.md and the screenshots. Run the independent pass through a different provider; if none is reachable set independentProvider to "missing".`,
     { label: `critic:${t.id}`, phase: 'Critique', agentType: 'starlight-web-studio:studio-critic', schema: CRITIQUE })
-    .then(critique => ({ target: t, ...read, critique })),
+    // A thrown critic would drop the whole item; keep the finished stages and mark only the critique missing.
+    .then(critique => ({ target: t, ...read, critique }), () => ({ target: t, ...read, critique: null })),
 )
 
 // A site is ranked only when every stage returned. Anything else is reported as incomplete,

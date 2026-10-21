@@ -57,6 +57,12 @@ test('a dead scout skips the later stages for that site', async () => {
   assert.ok(!calls.some(c => c.role === 'critic' && c.prompt.includes('"one"')));
 });
 
+test('a critic that throws keeps the stages that finished and reports only the critique missing', async () => {
+  const { result } = await run(two, { critic: label => { if (label === 'critic:two') throw new Error('provider down'); return STUB.critic(); } });
+  assert.deepEqual(result.incomplete, [{ id: 'two', missing: ['critique'] }]);
+  assert.equal(result.proposals.length, 1);
+});
+
 test('a missing second provider is surfaced, not hidden', async () => {
   const { result, logs } = await run(two, { critic: () => ({ ...STUB.critic(), independentProvider: 'missing' }) });
   assert.deepEqual(result.unverifiedCritique, ['one', 'two']);

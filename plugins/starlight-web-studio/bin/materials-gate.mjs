@@ -1630,6 +1630,9 @@ export function checkGpuSurfaces(root, files) {
   if (state.depthCut) gaps.push(`${state.depthCut} module(s) beyond the ${IMPORT_DEPTH}-edge traversal limit`);
   if (state.propagationCut.size) gaps.push(`${state.propagationCut.size} module(s) whose bindings could not be followed (a component that did not converge within ${FIXPOINT_ITERATIONS} iterations, exceeded ${COMPONENT_LIMIT} modules, two star exports naming the same renderer differently, or a dynamic() / lazy() callback shape the scanner does not read): ${listed([...state.propagationCut])}`);
   if (state.comboCut.size) gaps.push(`route(s) with more than ${COMBO_LIMIT} slot combinations, not enumerated: ${listed([...state.comboCut])}`);
+  // Only Next.js app/ and pages/ routers are read. With two or more renderers and no route found,
+  // "no route reaches two" was proved over nothing (a Vite, Astro or SvelteKit app), so it fails closed.
+  if (!routes.length && allRenderers.size > 1) gaps.push(`no route graph found (only Next.js app/ and pages/ routers are read), so ${allRenderers.size} renderer modules could not be counted per page: ${listed([...allRenderers.values()].map((f) => relative(root, f)))}`);
   if (aliases.dropped.length) gaps.push(`tsconfig: ${listed(aliases.dropped)}`);
   if (lexIssues.length) gaps.push(`${lexIssues.length} file(s) the lexer could not read to the end: ${listed(lexIssues)}`);
   const soft = state.unverified.size ? `${state.unverified.size} bare specifier(s) assumed to be packages because no node_modules exists: ${listed([...state.unverified])}` : '';

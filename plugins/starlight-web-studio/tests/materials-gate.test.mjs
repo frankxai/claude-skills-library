@@ -252,7 +252,9 @@ test('lexer: regex after a control condition, division after a property or postf
   const glass = byId(result, 'glass-gated');
   assert.equal(glass.level, 'error');
   for (const f of ['a[\\\\/]glass', 'b[\\\\/]glass', 'c[\\\\/]lens', 'd[\\\\/]lens']) assert.match(glass.detail, new RegExp(f));
-  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+  // The lexer read every file to the end. (Coverage itself now fails here for a different reason:
+  // two renderer modules and no route graph, which the route-graph test covers.)
+  assert.doesNotMatch(byId(result, 'coverage').detail, /could not read to the end|unresolved|cannot follow/);
   const { code } = lex(`const q = (a + b) / 2 / c; const g = <T,>(a: T) => a; const z = x</T>;`);
   assert.match(code, /\(a \+ b\) \/ 2 \/ c/);
   assert.doesNotMatch(code, /\/re\//);
@@ -1351,4 +1353,24 @@ test('the CLI runs from a path with spaces, prints a report and exits 1 on a fai
   assert.match(run.stdout, /Materials gate: FAIL/);
   const missing = spawnSync(process.execPath, [copy, join(target, 'nope')], { encoding: 'utf8' });
   assert.equal(missing.status, 2);
+});
+
+// --- route graph the gate cannot read --------------------------------------------------------
+
+const ORB = (name) => `import * as THREE from 'three';\nexport function ${name}() { const r = new THREE.WebGLRenderer(); const io = new IntersectionObserver(() => {}); return r; }\n`;
+
+test('two renderers in an app with no Next.js route graph fail coverage instead of passing', () => {
+  const root = fixture({
+    'src/App.tsx': `import { OrbA } from './a';\nimport { OrbB } from './b';\nexport default function App() { OrbA(); OrbB(); return null; }\n`,
+    'src/a.tsx': ORB('OrbA'),
+    'src/b.tsx': ORB('OrbB'),
+  });
+  const coverage = byId(runGate(root), 'coverage');
+  assert.equal(coverage.level, 'error', coverage.detail);
+  assert.match(coverage.detail, /no route graph/);
+});
+
+test('a single renderer with no route graph cannot exceed one surface, so coverage still passes', () => {
+  const root = fixture({ 'src/App.tsx': `import { OrbA } from './a';\nexport default () => OrbA();\n`, 'src/a.tsx': ORB('OrbA') });
+  assert.equal(byId(runGate(root), 'coverage').ok, true);
 });
