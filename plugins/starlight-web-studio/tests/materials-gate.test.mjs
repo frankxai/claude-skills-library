@@ -940,6 +940,19 @@ test('a selection operand may be parenthesised and carry a TypeScript assertion'
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 
+test('a constructor chosen inside the parenthesis after new is a renderer', () => {
+  const root = fixture({
+    'DESIGN.md': GOOD_DESIGN,
+    'app/page.tsx': `'use client';\nimport { useEffect, useRef } from 'react';\nimport { WebGLRenderer as GL } from 'three';\nimport { WebGPURenderer as GPU } from 'three/webgpu';\nexport default function Page() {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    const renderer = new (navigator.gpu ? GPU : GL)();\n    host.current?.appendChild(renderer.domElement);\n    return () => renderer.dispose();\n  }, []);\n  return <div ref={host} />;\n}\n`,
+    'node_modules/next/package.json': '{}',
+  });
+  const result = runGate(root);
+  const life = byId(result, 'gpu-lifecycle');
+  assert.equal(life.level, 'error', JSON.stringify(result.checks));
+  assert.match(life.detail, /app[\\/]page\.tsx/);
+  assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
+});
+
 test('a Promise.all shape the reader cannot follow, and a stray awaited import, fail coverage', () => {
   const root = fixture({
     'DESIGN.md': GOOD_DESIGN,

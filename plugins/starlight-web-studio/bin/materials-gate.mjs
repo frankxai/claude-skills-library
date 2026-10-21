@@ -1118,7 +1118,16 @@ export function hasRendererExpression(file, resolveLocal = null, state = null) {
   const alt = (set) => [...set].map(escapeRe).join('|');
   const tag = `(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.tag)})\\b`;
   // A tag mounts through JSX or through element creation: createElement, jsx, jsxs, jsxDEV, h.
-  return new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:createElement|jsxs?|jsxDEV|h)\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src);
+  if (new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:createElement|jsxs?|jsxDEV|h)\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src)) return true;
+  // `new (navigator.gpu ? GPU : GL)()`: a constructor chosen inside the parenthesis is a
+  // renderer when any name in it is one.
+  const ctor = new RegExp(`(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})(?![\\w$])`);
+  for (const m of src.matchAll(/(?<![\w$.])new\s*\(/g)) {
+    const open = m.index + m[0].length - 1;
+    const close = matchParen(src, open);
+    if (close !== -1 && ctor.test(src.slice(open + 1, close))) return true;
+  }
+  return false;
 }
 
 const isJs = (f) => JS_EXT.has(extname(f));
