@@ -118,6 +118,23 @@ def test_registry_files_are_skipped() -> None:
     shutil.rmtree(d)
 
 
+def test_eval_inputs_are_skipped() -> None:
+    """Agent OS keeps eval cases under evals/agents/<id>/: prompts, graders,
+    and a results table. AGENT_DIR_RE matches that agents/ segment, so without
+    the evals/ rule every eval file failed E1-E3 as if it were an agent."""
+    d = repo({
+        "evals/agents/worker-x/case-a/prompt.md": "---\nmax_turns: 15\n---\n\nUse the worker-x subagent.\n",
+        "evals/agents/worker-x/case-a/graders/criterion-1.md": "---\ntype: llm\nweight: 1\n---\n\nOpens a screenshot.\n",
+        "evals/agents/RESULTS.md": "# Eval results\n",
+        "agents/real.md": GOOD.replace("blue-team", "real"),
+    })
+    code, out = lint(d, "evals", "agents")
+    check("eval prompts, graders, results under evals/: skipped", code == 0 and "1 files" in out, out)
+    code, out = lint(d, "--changed")
+    check("eval files are not linted by the --changed ratchet", code == 0 and "1 files" in out, out)
+    shutil.rmtree(d)
+
+
 def test_sis_identity_card_shape() -> None:
     """A harness-agnostic card (no model, no tools) is not nagged about model,
     but a missing description is still an error: it is the routing text."""

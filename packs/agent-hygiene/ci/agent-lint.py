@@ -36,6 +36,10 @@ AGENT_FILE_RE = re.compile(r"(\.agent\.md|(^|/)AGENT\.md)$")
 SKIP_BASENAMES = {"CLAUDE.md", "AGENTS.md", "README.md", "AGENT_STANDARDIZATION.md",
                   "PRODUCT_TEAMS.md", "GROK.md", "GEMINI.md", "CONTRIBUTING.md"}
 SKIP_SUFFIXES = ("_REGISTRY.md", "-REGISTRY.md")
+# Eval prompts, graders, and results tables live under evals/agents/<id>/ in
+# Agent OS repos. They are test inputs about an agent, not agent definitions,
+# and AGENT_DIR_RE would otherwise match their agents/ segment.
+EVAL_DIR_RE = re.compile(r"(^|/)evals/")
 SKIP_DIRS = {".git", "node_modules", ".next", "dist", "build", ".replaced", "__pycache__",
              ".venv", "venv", "_staging"}
 
@@ -44,6 +48,8 @@ def kind_of(path: str) -> str | None:
     """'agent', 'skill', or None when the file is not in scope."""
     rel = path.replace(os.sep, "/")
     base = os.path.basename(rel)
+    if EVAL_DIR_RE.search(rel):
+        return None
     if base == "SKILL.md":
         return "skill"
     if not base.endswith(".md"):
