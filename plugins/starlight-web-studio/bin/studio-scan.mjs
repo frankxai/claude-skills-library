@@ -10,7 +10,10 @@
 
 import { readFile } from 'node:fs/promises';
 import { lookup as dnsLookup } from 'node:dns/promises';
+import http from 'node:http';
+import https from 'node:https';
 import { isIP } from 'node:net';
+import zlib from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 
 export const DIMENSIONS = ['search', 'answer', 'mobile', 'access', 'craft', 'speed'];
@@ -423,24 +426,72 @@ export function isPublicAddress(ip) {
   return !v6.startsWith('2001:db8:') && !v6.startsWith('64:ff9b:');
 }
 
-// Checks every hop before connecting. Residual: DNS can change between this lookup and the
-// connection (rebinding); closing that needs a pinned-address dispatcher.
-async function assertFetchable(target, { lookup = dnsLookup, allowPrivate = false } = {}) {
+// Resolves one hop and returns the address the connection must use. Every address the name
+// resolves to must be public, so a mixed answer cannot slip a private one in.
+async function resolveTarget(target, { lookup = dnsLookup, allowPrivate = false } = {}) {
   const u = new URL(target);
   if (!/^https?:$/.test(u.protocol)) throw new Error(`refused ${u.protocol} URL: only http and https are fetched`);
-  if (allowPrivate) return;
   const host = u.hostname.replace(/^\[|\]$/g, '');
-  const addresses = isIP(host) ? [host] : (await lookup(host, { all: true })).map(a => a.address);
-  const bad = addresses.length ? addresses.find(a => !isPublicAddress(a)) : 'no address';
-  if (bad) throw new Error(`refused ${u.host}: it resolves to a private or reserved address (${bad}); pass --allow-private to scan it`);
+  const found = isIP(host) ? [{ address: host, family: isIP(host) }] : await lookup(host, { all: true });
+  if (!found.length) throw new Error(`refused ${u.host}: no address`);
+  const bad = allowPrivate ? null : found.find(a => !isPublicAddress(a.address));
+  if (bad) throw new Error(`refused ${u.host}: it resolves to a private or reserved address (${bad.address}); pass --allow-private to scan it`);
+  return { address: found[0].address, family: found[0].family ?? isIP(found[0].address) };
 }
 
-async function get(url, { timeoutMs = 15000, fetch: doFetch = fetch, lookup, allowPrivate } = {}) {
+const MAX_BODY_BYTES = 8 * 1024 * 1024;
+
+// Connects to the address resolveTarget checked, never re-resolving the name, so DNS rebinding
+// between the check and the connection cannot redirect it. Host and TLS name stay the URL's.
+export function pinnedFetch(target, { headers = {}, timeoutMs = 15000, pin }) {
+  const u = new URL(target);
+  const lookup = (_host, options, callback) => {
+    const cb = typeof options === 'function' ? options : callback;
+    return options?.all ? cb(null, [pin]) : cb(null, pin.address, pin.family);
+  };
+  return new Promise((resolve, reject) => {
+    const req = (u.protocol === 'https:' ? https : http).request(u, {
+      method: 'GET', lookup, timeout: timeoutMs, headers: { ...headers, 'accept-encoding': 'gzip, deflate, br' },
+    }, (res) => {
+      const encoding = String(res.headers['content-encoding'] ?? '').toLowerCase();
+      const stream = encoding === 'gzip' ? res.pipe(zlib.createGunzip())
+        : encoding === 'deflate' ? res.pipe(zlib.createInflate())
+          : encoding === 'br' ? res.pipe(zlib.createBrotliDecompress()) : res;
+      const chunks = [];
+      let size = 0;
+      stream.on('data', (chunk) => {
+        size += chunk.length;
+        if (size > MAX_BODY_BYTES) { req.destroy(); stream.destroy(new Error(`body over ${MAX_BODY_BYTES} bytes`)); return; }
+        chunks.push(chunk);
+      });
+      stream.on('error', reject);
+      stream.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
+        const status = res.statusCode ?? 0;
+        resolve({
+          status,
+          ok: status >= 200 && status < 300,
+          headers: { get: (name) => { const v = res.headers[name.toLowerCase()]; return Array.isArray(v) ? v.join(', ') : (v ?? null); } },
+          text: async () => body,
+        });
+      });
+    });
+    req.on('timeout', () => req.destroy(new Error(`timed out after ${timeoutMs} ms`)));
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+async function get(url, { timeoutMs = 15000, fetch: injected, lookup, allowPrivate } = {}) {
   const started = performance.now();
+  const headers = { 'user-agent': UA, accept: 'text/html,text/plain,*/*' };
   let current = new URL(url).href;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    await assertFetchable(current, { lookup, allowPrivate });
-    const res = await doFetch(current, { headers: { 'user-agent': UA, accept: 'text/html,text/plain,*/*' }, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
+    const pin = await resolveTarget(current, { lookup, allowPrivate });
+    // Tests inject a fetch stub so they never touch the network; production always pins.
+    const res = injected
+      ? await injected(current, { headers, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) })
+      : await pinnedFetch(current, { headers, timeoutMs, pin });
     const location = res.headers.get('location');
     if (res.status >= 300 && res.status < 400 && location) {
       await res.body?.cancel();

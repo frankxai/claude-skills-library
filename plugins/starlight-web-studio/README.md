@@ -25,6 +25,7 @@ Any harness or CI job can run the scripts directly:
 node plugins/starlight-web-studio/bin/studio-doctor.mjs                            # what this machine can do: browser, second provider, companion skills
 node plugins/starlight-web-studio/bin/studio-scan.mjs https://example.com          # markdown report
 node plugins/starlight-web-studio/bin/studio-scan.mjs https://example.com --json   # exit 1 on any P0
+node plugins/starlight-web-studio/bin/studio-scan.mjs http://localhost:3000 --allow-private   # private and loopback addresses are refused without it, on every redirect and sitemap hop
 node plugins/starlight-web-studio/bin/studio-sweep.mjs --targets targets.json --out .studio/sweeps
 node plugins/starlight-web-studio/bin/materials-gate.mjs <repo> [--json]         # DESIGN.md, gated refraction, renderer count per route, motion score; exit 1 on error
 ```
@@ -119,7 +120,7 @@ skills, GreenSock's `gsap-skills`, and `humanizer`.
 ## Tests and evals
 
 ```bash
-node --test plugins/starlight-web-studio/tests/*.test.mjs    # 59 tests: scanner, RFC 9309 robots, sweep ranking, workflow, GPU gate
+node --test plugins/starlight-web-studio/tests/*.test.mjs    # 166 tests: scanner and its network guard, RFC 9309 robots, sweep, workflow, GPU gate, materials gate
 claude plugin eval plugins/starlight-web-studio
 ```
 

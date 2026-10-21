@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyze, fetchPage, isPublicAddress } from '../bin/studio-scan.mjs';
+import http from 'node:http';
+import zlib from 'node:zlib';
+import { analyze, fetchPage, isPublicAddress, pinnedFetch } from '../bin/studio-scan.mjs';
 
 const words = n => Array.from({ length: n }, (_, i) => `word${i}`).join(' ');
 const page = (body, head = '') => `<!doctype html><html lang="en"><head><title>Field notes for independent builders</title>
@@ -99,4 +101,44 @@ test('a publisher nested inside an Article counts as the publishing entity', () 
   assert.ok(!ids(page('<p>x</p>', ld)).includes('jsonld-no-entity'));
   const bare = '<script type="application/ld+json">{"@type":"Article","headline":"x"}</script>';
   assert.ok(ids(page('<p>x</p>', bare)).includes('jsonld-no-entity'));
+});
+
+// --- connection pinning (DNS rebinding) ---------------------------------------------------------
+
+
+async function localServer(handler) {
+  const server = http.createServer(handler);
+  await new Promise(r => server.listen(0, '127.0.0.1', r));
+  return { server, port: server.address().port };
+}
+
+test('the connection goes to the checked address and never re-resolves the name', async () => {
+  const hosts = [];
+  const { server, port } = await localServer((req, res) => {
+    hosts.push(req.headers.host);
+    res.writeHead(req.url === '/' ? 200 : 404, { 'content-type': 'text/html' });
+    res.end(req.url === '/' ? '<html lang="en"><title>pinned</title><body>ok</body></html>' : '');
+  });
+  let lookups = 0;
+  // ".test" never resolves through system DNS, so success proves only the checked address was used.
+  const lookup = async () => { lookups += 1; return [{ address: '127.0.0.1', family: 4 }]; };
+  try {
+    const r = await fetchPage(`http://rebind.test:${port}/`, { lookup, allowPrivate: true });
+    assert.equal(r.status, 200);
+    assert.match(r.html, /pinned/);
+    assert.ok(hosts.every(h => h === `rebind.test:${port}`), hosts.join(' '));
+    assert.equal(lookups, hosts.length, 'one lookup per request, none inside the connection');
+  } finally { server.close(); }
+});
+
+test('a pinned request decodes gzip and reports joined repeated headers', async () => {
+  const { server, port } = await localServer((req, res) => {
+    res.writeHead(200, { 'content-encoding': 'gzip', 'x-robots-tag': ['noindex', 'nofollow'] });
+    res.end(zlib.gzipSync('hello gzip'));
+  });
+  try {
+    const res = await pinnedFetch(`http://anything.test:${port}/`, { pin: { address: '127.0.0.1', family: 4 } });
+    assert.equal(await res.text(), 'hello gzip');
+    assert.equal(res.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+  } finally { server.close(); }
 });
