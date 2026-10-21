@@ -13,6 +13,7 @@ import { lookup as dnsLookup } from 'node:dns/promises';
 import http from 'node:http';
 import https from 'node:https';
 import { isIP } from 'node:net';
+import { pipeline, Writable } from 'node:stream';
 import zlib from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 
@@ -450,25 +451,33 @@ export function pinnedFetch(target, { headers = {}, timeoutMs = 15000, pin }) {
     return options?.all ? cb(null, [pin]) : cb(null, pin.address, pin.family);
   };
   return new Promise((resolve, reject) => {
+    // One deadline for the whole exchange, so a trickling or stalled body cannot outlive it.
+    const deadline = setTimeout(() => req.destroy(new Error(`timed out after ${timeoutMs} ms`)), timeoutMs);
+    const fail = (err) => { clearTimeout(deadline); req.destroy(); reject(err); };
     const req = (u.protocol === 'https:' ? https : http).request(u, {
-      method: 'GET', lookup, timeout: timeoutMs, headers: { ...headers, 'accept-encoding': 'gzip, deflate, br' },
+      method: 'GET', lookup, headers: { ...headers, 'accept-encoding': 'gzip, deflate, br' },
     }, (res) => {
       const encoding = String(res.headers['content-encoding'] ?? '').toLowerCase();
-      const stream = encoding === 'gzip' ? res.pipe(zlib.createGunzip())
-        : encoding === 'deflate' ? res.pipe(zlib.createInflate())
-          : encoding === 'br' ? res.pipe(zlib.createBrotliDecompress()) : res;
+      const decoder = encoding === 'gzip' ? [zlib.createGunzip()]
+        : encoding === 'deflate' ? [zlib.createInflate()]
+          : encoding === 'br' ? [zlib.createBrotliDecompress()] : [];
       const chunks = [];
       let size = 0;
-      stream.on('data', (chunk) => {
-        size += chunk.length;
-        if (size > MAX_BODY_BYTES) { req.destroy(); stream.destroy(new Error(`body over ${MAX_BODY_BYTES} bytes`)); return; }
-        chunks.push(chunk);
+      const sink = new Writable({
+        write(chunk, _enc, done) {
+          size += chunk.length;
+          if (size > MAX_BODY_BYTES) return done(new Error(`body over ${MAX_BODY_BYTES} bytes`));
+          chunks.push(chunk);
+          return done();
+        },
       });
-      stream.on('error', reject);
-      stream.on('end', () => {
+      // pipeline forwards an aborted response or a corrupt stream into one error, which .pipe() does not.
+      pipeline(res, ...decoder, sink, (err) => {
+        if (err) return fail(err);
+        clearTimeout(deadline);
         const body = Buffer.concat(chunks).toString('utf8');
         const status = res.statusCode ?? 0;
-        resolve({
+        return resolve({
           status,
           ok: status >= 200 && status < 300,
           headers: { get: (name) => { const v = res.headers[name.toLowerCase()]; return Array.isArray(v) ? v.join(', ') : (v ?? null); } },
@@ -476,8 +485,7 @@ export function pinnedFetch(target, { headers = {}, timeoutMs = 15000, pin }) {
         });
       });
     });
-    req.on('timeout', () => req.destroy(new Error(`timed out after ${timeoutMs} ms`)));
-    req.on('error', reject);
+    req.on('error', fail);
     req.end();
   });
 }

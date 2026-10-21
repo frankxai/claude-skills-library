@@ -142,3 +142,31 @@ test('a pinned request decodes gzip and reports joined repeated headers', async 
     assert.equal(res.headers.get('X-Robots-Tag'), 'noindex, nofollow');
   } finally { server.close(); }
 });
+
+test('an interrupted gzip, deflate or brotli body rejects instead of hanging', async () => {
+  for (const encoding of ['gzip', 'deflate', 'br']) {
+    const { server, port } = await localServer((req, res) => {
+      res.writeHead(200, { 'content-encoding': encoding });
+      res.write(Buffer.from([0x1f, 0x8b, 0x08, 0x00]));
+      setTimeout(() => res.destroy(), 20);
+    });
+    try {
+      const started = Date.now();
+      await assert.rejects(pinnedFetch(`http://x.test:${port}/`, { pin: { address: '127.0.0.1', family: 4 }, timeoutMs: 2000 }));
+      assert.ok(Date.now() - started < 1500, `${encoding} took ${Date.now() - started} ms`);
+    } finally { server.close(); }
+  }
+});
+
+test('a body that trickles past the deadline is cut off', async () => {
+  const { server, port } = await localServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    const tick = setInterval(() => res.write('.'), 30);
+    res.on('close', () => clearInterval(tick));
+  });
+  try {
+    const started = Date.now();
+    await assert.rejects(pinnedFetch(`http://x.test:${port}/`, { pin: { address: '127.0.0.1', family: 4 }, timeoutMs: 300 }), /timed out/);
+    assert.ok(Date.now() - started < 1500);
+  } finally { server.close(); }
+});
