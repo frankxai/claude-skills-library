@@ -959,14 +959,16 @@ test('a local alias of an element factory still mounts a renderer tag', () => {
     'app/page.jsx': `'use client';\nimport { createElement as el } from 'react';\nimport { Canvas as Scene } from '@react-three/fiber';\nexport default function Page() {\n  return el(Scene, {}, el('mesh'));\n}\n`,
     'app/two/page.jsx': `'use client';\nimport React from 'react';\nimport { Canvas } from '@react-three/fiber';\nconst make = React.createElement;\nexport default function Page() {\n  return make(Canvas, null);\n}\n`,
     'app/three/page.jsx': `'use client';\nimport * as runtime from 'react/jsx-runtime';\nimport { Canvas } from '@react-three/fiber';\nconst { jsx: j } = runtime;\nexport default function Page() {\n  return j(Canvas, {});\n}\n`,
+    'app/four/page.tsx': `'use client';\nimport { createElement as el } from 'react';\nimport { Canvas as Scene, type CanvasProps } from '@react-three/fiber';\nexport default function Page() {\n  return el<CanvasProps>(Scene, {});\n}\n`,
+    'app/five/page.tsx': `'use client';\nimport { createElement } from 'react';\nimport { Canvas, type CanvasProps } from '@react-three/fiber';\nexport default function Page() {\n  return createElement<Partial<CanvasProps>>(Canvas, {});\n}\n`,
     'node_modules/next/package.json': '{}',
   });
   const result = runGate(root);
   const life = byId(result, 'gpu-lifecycle');
   assert.equal(life.level, 'error', JSON.stringify(result.checks));
   assert.match(life.detail, /app[\\/]page\.jsx/);
-  assert.match(life.detail, /app[\\/]two[\\/]page\.jsx/);
-  assert.match(life.detail, /app[\\/]three[\\/]page\.jsx/);
+  for (const p of ['two', 'three']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.jsx`));
+  for (const p of ['four', 'five']) assert.match(life.detail, new RegExp(`app[\\\\/]${p}[\\\\/]page\\.tsx`));
   assert.equal(byId(result, 'coverage').ok, true, byId(result, 'coverage').detail);
 });
 

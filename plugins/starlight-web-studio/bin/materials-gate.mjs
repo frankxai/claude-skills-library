@@ -1123,7 +1123,9 @@ export function hasRendererExpression(file, resolveLocal = null, state = null) {
   const factories = new Set(['createElement', 'jsx', 'jsxs', 'jsxDEV', 'h']);
   for (const m of src.matchAll(/(?<![\w$.])(?:createElement|jsxs?|jsxDEV|h)\s*(?:as|:)\s*([A-Za-z_$][\w$]*)/g)) factories.add(m[1]);
   for (const m of src.matchAll(/([A-Za-z_$][\w$]*)\s*=\s*(?:[A-Za-z_$][\w$]*\.)?(?:createElement|jsxs?|jsxDEV)(?![\w$])/g)) factories.add(m[1]);
-  if (new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(factories)})\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src)) return true;
+  // A factory call may carry a type argument, `el<CanvasProps>(Scene, {})`, nested two deep.
+  const typeArgs = '(?:<[^<>()]*(?:<[^<>()]*>[^<>()]*)*>)?';
+  if (new RegExp(`new\\s+(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})\\b|<${tag}|(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(factories)})\\s*${typeArgs}\\s*\\(\\s*${tag}|(?<![\\w$.])(?:${alt(names.call)})\\s*\\(`).test(src)) return true;
   // `new (navigator.gpu ? GPU : GL)()`: a constructor chosen inside the parenthesis is a
   // renderer when any name in it is one.
   const ctor = new RegExp(`(?<![\\w$.])(?:[A-Za-z_$][\\w$]*\\.)?(?:${alt(names.ctor)})(?![\\w$])`);
