@@ -1,7 +1,9 @@
 // node --test packs/web-excellence/tests/install-agents.test.mjs
 // install.sh carries the three web workers into a repo: added when missing,
 // left alone when identical, set aside (never deleted) when a local copy
-// differs, and skipped on --no-agents, --skills-only, and --dry-run.
+// differs, and skipped on --no-agents, --skills-only, and --dry-run. It also
+// names any skill or agent the repo's .gitignore would keep out of git, and so
+// out of cloud sessions.
 
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';

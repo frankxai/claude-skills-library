@@ -134,7 +134,10 @@ counts as breaking), and the pnpm importer reader.
 agents arrive byte for byte, an identical re-run leaves them alone, a diverged
 local copy is set aside rather than deleted, and `--no-agents`,
 `--skills-only`, and `--dry-run` write none. It also checks each vendored agent
-is a compiled file whose name matches, with a model tier and no `Agent` tool.
+is a compiled file whose name matches, with a model tier and no `Agent` tool,
+and that the installer names any skill or agent the repo's `.gitignore` would
+keep out of git. Repos that allowlist pack skills one by one otherwise lose
+each new skill silently.
 
 ## Cloud sessions
 
