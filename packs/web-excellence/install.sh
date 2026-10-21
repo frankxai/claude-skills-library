@@ -39,6 +39,18 @@ TARGET="$(cd "$TARGET" && pwd)"
 say() { printf '%s\n' "$*"; }
 run() { if [ $DRY -eq 1 ]; then say "  would: $*"; else "$@"; fi; }
 
+# A file the repo's .gitignore hides is installed locally but never committed,
+# so it never reaches a cloud session. Repos that allowlist pack skills one by
+# one (`.claude/skills/*/` then `!.claude/skills/<name>/`) hit this on every new
+# skill; say so instead of letting it go missing.
+warn_ignored() {
+  [ $DRY -eq 1 ] && return 0
+  git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+  if git -C "$TARGET" check-ignore -q "$1"; then
+    say "  !! $1 is gitignored here, so it will not reach cloud sessions; allow it with: !$2"
+  fi
+}
+
 say "web-excellence → $TARGET"
 [ $DRY -eq 1 ] && say "(dry run — nothing will be written)"
 
@@ -62,6 +74,7 @@ for src in "$PACK_DIR"/skills/*/; do
     say "  add    $name"
   fi
   run cp -R "$src" "$DEST_SKILLS/$name"
+  warn_ignored ".claude/skills/$name/SKILL.md" ".claude/skills/$name/"
 done
 
 # ---------------------------------------------------------------- agents
@@ -87,6 +100,7 @@ if [ $NO_AGENTS -eq 0 ] && [ $SKILLS_ONLY -eq 0 ] && [ -d "$PACK_DIR/agents" ]; 
       say "  add    agent ${name%.md}"
     fi
     run cp "$src" "$dest"
+    warn_ignored ".claude/agents/$name" ".claude/agents/$name"
   done
 fi
 

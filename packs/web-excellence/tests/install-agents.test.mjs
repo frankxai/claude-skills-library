@@ -83,6 +83,20 @@ test('a local copy that differs is set aside outside .claude/agents, then replac
   }
 });
 
+test('a skill or agent the repo gitignores is named, with the allowlist line', () => {
+  const dir = freshRepo();
+  try {
+    writeFileSync(join(dir, '.gitignore'), '.claude/skills/*/\n!.claude/skills/web-release-gate/\n.claude/agents/worker-web-steward.md\n');
+    const out = install(dir);
+    assert.match(out, /!! \.claude\/skills\/gpu-surface\/SKILL\.md is gitignored here.*!\.claude\/skills\/gpu-surface\//);
+    assert.doesNotMatch(out, /!! \.claude\/skills\/web-release-gate\//);
+    assert.match(out, /!! \.claude\/agents\/worker-web-steward\.md is gitignored here/);
+    assert.doesNotMatch(out, /!! \.claude\/agents\/worker-web-builder\.md/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('--no-agents, --skills-only, and --dry-run write no agents', () => {
   for (const flag of ['--no-agents', '--skills-only', '--dry-run']) {
     const dir = freshRepo();
