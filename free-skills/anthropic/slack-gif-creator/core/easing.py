@@ -6,6 +6,7 @@ Provides various easing functions for natural motion and timing.
 All functions take a value t (0.0 to 1.0) and return eased value (0.0 to 1.0).
 """
 
+from typing import Callable
 import math
 
 
@@ -114,7 +115,7 @@ EASING_FUNCTIONS = {
 }
 
 
-def get_easing(name: str = 'linear'):
+def get_easing(name: str = 'linear') -> Callable[[float], float]:
     """Get easing function by name."""
     return EASING_FUNCTIONS.get(name, linear)
 
