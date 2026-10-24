@@ -1,16 +1,30 @@
 import fs from 'fs';
 import path from 'path';
 
-const skillsDir = 'C:/Users/frank/starlight/repos/claude-skills-library/free-skills';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const skillsDir = path.join(__dirname, '..', 'free-skills');
 
 if (!fs.existsSync(skillsDir)) {
     console.error(`Error: Skills directory not found at ${skillsDir}`);
     process.exit(1);
 }
 
-const folders = fs.readdirSync(skillsDir).filter(name => {
-    return fs.statSync(path.join(skillsDir, name)).isDirectory();
-});
+const folders = [];
+function findFolders(dir, rel = '') {
+    for (const name of fs.readdirSync(dir)) {
+        const fullPath = path.join(dir, name);
+        if (fs.statSync(fullPath).isDirectory()) {
+            if (fs.existsSync(path.join(fullPath, 'SKILL.md'))) {
+                folders.push(path.join(rel, name));
+            } else {
+                findFolders(fullPath, path.join(rel, name));
+            }
+        }
+    }
+}
+findFolders(skillsDir);
 
 console.log(`Found ${folders.length} skills to validate under free-skills/...\n`);
 
