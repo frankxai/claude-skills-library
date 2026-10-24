@@ -30,6 +30,7 @@ on:
       - '**/*.sass'
       - '.github/workflows/web-excellence.yml'
       - '.claude/ci/web-guidelines-lint.mjs'
+      - '.claude/ci/brand-lint.json'
 
 permissions:
   contents: read
