@@ -1,0 +1,144 @@
+# a. Where am I? A machine that has never seen this project.
+
+stranger@fresh-machine:~$ date -u
+Sat Oct 24 02:10:50 UTC 2026
+# exit 0
+
+stranger@fresh-machine:~$ echo $HOME
+/agent/workspace/g2-rec/home-1dDO
+# exit 0
+
+stranger@fresh-machine:~$ ls -A $HOME
+.codex
+# exit 0
+
+stranger@fresh-machine:~$ claude --version
+2.1.310 (Claude Code)
+# exit 0
+
+stranger@fresh-machine:~$ codex --version
+codex-cli 0.164.0
+# exit 0
+
+stranger@fresh-machine:~$ git ls-remote https://github.com/frankxai/claude-skills-library refs/heads/agent/hyperagent/eval-pack-rc1
+2602f49b604b6fee099d8e47a53a412f7460bea8        refs/heads/agent/hyperagent/eval-pack-rc1
+# exit 0
+# b. Claude Code: the tested pack, from the PUBLIC remote, exactly as the README says.
+
+stranger@fresh-machine:~$ claude plugin marketplace add frankxai/claude-skills-library#agent/hyperagent/eval-pack-rc1
+SSH not configured, cloning via HTTPS: https://github.com/frankxai/claude-skills-library.git
+Refreshing marketplace cache (timeout: 120s)…
+Cloning repository (timeout: 120s): https://github.com/frankxai/claude-skills-library.git (ref:
+agent/hyperagent/eval-pack-rc1)
+Clone complete, validating marketplace…
+Cleaning up old marketplace cache…
+✔ Successfully added marketplace: claude-skills-library (declared in user settings)
+# exit 0
+
+stranger@fresh-machine:~$ claude plugin install skills-with-evals@claude-skills-library
+✔ Successfully installed plugin: skills-with-evals@claude-skills-library (scope: user)
+# exit 0
+
+stranger@fresh-machine:~$ claude plugin details skills-with-evals@claude-skills-library
+Skills that ship with their evals (skills-with-evals)
+  Description: Ten skills from this library, each with an eval suite in evals/<skill>/: a no-skill baseline
+arm, a trigger test, seeded-defect recall and clean-input precision cases, run with `claude plugin eval`.
+Release candidate; see evals/<skill>/CARD.md.
+  Source: skills-with-evals@claude-skills-library
+
+Component inventory
+  Skills (10)  ai-architect-review, book-publishing, excellence-book-writing, github-code-review,
+langgraph-patterns, mcp-architecture, nextjs-expert, product-management-expert, skill-builder,
+ui-ux-design-expert
+  Agents (0)
+  Hooks (0)
+  MCP servers (0)
+  LSP servers (0)
+
+Projected token cost
+  Always-on:   ~727 tok   added to every session
+
+Per-component (rounded)
+  component                  always-on  on-invoke
+  ui-ux-design-expert              ~80      ~5.4k
+  github-code-review               ~60      ~1.5k
+  nextjs-expert                    ~70      ~4.7k
+  mcp-architecture                 ~70      ~2.6k
+  ai-architect-review             ~110      ~2.7k
+  langgraph-patterns               ~70      ~1.8k
+  skill-builder                    ~80      ~5.3k
+  product-management-expert        ~60       ~780
+  book-publishing                  ~60      ~4.1k
+  excellence-book-writing          ~70      ~2.1k
+
+  On-invoke cost is paid each time a skill or agent fires.
+  Token counts are estimates and may differ from actual usage.
+# exit 0
+# c. Codex: the tested pack, as the README says.
+
+stranger@fresh-machine:~$ codex plugin marketplace add frankxai/claude-skills-library@agent/hyperagent/eval-pack-rc1
+Added marketplace `claude-skills-library` from https://github.com/frankxai/claude-skills-library.git#agent/hyperagent/eval-pack-rc1.
+Installed marketplace root: /agent/workspace/g2-rec/home-1dDO/.codex/.tmp/marketplaces/claude-skills-library
+# exit 0
+
+stranger@fresh-machine:~$ codex plugin add skills-with-evals@claude-skills-library
+Added plugin `skills-with-evals` from marketplace `claude-skills-library`.
+Installed plugin root: /agent/workspace/g2-rec/home-1dDO/.codex/plugins/cache/claude-skills-library/skills-with-evals/local
+# exit 0
+# Model-visible skill list. OUTPUT IS FILTERED to the pack's lines (grep) and cut to 105 columns.
+
+stranger@fresh-machine:~$ codex debug prompt-input "Review this pull request diff before I merge it" | sed 's/\\n/\n/g' | grep -E '^- skills-with-evals:' | cut -c1-105   # FILTERED
+- skills-with-evals:ai-architect-review: Review the architecture of a system that calls a language model.
+- skills-with-evals:book-publishing: Multi-book content, voice, and production workflows for nonfiction a
+- skills-with-evals:excellence-book-writing: High-quality nonfiction writing patterns for structure, clar
+- skills-with-evals:github-code-review: Comprehensive GitHub pull-request code review with multi-agent co
+- skills-with-evals:langgraph-patterns: Production-grade agentic workflows with LangGraph — graph orchest
+- skills-with-evals:mcp-architecture: Design and implement Model Context Protocol servers with resources,
+- skills-with-evals:nextjs-expert: Comprehensive Next.js expertise across App Router, server/client bound
+- skills-with-evals:product-management-expert: Product management expertise for strategy, discovery, prio
+- skills-with-evals:skill-builder: Create new Claude Code Skills with proper YAML frontmatter, progressiv
+- skills-with-evals:ui-ux-design-expert: Expert guidance on UI/UX design, design systems, accessibility (
+# exit 0 (pipeline: 0 0 0 0)
+
+stranger@fresh-machine:~$ codex debug prompt-input "Review this pull request diff before I merge it" | sed 's/\\n/\n/g' | grep -c '^- skills-with-evals:'   # FILTERED count
+10
+# exit 0 (pipeline: 0 0 0)
+# d. Fresh clone, plugin validation, and the repo's own install test.
+
+stranger@fresh-machine:~$ git clone --depth 1 --branch agent/hyperagent/eval-pack-rc1 https://github.com/frankxai/claude-skills-library.git $HOME/clone
+Cloning into '/agent/workspace/g2-rec/home-1dDO/clone'...
+remote: Enumerating objects: 1485, done.
+remote: Counting objects: 100% (1485/1485), done.
+remote: Compressing objects: 100% (1199/1199), done.
+remote: Total 1485 (delta 217), reused 1043 (delta 110), pack-reused 0 (from 0)
+Receiving objects: 100% (1485/1485), 5.62 MiB | 40.24 MiB/s, done.
+Resolving deltas: 100% (217/217), done.
+# exit 0
+
+stranger@fresh-machine:~$ cd $HOME/clone
+# exit 0
+
+stranger@fresh-machine:~/clone$ git --no-pager log -1 --format="%H %cd" --date=iso-strict
+2602f49b604b6fee099d8e47a53a412f7460bea8 2026-10-24T04:08:16+02:00
+# exit 0
+
+stranger@fresh-machine:~/clone$ claude plugin validate .
+Validating marketplace manifest: /agent/workspace/g2-rec/home-1dDO/clone/.claude-plugin/marketplace.json
+
+✔ Validation passed
+# exit 0
+
+stranger@fresh-machine:~/clone$ node scripts/install-test.mjs
+install-test: skills-with-evals@claude-skills-library from /agent/workspace/g2-rec/home-1dDO/clone
+throwaway HOME /tmp/skills-install-home-XMM3ap
+versions: 2.1.310 (Claude Code) | codex-cli 0.164.0
+PASS claude-code: 10 skill(s) visible, 0 missing
+     always-on context cost: ~727 tok per session
+PASS codex: 10 skill(s) visible, 0 missing
+install-test: PASS (10 pack skills expected in each runtime)
+# exit 0
+
+stranger@fresh-machine:~/clone$ date -u
+Sat Oct 24 02:10:54 UTC 2026
+# exit 0
+# End of walkthrough. HOME was /agent/workspace/g2-rec/home-1dDO
