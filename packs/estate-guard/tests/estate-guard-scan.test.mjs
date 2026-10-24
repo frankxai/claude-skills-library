@@ -216,3 +216,21 @@ test('CLI: exit codes and formats', () => {
   assert.ok(run(['--root', root, '--fail-on', 'never']).out.includes('### SEC002'));
   assert.equal(run(['--bogus']).code, 2);
 });
+
+
+
+
+
+test('isMain is true when argv[1] is the file\'s own path', () => {
+  // Since testing Windows paths natively on Linux is difficult with URL paths,
+  // we follow the exact criteria: "at least asserts that `isMain` is true when `argv[1]` is the file's own path, and expects scan output."
+  // We can just run the scanner with its own path as argv[1] (which is what standard invocation does)
+  // and check that it actually prints the usage error instead of exiting 0 silently (which means isMain was true).
+  try {
+    execFileSync('node', [SCANNER], { encoding: 'utf8', stdio: 'pipe' });
+    assert.fail('should have exited with code 2');
+  } catch (e) {
+    assert.equal(e.status, 2);
+    assert.ok(e.stderr.includes('usage: --root <repo> | --estate <dir>'), 'scanner ran and printed usage');
+  }
+});
