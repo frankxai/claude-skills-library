@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "claude-skills-library",
+      "name": "frankx-skills",
       "description": "The complete library of Agent Skills — AI agents & orchestration, MCP & SDKs, Oracle & cloud, frontend & animation, engineering workflow, content & brand, and creative production. Skills auto-activate when relevant.",
       "source": "./",
       "strict": false,

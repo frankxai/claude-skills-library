@@ -54,7 +54,9 @@ by inventing problems.
 ```bash
 node scripts/trigger-lint.mjs --pack products/skills-with-evals/pack.json   # static trigger check
 node scripts/install-test.mjs                                              # Claude Code + Codex install, throwaway HOME
-node scripts/eval-skill.mjs <skill> --runs 3 --max-cost-usd 5 --model claude-sonnet-5-5   # measured lift (needs claude login)
+node scripts/run-pack-lift.mjs --dry-run                                  # stage all 10 suites, no model call
+node scripts/run-pack-lift.mjs --by "<you>"                             # G1: all 10 skills, $5/skill, $50 total, subscription login
+node scripts/eval-skill.mjs <skill> --runs 3 --max-cost-usd 5 --model sonnet   # one skill (needs claude login)
 node scripts/eval-card.mjs                                                 # regenerate cards from result files
 node --test scripts/tests/eval-pack.test.mjs scripts/tests/eval-skill.test.mjs
 ```
@@ -75,6 +77,6 @@ a private repository. Nothing here changes a licence.
 | Gate | What it proves | State |
 |---|---|---|
 | G0 | Every public claim is listed with its evidence | Posted on the PR |
-| G1 | Eval counts printed by `claude plugin eval` | Load check done (31 cases load, 0 errors); measured runs wait for a Claude credential |
+| G1 | Eval counts printed by `claude plugin eval` | Load check done (31 cases load, 0 errors). Measured runs: `scripts/run-pack-lift.mjs` on a signed-in Claude Code (subscription, no API key); instructions in the PR #82 G1-local comment |
 | G2 | A stranger installs from a clean clone, with screenshots | Install level: **local clean clone PASS in both runtimes**; the remote command failed before the pinned-branch fix (`receipts/g2/`). Outcome level (a buyer-agent reaches a result with the skill on three providers, as `PRODUCT-RELEASE-GATE.md` requires for agentic products) needs model credentials and is not done |
 | G3 | Different-family model checks the claims | Brief in `G3-BRIEF.md`; not run yet |

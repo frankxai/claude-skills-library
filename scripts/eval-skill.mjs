@@ -3,7 +3,9 @@
 //
 // free-skills/<skill>/ stays the only copy of the skill: this script stages a throwaway
 // plugin (manifest + that skill + evals/<skill>/) in the temp dir, runs the eval there with
-// its no-plugin baseline arm, and writes evals/<skill>/SCORECARD.md and results/<stamp>.json.
+// its no-plugin baseline arm, and writes evals/<skill>/SCORECARD.md and results/<stamp>.json,
+// plus the HTML report (results/<stamp>.report.html) and every run's unedited trace
+// (results/<stamp>/traces/<case>__<arm>__<n>.jsonl), so a reader can check what the model did.
 // The eval runs with --threshold 0: this script collects measurements and judges
 // comparability itself, it does not gate on a score.
 //
@@ -14,7 +16,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -105,6 +107,31 @@ export function comparability(result) {
   return problems;
 }
 
+// `claude plugin eval` writes each run's trace to a temp dir it deletes unless --keep-temp is set.
+// Copy every trace into destDir, point tracePath at the copy (relative to relBase), and remove the
+// claude-eval-* temp dirs afterwards. Returns the number of traces copied.
+export function collectTraces(result, destDir, relBase) {
+  let copied = 0;
+  const temps = new Set();
+  for (const c of result.cases || []) {
+    for (const [arm, runs] of Object.entries(c.arms || {})) {
+      (runs || []).forEach((r, i) => {
+        const src = r?.tracePath;
+        if (!src || !existsSync(src)) return;
+        mkdirSync(destDir, { recursive: true });
+        const dest = join(destDir, `${c.name}__${arm}__${i + 1}.jsonl`);
+        cpSync(src, dest);
+        r.tracePath = relative(relBase, dest).split('\\').join('/');
+        copied++;
+        const tmp = dirname(dirname(src));
+        if (/^claude-eval-/.test(basename(tmp)) && resolve(tmp).startsWith(resolve(tmpdir()))) temps.add(tmp);
+      });
+    }
+  }
+  for (const t of temps) rmSync(t, { recursive: true, force: true });
+  return copied;
+}
+
 const pct = (x) => (typeof x === 'number' ? `${Math.round(x * 100)}%` : 'n/a');
 const pts = (x) => (typeof x === 'number' ? `${x > 0 ? '+' : ''}${Math.round(x * 100)} pts` : 'n/a');
 
@@ -134,7 +161,7 @@ export function renderScorecard(skill, result, meta) {
     '',
     `Overall with the skill: ${pct(a.overallScore)}. Mean difference: ${pts(a.meanDelta)}. Cost about $${(result.costUsd ?? 0).toFixed(2)}.`,
     '',
-    `Cases, fixtures and graders are in this folder. Raw result: \`results/${meta.stamp}.json\`.`,
+    `Cases, fixtures and graders are in this folder. Raw result: \`results/${meta.stamp}.json\`; HTML report: \`results/${meta.stamp}.report.html\`; unedited run traces: \`results/${meta.stamp}/traces/\` (${meta.traces ?? 0} files).`,
     '',
   ].join('\n');
 }
@@ -162,13 +189,17 @@ function main(argv) {
 
   const claude = findClaude();
   const jsonOut = join(work, 'result.json');
-  const args = ['plugin', 'eval', plugin, '--trust-plugin', '--ablation', 'with-without', '--no-publish',
+  const stamp = new Date().toISOString().replace(/[:]/g, '-').replace(/\.\d+Z$/, 'Z');
+  const out = join(REPO, 'evals', opts.skill);
+  mkdirSync(join(out, 'results'), { recursive: true });
+  const report = join(out, 'results', `${stamp}.report.html`);
+  const args = ['plugin', 'eval', plugin, '--trust-plugin', '--ablation', 'with-without', '--no-publish', '--keep-temp', '--report', report,
     '--threshold', '0', '--runs', opts.runs, '--max-cost-usd', opts['max-cost-usd'],
     '--judge-model', opts['judge-model'], '--json', jsonOut, ...(opts.model ? ['--model', opts.model] : [])];
   // A .cmd shim needs a shell, which splits on spaces and interprets metacharacters, in the
   // shim's own path as much as in its arguments.
   if (claude.shell && [claude.cmd, ...args].some((a) => !/^[\w.:\\/@+-]+$/.test(a))) {
-    console.error('claude is a .cmd shim here and its path or an argument (likely the temp path) contains spaces or shell characters. Install the native claude binary or set TMP to a path without spaces.');
+    console.error('claude is a .cmd shim here and its path or an argument (the temp path or this repo\'s path) contains spaces or shell characters. Install the native claude binary, or use a repo path and TMP without spaces.');
     return 2;
   }
   const run = spawnSync(claude.cmd, args, { stdio: 'inherit', shell: claude.shell });
@@ -181,14 +212,12 @@ function main(argv) {
     return run.status || 1;
   }
   const result = JSON.parse(readFileSync(jsonOut, 'utf8'));
-  const stamp = new Date().toISOString().replace(/[:]/g, '-').replace(/\.\d+Z$/, 'Z');
+  const traces = collectTraces(result, join(out, 'results', stamp, 'traces'), out);
   const claudeVersion = spawnSync(claude.cmd, ['--version'], { encoding: 'utf8', shell: claude.shell }).stdout?.trim() || 'unknown version';
   const meta = {
-    stamp, claudeVersion, judgeModel: opts['judge-model'], model: opts.model, by: opts.by,
+    stamp, claudeVersion, judgeModel: opts['judge-model'], model: opts.model, by: opts.by, traces,
     skillHash: treeHash(join(REPO, 'free-skills', opts.skill)), suiteHash: treeHash(join(plugin, 'evals')),
   };
-  const out = join(REPO, 'evals', opts.skill);
-  mkdirSync(join(out, 'results'), { recursive: true });
   writeFileSync(join(out, 'results', `${stamp}.json`), JSON.stringify({ meta, result }, null, 2) + '\n');
   writeFileSync(join(out, 'SCORECARD.md'), renderScorecard(opts.skill, result, meta));
   const problems = comparability(result);
