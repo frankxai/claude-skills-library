@@ -8,6 +8,7 @@ import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ledgerMain } from './ledger.mjs';
+import { contextMain } from './context.mjs';
 
 // Same output either side of the filter: no lossy listing commands in this table.
 export const BENCH_CASES = (rtk) => [
@@ -177,6 +178,7 @@ export function doctor(home = homedir(), probes = { rtk: () => resolveRtk(), shi
 
 function main(argv) {
   const [command = 'doctor', ...flags] = argv;
+  if (command === 'context') return contextMain(flags);
   if (command === 'bench') {
     const rtk = resolveRtk();
     if (!rtk) {
@@ -195,7 +197,7 @@ function main(argv) {
     for (const row of doctor()) console.log(`${row.ok ? 'ok     ' : 'missing'}  ${row.name.padEnd(20)} ${row.detail}`);
     return 0;
   }
-  console.error('usage: neutron.mjs doctor | bench [--json | --md] | ledger <sub>');
+  console.error('usage: neutron.mjs doctor | bench [--json | --md] | context [--config path] [--propose] | ledger <sub>');
   return 2;
 }
 
