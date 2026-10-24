@@ -62,7 +62,9 @@ by inventing problems.
 node scripts/trigger-lint.mjs --pack products/skills-with-evals/pack.json   # static trigger check
 node scripts/install-test.mjs                                              # Claude Code + Codex install, throwaway HOME
 node scripts/run-pack-lift.mjs --dry-run                                  # stage all 10 suites, no model call
-node scripts/run-pack-lift.mjs --by "<you>"                             # G1: all 10 skills, $5/skill, $50 total, subscription login
+node scripts/run-pack-lift.mjs                                         # G1: all 10 skills, $5/skill, $50 total (see G1-RUNBOOK.md)
+node scripts/run-pack-lift.mjs --pilot                                 # one skill, 6 runs, $1 cap
+node scripts/run-pack-lift.mjs --check-outputs                         # after a run: files, traces, isolation, cards
 node scripts/eval-skill.mjs <skill> --runs 3 --max-cost-usd 5 --model sonnet   # one skill (needs claude login)
 node scripts/eval-card.mjs                                                 # regenerate cards from result files
 node --test scripts/tests/eval-pack.test.mjs scripts/tests/eval-skill.test.mjs
