@@ -23,13 +23,13 @@ SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) is a sys
 
 1. [Core Philosophy](#core-philosophy)
 2. [Development Phases](#development-phases)
-3. [Available Modes](#available-modes)
-4. [Activation Methods](#activation-methods)
-5. [Orchestration Patterns](#orchestration-patterns)
-6. [TDD Workflows](#tdd-workflows)
-7. [Best Practices](#best-practices)
-8. [Integration Examples](#integration-examples)
-9. [Common Workflows](#common-workflows)
+3. [Available Modes](references/modes.md#available-modes)
+4. [Activation Methods](references/modes.md#activation-methods)
+5. [Orchestration Patterns](references/patterns.md#orchestration-patterns)
+6. [TDD Workflows](references/patterns.md#tdd-workflows)
+7. [Best Practices](references/patterns.md#best-practices)
+8. [Integration Examples](references/patterns.md#integration-examples)
+9. [Common Workflows](references/patterns.md#common-workflows)
 
 ---
 

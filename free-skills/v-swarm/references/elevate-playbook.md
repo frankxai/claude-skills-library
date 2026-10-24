@@ -116,7 +116,7 @@ Write a learning artifact to `docs/learning/<YYYY-MM-DD>-<topic>.md`. Capped at 
 
 ### Template
 
-```markdown
+````markdown
 # <topic> — what changed and why
 
 **Date:** YYYY-MM-DD
@@ -150,7 +150,7 @@ and what signals would tell you to migrate>
 
 - `vercel:knowledge-update` (2026-02-27) or specific doc URL
 - Related memory: [[relevant-memory-entry]]
-```
+````
 
 ---
 

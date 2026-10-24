@@ -37,7 +37,7 @@
 
 ### Weekly Newsletter Structure
 
-```markdown
+````markdown
 # AI Architect Weekly - Issue #N
 **Date**: YYYY-MM-DD | **Reading Time**: ~15-20 min
 
@@ -133,7 +133,7 @@
 **About**: AI Architect Newsletter delivers weekly intelligence for builders who architect AI systems. No hype. Just actionable insights.
 
 [Unsubscribe] | [Update Preferences]
-```
+````
 
 ### Daily Brief Structure
 
@@ -217,7 +217,7 @@
 ### Tool Launch Story
 
 **Template**:
-```
+````
 **[Tool Name]: [One-line description]**
 
 **Why This Matters**: [Specific problem it solves]
@@ -241,7 +241,7 @@
 - GitHub: [Link]
 - Docs: [Link]
 - Examples: [Link]
-```
+````
 
 ## Section-Specific Guidelines
 

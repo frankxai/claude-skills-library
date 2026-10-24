@@ -82,7 +82,7 @@ if [ $DRY -eq 1 ]; then
   say "  would: merge hooks into .claude/settings.json (existing hooks preserved)"
 else
   python3 - "$SETTINGS" "$PACK_DIR/settings.snippet.json" <<'PY'
-import json, os, sys
+import json, os, re, sys
 
 settings_path, snippet_path = sys.argv[1], sys.argv[2]
 snippet = json.load(open(snippet_path, encoding="utf-8"))["hooks"]
@@ -96,66 +96,95 @@ else:
     settings = {}
 
 hooks = settings.setdefault("hooks", {})
-added = updated = 0
+added = updated = removed = 0
 
-# Ours by command string. Re-running must UPGRADE these in place (a changed
-# timeout, a renamed script) rather than skip them because the command already
-# exists — otherwise the pack can never ship a fix to an installed repo.
-ours = {h["command"]: h for entries in snippet.values() for e in entries for h in e["hooks"]}
+# Ours by script name, not by command string. Re-running must UPGRADE these in
+# place (a changed timeout, a new command form) rather than add a second copy
+# next to the old one — otherwise the pack can never ship a fix to an
+# installed repo, and a changed command would run every hook twice.
+SCRIPT = re.compile(r"\.claude/hooks/(web-excellence-[a-z]+\.py)")
+
+
+def script_of(cmd):
+    m = SCRIPT.search(cmd or "")
+    return m.group(1) if m else None
+
+
+ours = {script_of(h["command"]): h for entries in snippet.values() for e in entries for h in e["hooks"]}
 
 for event, entries in snippet.items():
     existing = hooks.setdefault(event, [])
     seen = set()
     for e in existing:
-        for i, h in enumerate(e.get("hooks", [])):
-            cmd = h.get("command")
-            if cmd in ours:
-                seen.add(cmd)
-                if h != ours[cmd]:
-                    e["hooks"][i] = dict(ours[cmd])
+        before = e.get("hooks", [])
+        kept = []
+        for h in before:
+            key = script_of(h.get("command"))
+            if key in ours:
+                if key in seen:
+                    removed += 1  # a second copy left by an older install
+                    continue
+                seen.add(key)
+                if h != ours[key]:
+                    h = dict(ours[key])
                     updated += 1
+            kept.append(h)
+        e["hooks"] = kept
+    hooks[event] = [e for e in existing if e.get("hooks")]
     for entry in entries:
-        new = [h for h in entry["hooks"] if h.get("command") not in seen]
+        new = [h for h in entry["hooks"] if script_of(h.get("command")) not in seen]
         if not new:
             continue
         merged = dict(entry)
         merged["hooks"] = new
-        existing.append(merged)
+        hooks[event].append(merged)
         added += len(new)
 
 os.makedirs(os.path.dirname(settings_path), exist_ok=True)
 with open(settings_path, "w", encoding="utf-8") as fh:
     json.dump(settings, fh, indent=2, ensure_ascii=False)
     fh.write("\n")
-print(f"  merge  .claude/settings.json ({added} added, {updated} upgraded; other hooks untouched)")
+print(f"  merge  .claude/settings.json ({added} added, {updated} upgraded, {removed} duplicates removed; other hooks untouched)")
 PY
 fi
 
 # ------------------------------------------------------ CI (between sessions)
 # The hooks cover a session. This covers every PR, whoever opened it.
 if [ $NO_CI -eq 0 ]; then
-  say "  ci     .claude/ci/web-guidelines-lint.mjs + .github/workflows/web-excellence.yml"
+  say "  ci     .claude/ci/web-guidelines-lint.mjs"
   run mkdir -p "$TARGET/.claude/ci" "$TARGET/.github/workflows"
   run cp "$PACK_DIR/ci/web-guidelines-lint.mjs" "$TARGET/.claude/ci/"
-  run cp "$PACK_DIR/ci/web-excellence.yml" "$TARGET/.github/workflows/"
+  # A workflow is repo policy (action pins, draft gating, triggers), and repos
+  # tune it after install. Write it only when absent; never overwrite a copy
+  # that differs, say so instead.
+  WF="$TARGET/.github/workflows/web-excellence.yml"
+  if [ ! -f "$WF" ]; then
+    say "  ci     .github/workflows/web-excellence.yml"
+    run cp "$PACK_DIR/ci/web-excellence.yml" "$WF"
+  elif ! cmp -s "$WF" "$PACK_DIR/ci/web-excellence.yml"; then
+    say "  keep   .github/workflows/web-excellence.yml (differs from the pack's; compare with $PACK_DIR/ci/web-excellence.yml)"
+  fi
 fi
 
 # ---------------------------------------------------------------- gitignore
+# Line by line, so a repo installed by an older version picks up new entries.
 GI="$TARGET/.gitignore"
+IGNORES=(.visual-proof/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/')
 if [ $DRY -eq 1 ]; then
-  say "  would: ensure .visual-proof/ and .lighthouse.json are gitignored"
-elif [ -f "$GI" ] && grep -q '^\.visual-proof/' "$GI"; then
-  :
+  say "  would: ensure ${IGNORES[*]} are gitignored"
 else
-  {
-    echo ""
-    echo "# web-excellence pack — local evidence, not repo artifacts"
-    echo ".visual-proof/"
-    echo ".lighthouse.json"
-    echo ".extract-design-system/"
-    echo ".claude/skills/.replaced/"
-  } >>"$GI"
-  say "  ignore .visual-proof/ .lighthouse.json .extract-design-system/"
+  missing=()
+  for line in "${IGNORES[@]}"; do
+    [ -f "$GI" ] && grep -qxF "$line" "$GI" || missing+=("$line")
+  done
+  if [ ${#missing[@]} -gt 0 ]; then
+    if [ -f "$GI" ] && grep -qxF "# web-excellence pack — local evidence, not repo artifacts" "$GI"; then
+      printf '%s\n' "${missing[@]}" >>"$GI"
+    else
+      { echo ""; echo "# web-excellence pack — local evidence, not repo artifacts"; printf '%s\n' "${missing[@]}"; } >>"$GI"
+    fi
+    say "  ignore ${missing[*]}"
+  fi
 fi
 
 say ""
