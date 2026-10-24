@@ -146,9 +146,10 @@ Then one line in the repo's `CLAUDE.md`: *Website / web-design work goes through
 ## Why this library
 
 The largest skills repositories are excellent at *judgment*: how to think about a design, a diff, a
-test. They are weak at *proof*. None of them measures anything, produces evidence at real
-breakpoints, refuses to let work be called done, or tells you where a vendored skill came from and
-whether it has moved upstream since. This library is built around those gaps.
+test. Few ship *proof* with each skill. Anthropic's skill-creator gives authors evals and skill/no-skill
+comparisons, but the results rarely travel with the published skill. Fewer still produce evidence at real
+breakpoints, refuse to let work be called done, or tell you where a vendored skill came from and whether it has
+moved upstream since. This library is built around those gaps.
 
 | | Most skills repos | This library |
 |---|---|---|
@@ -374,7 +375,7 @@ Yes. See [`runtimes/`](runtimes/) for Antigravity, OpenCode, Codex, Gemini CLI, 
 
 ---
 
-## Would you pay for a skill that proves it works?
+## Would you pay for skills that ship with their evals?
 
 Every first-party skill here is free and MIT. That is not changing. Skills under `free-skills/anthropic/` keep Anthropic's own terms.
 
