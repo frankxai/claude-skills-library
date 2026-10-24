@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: verification-quality--no-trigger
+description: "Should NOT trigger verification-quality."
+tags: [verification-quality, should-not-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Explain what a Python decorator is in three sentences."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-quality\""
+    min: 0
+    max: 0
+    arm: both

@@ -1,0 +1,30 @@
+schema_version: "1.1"
+name: hooks-automation--outcome-a
+description: "Should trigger hooks-automation; outcome graded."
+tags: [hooks-automation, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Configure Claude Code hooks so files are auto-formatted after every edit and a check runs before any git commit."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?hooks-automation\""
+  - name: rx-0
+    type: regex
+    pattern: "PostToolUse"
+    flags: i
+  - name: rx-1
+    type: regex
+    pattern: "PreToolUse"
+    flags: i
+  - name: rx-2
+    type: regex
+    pattern: "settings\\.json"
+    flags: i
+  - name: judged-3
+    type: llm
+    criteria: "PASS only if it shows a valid Claude Code hooks configuration: a PostToolUse hook with a matcher for edit or write tools running a formatter command, and a PreToolUse hook on Bash that inspects git commit commands."
