@@ -42,6 +42,42 @@
       ]
     },
     {
+      "name": "skills-with-evals",
+      "displayName": "Skills that ship with their evals",
+      "description": "Ten skills from this library, each with an eval suite in evals/<skill>/: a no-skill baseline arm, a trigger test, seeded-defect recall and clean-input precision cases, run with `claude plugin eval`. Release candidate; see evals/<skill>/CARD.md.",
+      "source": "./",
+      "strict": false,
+      "category": "productivity",
+      "homepage": "https://github.com/frankxai/claude-skills-library/tree/main/evals",
+      "keywords": [
+        "agent-skills",
+        "evals",
+        "claude-code",
+        "codex",
+        "code-review",
+        "nextjs",
+        "mcp",
+        "accessibility"
+      ],
+      "skills": [
+        "./free-skills/ui-ux-design-expert",
+        "./free-skills/github-code-review",
+        "./free-skills/nextjs-expert",
+        "./free-skills/mcp-architecture",
+        "./free-skills/ai-architect-review",
+        "./free-skills/langgraph-patterns",
+        "./free-skills/skill-builder",
+        "./free-skills/product-management-expert",
+        "./free-skills/book-publishing",
+        "./free-skills/excellence-book-writing"
+      ],
+      "tags": [
+        "skills-with-evals",
+        "agent-skills",
+        "evals"
+      ]
+    },
+    {
       "name": "creator-os-core",
       "displayName": "Creator OS core",
       "description": "GenCreator / FrankX creator OS: five practices for starting work safely, reviewing a diff, writing in a stated voice, running the checks, and a clean handoff.",

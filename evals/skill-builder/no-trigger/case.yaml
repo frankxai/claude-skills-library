@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: skill-builder--no-trigger
+description: "Should NOT trigger skill-builder: an adjacent but different task."
+tags: [skill-builder, should-not-trigger]
+runs: 3
+execution:
+  prompt: "Summarise the difference between a git merge and a git rebase in three bullet points."
+  max_turns: 4
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?skill-builder\""
+    min: 0
+    max: 0
+    arm: both

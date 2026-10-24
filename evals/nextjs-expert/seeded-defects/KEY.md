@@ -1,0 +1,13 @@
+# Answer key: nextjs-expert seeded-defects
+
+Never staged into a run (scripts/eval-skill.mjs NEVER_STAGED).
+
+1. **params-sync** (next16): the page in `app/blog/[slug]/page.tsx` reading `params.slug` synchronously (typing `params` as a plain object) when Next.js 15+/16 passes `params` as a Promise → fix: typing `params` as a Promise and awaiting it (`const { slug } = await params`)
+2. **searchparams-sync** (next16): the same page reading `searchParams.preview` synchronously when `searchParams` is a Promise in Next.js 15+/16 → fix: awaiting `searchParams` before reading `preview`
+3. **cookies-sync** (next16): the call `cookies().get('session')` used synchronously in `app/blog/[slug]/page.tsx`, although `cookies()` is async in Next.js 15+/16 → fix: awaiting `cookies()` first (`(await cookies()).get('session')`)
+4. **action-no-auth** (security): the Server Action `deletePost` in `app/blog/actions.ts` deleting any post by id with no authentication or ownership check, even though Server Actions are public POST endpoints anyone can call → fix: checking the signed-in user and that they own (or may delete) the post inside the action before deleting
+5. **db-in-client** (security): the client component `components/DeleteButton.tsx` (`'use client'`) importing and querying `db` from `@/lib/db` (the Prisma client with the database credentials), which cannot run in the browser and pulls server code toward the client bundle → fix: keeping database access on the server (Server Action or server component) and marking `lib/db.ts` with `server-only`
+6. **public-secret** (security): `process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY` in `components/DeleteButton.tsx`: the `NEXT_PUBLIC_` prefix inlines the Stripe secret key into the browser bundle → fix: renaming it without the `NEXT_PUBLIC_` prefix, using it only on the server, and rotating the exposed key
+7. **sitemap-collision** (next16): `app/sitemap.ts` and `app/sitemap/page.tsx` both claiming the `/sitemap` route, which collides (Turbopack production builds fail even though `next dev` may not show it) → fix: moving the human-readable page to a different route such as `/sitemap-info`
+8. **cachecomponents-experimental** (next16): `cacheComponents: true` placed under `experimental` in `next.config.ts`, where Next.js 16 expects it as a top-level option → fix: moving `cacheComponents: true` to the top level of the config
+9. **xss** (security): `dangerouslySetInnerHTML={{ __html: post.html }}` in the page rendering stored post HTML without sanitizing it (stored XSS) → fix: sanitizing the HTML (for example with DOMPurify) or rendering from a safe format

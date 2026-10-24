@@ -1,12 +1,11 @@
 schema_version: "1.1"
 name: langgraph-patterns--no-trigger
-description: "Should NOT trigger langgraph-patterns."
+description: "Should NOT trigger langgraph-patterns: an adjacent but different task."
 tags: [langgraph-patterns, should-not-trigger]
-runs: 2
+runs: 3
 execution:
-  model: claude-sonnet-5
-  prompt: "What is the time complexity of quicksort in the average and worst case?"
-  max_turns: 6
+  prompt: "Write a Python function that retries an HTTP GET with exponential backoff (max 5 attempts) using the requests library."
+  max_turns: 4
   allowed_tools: [Skill, Read]
 graders:
   - name: skill-not-fired

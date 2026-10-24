@@ -1,0 +1,36 @@
+schema_version: "1.1"
+name: write-skill
+description: "Outcome. Author a SKILL.md for a described workflow; graded on the Agent Skills spec and on routing text that survives Codex's ~100-character description window."
+tags: [skill-builder, outcome, should-trigger]
+runs: 3
+execution:
+  prompt: |
+    Before every Postgres schema migration our team does four things: (1) make sure the migration has a
+    working rollback, (2) run it against a copy of production and note how long it takes, (3) avoid long
+    locks on tables over a million rows (for example CREATE INDEX CONCURRENTLY and batched backfills),
+    and (4) make sure the currently deployed app still works with the new schema during the deploy.
+
+    Write the complete SKILL.md for an Agent Skill that makes Claude Code and Codex apply this checklist
+    automatically whenever someone writes or reviews a database migration. Reply with only the file
+    content, starting with the frontmatter.
+  max_turns: 6
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?skill-builder\""
+  - name: frontmatter-name
+    type: regex
+    pattern: "(^|\\n)---\\s*\\n(?:[^\\n]*\\n){0,6}?name:\\s*[a-z0-9][a-z0-9-]{0,63}\\s*\\n"
+  - name: frontmatter-description
+    type: regex
+    pattern: "\\ndescription:\\s*\\S"
+  - name: trigger-cue-in-first-100-chars
+    type: regex
+    pattern: "\\ndescription:\\s*(?:[>|][-+]?\\s*\\n\\s+)?[\"']?[^\\n]{0,100}?\\b([Uu]se (it )?(when|whenever|for|before)|[Ww]hen (writing|reviewing|creating|someone|a |the ))"
+  - name: judged-spec-and-content
+    type: llm
+    weight: 2
+    criteria: "PASS only if the final answer is a complete SKILL.md: YAML frontmatter with a lowercase-hyphenated name and a description written in the third person that states what the skill does AND when to use it with concrete triggers (such as migration, schema change, ALTER TABLE, CREATE INDEX); and a body that turns all four of the team's steps into actionable checks (rollback, rehearsal on a production copy with timing, lock avoidance on large tables, compatibility of the running app during deploy). FAIL if any of the four steps is missing, if the description is first person or has no when-to-use clause, or if the answer is not a SKILL.md file."
