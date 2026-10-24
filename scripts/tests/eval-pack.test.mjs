@@ -259,3 +259,17 @@ test('the mcp clean twin updates only the fields given and does not claim succes
   assert.match(handler, /nothing to update/);
   assert.match(handler, /RETURNING id[\s\S]*rows\.length === 0/);
 });
+
+test('every pack skill passes trigger-lint with zero errors, so CI covers the lint without a workflow change (G3 P1-4)', () => {
+  const failing = PACK.skills.map((s) => [s, lintSkill(join(REPO, 'free-skills', s)).errors]).filter(([, e]) => e.length);
+  assert.deepEqual(failing, []);
+});
+
+test('the proposed CI patch runs the lift lane on every pack skill, read from pack.json (G3 P1-4)', () => {
+  const patch = readFileSync(join(REPO, 'products/skills-with-evals/ci/skill-eval.yml.patch'), 'utf8');
+  assert.match(patch, /^-\s+LIFT_SKILLS: ui-ux-design-expert book-publishing excellence-book-writing$/m);
+  assert.match(patch, /^\+\s+LIFT_PACK: products\/skills-with-evals\/pack\.json$/m);
+  assert.match(patch, /^\+\s+LIFT_SKILLS=\$\(node -p "require\('\.\/\$LIFT_PACK'\)\.skills\.join\(' '\)"\)$/m);
+  assert.match(patch, /^\+.*scripts\/tests\/eval-pack\.test\.mjs$/m);
+  assert.match(patch, /^\+\s+run: node scripts\/build-catalog\.mjs --check$/m);
+});
