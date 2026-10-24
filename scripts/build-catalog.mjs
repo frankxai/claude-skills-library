@@ -16,7 +16,8 @@ const BRANDS = {
   "creator-os-core": "GenCreator",
   "starlight-academy": "Starlight",
   "starlight-department-lab": "Starlight",
-  "claude-skills-library": "Tooling",
+  "frankx-skills": "Tooling",
+  "skills-with-evals": "Tooling",
 };
 
 const CODEX_DOCS = "https://learn.chatgpt.com/docs/build-skills";
@@ -71,6 +72,17 @@ function skillDirs(plugin) {
   return dirs.sort();
 }
 
+// A suite counts if the skill folder has evals/, or the repo-level evals/<name>/ holds at least one
+// case directory (case.yaml or prompt.md) outside _legacy-* folders. That is where scripts/eval-skill.mjs
+// reads suites from. hasEvals means "a suite exists", not "lift was measured".
+function hasEvalSuite(dir, name) {
+  if (fs.existsSync(path.join(dir, "evals"))) return true;
+  const suite = path.join(ROOT, "evals", name);
+  if (!fs.existsSync(suite)) return false;
+  return fs.readdirSync(suite, { withFileTypes: true }).some((e) => e.isDirectory() && !e.name.startsWith("_")
+    && (fs.existsSync(path.join(suite, e.name, "case.yaml")) || fs.existsSync(path.join(suite, e.name, "prompt.md"))));
+}
+
 function localSkills(plugin) {
   return skillDirs(plugin).map((dir) => {
     const fm = frontmatter(fs.readFileSync(path.join(dir, "SKILL.md"), "utf8"));
@@ -81,7 +93,7 @@ function localSkills(plugin) {
       name: fm.name,
       description: fm.description,
       path: path.relative(ROOT, dir).split(path.sep).join("/"),
-      hasEvals: fs.existsSync(path.join(dir, "evals")),
+      hasEvals: hasEvalSuite(dir, fm.name),
     };
   });
 }
@@ -123,14 +135,16 @@ function build() {
     };
   });
   const listed = plugins.filter((p) => p.skills);
+  // A skill listed by two local plugins (the full library and a pack) is one skill: count paths once.
+  const unique = new Map(listed.flatMap((p) => p.skills.map((s) => [s.path, s])));
   return {
     schema: "claude-skills-library/catalog@1",
     generatedBy: "scripts/build-catalog.mjs",
     marketplace: { name: mp.name, repo: REPO, description: mp.description, pluginCount: plugins.length },
     totals: {
       pluginsWithListedSkills: listed.length,
-      skills: listed.reduce((n, p) => n + p.skills.length, 0),
-      skillsWithEvals: listed.reduce((n, p) => n + p.skills.filter((s) => s.hasEvals).length, 0),
+      skills: unique.size,
+      skillsWithEvals: [...unique.values()].filter((s) => s.hasEvals).length,
       pluginsFromOtherRepos: plugins.length - listed.length,
     },
     plugins,

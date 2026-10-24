@@ -10,6 +10,21 @@ version: 2.1.0
 **Author:** FrankX AI Systems
 **Last Updated:** 2026-05-13
 
+## When not to use
+
+- Other Node.js servers and frameworks (Express, Fastify, Hono, Remix) or general JavaScript and TypeScript questions with nothing Next.js-specific in them.
+- Visual design or accessibility review: use `ui-ux-design-expert`.
+- A general pull-request review where Next.js behaviour is not the question: use `github-code-review`.
+- Older Pages Router conventions as the target. The guidance here is for the App Router on Next.js 16; older versions differ in exactly the places listed under the gotchas.
+
+## Reference files
+
+Load these only when the task needs them:
+
+- [`references/architecture-data-routes.md`](references/architecture-data-routes.md): Project layout and the server/client component split, fetch caching and revalidation, and route handlers. Read when structuring an app, choosing how data is fetched and cached, or writing an API route.
+- [`references/performance-metadata-middleware.md`](references/performance-metadata-middleware.md): Images, fonts, bundles and streaming; metadata and SEO; Proxy (`proxy.ts`, formerly `middleware.ts`). Read when tuning performance, adding metadata or SEO, or intercepting requests.
+- [`references/common-patterns.md`](references/common-patterns.md): Loading states, error boundaries, and parallel versus sequential data fetching. Read when adding loading or error UI, or untangling a slow data waterfall.
+
 ## Platform baseline (Next.js 16 + Vercel, May 2026)
 
 - **Next.js:** 16.x (Turbopack is the default build/dev engine; webpack is opt-in only)
@@ -54,6 +69,11 @@ If you have `app/sitemap.ts`, `app/robots.ts`, `app/manifest.ts`, `app/icon.ts`,
 
 Turbopack catches collisions, missing `await params`, and metadata conflicts only at build time. Dev server is lenient. Always run `pnpm build` (or `npm run build`) locally before pushing to main.
 
+### 4. Renamed or changed in 16 that still runs, with a deprecation warning
+
+- `middleware.ts` is now `proxy.ts`, and the exported function is `proxy`. Proxy runs on Node.js only and is for optimistic redirects, never the only auth check (see `references/performance-metadata-middleware.md`).
+- `revalidateTag(tag)` with one argument is deprecated: pass a cacheLife profile, `revalidateTag(tag, 'max')`, or call `updateTag(tag)` inside a Server Action for read-your-writes.
+
 ## Overview
 
 You are a Next.js expert with deep knowledge of Next.js 16+, React Server Components, Server Actions, and modern web development patterns. You have access to two powerful MCP servers that provide real-time application insights and comprehensive documentation.
@@ -76,67 +96,6 @@ Provides high-level development guidance:
 - Framework-specific patterns and optimizations
 
 ## Core Expertise
-
-### Architecture Patterns
-
-**App Router Best Practices (Next.js 16+):**
-```typescript
-// app/layout.tsx - Root layout with metadata
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: {
-    template: '%s | My App',
-    default: 'My App',
-  },
-  description: 'Built with Next.js 16',
-}
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  )
-}
-```
-
-**Server Components (Default):**
-```typescript
-// app/page.tsx - Server Component by default
-async function getData() {
-  const res = await fetch('https://api.example.com/data', {
-    next: { revalidate: 3600 } // ISR with 1 hour revalidation
-  })
-  return res.json()
-}
-
-export default async function Page() {
-  const data = await getData()
-  return <div>{data.title}</div>
-}
-```
-
-**Client Components (Interactive):**
-```typescript
-// components/counter.tsx
-'use client'
-
-import { useState } from 'react'
-
-export function Counter() {
-  const [count, setCount] = useState(0)
-  return (
-    <button onClick={() => setCount(count + 1)}>
-      Count: {count}
-    </button>
-  )
-}
-```
 
 ### Server Actions
 
@@ -174,248 +133,6 @@ export default function NewPost() {
       <button type="submit">Create Post</button>
     </form>
   )
-}
-```
-
-### Data Fetching & Caching
-
-**Fetch with Caching Strategies:**
-```typescript
-// Static data (cached permanently)
-fetch('https://api.example.com/static', { cache: 'force-cache' })
-
-// Dynamic data (no cache)
-fetch('https://api.example.com/live', { cache: 'no-store' })
-
-// Revalidated data (ISR)
-fetch('https://api.example.com/timed', {
-  next: { revalidate: 60 } // Revalidate every 60 seconds
-})
-
-// Tagged cache for selective revalidation
-fetch('https://api.example.com/posts', {
-  next: { tags: ['posts'] }
-})
-```
-
-**Manual Cache Revalidation:**
-```typescript
-import { revalidateTag, revalidatePath } from 'next/cache'
-
-// Revalidate specific tag
-revalidateTag('posts')
-
-// Revalidate specific path
-revalidatePath('/posts')
-revalidatePath('/posts/[slug]', 'page') // Specific dynamic route
-```
-
-### Route Handlers (API Routes)
-
-**Modern API Route:**
-```typescript
-// app/api/posts/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const query = searchParams.get('query')
-
-  const posts = await db.post.findMany({
-    where: query ? { title: { contains: query } } : {}
-  })
-
-  return NextResponse.json(posts)
-}
-
-export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const post = await db.post.create({ data: body })
-
-  return NextResponse.json(post, { status: 201 })
-}
-```
-
-**Dynamic Route Handlers (Next.js 16 — params is a Promise):**
-```typescript
-// app/api/posts/[id]/route.ts
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  const post = await db.post.findUnique({
-    where: { id }
-  })
-
-  if (!post) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
-
-  return NextResponse.json(post)
-}
-```
-
-### Performance Optimization
-
-**Image Optimization:**
-```typescript
-import Image from 'next/image'
-
-// Local images
-import heroImage from '@/public/hero.jpg'
-
-<Image
-  src={heroImage}
-  alt="Hero"
-  priority // LCP image
-  placeholder="blur" // Automatic blur placeholder
-/>
-
-// Remote images (configure in next.config.js)
-<Image
-  src="https://example.com/image.jpg"
-  alt="Remote"
-  width={800}
-  height={600}
-  loading="lazy"
-/>
-```
-
-**Font Optimization:**
-```typescript
-import { Inter, Roboto_Mono } from 'next/font/google'
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-})
-
-const robotoMono = Roboto_Mono({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-roboto-mono',
-})
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en" className={`${inter.variable} ${robotoMono.variable}`}>
-      <body className="font-sans">{children}</body>
-    </html>
-  )
-}
-```
-
-**Lazy Loading Components:**
-```typescript
-import dynamic from 'next/dynamic'
-
-const DynamicChart = dynamic(() => import('@/components/Chart'), {
-  loading: () => <p>Loading chart...</p>,
-  ssr: false // Client-side only
-})
-
-export default function Dashboard() {
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <DynamicChart data={data} />
-    </div>
-  )
-}
-```
-
-### Metadata & SEO
-
-**Dynamic Metadata (Next.js 16 — params is a Promise):**
-```typescript
-// app/posts/[slug]/page.tsx
-import type { Metadata } from 'next'
-
-type Props = {
-  params: Promise<{ slug: string }>
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
-  const post = await getPost(slug)
-
-  return {
-    title: post.title,
-    description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      images: [post.coverImage],
-      type: 'article',
-      publishedTime: post.publishedAt,
-      authors: [post.author.name],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.title,
-      description: post.excerpt,
-      images: [post.coverImage],
-    },
-  }
-}
-
-export default async function PostPage({ params }: Props) {
-  const { slug } = await params
-  const post = await getPost(slug)
-  return <article>{/* Post content */}</article>
-}
-```
-
-**Watch out for metadata-file vs page-route collisions.** If `app/sitemap.ts`, `app/robots.ts`, `app/manifest.ts`, or `app/icon.ts` exists, never create `app/<sameName>/page.tsx`. Turbopack fails the prod build; `next dev` masks it. Use a distinct route name.
-
-**Static Metadata:**
-```typescript
-export const metadata: Metadata = {
-  title: 'My Page',
-  description: 'Page description',
-  keywords: ['next.js', 'react', 'typescript'],
-  authors: [{ name: 'Author Name' }],
-  robots: {
-    index: true,
-    follow: true,
-  },
-}
-```
-
-### Middleware
-
-**Authentication Middleware:**
-```typescript
-// middleware.ts
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')
-
-  if (!token && request.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  return NextResponse.next()
-}
-
-export const config = {
-  matcher: ['/dashboard/:path*', '/api/:path*'],
-}
-```
-
-**Custom Headers Middleware:**
-```typescript
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next()
-
-  response.headers.set('X-Custom-Header', 'my-value')
-  response.headers.set('X-Frame-Options', 'DENY')
-
-  return response
 }
 ```
 
@@ -503,119 +220,6 @@ const publicKey = process.env.NEXT_PUBLIC_PUBLISHABLE_KEY
 
 ## Common Patterns & Solutions
 
-### Loading States
-
-**Streaming with Suspense:**
-```typescript
-// app/posts/page.tsx
-import { Suspense } from 'react'
-
-async function Posts() {
-  const posts = await getPosts() // Slow data fetch
-  return <PostsList posts={posts} />
-}
-
-export default function PostsPage() {
-  return (
-    <div>
-      <h1>Posts</h1>
-      <Suspense fallback={<PostsSkeleton />}>
-        <Posts />
-      </Suspense>
-    </div>
-  )
-}
-```
-
-**Loading UI:**
-```typescript
-// app/dashboard/loading.tsx
-export default function Loading() {
-  return <div>Loading dashboard...</div>
-}
-```
-
-### Error Handling
-
-**Error Boundary:**
-```typescript
-// app/dashboard/error.tsx
-'use client'
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-      <p>{error.message}</p>
-      <button onClick={reset}>Try again</button>
-    </div>
-  )
-}
-```
-
-**Not Found:**
-```typescript
-// app/posts/[slug]/not-found.tsx
-export default function NotFound() {
-  return (
-    <div>
-      <h2>Post Not Found</h2>
-      <p>Could not find the requested post.</p>
-    </div>
-  )
-}
-
-// Trigger from page
-import { notFound } from 'next/navigation'
-
-export default async function PostPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
-  const { slug } = await params
-  const post = await getPost(slug)
-
-  if (!post) {
-    notFound()
-  }
-
-  return <article>{post.content}</article>
-}
-```
-
-### Parallel & Sequential Data Fetching
-
-**Parallel (Fastest):**
-```typescript
-async function Page() {
-  // Fetch in parallel
-  const [user, posts, comments] = await Promise.all([
-    getUser(),
-    getPosts(),
-    getComments(),
-  ])
-
-  return <Dashboard user={user} posts={posts} comments={comments} />
-}
-```
-
-**Sequential (When Dependent):**
-```typescript
-async function Page() {
-  const user = await getUser()
-  const posts = await getUserPosts(user.id) // Depends on user
-
-  return <Profile user={user} posts={posts} />
-}
-```
-
 ### Cache Components (Next.js 16 — supersedes PPR)
 
 In Next.js 16, Partial Prerendering matured into "Cache Components" and is enabled at the top level (no longer experimental):
@@ -660,7 +264,7 @@ Use the `'use cache'` directive on a component or function to mark it static; ev
 - Never expose secrets to client
 - Validate all inputs in Server Actions
 - Implement CSRF protection
-- Use middleware for auth
+- Use Proxy (`proxy.ts`, formerly middleware) only for optimistic redirects; check the session and ownership in the data layer and in every Server Action
 
 ## Troubleshooting Guide
 
@@ -684,7 +288,7 @@ Use the `'use cache'` directive on a component or function to mark it static; ev
 
 **Cache Not Invalidating:**
 - Check revalidate settings
-- Use revalidatePath or revalidateTag
+- Use `revalidatePath`, or `revalidateTag(tag, 'max')` (Next.js 16 requires the profile); in a Server Action, `updateTag(tag)` for read-your-writes
 - Verify cache tags are properly set
 
 **Server Actions Not Working:**

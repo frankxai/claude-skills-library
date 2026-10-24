@@ -1,0 +1,77 @@
+{
+  "repo": "/agent/workspace/g2-clone",
+  "plugin": "skills-with-evals@claude-skills-library",
+  "startedAt": "2026-10-24T01:01:46.486Z",
+  "home": "(deleted)",
+  "runtimes": {
+    "claude-code-cost": "~727 tok",
+    "claude-code": {
+      "ok": true,
+      "steps": [
+        {
+          "cmd": "claude plugin marketplace add /agent/workspace/g2-clone",
+          "code": 0
+        },
+        {
+          "cmd": "claude plugin install skills-with-evals@claude-skills-library",
+          "code": 0
+        },
+        {
+          "cmd": "claude plugin details skills-with-evals@claude-skills-library",
+          "code": 0
+        }
+      ],
+      "skillsSeen": [
+        "ai-architect-review",
+        "book-publishing",
+        "excellence-book-writing",
+        "github-code-review",
+        "langgraph-patterns",
+        "mcp-architecture",
+        "nextjs-expert",
+        "product-management-expert",
+        "skill-builder",
+        "ui-ux-design-expert"
+      ],
+      "missing": [],
+      "extra": []
+    },
+    "codex": {
+      "ok": true,
+      "steps": [
+        {
+          "cmd": "codex plugin marketplace add /agent/workspace/g2-clone",
+          "code": 0
+        },
+        {
+          "cmd": "codex plugin add skills-with-evals@claude-skills-library",
+          "code": 0
+        },
+        {
+          "cmd": "codex debug prompt-input hello",
+          "code": 0
+        }
+      ],
+      "skillsSeen": [
+        "ai-architect-review",
+        "book-publishing",
+        "excellence-book-writing",
+        "github-code-review",
+        "langgraph-patterns",
+        "mcp-architecture",
+        "nextjs-expert",
+        "product-management-expert",
+        "skill-builder",
+        "ui-ux-design-expert"
+      ],
+      "missing": [],
+      "extra": []
+    }
+  },
+  "pass": true,
+  "versions": {
+    "claude": "2.1.310 (Claude Code)",
+    "codex": "codex-cli 0.164.0\nWARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"/tmp/skills-install-home-hBT2kM/.codex\"))"
+  },
+  "finishedAt": "2026-10-24T01:01:47.443Z"
+}

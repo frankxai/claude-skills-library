@@ -9,6 +9,13 @@ description: Multi-book content, voice, and production workflows for nonfiction 
 
 Intelligence layer for FrankX's 6-book publishing platform. Provides AI agents with complete book DNA — voice, research context, visual identity, and writing style for each book line. Any agent loading this skill can produce content indistinguishable from Frank's authored work.
 
+## When not to use
+
+- Short-form writing: commit messages, emails, release notes, social posts, chat replies.
+- Line-level craft on a single passage with no book, voice or production question: use `excellence-book-writing`.
+- Fiction (plot, character, dialogue). The standards here are for nonfiction.
+- Contracts, rights, ISBNs or pricing decisions.
+
 ## Activation
 
 Auto-activates when session involves: book writing, chapter drafting, book cover generation, PDF/EPUB creation, library reviews, or any `/books/` route work.

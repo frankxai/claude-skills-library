@@ -1,0 +1,122 @@
+{
+  "id": "claude-skills-eval-pack",
+  "name": "Skills that ship with their evals",
+  "registry": "frankxai/starlight-estate graph/products.graph.json#claude-skills-eval-pack",
+  "status": "release-candidate-1 (draft, not for sale; no price, no checkout)",
+  "skills": [
+    "ui-ux-design-expert",
+    "github-code-review",
+    "nextjs-expert",
+    "mcp-architecture",
+    "ai-architect-review",
+    "langgraph-patterns",
+    "skill-builder",
+    "product-management-expert",
+    "book-publishing",
+    "excellence-book-writing"
+  ],
+  "free_core": "free-skills/<skill>/ stays MIT and unchanged by this pack",
+  "pro_pack": [
+    "evals/<skill>/ suites and answer keys",
+    "scripts/eval-skill.mjs harness and scorecards",
+    "evals/<skill>/CARD.md reports",
+    "update channel: re-run on model or skill change"
+  ],
+  "eval_runner": "claude plugin eval (Claude Code 2.1.310) via scripts/eval-skill.mjs, no-plugin baseline arm",
+  "held_out": "Answer keys, grader expected outputs and raw results live in a private folder, never in this repo (scripts/held-out.mjs). Publishing them would leak the eval. Public: each case's prompt and inputs, the counts below, the runner, and aggregate results (evals/<skill>/results/<stamp>.summary.json, CARD.md).",
+  "heldOut": {
+    "ui-ux-design-expert": {
+      "planted": 8,
+      "graders": {
+        "clean-form": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "github-code-review": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "nextjs-expert": {
+      "planted": 9,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 10
+      }
+    },
+    "mcp-architecture": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "ai-architect-review": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "langgraph-patterns": {
+      "planted": 7,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 8
+      }
+    },
+    "skill-builder": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9,
+        "write-skill": 5
+      }
+    },
+    "product-management-expert": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "book-publishing": {
+      "planted": 8,
+      "graders": {
+        "clean-chapter": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "excellence-book-writing": {
+      "planted": 8,
+      "graders": {
+        "clean-section": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    }
+  },
+  "jobs": {
+    "ui-ux-design-expert": "Reviews a page's markup and CSS for WCAG 2.2 AA accessibility defects and names the element and the fix.",
+    "github-code-review": "Reviews a pull-request diff for merge-blocking correctness and security bugs, line by line.",
+    "nextjs-expert": "Reviews and builds Next.js 16 App Router code, including the version-specific changes that compile fine and break in production.",
+    "mcp-architecture": "Designs and reviews MCP servers: tool and resource boundaries, input schemas, annotations, auth and secret handling.",
+    "ai-architect-review": "Reviews the architecture of an LLM-calling system before launch: model seam, loop bounds, trust boundaries, durability, cost and evals.",
+    "langgraph-patterns": "Builds and debugs LangGraph agents: state reducers, routing, tool binding, checkpointing and human-in-the-loop interrupts.",
+    "skill-builder": "Writes and reviews Agent Skills (SKILL.md) so they load, trigger at the right time and stay safe to share.",
+    "product-management-expert": "Reviews PRDs and product plans for missing evidence, unmeasurable metrics, scope contradictions and risky rollouts.",
+    "book-publishing": "Edits nonfiction book chapters against a house voice and production rules.",
+    "excellence-book-writing": "Revises long-form nonfiction prose for structure, clarity and voice, removing AI-sounding patterns."
+  }
+}

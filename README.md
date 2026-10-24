@@ -31,8 +31,41 @@ Three ways in. Pick one.
 ```text
 # 1. Claude Code plugin — auto-updating, skills discovered on their own
 /plugin marketplace add frankxai/claude-skills-library
-/plugin install claude-skills-library@claude-skills-library
+/plugin install frankx-skills@claude-skills-library
 ```
+
+```bash
+# 1b. Codex (codex-cli 0.164.0 or later) — same marketplace
+codex plugin marketplace add frankxai/claude-skills-library
+codex plugin add frankx-skills@claude-skills-library
+```
+
+> **Renamed 2026-10-24:** the plugin `claude-skills-library` is now `frankx-skills`. Claude Code reserves
+> plugin names that start with `claude-`, so the old name fails `claude plugin validate`. The marketplace
+> keeps its name, so `marketplace add` is unchanged. If you installed the old plugin, remove it and install
+> the new one:
+> `/plugin uninstall claude-skills-library@claude-skills-library`, then `/plugin install frankx-skills@claude-skills-library`.
+
+**The tested pack (release candidate).** Ten of these skills ship with an eval suite: planted problems
+to find, a clean copy where they must find nothing, a task where they must stay quiet, and a no-skill
+baseline on every case. Lift is not measured yet; each skill's card says so
+([`products/skills-with-evals/`](products/skills-with-evals/README.md)). Until it merges, pin the branch:
+
+```bash
+# Claude Code
+claude plugin marketplace add frankxai/claude-skills-library#agent/hyperagent/eval-pack-rc1
+claude plugin install skills-with-evals@claude-skills-library
+# Codex
+codex plugin marketplace add frankxai/claude-skills-library@agent/hyperagent/eval-pack-rc1
+codex plugin add skills-with-evals@claude-skills-library
+```
+
+**Before you add the branch:** if you already added this marketplace from `main`, both runtimes refuse a
+second source under the same name. Remove it first (`claude plugin marketplace remove claude-skills-library`,
+`codex plugin marketplace remove claude-skills-library`), then add the branch. After the pack merges, remove it
+again and re-add without the suffix. `#` (Claude Code) and `@` (Codex) both pin the branch, which moves until it
+merges; Codex can pin an exact commit (`@<sha>`), Claude Code 2.1.310 only branches and tags.
+`/plugin …` inside Claude Code and `claude plugin …` in a terminal are the same command.
 
 ```bash
 # 2. skills.sh — the top-level skills, or a curated lane
@@ -113,9 +146,10 @@ Then one line in the repo's `CLAUDE.md`: *Website / web-design work goes through
 ## Why this library
 
 The largest skills repositories are excellent at *judgment*: how to think about a design, a diff, a
-test. They are weak at *proof*. None of them measures anything, produces evidence at real
-breakpoints, refuses to let work be called done, or tells you where a vendored skill came from and
-whether it has moved upstream since. This library is built around those gaps.
+test. Few ship *proof* with each skill. Anthropic's skill-creator gives authors evals and skill/no-skill
+comparisons, but the results rarely travel with the published skill. Fewer still produce evidence at real
+breakpoints, refuse to let work be called done, or tell you where a vendored skill came from and whether it has
+moved upstream since. This library is built around those gaps.
 
 | | Most skills repos | This library |
 |---|---|---|
@@ -341,7 +375,7 @@ Yes. See [`runtimes/`](runtimes/) for Antigravity, OpenCode, Codex, Gemini CLI, 
 
 ---
 
-## Would you pay for a skill that proves it works?
+## Would you pay for skills that ship with their evals?
 
 Every first-party skill here is free and MIT. That is not changing. Skills under `free-skills/anthropic/` keep Anthropic's own terms.
 

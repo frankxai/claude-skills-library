@@ -1,18 +1,9 @@
 schema_version: "1.1"
 name: ai-architect-review--no-trigger
-description: "Should NOT trigger ai-architect-review."
+description: "Should NOT trigger ai-architect-review: an adjacent but different task."
 tags: [ai-architect-review, should-not-trigger]
-runs: 2
+runs: 3
 execution:
-  model: claude-sonnet-5
-  prompt: "Write a Python function that extracts the ISO date from a log line like \"2026-10-05T12:00:00Z ERROR boom\"."
-  max_turns: 6
+  prompt: "Write a Python script that reads a CSV of support tickets (columns: id, created_at, closed_at) and prints the median time to close in hours."
+  max_turns: 4
   allowed_tools: [Skill, Read]
-graders:
-  - name: skill-not-fired
-    type: tool_used
-    tool: Skill
-    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ai-architect-review\""
-    min: 0
-    max: 0
-    arm: both

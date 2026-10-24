@@ -5,7 +5,12 @@ import { dirname, join, resolve } from 'node:path';
 import test, { after } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { comparability, parseArgs, renderScorecard, stage, treeHash } from '../eval-skill.mjs';
+import { collectTraces, comparability, parseArgs, renderScorecard, stage, treeHash } from '../eval-skill.mjs';
+// CI's skill-eval test job runs only this file and evals/skill-eval/run.test.mjs. Changing that workflow needs a
+// token with the GitHub `workflows` permission, which the agent's connector lacks, so the pack tests (catalog
+// check, suite shape, trigger lint, cards, runner) are pulled in here to run in CI today. The proper workflow
+// change is in products/skills-with-evals/ci/skill-eval.yml.patch for Frank to apply.
+import './eval-pack.test.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const made = [];
@@ -103,4 +108,19 @@ test('treeHash ignores line endings and changes with content', () => {
   assert.equal(treeHash(a), treeHash(b));
   writeFileSync(join(b, 'x.md'), 'one\nthree\n');
   assert.notEqual(treeHash(a), treeHash(b));
+});
+
+test('collectTraces copies every run trace into the repo, rewrites tracePath, and removes the claude-eval temp dir', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'claude-eval-'));
+  const trace = join(tmp, 'out', 'trace.jsonl');
+  mkdirSync(dirname(trace), { recursive: true });
+  writeFileSync(trace, '{"type":"assistant","text":"found 3 bugs"}\n');
+  const result = { cases: [{ name: 'seeded-defects', arms: { with: [{ tracePath: trace }], without: [{ tracePath: '/nope/trace.jsonl' }] } }] };
+  const out = mkdtempSync(join(tmpdir(), 'eval-out-'));
+  const n = collectTraces(result, join(out, 'results', 'stamp', 'traces'), out);
+  assert.equal(n, 1);
+  assert.equal(result.cases[0].arms.with[0].tracePath, 'results/stamp/traces/seeded-defects__with__1.jsonl');
+  assert.equal(readFileSync(join(out, result.cases[0].arms.with[0].tracePath), 'utf8'), '{"type":"assistant","text":"found 3 bugs"}\n');
+  assert.equal(result.cases[0].arms.without[0].tracePath, '/nope/trace.jsonl');
+  assert.equal(existsSync(tmp), false);
 });

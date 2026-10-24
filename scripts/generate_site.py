@@ -55,7 +55,7 @@ def main() -> int:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Skills Library — {len(data)} Agent Skills</title>
-<meta name="description" content="{len(data)} production-grade, MIT-licensed Agent Skills for Claude Code and every major agentic runtime.">
+<meta name="description" content="{len(data)} MIT-licensed Agent Skills for Claude Code and every major agentic runtime.">
 <style>
   :root {{
     --bg:#0b0d12; --panel:#13161f; --panel2:#191d28; --line:#262b3a;
@@ -101,7 +101,7 @@ def main() -> int:
 <div class="wrap">
   <header>
     <h1>🧠 Claude Skills Library</h1>
-    <p class="tag">{len(data)} production-grade Agent Skills for Claude Code &amp; every major agentic runtime</p>
+    <p class="tag">{len(data)} MIT-licensed Agent Skills for Claude Code &amp; every major agentic runtime</p>
     <div class="pills">
       <span class="pill"><b>{len(data)}</b> skills</span>
       <span class="pill"><b>{len(cats)}</b> categories</span>
@@ -110,7 +110,7 @@ def main() -> int:
     </div>
     <div class="install">
       <code>/plugin marketplace add frankxai/claude-skills-library
-/plugin install claude-skills-library@claude-skills-library</code>
+/plugin install frankx-skills@claude-skills-library</code>
     </div>
   </header>
 
