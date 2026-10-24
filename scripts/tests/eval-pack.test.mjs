@@ -6,7 +6,7 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from '../trigger-lint.mjs';
 import { cardData, coverage, currentHashes, renderCard, staleness } from '../eval-card.mjs';
-import { comparability, reviewLift } from '../eval-skill.mjs';
+import { baselineScore, comparability, firedRate, reviewLift } from '../eval-skill.mjs';
 import { haltsPack, isolationProblems, parseArgs as packArgs } from '../run-pack-lift.mjs';
 import { mkdtempSync, writeFileSync as writeF, mkdirSync as mkdirS } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -352,4 +352,18 @@ test('.lycheeignore entries added for this PR exclude exact URLs, not whole doma
     assert.ok(lines.some((l) => new RegExp(l).test(url)), `${url} is excluded`);
     assert.ok(!lines.some((l) => new RegExp(l).test(url.replace(/[^/]+\/?$/, 'another-page'))), `a sibling of ${url} is still checked`);
   }
+});
+
+test('trigger and baseline come from the tool output: fired share on review cases, no-skill mean (buyer cards)', () => {
+  const g = (fired) => ({ graders: [{ name: 'judge', passed: true, withOnly: false, scored: true }, { name: 'skill-fired', passed: fired, withOnly: true, scored: false }] });
+  const result = { cases: [
+    { name: 'seeded-defects', aggregates: { score: 0.75, delta: 0.25 }, arms: { with: [g(true), g(true), g(false)], without: [{}, {}, {}] } },
+    { name: 'clean', aggregates: { score: 0.9, delta: 0.1 }, arms: { with: [g(true), g(true), g(true)], without: [{}, {}, {}] } },
+    { name: 'no-trigger', aggregates: { score: 1, delta: 0 }, arms: { with: [g(false)], without: [{}] } },
+  ] };
+  assert.deepEqual(firedRate(result), { fired: 5, of: 6 }, 'the quiet case does not count toward firing');
+  assert.ok(Math.abs(baselineScore(result) - 0.65) < 1e-9, 'mean of 0.50 and 0.80');
+  assert.equal(firedRate({ cases: [] }), null);
+  assert.equal(baselineScore({ cases: [] }), null);
+  for (const s of PACK.skills) { const d = cardData(s); if (!d.lift) assert.equal(d.lift, null); }
 });
