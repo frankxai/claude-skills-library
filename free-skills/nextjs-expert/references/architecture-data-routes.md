@@ -86,10 +86,14 @@ fetch('https://api.example.com/posts', {
 
 **Manual Cache Revalidation:**
 ```typescript
-import { revalidateTag, revalidatePath } from 'next/cache'
+import { revalidateTag, revalidatePath, updateTag } from 'next/cache'
 
-// Revalidate specific tag
-revalidateTag('posts')
+// Revalidate a tag with stale-while-revalidate. Next.js 16 requires a cacheLife profile as the
+// second argument ('max' suits most content); the one-argument form is deprecated.
+revalidateTag('posts', 'max')
+
+// Inside a Server Action, when the user must see their own write at once (read-your-writes)
+updateTag('posts')
 
 // Revalidate specific path
 revalidatePath('/posts')
