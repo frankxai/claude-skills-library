@@ -124,67 +124,212 @@ function loadBrandConfig() {
   let cfg;
   try { cfg = JSON.parse(readFileSync(BRAND_CONFIG, 'utf8')); } catch (e) { fail(`not valid JSON (${e.message})`); }
   if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) fail('must be a JSON object');
-  const hex = cfg.bannedHex ?? [];
+  // A key that is present must hold the right type: `null` is a typo, not a default.
+  const has = k => Object.prototype.hasOwnProperty.call(cfg, k);
+  const hex = has('bannedHex') ? cfg.bannedHex : [];
   if (!Array.isArray(hex) || hex.some(h => typeof h !== 'string' || !/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(h))) {
     fail('bannedHex must be an array of 3- or 6-digit hex colours, e.g. ["#ab47c7"]');
   }
-  if (cfg.gradientText !== undefined && !['warn', 'error', 'off'].includes(cfg.gradientText)) {
+  if (has('gradientText') && !['warn', 'error', 'off'].includes(cfg.gradientText)) {
     fail('gradientText must be "warn", "error" or "off"');
   }
-  if (cfg.maxFontFamilies !== undefined && !(Number.isInteger(cfg.maxFontFamilies) && cfg.maxFontFamilies >= 1)) {
+  if (has('maxFontFamilies') && !(Number.isInteger(cfg.maxFontFamilies) && cfg.maxFontFamilies >= 1)) {
     fail('maxFontFamilies must be a positive integer');
   }
-  const ignore = cfg.fontScanIgnore ?? [];
-  if (!Array.isArray(ignore) || ignore.some(p => typeof p !== 'string')) fail('fontScanIgnore must be an array of path prefixes');
+  const ignore = has('fontScanIgnore') ? cfg.fontScanIgnore : [];
+  // An empty prefix matches every path and would switch the budget off.
+  if (!Array.isArray(ignore) || ignore.some(p => typeof p !== 'string' || !p.trim())) {
+    fail('fontScanIgnore must be an array of non-empty path prefixes');
+  }
   return {
     bannedHex: hex.map(h => h.replace(/^#/, '').toLowerCase()),
-    gradientText: cfg.gradientText ?? 'warn',
-    maxFontFamilies: cfg.maxFontFamilies,
+    gradientText: has('gradientText') ? cfg.gradientText : 'warn',
+    maxFontFamilies: has('maxFontFamilies') ? cfg.maxFontFamilies : undefined,
     fontScanIgnore: ignore,
   };
 }
 const brand = loadBrandConfig();
 
 const CSS_EXT = /\.(css|scss|sass)$/;
+const SFC_EXT = /\.(vue|svelte|astro)$/;
 
-// The text a two-signal rule needs to see beyond its trigger line. In a
-// stylesheet that is the declaration block, so two unrelated rules never add up;
-// in markup it is a short window, because a className is often split across
-// lines by clsx/cn and Prettier. Returns [text, key]; the key de-duplicates a
-// block that carries the trigger twice (-webkit-background-clip + background-clip).
-function context(lines, i, file) {
-  if (CSS_EXT.test(file)) {
-    let s = i;
-    while (s > 0 && i - s < 40 && !lines[s].includes('{')) {
-      if (s !== i && lines[s].includes('}')) { s++; break; }
-      s--;
+// Comments become spaces (newlines kept), so offsets and line numbers still
+// line up. String-aware, so 'https://fonts.googleapis.com/…' is not a comment.
+function stripComments(src, file) {
+  const css = CSS_EXT.test(file);
+  const html = /\.(html|vue|svelte|astro)$/.test(file);
+  const blank = s => s.replace(/[^\n]/g, ' ');
+  let out = '';
+  let q = null;
+  for (let i = 0; i < src.length;) {
+    const c = src[i];
+    if (q) {
+      out += c;
+      if (c === '\\' && i + 1 < src.length) { out += src[i + 1]; i += 2; continue; }
+      if (c === q || (c === '\n' && q !== '`')) q = null;
+      i++;
+      continue;
     }
-    let e = i;
-    while (e < lines.length - 1 && e - i < 40 && !lines[e].includes('}')) e++;
-    return [lines.slice(s, e + 1).join('\n'), `b${s}`];
+    let end = -1;
+    if (c === '/' && src[i + 1] === '*') {
+      const e = src.indexOf('*/', i + 2);
+      end = e === -1 ? src.length : e + 2;
+    } else if (!css && c === '/' && src[i + 1] === '/' && src[i - 1] !== ':') {
+      const e = src.indexOf('\n', i);
+      end = e === -1 ? src.length : e;
+    } else if (html && src.startsWith('<!--', i)) {
+      const e = src.indexOf('-->', i + 4);
+      end = e === -1 ? src.length : e + 3;
+    }
+    if (end !== -1) { out += blank(src.slice(i, end)); i = end; continue; }
+    if (c === '"' || c === "'" || c === '`') q = c;
+    out += c;
+    i++;
   }
-  return [lines.slice(Math.max(0, i - 4), i + 5).join('\n'), `w${i}`];
+  return out;
+}
+
+// Line ranges of <style> blocks in a .vue/.svelte/.astro file: those lines are
+// CSS and get the stylesheet scoping, the rest is markup.
+function styleRanges(lines) {
+  const out = [];
+  let start = -1;
+  lines.forEach((l, i) => {
+    if (start === -1 && /<style\b[^>]*>/i.test(l)) start = i;
+    if (start !== -1 && /<\/style>/i.test(l)) { out.push([start, i]); start = -1; }
+  });
+  return out;
+}
+
+// The declarations of the CSS rule (or JS object literal) that encloses
+// `pos`, nested blocks excluded, so a parent rule and its nested child never
+// add up. Returns null when `pos` sits in no block.
+function ownBlock(text, pos) {
+  let d = 0;
+  let open = -1;
+  for (let p = pos - 1; p >= 0; p--) {
+    if (text[p] === '}') d++;
+    else if (text[p] === '{') { if (d === 0) { open = p; break; } d--; }
+  }
+  if (open === -1) return null;
+  let own = '';
+  d = 0;
+  for (let p = open + 1; p < text.length; p++) {
+    const c = text[p];
+    if (c === '{') d++;
+    else if (c === '}') { if (d === 0) break; d--; }
+    else if (d === 0) own += c;
+  }
+  return { text: own, key: open };
+}
+
+// The JSX/HTML element whose opening tag contains `pos`: from `<Tag` to the
+// `>` that closes it at brace depth 0 (so `=>` and `{…}` props do not end it).
+function ownElement(text, pos) {
+  let d = 0;
+  let start = -1;
+  for (let p = pos - 1; p >= 0; p--) {
+    const c = text[p];
+    if (c === '}') d++;
+    else if (c === '{') d = Math.max(0, d - 1);
+    else if (d === 0 && c === '>' && text[p - 1] !== '=') return null;
+    else if (d === 0 && c === '<' && /[A-Za-z]/.test(text[p + 1] || '')) { start = p; break; }
+  }
+  if (start === -1) return null;
+  d = 0;
+  for (let p = start + 1; p < text.length; p++) {
+    const c = text[p];
+    if (c === '{') d++;
+    else if (c === '}') d = Math.max(0, d - 1);
+    else if (d === 0 && c === '>' && text[p - 1] !== '=') return { text: text.slice(start, p + 1), key: start };
+  }
+  return { text: text.slice(start), key: start };
+}
+
+const lineStarts = new WeakMap();
+function offsetOf(lines, i) {
+  let starts = lineStarts.get(lines);
+  if (!starts) {
+    starts = [0];
+    for (const l of lines) starts.push(starts[starts.length - 1] + l.length + 1);
+    lineStarts.set(lines, starts);
+  }
+  return starts[i];
+}
+
+// What a two-signal rule may look at besides its trigger: the CSS rule it sits
+// in (stylesheets, <style> blocks), else the element whose tag it sits in, else
+// the enclosing object literal (CSS-in-JS), else its own line. `lines` are
+// comment-stripped. Returns { text, key }; the key de-duplicates a scope that
+// carries the trigger twice (-webkit-background-clip + background-clip).
+const styleCache = new WeakMap();
+function scopeOf(lines, i, col, file) {
+  let inStyle = CSS_EXT.test(file);
+  if (!inStyle && SFC_EXT.test(file)) {
+    if (!styleCache.has(lines)) styleCache.set(lines, styleRanges(lines));
+    inStyle = styleCache.get(lines).some(([s, e]) => i > s && i < e);
+  }
+  const all = lines.join('\n');
+  const pos = offsetOf(lines, i) + col;
+  let hit = inStyle ? ownBlock(all, pos) : ownElement(all, pos);
+  // Outside a tag, an enclosing object literal is a CSS-in-JS style; a block
+  // that large is a function body, which is no scope at all.
+  if (!hit && !inStyle) {
+    const obj = ownBlock(all, pos);
+    if (obj && obj.text.length <= 800) hit = obj;
+  }
+  return hit ? { text: hit.text, key: `s${hit.key}` } : { text: lines[i], key: `l${i}` };
 }
 
 // Tailwind arbitrary values spell spaces as underscores: bg-[size:24px_24px].
 const tw = s => s.replace(/_/g, ' ');
-const HAIRLINE = /\d{1,3}px\s*,\s*transparent\s+\d{1,3}px|transparent\s+calc\(100%\s*-\s*\d{1,3}px\)/gi;
-const PX_CELL = /(?:background-size\s*:|backgroundSize\s*:\s*['"`]|bg-\[size:|bg-size-\[)\s*\d{1,3}px\b/i;
-const PX_PAIR = /(?:background-size\s*:|backgroundSize\s*:\s*['"`]|bg-\[size:|bg-size-\[)\s*\d{1,3}px\s+\d{1,3}px/i;
+const HAIRLINE = /\d{1,3}px\s*,\s*transparent\s+\d{1,3}px|transparent\s+calc\(100%\s*-\s*\d{1,3}px\)/i;
+const CELL = /(?:background-size\s*:|backgroundSize\s*:\s*['"`]|bg-\[size:|bg-size-\[|\/)\s*(\d{1,3})px\s+(\d{1,3})px/gi;
 
-// Two hairline layers tiled by a pixel cell is the generated-UI grid backdrop
-// (impeccable's codex-grid-background). One hairline layer with a two-axis
-// pixel cell is the same thing drawn as a line field.
+function gradientLayers(t) {
+  const out = [];
+  const re = /(repeating-)?linear-gradient\(/gi;
+  let m;
+  while ((m = re.exec(t))) {
+    let d = 1;
+    let p = m.index + m[0].length;
+    const s = p;
+    while (p < t.length && d) { if (t[p] === '(') d++; else if (t[p] === ')') d--; p++; }
+    out.push({ repeating: !!m[1], args: t.slice(s, p - 1) });
+  }
+  return out;
+}
+
+// A line's axis from the gradient's direction: `to right`/90deg paints
+// vertical lines, `to bottom`/0deg (or no direction, the default) horizontal.
+function axis(args) {
+  const first = args.split(',')[0].trim().toLowerCase();
+  if (/^to\s+(left|right)$|^-?(90|270)deg$/.test(first)) return 'x';
+  if (/^to\s+(top|bottom)$|^-?(0|180|360)deg$/.test(first)) return 'y';
+  return /^(to\s|-?[\d.]+(deg|turn|rad|grad)$)/.test(first) ? null : 'y';
+}
+
+// The generated-UI grid backdrop (impeccable's codex-grid-background): two
+// hairline layers crossing each other, tiled by a square-ish pixel cell (or
+// tiling themselves as repeating gradients). One hairline, or two parallel
+// ones, is a rule or a stripe, not a grid.
 function gridBackdrop(text) {
   const t = tw(text);
-  const hairlines = (t.match(HAIRLINE) || []).length;
-  if (PX_PAIR.test(t)) return hairlines >= 1;
-  return hairlines >= 2 && (PX_CELL.test(t) || /repeating-linear-gradient/i.test(t));
+  const hair = gradientLayers(t).filter(l => HAIRLINE.test(l.args));
+  const axes = new Set(hair.map(l => axis(l.args)));
+  if (!(axes.has('x') && axes.has('y'))) return false;
+  if (hair.every(l => l.repeating)) return true;
+  for (const m of t.matchAll(CELL)) {
+    const [a, b] = [Number(m[1]), Number(m[2])];
+    if (Math.min(a, b) >= 4 && Math.max(a, b) <= 2 * Math.min(a, b)) return true;
+  }
+  return false;
 }
 
 // [id, severity, regex, message, fileGuard?, near?]
 // fileGuard: if it matches the whole file, the rule is suppressed for that file.
-// near: (text around the line) → true when the second signal is present.
+// near: (text of the trigger's own rule or element) → true when the second
+// signal is present there.
 // message may be a function of the matched line.
 const RULES = [
   ['transition-all', 'error', /transition:\s*all\b|(?:^|["'\s:])transition-all(?:[\s"'/]|$)/,
@@ -222,16 +367,25 @@ const RULES = [
   // linter cannot see whether the picture carries content. It stays quiet when
   // the tag says it is decorative (aria-hidden, role="presentation"/"none").
   ['img-empty-alt', 'warn',
-    /<(?:img|Image)\b(?![^>]*\b(?:aria-hidden(?!=\{?\s*["']?false)|role=["'](?:presentation|none)["']))[^>]*\salt=(?:""|''|\{\s*(?:""|''|``)\s*\})/,
+    /<(?:img|Image)\b(?![^>]*\b(?:aria-hidden(?!=\{?\s*["']?false)|role=\{?\s*["'](?:presentation|none)["']))[^>]*\salt=(?:""|''|\{\s*(?:""|''|``)\s*\})/,
     'empty alt on an image not marked decorative — describe the content, or add aria-hidden / role="presentation" if it is decoration'],
 
   ['decorative-grid-bg', 'warn', /\d{1,3}px[\s_]*,[\s_]*transparent[\s_]+\d{1,3}px|transparent[\s_]+calc\(100%[\s_]*-[\s_]*\d{1,3}px\)/i,
     'hairline grid backdrop (gradient lines tiled by a px cell) — a generated-UI signature; use real structure or a plain surface',
-    null, (lines, i, file) => gridBackdrop(context(lines, i, file)[0])],
+    null, scope => gridBackdrop(scope)],
 ];
 
+// Every spelling of one colour: #abc, #abcf, #aabbcc, #aabbccff. A 6-digit
+// entry that has a short form (#00bbcc) is banned in that form too.
+function hexForms(h) {
+  const long = h.length === 3 ? [...h].map(c => c + c).join('') : h;
+  const forms = [`${long}(?:[0-9a-f]{2})?`];
+  if (/^(.)\1(.)\2(.)\3$/.test(long)) forms.push(`${long[0]}${long[2]}${long[4]}[0-9a-f]?`);
+  return forms;
+}
+
 if (brand.bannedHex?.length) {
-  const re = new RegExp(`#(?:${brand.bannedHex.join('|')})(?:[0-9a-f]{2})?(?![0-9a-f])`, 'i');
+  const re = new RegExp(`#(?:${brand.bannedHex.flatMap(hexForms).join('|')})(?![0-9a-f])`, 'i');
   RULES.push(['banned-hex', 'error', re,
     line => `${re.exec(line)[0]} is on this repo's banned colour list (${BRAND_CONFIG}) — use a design token`]);
 }
@@ -240,7 +394,7 @@ if (brand.gradientText !== 'off') {
   RULES.push(['gradient-text', brand.gradientText ?? 'warn',
     /background-clip\s*:\s*text|(?:^|["'`\s:])bg-clip-text(?:[\s"'`/]|$)|[bB]ackgroundClip\s*:\s*['"]text['"]/,
     'gradient-clipped text — a generated-UI signature; set headings in a solid colour',
-    null, (lines, i, file) => /gradient/i.test(context(lines, i, file)[0])]);
+    null, scope => /gradient|\bbg-(?:linear|radial|conic)(?:-|\b)/i.test(scope)]);
 }
 
 // Rules that match a whole JSX tag rather than a bare pattern. Prettier breaks
@@ -275,6 +429,7 @@ for (const file of files) {
   let text;
   try { text = readFileSync(file, 'utf8'); } catch { continue; }
   const lines = text.split('\n');
+  let code = null; // comment-stripped lines, built only when a two-signal rule fires
   const added = scope ? scope.get(file) : null;
   if (scope && (!added || added.size === 0)) continue;
 
@@ -289,10 +444,15 @@ for (const file of files) {
       const subject = TAG_SCOPED.has(id) ? tagText(lines, i) : line;
       if (!re.test(subject)) return;
       if (near) {
-        if (!near(lines, i, file)) return;
-        const key = context(lines, i, file)[1];
-        if (seen.has(key)) return;
-        seen.add(key);
+        // Two-signal rules read code with comments removed, so a commented-out
+        // gradient or grid neither triggers nor supplies the second signal.
+        code ??= stripComments(text, file).split('\n');
+        const m = re.exec(code[i]);
+        if (!m) return;
+        const sc = scopeOf(code, i, m.index, file);
+        if (!near(sc.text)) return;
+        if (seen.has(sc.key)) return;
+        seen.add(sc.key);
       }
       const msg = typeof message === 'function' ? message(subject) : message;
       const entry = { line: i + 1, severity, id, message: msg };
@@ -311,7 +471,23 @@ for (const file of files) {
 const FONT_SCAN_EXT = /\.(tsx|jsx|ts|js|mjs|cjs|vue|svelte|astro|css|scss|sass|html)$/;
 const FONT_SCAN_SKIP = /(^|\/)(node_modules|\.next|dist|build|out|\.claude)\/|\.(test|spec|d)\.(ts|tsx|js|jsx)$|\.min\.(js|css)$/;
 
-function fontFamilies(src) {
+// A local font is identified by its file, not by the variable that holds it:
+// `const font = localFont({ src: [Alpha.woff2, Beta.woff2] })` is two families,
+// Satoshi-Regular.woff2 + Satoshi-Bold.woff2 is one.
+const WEIGHT_SUFFIX = /[-_ ]?(thin|hairline|extra-?light|ultra-?light|light|regular|book|normal|medium|semi-?bold|demi-?bold|bold|extra-?bold|ultra-?bold|black|heavy|italic|oblique|variable|var|vf|wght|\d{3})$/i;
+function localFamilies(args) {
+  const names = new Set();
+  for (const m of args.matchAll(/['"`]([^'"`]+\.(?:woff2?|ttf|otf|eot))['"`]/gi)) {
+    let base = m[1].split(/[\\/]/).pop().replace(/\.(woff2?|ttf|otf|eot)$/i, '');
+    let prev;
+    do { prev = base; base = base.replace(WEIGHT_SUFFIX, ''); } while (base && base !== prev);
+    names.add(base || prev);
+  }
+  return [...names];
+}
+
+function fontFamilies(raw, file) {
+  const src = stripComments(raw, file);
   const found = [];
   let m;
   const google = /import\s*\{([^}]*)\}\s*from\s*['"]next\/font\/google['"]/g;
@@ -322,7 +498,13 @@ function fontFamilies(src) {
     }
   }
   const local = /(?:const|let|var)\s+(\w+)\s*=\s*localFont\s*\(/g;
-  while ((m = local.exec(src))) found.push(`${m[1]} (next/font/local)`);
+  while ((m = local.exec(src))) {
+    let d = 1;
+    let p = local.lastIndex;
+    while (p < src.length && d) { if (src[p] === '(') d++; else if (src[p] === ')') d--; p++; }
+    const fams = localFamilies(src.slice(local.lastIndex, p));
+    for (const f of fams.length ? fams : [m[1]]) found.push(`${f} (next/font/local)`);
+  }
   const face = /@font-face\s*\{[^}]*?font-family\s*:\s*(['"]?)([^;'"}]+)\1/g;
   while ((m = face.exec(src))) found.push(m[2].trim());
   const gf = /fonts\.googleapis\.com\/css2?\?([^"'`)\s>]+)/g;
@@ -360,7 +542,7 @@ function fontBudget() {
       src = readFileSync(f, 'utf8');
     } catch { continue; }
     if (!/next\/font|@font-face|fonts\.googleapis|@fontsource/.test(src)) continue;
-    for (const name of fontFamilies(src)) {
+    for (const name of fontFamilies(src, f)) {
       const key = name.toLowerCase().replace(/\s+/g, ' ');
       if (!families.has(key)) families.set(key, { name, files: [] });
       const entry = families.get(key);

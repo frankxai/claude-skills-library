@@ -11,6 +11,7 @@ gets a linter switched off.
 from __future__ import annotations
 
 import json
+import re
 import os
 import shutil
 import subprocess
@@ -237,7 +238,7 @@ def test_font_family_budget() -> None:
         out, rc = lint(d, "components/A.tsx")
         check("five distinct families fit a budget of five (Inter counted once)",
               rc == 0 and "5 families loaded, budget 5" in out, out)
-        for name in ("Inter", "Playfair Display", "satoshi (next/font/local)",
+        for name in ("Inter", "Playfair Display", "Satoshi (next/font/local)",
                      "Space Grotesk", "Brand Mono"):
             check(f"budget report lists {name}", f"  {name}:" in out, out)
         check("a font-family declaration that loads nothing is not counted",
@@ -257,6 +258,197 @@ def test_font_family_budget() -> None:
         os.remove(os.path.join(d, ".claude", "ci", "brand-lint.json"))
         out, rc = lint(d, "components/A.tsx")
         check("no maxFontFamilies, no budget check", "font-family-budget" not in out and rc == 0, out)
+
+
+# --------------------------------------------- review fixes (Grok, PR #84 @ 712927b)
+# One test per defect. Each failed against 712927b and passes now.
+
+def budget_out(files: dict, cfg: dict):
+    d = tempfile.mkdtemp()
+    try:
+        for rel, text in files.items():
+            write(d, rel, text)
+        write(d, "components/A.tsx", "export const A = () => null;\n")
+        config(d, cfg)
+        git_repo(d)
+        return lint(d, "components/A.tsx")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_fix1_comment_inside_next_font_import() -> None:
+    out, rc = budget_out({"app/layout.tsx":
+        "import {\n  Inter, // primary, body\n  Lora,\n} from 'next/font/google';\n"},
+        {"maxFontFamilies": 2})
+    check("#1 a comma inside a comment is not a family", rc == 0 and "2 families" in out, out)
+
+
+def test_fix2_commented_out_font_face() -> None:
+    out, rc = budget_out({"app/globals.css":
+        "@font-face { font-family: 'Live'; src: url(/a.woff2); }\n"
+        "/* @font-face { font-family: 'Dead'; src: url(/b.woff2); } */\n",
+        "app/old.tsx": "// import { Roboto } from 'next/font/google';\nexport const X = 1;\n"},
+        {"maxFontFamilies": 1})
+    check("#2 commented-out @font-face and imports are not loaded fonts",
+          rc == 0 and "Dead" not in out and "Roboto" not in out, out)
+
+
+def test_fix3_local_font_identity_is_the_file() -> None:
+    out, rc = budget_out({"app/fonts.ts":
+        "import localFont from 'next/font/local';\n"
+        "export const font = localFont({ src: [\n"
+        "  { path: './Alpha.woff2' },\n  { path: './Beta.woff2' },\n] });\n"},
+        {"maxFontFamilies": 1})
+    check("#3 one localFont call loading two files is two families",
+          rc == 1 and "Alpha (next/font/local)" in out and "Beta (next/font/local)" in out, out)
+    out, rc = budget_out({"app/fonts.ts":
+        "import localFont from 'next/font/local';\n"
+        "export const sans = localFont({ src: [\n"
+        "  { path: './Satoshi-Regular.woff2', weight: '400' },\n"
+        "  { path: './Satoshi-Bold.woff2', weight: '700' },\n] });\n"},
+        {"maxFontFamilies": 1})
+    check("#3 weights of one local family count once", rc == 0 and "Satoshi (next/font/local)" in out, out)
+
+
+def test_fix4_and_5_config_types() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        write(d, "components/A.tsx", "export const A = () => null;\n")
+        for bad, why in (({"bannedHex": None}, "bannedHex null"),
+                         ({"bannedHex": "#ab47c7"}, "bannedHex string"),
+                         ({"gradientText": None}, "gradientText null"),
+                         ({"maxFontFamilies": None}, "maxFontFamilies null"),
+                         ({"fontScanIgnore": None}, "fontScanIgnore null"),
+                         ({"fontScanIgnore": [""]}, "fontScanIgnore empty prefix"),
+                         ({"fontScanIgnore": ["  "]}, "fontScanIgnore blank prefix")):
+            config(d, bad)
+            out, rc = lint(d, "components/A.tsx")
+            check(f"#4/#5 {why} is a malformed config (exit 2)", rc == 2, out)
+
+
+def test_fix6_short_hex_forms() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        config(d, {"bannedHex": ["#abc", "#00bbcc"]})
+        write(d, "styles/a.css",
+              ".a { color: #abcf; }\n.b { color: #AABBCC; }\n.c { color: #aabbcc80; }\n"
+              ".d { color: #0bc; }\n.e { color: #abcd12; }\n.f { color: #abd; }\n")
+        out, rc = lint(d, "styles/a.css")
+        for n, what in ((1, "#abcf (4-digit alpha)"), (2, "#AABBCC (long form)"),
+                        (3, "#aabbcc80 (8-digit)"), (4, "#0bc (short form of a 6-digit ban)")):
+            check(f"#6 {what} is banned", f"a.css:{n} " in out, out)
+        check("#6 a longer or different hex is not banned",
+              "a.css:5 " not in out and "a.css:6 " not in out, out)
+
+
+def test_fix7_gradient_text_is_element_scoped() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        write(d, "components/Sib.tsx",
+              "export const S = () => (\n"
+              "  <div>\n"
+              '    <div className="bg-gradient-to-b from-black to-transparent" />\n'
+              '    <h1 className="bg-clip-text text-transparent bg-[url(/paper.jpg)]">Hi</h1>\n'
+              "    {/* gradient was here */}\n"
+              "  </div>\n"
+              ");\n")
+        write(d, "components/V4.tsx",
+              'export const V = () => <h1 className="bg-linear-to-r from-sky-400 to-pink-400 '
+              'bg-clip-text text-transparent">Hi</h1>;\n')
+        write(d, "components/Style.tsx",
+              "export const T = () => (\n"
+              "  <h1\n"
+              "    style={{\n"
+              "      backgroundImage: 'radial-gradient(circle, red, blue)',\n"
+              "      backgroundClip: 'text',\n"
+              "    }}\n"
+              "  >Hi</h1>\n"
+              ");\n")
+        out, rc = lint(d, "components/Sib.tsx", "components/V4.tsx", "components/Style.tsx")
+        check("#7 a sibling's fade and a comment do not make clipped text a gradient",
+              "Sib.tsx" not in out, out)
+        check("#7 Tailwind v4 bg-linear-* gradient text is caught", "V4.tsx:1" in out, out)
+        check("#7 gradient set through a style object on the same element is caught",
+              "Style.tsx:5" in out, out)
+
+
+def test_fix8_nested_rule_is_not_the_parent() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        write(d, "styles/n.scss",
+              ".panel {\n"
+              "  background-image: linear-gradient(to right, #fff1 1px, transparent 1px),\n"
+              "    linear-gradient(to bottom, #fff1 1px, transparent 1px);\n"
+              "  .tile { background-size: 24px 24px; }\n"
+              "}\n")
+        out, rc = lint(d, "styles/n.scss")
+        check("#8 a nested rule's background-size does not complete the parent's grid",
+              "n.scss" not in out, out)
+
+
+def test_fix9_sfc_style_blocks_are_css() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        write(d, "components/Card.vue",
+              "<template><h1 class=\"title\">Hi</h1></template>\n"
+              "<style scoped>\n"
+              ".fade { background: linear-gradient(red, blue); }\n"
+              ".title {\n"
+              "  background: url(/paper.jpg);\n"
+              "  background-clip: text;\n"
+              "}\n"
+              "</style>\n")
+        write(d, "components/Grad.svelte",
+              "<h1 class=\"t\">Hi</h1>\n"
+              "<style>\n"
+              ".t {\n"
+              "  background: linear-gradient(90deg, red, blue);\n"
+              "  background-clip: text;\n"
+              "}\n"
+              "</style>\n")
+        out, rc = lint(d, "components/Card.vue", "components/Grad.svelte")
+        check("#9 a <style> block is scoped per rule, like a .css file", "Card.vue" not in out, out)
+        check("#9 gradient text inside a <style> block is still caught", "Grad.svelte:5" in out, out)
+
+
+def test_fix10_grid_needs_crossing_lines_and_a_square_cell() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        write(d, "styles/dash.css",
+              ".rule {\n"
+              "  background: linear-gradient(to right, #ddd 1px, transparent 1px);\n"
+              "  background-size: 8px 1px;\n"
+              "}\n")
+        write(d, "styles/stripes.css",
+              ".stripes {\n"
+              "  background-image: linear-gradient(#ddd 1px, transparent 1px),\n"
+              "    linear-gradient(#eee 1px, transparent 1px);\n"
+              "  background-size: 20px 20px;\n"
+              "}\n")
+        write(d, "styles/rep.css",
+              ".g {\n"
+              "  background:\n"
+              "    repeating-linear-gradient(0deg, #ddd 0 1px, transparent 1px 32px),\n"
+              "    repeating-linear-gradient(90deg, #ddd 0 1px, transparent 1px 32px);\n"
+              "}\n")
+        out, rc = lint(d, "styles/dash.css", "styles/stripes.css", "styles/rep.css")
+        check("#10 one hairline on an 8x1 cell (a dashed rule) is not a grid", "dash.css" not in out, out)
+        check("#10 two parallel hairlines are stripes, not a grid", "stripes.css" not in out, out)
+        check("#10 crossing repeating hairlines are a grid", "rep.css:3" in out, out)
+
+
+def test_fix11_jsx_expression_role() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        write(d, "components/D.tsx",
+              'export const D = () => <img src="/a.png" width={1} height={1} alt="" role={"presentation"} />;\n'
+              "export const E = () => <img src=\"/b.png\" width={1} height={1} alt=\"\" role={'none'} />;\n"
+              'export const F = () => <img src="/c.png" width={1} height={1} alt="" aria-hidden={true} />;\n')
+        out, rc = lint(d, "components/D.tsx")
+        check("#11 role={\"presentation\"}, role={'none'} and aria-hidden={true} are decorative",
+              "D.tsx" not in out, out)
+
+
+def test_fix12_workflow_fires_on_font_sources() -> None:
+    wf = open(os.path.join(os.path.dirname(HERE), "ci", "web-excellence.yml"), encoding="utf-8").read()
+    src = open(LINT, encoding="utf-8").read()
+    exts = re.search(r"const FONT_SCAN_EXT = /\\\.\(([^)]+)\)", src).group(1).split("|")
+    missing = [e for e in exts if f"'**/*.{e}'" not in wf]
+    check("#12 every extension the font budget reads also triggers the workflow",
+          not missing, f"no trigger for {missing}")
 
 
 if __name__ == "__main__":
