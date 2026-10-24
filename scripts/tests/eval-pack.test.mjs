@@ -6,6 +6,7 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from '../trigger-lint.mjs';
 import { cardData, coverage, currentHashes, renderCard, staleness } from '../eval-card.mjs';
+import { pickCommand, shellArgs } from '../install-test.mjs';
 import { baselineScore, comparability, firedRate, reviewLift } from '../eval-skill.mjs';
 import { checkOutputs, expectedOutputs, haltsPack, isolationProblems, parseArgs as packArgs } from '../run-pack-lift.mjs';
 import { mkdtempSync, writeFileSync as writeF, mkdirSync as mkdirS } from 'node:fs';
@@ -403,4 +404,28 @@ test('G1 prep: --pilot, expected outputs, and --check-outputs on a synthetic com
   assert.match(checkOutputs('nextjs-expert', make({ dropTrace: true })).notes.join(' '), /17 traces for 18 runs/);
   assert.match(checkOutputs('nextjs-expert', make({ foreign: true })).notes.join(' '), /unexpected plugin/);
   assert.match(checkOutputs('nextjs-expert', mkdtempSync(join(tmpdir(), 'g1-none-'))).notes.join(' '), /not run yet/);
+});
+
+test('install-test launches commands safely on Windows: prefer .exe, shell only for .cmd/.bat shims, quote args', () => {
+  assert.deepEqual(pickCommand(['/home/u/.local/bin/claude'], 'linux'), { cmd: '/home/u/.local/bin/claude', shell: false });
+  assert.deepEqual(pickCommand(['C:\\npm\\claude', 'C:\\npm\\claude.cmd', 'C:\\Users\\u\\.local\\bin\\claude.exe'], 'win32'),
+    { cmd: 'C:\\Users\\u\\.local\\bin\\claude.exe', shell: false });
+  assert.deepEqual(pickCommand(['C:\\npm\\claude', 'C:\\npm\\claude.cmd'], 'win32'), { cmd: 'C:\\npm\\claude.cmd', shell: true });
+  assert.equal(pickCommand(['', '  '], 'win32'), null);
+  assert.deepEqual(shellArgs(['plugin', 'add', 'skills-with-evals@claude-skills-library', 'owner/repo#a/b', 'C:\\My Repos\\x']),
+    ['plugin', 'add', 'skills-with-evals@claude-skills-library', '"owner/repo#a/b"', '"C:\\My Repos\\x"']);
+});
+
+test('the install matrix covers ubuntu and windows, validate, local and pinned-remote installs, without secrets', () => {
+  const y = readFileSync(join(REPO, 'products/skills-with-evals/ci/install-matrix.yml'), 'utf8');
+  assert.match(y, /os: \[ubuntu-latest, windows-latest\]/);
+  assert.match(y, /claude: \['2\.1\.310', 'latest'\]/);
+  assert.match(y, /run: claude plugin validate \./);
+  assert.match(y, /node scripts\/install-test\.mjs --json/);
+  assert.match(y, /--claude-source "\$\{REPO\}#\$\{BRANCH\}"/);
+  assert.match(y, /--codex-source "\$\{REPO\}@\$\{BRANCH\}"/);
+  assert.match(y, /head\.repo\.full_name == github\.repository/, 'remote step skipped for fork PRs');
+  assert.match(y, /CODEX_VERSION: '0\.164\.0'/);
+  assert.doesNotMatch(y, /secrets\./, 'no secret needed');
+  assert.match(y, /permissions:\n  contents: read/);
 });
