@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from '../trigger-lint.mjs';
-import { renderCard } from '../eval-card.mjs';
+import { cardData, renderCard } from '../eval-card.mjs';
 import { haltsPack, isolationProblems, parseArgs as packArgs } from '../run-pack-lift.mjs';
 import { mkdtempSync, writeFileSync as writeF, mkdirSync as mkdirS } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -114,4 +114,13 @@ test('isolationProblems passes a clean pair of runs and flags foreign plugins, l
   assert.match(isolationProblems(r('w', 'bad'), 'nextjs-expert', dir).problems.join(' '), /unexpected plugin\(s\) frankx-skills/);
   assert.match(isolationProblems(r('w', 'leak'), 'nextjs-expert', dir).problems.join(' '), /no-skill arm loaded the skill/);
   assert.match(isolationProblems(r('w', 'missing'), 'nextjs-expert', dir).problems.join(' '), /no trace/);
+});
+
+test('cardData gives the page the same facts as the card, with lift null until a result exists', () => {
+  for (const s of PACK.skills) {
+    const d = cardData(s);
+    assert.ok(d.job && d.test && d.planted >= 7 && d.clean && d.quietTask, `${s}: complete card data`);
+    const hasResult = existsSync(join(REPO, 'evals', s, 'results')) && readdirSync(join(REPO, 'evals', s, 'results')).some((f) => f.endsWith('.json'));
+    if (!hasResult) assert.equal(d.lift, null);
+  }
 });
