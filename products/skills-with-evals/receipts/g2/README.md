@@ -20,10 +20,10 @@ Full report, verbatim: [`G2-REPORT.md`](G2-REPORT.md).
 
 | # | Finding | Status |
 |---|---|---|
-| 1 | Card install commands point at `main`, which lacks the entry, so they fail before merge | **Fixed in `0424453`** (pushed while G2 ran): cards, README and `codex.md` now pin the branch (`#ref` for Claude Code, `@ref` for Codex). That is exactly the extra probe that passed |
+| 1 | Card install commands point at `main`, which lacks the entry, so they fail before merge | **Fixed in `0424453`** (pushed while G2 ran): cards, README and `codex.md` now pin the branch, `owner/repo#ref` for Claude Code and `owner/repo@ref` for Codex. *Corrected 2026-10-24 (G3 P1-6):* this row used to call that "exactly the extra probe that passed". It was not: the probe ran `https://github.com/…/claude-skills-library.git#ref` (Claude Code) and `--ref` (Codex). The exact `owner/repo#ref` and `owner/repo@ref` forms were verified separately in fresh HOMEs (G0 row 9), and end to end by the real recording at `2602f49` ([`../g2-recording/`](../g2-recording/README.md)) |
 | 2 | README had no install section | **Fixed in `0424453`** |
 | 3 | Codex showed the pack's descriptions **in full**, with no ~100-character cut | **Our claim was wrong as stated.** Codex trims by a shared budget, not a fixed width: full text at ≤ 40 installed skills, about 104 characters at 114. Measured in [`../codex-skill-list-budget.md`](../codex-skill-list-budget.md); every mention in this PR corrected |
-| 4 | `install-test.json` captured a Codex PATH-alias warning inside `versions.codex` | **Fixed:** warning lines are filtered from version strings |
+| 4 | `install-test.json` captured a Codex PATH-alias warning inside `versions.codex` | **Fixed in the script** (`5a18794`): warning lines are filtered from version strings. *Corrected 2026-10-24 (G3 P1-6):* the `install-test.json` in this folder is the stranger's original output at `1222849`, before that fix, and is kept unedited, so it still shows the warning. A re-run at `af15ec6` with clean version strings: [`install-test-rerun-af15ec6.json`](install-test-rerun-af15ec6.json) |
 | 5 | The plugin's homepage link (`…/tree/main/evals`) is a 404 before merge | **Fixed:** points at the repository root |
 | 6 | `claude plugin validate` fails on the *other* entry (`claude-skills-library`, reserved name), on `main` too | Open, Frank's decision (rename changes the public install id) |
 
