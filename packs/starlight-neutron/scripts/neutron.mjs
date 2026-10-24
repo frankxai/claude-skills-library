@@ -8,7 +8,6 @@ import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ledgerMain } from './ledger.mjs';
-import { contextMain } from './context.mjs';
 
 // Same output either side of the filter: no lossy listing commands in this table.
 export const BENCH_CASES = (rtk) => [
@@ -176,9 +175,12 @@ export function doctor(home = homedir(), probes = { rtk: () => resolveRtk(), shi
   ];
 }
 
-function main(argv) {
+async function main(argv) {
   const [command = 'doctor', ...flags] = argv;
-  if (command === 'context') return contextMain(flags);
+  if (command === 'context') {
+    const { contextMain } = await import('./context.mjs');
+    return contextMain(flags);
+  }
   if (command === 'bench') {
     const rtk = resolveRtk();
     if (!rtk) {
@@ -202,5 +204,5 @@ function main(argv) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(main(process.argv.slice(2)));
+  main(process.argv.slice(2)).then(code => process.exit(code));
 }

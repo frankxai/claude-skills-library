@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { contextMain } from '../scripts/context.mjs';
 
-test('contextMain counts bytes and tokens', (t) => {
+test('contextMain counts bytes and tokens', async (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'neutron-context-test-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
 
@@ -35,7 +35,7 @@ test('contextMain counts bytes and tokens', (t) => {
   }
 });
 
-test('contextMain --propose identifies duplicates and long sections', (t) => {
+test('contextMain --propose identifies duplicates and long sections', async (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'neutron-context-test2-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
 
@@ -77,7 +77,7 @@ test('contextMain --propose identifies duplicates and long sections', (t) => {
   }
 });
 
-test('contextMain with invalid config', (t) => {
+test('contextMain with invalid config', async (t) => {
   let err = '';
   const originalError = console.error;
   console.error = (msg) => { err += msg + '\n'; };
@@ -88,5 +88,32 @@ test('contextMain with invalid config', (t) => {
     assert.match(err, /Config file not found/);
   } finally {
     console.error = originalError;
+  }
+});
+
+test('contextMain deduplicates overlapping globs', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'neutron-context-test-dedup-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+
+  const configPath = join(dir, 'context.config.json');
+  // Two patterns that will both match file1.md
+  writeFileSync(configPath, JSON.stringify({
+    'test-harness': ['file1.md', 'file*.md']
+  }));
+
+  writeFileSync(join(dir, 'file1.md'), 'hello world'); // 11 bytes
+
+  // Capture stdout
+  let out = '';
+  const originalLog = console.log;
+  console.log = (msg) => { out += msg + '\n'; };
+
+  try {
+    const code = contextMain(['--config', configPath]);
+    assert.strictEqual(code, 0);
+    // Should be exactly 11 bytes. If it were duplicated it would be 22.
+    assert.match(out, /Total bytes: 11/);
+  } finally {
+    console.log = originalLog;
   }
 });

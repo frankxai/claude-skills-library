@@ -15,7 +15,7 @@ function resolveGlob(pattern, baseDir) {
   const absolutePattern = isAbsolute(expanded) ? expanded : join(baseDir, expanded);
 
   // Return early if it's just a file without globs for faster processing
-  if (!absolutePattern.includes('*')) {
+  if (!/[*?{}\[\]]/.test(absolutePattern)) {
     if (existsSync(absolutePattern) && statSync(absolutePattern).isFile()) {
        return [absolutePattern];
     }
@@ -89,11 +89,15 @@ export function contextMain(argv) {
 
     let totalBytes = 0;
     const fileStats = [];
+    const seenFiles = new Set();
 
     for (const pattern of patterns) {
       const files = resolveGlob(pattern, configDir);
 
       for (const file of files) {
+        if (seenFiles.has(file)) continue;
+        seenFiles.add(file);
+
         if (!statSync(file).isFile()) continue;
 
         const content = readFileSync(file, 'utf8');
