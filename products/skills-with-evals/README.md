@@ -11,54 +11,36 @@
 
 Reviews a pull-request diff for merge-blocking correctness and security bugs, line by line.
 
-**The task**, given word for word to Claude with the skill and without it:
+**How it is tested:**
 
-> Please review pull request #412 before it merges. The description is in `PR-412.md` and the full diff is `pr-412.diff`, both in the added `resources` directory. You can't run the code.
-> 
-> List every problem that should block the merge. For each, quote or point at the exact line in the diff, say what goes wrong in production, and give the concrete fix. Skip style preferences.
+1. **A realistic pull request.** A pull-request diff (order search and self-service refunds) with eight seeded correctness and security bugs. The answer key is held out: never shown to the model, and not published.
+2. **The same pull request, fixed.** A correct implementation of the same pull request; the review must not invent blocking problems. A review that invents a blocking problem here counts as a false alarm.
+3. **An unrelated task.** “Write a short README section that explains how to run this project's test suite with `npm test` and how to run a single test file”. The skill should stay out of it.
+4. **Two arms, same everything else.** Each case runs with the skill loaded and with no skill at all: same model, same prompt, same files. Three runs per arm.
+5. **Scored by graders that are held out too.** A judge model scores each answer against private graders. Only totals are published: how many planted bugs a run found on average, never which ones.
 
-**The input:** Adds `GET /api/orders/search` (search the signed-in customer's orders by product name, paginated, pages start at 1) and `POST /api/orders/:id/refund` (customer requests a refund for one of their orders; amount in cents). Stack: Express 5, TypeScript, `pg` (node-postgres), Stripe SDK. `requireAuth` sets `req.user = { id, role }`. The diff is in `pr-412.diff`. Files: `evals/github-code-review/seeded-defects/resources/PR-412.md`, `evals/github-code-review/seeded-defects/resources/pr-412.diff`.
-
-**What is planted** (8 bugs; the answer key is never shown to the model):
-
-1. Search query building SQL by interpolating `q` *(security)*
-2. Refund route loading the order with `SELECT * FROM orders WHERE id = $1` without checking that it belongs to `req.user` *(security)*
-3. `UPDATE orders ... refunded_cents` query called without `await` *(correctness)*
-4. `const offset = page * limit` with pages starting at 1 *(correctness)*
-5. `logger.info('creating refund', ...)` call writing `process.env.STRIPE_SECRET_KEY` into the logs *(security)*
-6. `catch (e) { res.json({ ok: true }) }` block that hides failures and tells the client the refund succeeded *(correctness)*
-7. `limit` taken from `req.query.limit` with no maximum *(security)*
-8. `amount` from `req.body.amount_cents` passed to Stripe without validating that it is a positive integer and not more than the order's remaining refundable amount *(correctness)*
-
-**Also checked:** The same pull request with every planted bug fixed; a review must not invent blocking problems. And an unrelated task it must stay out of: “Write a short README section that explains how to run this project's test suite with `npm test` and how to run a single test file”.
-
-> **Placeholder.** Nothing below is measured yet. The first lift run fills every cell from the tool's own output, including misses and false alarms.
+> **Placeholder.** Nothing below is measured yet. The first lift run fills every cell from the published summary: totals only, misses and false alarms included.
 
 | | No skill (baseline) | With `github-code-review` |
 |---|---|---|
 | Planted bugs found, mean per run (of 8) | *placeholder* | *placeholder* |
-| Runs with a false alarm on the clean copy | *placeholder* | *placeholder* |
+| Runs with a false alarm on the fixed copy | *placeholder* | *placeholder* |
 | Loaded on its own job | n/a | *placeholder* |
 | Stayed out of the unrelated task | n/a | *placeholder* |
 | Cost per run | *placeholder* | *placeholder* |
 | Time per run | *placeholder* | *placeholder* |
 
-**Per planted bug:** *placeholder* until the first run.
-
-**Example output:** *placeholder*: one unedited answer from each arm appears here after the run.
-
-**Versions this result belongs to:** skill `c22a50d04404`, suite `19067051e3e0`, Claude Code not run yet (tested install: 2.1.310), model sonnet (planned), judge haiku (planned). A change to the skill or the suite marks any result out of date.
+**Versions this result belongs to:** skill `c22a50d04404`, public suite `11aedfd9c0dd`, held-out half recorded with the first run, Claude Code not run yet (tested install: 2.1.310), model sonnet (planned), judge haiku (planned). A change to the skill, the public cases or the held-out half marks any result out of date.
 
 **Limits:**
 - The same author wrote the skill and its test suite.
-- There are no held-out cases yet, so a pass shows the skill works on these fixtures, not that it generalises.
+- The test inputs are public, and until 24 October 2026 the answer key was public too, so these cases are not held out from anyone who read it. A clean claim needs fresh cases that have never been published.
 - The judge (haiku) is the same provider as the model under test until a cross-family check runs.
 <!-- flagship:end -->
 
 ## Try the flagship
 
-**Prerequisites:** Claude Code 2.1.269 or later (tested on 2.1.310), or codex-cli 0.164.0. Node 22 or later only if you
-want to run the eval yourself.
+**Prerequisites:** Claude Code 2.1.269 or later (tested on 2.1.310), or codex-cli 0.164.0.
 
 ```bash
 # Claude Code: adds one marketplace entry and one plugin (the 10 skills)
@@ -79,40 +61,35 @@ claude plugin uninstall skills-with-evals@claude-skills-library
 claude plugin marketplace remove claude-skills-library
 ```
 
-**Run the comparison yourself** (needs a signed-in Claude Code; runs the task with and without the skill, 3 runs
-each, capped at USD 5; the real cost per run is not measured yet):
-
-```bash
-git clone --branch agent/hyperagent/eval-pack-rc1 https://github.com/frankxai/claude-skills-library.git
-cd claude-skills-library
-node scripts/eval-skill.mjs github-code-review --runs 3 --max-cost-usd 5 --model sonnet
-```
-
-It writes the result, Claude Code's HTML report and every unedited run trace under `evals/github-code-review/results/`,
-and refreshes that skill's card.
+**Check the method yourself.** Each case's prompt and inputs are public in `evals/<skill>/`, and so is the runner.
+The graders and the answer key are held out, because publishing them would let anyone tune a skill to the answers
+and make every lift number meaningless. I run the comparison; each run publishes an aggregate summary
+(`evals/<skill>/results/<stamp>.summary.json`) and refreshes the skill's card. The raw output (every grader verdict,
+the report, the run traces) stays with the graders.
 
 ## What you get
 
 | | Today (free, MIT) | Planned paid (no price, not for sale) |
 |---|---|---|
 | The skill | `free-skills/<skill>/SKILL.md` | — |
-| Its cases | planted problems, a clean copy, a stay-out task: `evals/<skill>/` | — |
-| Its graders | one per planted problem plus a false-alarm judge: `evals/<skill>/*/graders/` | — |
+| Its cases | prompts and inputs: planted problems, a fixed copy, a stay-out task (`evals/<skill>/`) | — |
+| Graders, answer key, raw results | held out, never published (`scripts/held-out.mjs`); the counts are in `pack.json` | — |
 | The runner | `scripts/eval-skill.mjs`, `scripts/run-pack-lift.mjs` | — |
-| A versioned result | after a run: result file, report, traces, card (bound to the skill and suite hashes) | results re-run on each new Claude Code, Codex and model release, with transcripts |
+| A versioned result | after a run: an aggregate summary and the card, bound to the skill, case and grader hashes | results re-run on each new Claude Code, Codex and model release |
 | Updates | — | an update channel when a skill's number drops |
 
 **The bet:** a skill without an eval is a claim. Every skill in this pack ships with:
 
-1. **An eval suite** run by the official `claude plugin eval` (Claude Code 2.1.310), in `evals/<skill>/`.
+1. **An eval suite** run by the official `claude plugin eval` (Claude Code 2.1.310): public cases (prompts and
+   inputs) in `evals/<skill>/`, scored by graders that are held out with the answer key.
 2. **A no-skill baseline:** every case also runs with no skill loaded, same model and prompt, so lift is a
    measured difference, not an opinion (`--ablation with-without`).
 3. **A trigger test:** a should-trigger case with a `tool_used: Skill` indicator, a should-not-trigger case on
    an adjacent task, and a static check (`scripts/trigger-lint.mjs`) that the "use when" cue comes early enough to
    survive Codex trimming descriptions on large installs (about 104 characters with 114 skills installed,
    full text with 40 or fewer: `receipts/codex-skill-list-budget.md`).
-4. **A measured lift** on a one-page card (`evals/<skill>/CARD.md`), generated from the tool's result file. Until a
-   comparable run exists, the card says "Not measured yet. No lift is claimed."
+4. **A measured lift** on a one-page card (`evals/<skill>/CARD.md`), generated from the run's published aggregate
+   summary. Until a comparable run exists, the card says "Not measured yet. No lift is claimed."
 
 ## Install
 
@@ -164,8 +141,9 @@ node scripts/run-pack-lift.mjs --dry-run                                  # stag
 node scripts/run-pack-lift.mjs                                         # G1: all 10 skills, $5/skill, $50 total (see G1-RUNBOOK.md)
 node scripts/run-pack-lift.mjs --pilot                                 # one skill, 6 runs, $1 cap
 node scripts/run-pack-lift.mjs --check-outputs                         # after a run: files, traces, isolation, cards
-node scripts/eval-skill.mjs <skill> --runs 3 --max-cost-usd 5 --model sonnet   # one skill (needs claude login)
-node scripts/eval-card.mjs                                                 # regenerate cards from result files
+node scripts/eval-skill.mjs <skill> --runs 3 --max-cost-usd 5 --model sonnet   # one skill (needs claude login and the private half)
+node scripts/eval-card.mjs                                                 # regenerate cards from the published summaries
+node scripts/held-out.mjs check                                            # leak guard: nothing held out is public
 node --test scripts/tests/eval-pack.test.mjs scripts/tests/eval-skill.test.mjs
 ```
 
@@ -176,9 +154,14 @@ node --test scripts/tests/eval-pack.test.mjs scripts/tests/eval-skill.test.mjs
 - **Pro pack (proposed):** the eval suites and answer keys, the measured scorecards and cards, the harness
   runs, and an update channel that re-runs every suite when a model or a skill changes.
 
-**Open decision for Frank:** this repository is public, so everything on this branch is readable. PR #33
-and PR #46 already put suites in public drafts. Before anything is sold, decide whether pro assets move to
-a private repository. Nothing here changes a licence.
+**Rule (24 October 2026):** the answer keys, the grader expected outputs and the raw results are never
+published, not on the buyer page and not in the free package. They now live in a private half outside this
+repository (`scripts/held-out.mjs`); a CI test fails if any of it comes back. Until 24 October they were public on
+this branch, so they remain in its history.
+
+**Still open for Frank:** where the private half is hosted; whether anything listed under the pro pack above is ever
+shared with buyers (sharing an answer key with anyone exposes the eval); and fresh held-out cases for any claim I
+publish. Nothing here changes a licence.
 
 ## Receipts (release gate)
 

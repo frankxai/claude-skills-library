@@ -22,7 +22,7 @@ Routing text (the only part an agent sees before loading the skill): "Product ma
 | no-trigger | Should NOT trigger product-management-expert: an adjacent but different task. | 1 |
 | seeded-defects | Recall. An approved PRD for an AI feature with eight seeded product-management gaps. | 9 |
 
-8 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+8 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 

@@ -22,7 +22,7 @@ Routing text (the only part an agent sees before loading the skill): "Review the
 | no-trigger | Should NOT trigger ai-architect-review: an adjacent but different task. | 1 |
 | seeded-defects | Recall. Pre-launch architecture notes for an LLM support agent with eight seeded architecture flaws. | 9 |
 
-8 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+8 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 

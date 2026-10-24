@@ -3,12 +3,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { lintSkill, parseFrontmatter } from '../trigger-lint.mjs';
 import { BUDGET, boundarySection, dollarArgs, qualitySkill, scanBody } from '../skill-quality.mjs';
-import { cardData, coverage, currentHashes, firstClause, flagshipData, flagshipMeasures, plantedDefects, renderCard, renderFlagshipMd, staleness, withFlagship } from '../eval-card.mjs';
+import { cardData, coverage, currentHashes, flagshipData, flagshipMeasures, renderCard, renderFlagshipMd, staleness, withFlagship } from '../eval-card.mjs';
+import { heldOutStatus, isMarker, keyPhraseHits, leakProblems, MARKER, overlayHeldOut, privateRoot } from '../held-out.mjs';
 import { pickCommand, shellArgs } from '../install-test.mjs';
-import { baselineScore, comparability, firedRate, reviewLift } from '../eval-skill.mjs';
+import { baselineScore, comparability, firedRate, reviewLift, stage, summarizeResult } from '../eval-skill.mjs';
 import { acquireLock, appendLedger, checkOutputs, decide, expectedOutputs, haltsPack, isolationProblems, ledgerState, parseArgs as packArgs, readLedger, reconcile, runPack } from '../run-pack-lift.mjs';
 import { mkdtempSync, rmSync, writeFileSync as writeF, mkdirSync as mkdirS } from 'node:fs';
 import { hostname, tmpdir } from 'node:os';
@@ -18,21 +19,19 @@ const PACK = JSON.parse(readFileSync(join(REPO, 'products/skills-with-evals/pack
 const MARKET = JSON.parse(readFileSync(join(REPO, '.claude-plugin/marketplace.json'), 'utf8'));
 const walk = (d) => readdirSync(d).flatMap((n) => { const p = join(d, n); return statSync(p).isDirectory() ? walk(p) : [p]; });
 
-test('every pack skill has a recall, a precision and a no-trigger case, and one grader per answer-key entry', () => {
+test('every pack skill has a recall, a precision and a no-trigger case; the held-out counts are in pack.json', () => {
   assert.equal(PACK.skills.length, 10);
   for (const s of PACK.skills) {
     const suite = join(REPO, 'evals', s);
-    const key = readFileSync(join(suite, 'seeded-defects', 'KEY.md'), 'utf8').split('\n').filter((l) => /^\d+\.\s/.test(l) || /^\|\s*\d+\s*\|/.test(l));
-    const graders = readdirSync(join(suite, 'seeded-defects', 'graders')).filter((f) => /^d\d+-/.test(f));
-    assert.ok(key.length >= 7, `${s}: at least 7 planted defects (has ${key.length})`);
-    assert.equal(graders.length, key.length, `${s}: one grader per planted defect`);
-    const cleanDir = ['clean', 'clean-form', 'clean-chapter', 'clean-section'].map((c) => join(suite, c)).find(existsSync);
-    assert.ok(cleanDir, `${s}: has a clean (precision) case`);
-    assert.ok(readdirSync(join(cleanDir, 'graders')).some((f) => f === 'no-unsupported-claims.md'), `${s}: precision grader`);
-    const nt = readFileSync(join(suite, 'no-trigger', 'case.yaml'), 'utf8');
-    assert.match(nt, /should-not-trigger/);
-    assert.match(nt, /max: 0/);
-    assert.match(nt, /arm: both/);
+    const h = PACK.heldOut[s];
+    assert.ok(h && h.planted >= 7, `${s}: at least 7 planted defects (pack.json heldOut)`);
+    assert.equal(h.graders['seeded-defects'], h.planted + 1, `${s}: one grader per planted defect, plus the fired indicator`);
+    assert.ok(existsSync(join(suite, 'seeded-defects', 'prompt.md')), `${s}: recall case`);
+    const clean = ['clean', 'clean-form', 'clean-chapter', 'clean-section'].find((c) => existsSync(join(suite, c)));
+    assert.ok(clean && h.graders[clean] >= 1, `${s}: has a clean (precision) case`);
+    assert.ok(isMarker(join(suite, clean, 'resources')), `${s}: the fixed twin's inputs are held out`);
+    assert.match(readFileSync(join(suite, 'no-trigger', 'case.yaml'), 'utf8'), /should-not-trigger/);
+    assert.equal(h.graders['no-trigger'], 1);
   }
 });
 
@@ -83,16 +82,19 @@ test('trigger-lint finds the cue position, parses folded descriptions, and fails
   const seeded = lintSkill(join(REPO, 'evals/skill-builder/seeded-defects/resources/deploy-helper'));
   assert.ok(seeded.errors.some((e) => /not lowercase-hyphen/.test(e)));
   assert.ok(seeded.errors.some((e) => /1024/.test(e)));
-  const clean = lintSkill(join(REPO, 'evals/skill-builder/clean/resources/db-migration-check'));
+  const dir = join(mkdtempSync(join(tmpdir(), 'tl-')), 'db-migration-check');
+  mkdirS(dir);
+  writeF(join(dir, 'SKILL.md'), '---\nname: db-migration-check\ndescription: Checks a database migration. Use when reviewing a migration before it runs.\n---\nbody\n');
+  const clean = lintSkill(dir);
   assert.deepEqual(clean.errors, []);
-  assert.ok(clean.cueAt !== null && clean.cueAt <= 100, `clean fixture cue within Codex window (at ${clean.cueAt})`);
+  assert.ok(clean.cueAt !== null && clean.cueAt <= 100, `cue within Codex window (at ${clean.cueAt})`);
 });
 
 test('cards are generated from files and never claim lift without a result file', () => {
   for (const s of PACK.skills) {
     const card = renderCard(s);
     assert.equal(readFileSync(join(REPO, 'evals', s, 'CARD.md'), 'utf8'), card, `${s}: CARD.md is stale; run node scripts/eval-card.mjs`);
-    const hasResult = existsSync(join(REPO, 'evals', s, 'results')) && readdirSync(join(REPO, 'evals', s, 'results')).some((f) => f.endsWith('.json'));
+    const hasResult = existsSync(join(REPO, 'evals', s, 'results')) && readdirSync(join(REPO, 'evals', s, 'results')).some((f) => f.endsWith('.summary.json'));
     if (!hasResult) assert.match(card, /Not measured yet\. No lift is claimed\./);
   }
 });
@@ -136,12 +138,12 @@ test('cardData gives the page the same facts as the card, with lift null until a
   for (const s of PACK.skills) {
     const d = cardData(s);
     assert.ok(d.job && d.test && d.planted >= 7 && d.clean && d.quietTask, `${s}: complete card data`);
-    const hasResult = existsSync(join(REPO, 'evals', s, 'results')) && readdirSync(join(REPO, 'evals', s, 'results')).some((f) => f.endsWith('.json'));
+    const hasResult = existsSync(join(REPO, 'evals', s, 'results')) && readdirSync(join(REPO, 'evals', s, 'results')).some((f) => f.endsWith('.summary.json'));
     if (!hasResult) assert.equal(d.lift, null);
   }
 });
 
-test('skill-builder teaches the name rule its own graders enforce (G3 P0-2)', () => {
+test('skill-builder teaches the spec\'s name rule, and trigger-lint agrees (G3 P0-2; the grader side is in the private tests)', () => {
   const skill = readFileSync(join(REPO, 'free-skills/skill-builder/SKILL.md'), 'utf8');
   const lines = skill.split('\n');
   const SPEC = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -154,22 +156,14 @@ test('skill-builder teaches the name rule its own graders enforce (G3 P0-2)', ()
     if (!markedWrong) assert.match(value, SPEC, `SKILL.md line ${i + 1} teaches name "${value}"`);
   });
   assert.doesNotMatch(skill, /Title Case/, 'no Title Case advice for name');
-  // The write-skill grader's regex accepts what the skill teaches and rejects what it forbids.
-  const yaml = readFileSync(join(REPO, 'evals/skill-builder/write-skill/case.yaml'), 'utf8');
-  const raw = /- name: frontmatter-name\n\s+type: regex\n\s+pattern: ("(?:[^"\\]|\\.)*")/.exec(yaml)[1];
-  const re = new RegExp(JSON.parse(raw));
   const fm = (name) => `---\nname: ${name}\ndescription: "Checks migrations. Use when reviewing a migration."\n---\n`;
-  for (const good of ['my-first-skill', 'db-migration-check', '"db-migration-check"', "'api-builder'"]) assert.match(fm(good), re, good);
-  for (const bad of ['"My First Skill"', 'Deploy_Helper', 'API:Builder', '"API Documentation Generator"']) assert.doesNotMatch(fm(bad), re, bad);
-  // trigger-lint (the static check) agrees with the grader.
+  // trigger-lint (the static check) enforces the same rule.
   const dir = mkdtempSync(join(tmpdir(), 'sb-'));
   for (const [folder, name, ok] of [['my-first-skill', 'my-first-skill', true], ['my-first-skill', '"My First Skill"', false]]) {
     mkdirS(join(dir, folder), { recursive: true });
     writeF(join(dir, folder, 'SKILL.md'), fm(name) + 'body\n');
     assert.equal(lintSkill(join(dir, folder)).errors.some((e) => /name/.test(e)), !ok, `${name}`);
   }
-  // The recall key still plants the defect the skill now teaches against.
-  assert.match(readFileSync(join(REPO, 'evals/skill-builder/seeded-defects/graders/d1-name-format.md'), 'utf8'), /lowercase-and-hyphens/);
 });
 
 // Express matches routes in registration order: a static path registered after a param path of the same method
@@ -197,19 +191,12 @@ test('no review fixture registers an Express route that an earlier param route s
   assert.deepEqual(shadowedRoutes(" r.get('/api/orders/:id', h)\n+r.get('/api/orders/search', h)\n"), ['GET /api/orders/search is shadowed by /api/orders/:id']);
 });
 
-test('the clean code-review twin reports a refund Stripe already issued instead of claiming nothing was charged', () => {
-  const diff = readFileSync(join(REPO, 'evals/github-code-review/clean/resources/pr-412.diff'), 'utf8');
-  assert.match(diff, /refundId = refund\.id/);
-  assert.match(diff, /json\(refundId\s*\n\+\s*\? \{ error: 'the refund was issued/);
-});
-
-test('langgraph-patterns teaches interrupt() inside a node and Command(resume=...), which its grader requires (G3 P1-2)', () => {
+test('langgraph-patterns teaches interrupt() inside a node and Command(resume=...) (G3 P1-2)', () => {
   const s = readFileSync(join(REPO, 'free-skills/langgraph-patterns/SKILL.md'), 'utf8');
   assert.doesNotMatch(s, /add_node\([^)]*interrupt\(\)\)/, 'interrupt() passed to add_node at build time');
   assert.match(s, /def \w+\(state[^)]*\)[^\n]*:\n(?:[^\n]*\n){0,4}?\s+\w+ = interrupt\(/, 'interrupt() called inside a node function');
   assert.match(s, /invoke\(Command\(resume=/);
   assert.match(s, /compile\(checkpointer=/);
-  assert.match(readFileSync(join(REPO, 'evals/langgraph-patterns/seeded-defects/graders/d1-interrupt-no-checkpointer.md'), 'utf8'), /Command\(resume=/);
 });
 
 test('github-code-review teaches the review itself; the swarm tooling is an optional reference (G3 P1-2)', () => {
@@ -221,46 +208,6 @@ test('github-code-review teaches the review itself; the swarm tooling is an opti
   assert.doesNotMatch(body.split('## Optional: multi-agent review')[0], /ruv-swarm|claude-flow|npx /, 'core method needs no swarm tooling');
   assert.ok(existsSync(join(dir, 'references/swarm-review.md')), 'swarm material kept as a reference');
   assert.doesNotMatch(body, /pr-412|orders\/search|stripe/i, 'no fixture-specific details in the skill');
-});
-
-test('the langgraph clean twin respects the agent proposal under 1,000 EUR and pauses above it or on escalation (G3 P1-3)', async () => {
-  const { spawnSync } = await import('node:child_process');
-  // Run the real finance_review from the fixture with a stubbed interrupt(); no LangGraph needed.
-  const py = `
-import ast, json, sys
-src = open(sys.argv[1]).read()
-fn = next(n for n in ast.parse(src).body if isinstance(n, ast.FunctionDef) and n.name == "finance_review")
-calls = []
-def interrupt(payload):
-    calls.append(payload)
-    return "approve"
-ns = {"interrupt": interrupt, "State": dict}
-exec(compile(ast.Module(body=[fn], type_ignores=[]), "fixture", "exec"), ns)
-out = []
-for amount, proposal in [(500, "approve"), (500, "reject"), (500, "escalate"), (1500, "approve"), (1500, "reject")]:
-    before = len(calls)
-    r = ns["finance_review"]({"amount_eur": amount, "proposal": proposal, "reason": "r"})
-    out.append([amount, proposal, r["approved"], len(calls) > before])
-print(json.dumps(out))
-`;
-  const r = spawnSync('python3', ['-c', py, join(REPO, 'evals/langgraph-patterns/clean/resources/expense_agent.py')], { encoding: 'utf8' });
-  assert.equal(r.status, 0, r.stderr);
-  // [amount, proposal, approved, paused]
-  assert.deepEqual(JSON.parse(r.stdout), [
-    [500, 'approve', true, false], [500, 'reject', false, false], [500, 'escalate', true, true],
-    [1500, 'approve', true, true], [1500, 'reject', true, true],
-  ]);
-  const src = readFileSync(join(REPO, 'evals/langgraph-patterns/clean/resources/expense_agent.py'), 'utf8');
-  assert.match(src, /def propose\(state: State\):\n\s+if getattr\(state\["messages"\]\[-1\], "tool_calls", None\):/, 'escalates on pending tool calls without a model call');
-});
-
-test('the mcp clean twin updates only the fields given and does not claim success for a missing ticket (G3 P1-3)', () => {
-  const src = readFileSync(join(REPO, 'evals/mcp-architecture/clean/resources/server.ts'), 'utf8');
-  const handler = src.slice(src.indexOf("registerTool('update_ticket'"), src.indexOf("registerTool('delete_ticket'"));
-  assert.doesNotMatch(handler, /sql\(\{ status, assignee, priority \}/, 'optional fields passed to sql() unconditionally');
-  assert.match(handler, /filter\(\(\[, v\]\) => v !== undefined\)/);
-  assert.match(handler, /nothing to update/);
-  assert.match(handler, /RETURNING id[\s\S]*rows\.length === 0/);
 });
 
 test('every pack skill passes trigger-lint with zero errors, so CI covers the lint without a workflow change (G3 P1-4)', () => {
@@ -376,11 +323,13 @@ test('G1 prep: --pilot, expected outputs, and --check-outputs on a synthetic com
   assert.match(packArgs([]).by, /\S/, 'run-by defaults to the local user');
   assert.equal(expectedOutputs('nextjs-expert', 3, 3).traces, 18);
   assert.equal(expectedOutputs('skill-builder', 4, 3).traces, 24);
-  const make = ({ dropTrace = false, foreign = false } = {}) => {
+  assert.ok(expectedOutputs('nextjs-expert', 3, 3).files.every((f) => f.startsWith('<private>/') || /summary\.json|CARD\.md/.test(f)), 'raw output is private');
+  const make = ({ dropTrace = false, foreign = false, noSummary = false } = {}) => {
     const root = mkdtempSync(join(tmpdir(), 'g1-out-'));
-    const base = join(root, 'evals', 'nextjs-expert');
+    const priv = mkdtempSync(join(tmpdir(), 'g1-priv-'));
+    const base = join(priv, 'results', 'nextjs-expert');
     const stamp = '2026-10-24T08-00-00Z';
-    mkdirS(join(base, 'results', stamp, 'traces'), { recursive: true });
+    mkdirS(join(base, stamp, 'traces'), { recursive: true });
     const init = (arm) => JSON.stringify({ type: 'system', subtype: 'init', model: 'claude-sonnet-5-5',
       plugins: [...(arm === 'with' ? [{ name: 'eval-nextjs-expert', source: 'eval-nextjs-expert@inline' }] : []),
         ...(foreign ? [{ name: 'frankx-skills', source: 'frankx-skills@claude-skills-library' }] : [])],
@@ -388,23 +337,25 @@ test('G1 prep: --pilot, expected outputs, and --check-outputs on a synthetic com
     const cases = ['seeded-defects', 'clean', 'no-trigger'].map((name) => {
       const arms = {};
       for (const arm of ['with', 'without']) arms[arm] = [1, 2, 3].map((n) => {
-        const rel = `results/${stamp}/traces/${name}__${arm}__${n}.jsonl`;
+        const rel = `${stamp}/traces/${name}__${arm}__${n}.jsonl`;
         if (!(dropTrace && name === 'clean' && arm === 'without' && n === 3)) writeF(join(base, rel), init(arm));
         return { tracePath: rel, graders: [] };
       });
       return { name, dir: `/tmp/x/evals/${name}`, aggregates: { score: 0.8, delta: name === 'no-trigger' ? 0 : 0.2 }, arms };
     });
-    writeF(join(base, 'results', `${stamp}.json`), JSON.stringify({ meta: { stamp }, result: { aggregates: { meanDelta: 0.13, overallScore: 0.8 }, cases } }));
-    writeF(join(base, 'results', `${stamp}.report.html`), '<html></html>');
+    writeF(join(base, `${stamp}.json`), JSON.stringify({ meta: { stamp }, result: { aggregates: { meanDelta: 0.13, overallScore: 0.8 }, cases } }));
+    writeF(join(base, `${stamp}.report.html`), '<html></html>');
     writeF(join(base, 'SCORECARD.md'), '# scorecard\n');
-    return root;
+    if (!noSummary) { mkdirS(join(root, 'evals', 'nextjs-expert', 'results'), { recursive: true }); writeF(join(root, 'evals', 'nextjs-expert', 'results', `${stamp}.summary.json`), '{}'); }
+    return [root, priv];
   };
-  const good = checkOutputs('nextjs-expert', make());
+  const good = checkOutputs('nextjs-expert', ...make());
   assert.equal(good.ok, true, good.notes.join('; '));
   assert.deepEqual([good.runs, good.traces], [18, 18]);
-  assert.match(checkOutputs('nextjs-expert', make({ dropTrace: true })).notes.join(' '), /17 traces for 18 runs/);
-  assert.match(checkOutputs('nextjs-expert', make({ foreign: true })).notes.join(' '), /unexpected plugin/);
-  assert.match(checkOutputs('nextjs-expert', mkdtempSync(join(tmpdir(), 'g1-none-'))).notes.join(' '), /not run yet/);
+  assert.match(checkOutputs('nextjs-expert', ...make({ dropTrace: true })).notes.join(' '), /17 traces for 18 runs/);
+  assert.match(checkOutputs('nextjs-expert', ...make({ foreign: true })).notes.join(' '), /unexpected plugin/);
+  assert.match(checkOutputs('nextjs-expert', ...make({ noSummary: true })).notes.join(' '), /public summary missing/);
+  assert.match(checkOutputs('nextjs-expert', mkdtempSync(join(tmpdir(), 'g1-none-')), mkdtempSync(join(tmpdir(), 'g1-none-'))).notes.join(' '), /not run yet/);
 });
 
 test('install-test launches commands safely on Windows: prefer .exe, shell only for .cmd/.bat shims, quote args', () => {
@@ -440,39 +391,29 @@ test('the checks validate.yml runs on PRs to main also pass here (catalog, site,
   }
 });
 
-test('flagship: the worked comparison comes from the suite files and stays a labelled placeholder until measured', () => {
+test('flagship: method and aggregate results only, labelled placeholders until measured, nothing from the answer key', () => {
   const f = flagshipData('github-code-review');
-  assert.equal(f.planted.length, 8);
-  const graders = readdirSync(join(REPO, 'evals/github-code-review/seeded-defects/graders')).filter((g) => /^d\d+-/.test(g)).sort();
-  assert.deepEqual(f.planted.map((d) => `d${d.n}-${d.id}.md`).sort(), graders, 'one planted bug per grader');
-  assert.match(f.task, /review pull request #412/i);
+  assert.equal(f.planted, PACK.heldOut['github-code-review'].planted);
   assert.equal(f.measured, null);
+  assert.ok(f.method.length >= 4);
   assert.equal(f.limits.length, 3);
+  for (const k of ['task', 'input', 'inputFiles']) assert.equal(f[k], undefined, `no ${k} in the flagship data`);
+  assert.ok(!Array.isArray(f.planted), 'a count, never the list');
   const md = renderFlagshipMd(f);
   assert.match(md, /\*\*Placeholder\.\*\* Nothing below is measured yet/);
-  assert.equal((md.match(/\*placeholder\*/g) || []).length >= 10, true);
+  assert.ok((md.match(/\*placeholder\*/g) || []).length >= 10);
+  assert.doesNotMatch(md, /What is planted|Per planted bug|Example output|word for word/i);
   const readme = readFileSync(join(REPO, 'products/skills-with-evals/README.md'), 'utf8');
   assert.equal(withFlagship(readme, md), readme, 'README flagship section is current (run node scripts/eval-card.mjs)');
-  assert.equal(firstClause("the `catch (e) { x, y }` block, which hides it"), 'the `catch (e) { x, y }` block');
 });
 
-test('flagship measures per arm: bugs found, false alarms on the clean copy, cost and time, per planted bug', () => {
-  const defects = [{ n: 1, id: 'a' }, { n: 2, id: 'b' }];
-  const run = (found, extra = {}) => ({ graders: found.map((n) => ({ name: `d${n}-x`, passed: true })), costUsd: 0.1, durationSeconds: 30, ...extra });
-  const result = { cases: [
-    { name: 'seeded-defects', arms: { with: [run([1, 2]), run([1, 2]), run([1])], without: [run([1]), run([]), run([])] } },
-    { name: 'clean', arms: { with: [{ graders: [{ name: 'no-unsupported-claims', passed: true }] }, { graders: [{ name: 'no-unsupported-claims', passed: false }] }],
-      without: [{ graders: [{ name: 'no-unsupported-claims', passed: true }] }, { graders: [{ name: 'no-unsupported-claims', passed: true }] }] } },
-  ] };
-  const m = flagshipMeasures(result, defects, tmpdir());
-  assert.ok(Math.abs(m.with.meanFound - 5 / 3) < 1e-9);
-  assert.ok(Math.abs(m.without.meanFound - 1 / 3) < 1e-9);
-  assert.equal(m.with.falseAlarmRate, 0.5);
-  assert.equal(m.without.falseAlarmRate, 0);
-  assert.deepEqual(m.with.perDefect.map((d) => +d.found.toFixed(3)), [1, 0.667]);
-  assert.ok(Math.abs(m.with.costPerRunUsd - 0.1) < 1e-9);
-  assert.equal(m.with.secondsPerRun, 30);
-  assert.deepEqual(plantedDefects('nextjs-expert').length, 9);
+test('flagship measures come from the public summary: totals per arm, never which bugs', () => {
+  const m = flagshipMeasures({ runsPerArm: 3, recall: { planted: 8, foundMeanWith: 5.5, foundMeanWithout: 2 }, falseAlarmRate: { with: 0, without: 0.5 },
+    perRun: { costUsdWith: 0.12, costUsdWithout: 0.08, secondsWith: 40, secondsWithout: 30 } });
+  assert.deepEqual(m.with, { foundMean: 5.5, falseAlarmRate: 0, costPerRunUsd: 0.12, secondsPerRun: 40 });
+  assert.deepEqual(m.without, { foundMean: 2, falseAlarmRate: 0.5, costPerRunUsd: 0.08, secondsPerRun: 30 });
+  assert.equal(m.runsPerArm, 3);
+  assert.deepEqual(flagshipMeasures(null).with, { foundMean: null, falseAlarmRate: null, costPerRunUsd: null, secondsPerRun: null });
 });
 
 // ---- skill quality lint (quality program 3) ----
@@ -655,7 +596,16 @@ test('G1 end to end with a fake claude (no model): SIGKILL mid-skill, resume wit
     mkdirS(bin);
     cpSync(join(REPO, 'scripts/tests/fixtures/fake-claude.cjs'), join(bin, 'claude'));
     chmodSync(join(bin, 'claude'), 0o755);
-    const env = { ...process.env, PATH: `${bin}:${process.env.PATH}` };
+    const priv = join(root, 'private');
+    for (const s of ['github-code-review', 'nextjs-expert']) {
+      for (const c of Object.keys(PACK.heldOut[s].graders)) {
+        mkdirS(join(priv, 'evals', s, c, 'graders'), { recursive: true });
+        writeF(join(priv, 'evals', s, c, 'graders', 'g.md'), '---\ntype: llm\n---\nPASS if anything (dummy for the fake run).\n');
+        if (/^clean/.test(c)) { mkdirS(join(priv, 'evals', s, c, 'resources'), { recursive: true }); writeF(join(priv, 'evals', s, c, 'resources', 'x.txt'), 'x'); }
+      }
+      writeF(join(priv, 'evals', s, 'seeded-defects', 'KEY.md'), 'dummy');
+    }
+    const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, SKILLS_EVALS_PRIVATE: priv };
     delete env.ANTHROPIC_API_KEY;
     const ledger = join(repo, 'products/skills-with-evals/receipts/g1-ledger.jsonl');
     const args = [join(repo, 'scripts/run-pack-lift.mjs'), '--skills', 'github-code-review,nextjs-expert', '--per-skill-usd', '5', '--total-usd', '50', '--by', 'ci'];
@@ -687,5 +637,97 @@ test('G1 end to end with a fake claude (no model): SIGKILL mid-skill, resume wit
     assert.equal(st.open.length, 0);
     assert.deepEqual(st.finished.map((f) => `${f.skill}:${f.status}`), ['github-code-review:complete', 'nextjs-expert:interrupted', 'nextjs-expert:complete']);
     assert.ok(!existsSync(`${ledger}.lock`), 'lock released');
+    assert.ok(readdirSync(join(priv, 'results', 'nextjs-expert')).some((f) => f.endsWith('.json')), 'raw results land in the private half');
+    const pub = readdirSync(join(repo, 'evals', 'nextjs-expert', 'results'));
+    assert.ok(pub.length && pub.every((f) => f.endsWith('.summary.json')), `only summaries are public: ${pub}`);
+    assert.deepEqual(leakProblems(repo), [], 'the run leaves nothing held out in the public tree');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+// ---- held-out half (CEO guardrail, 24 Oct 2026): answer keys, grader expected outputs and raw results never public ----
+test('held-out guard: nothing held out is public on this branch', () => {
+  assert.deepEqual(leakProblems(REPO), []);
+});
+
+test('held-out guard catches each kind of leak, and accepts the placeholders', () => {
+  const root = mkdtempSync(join(tmpdir(), 'leak-'));
+  const put = (rel, text) => { mkdirS(dirname(join(root, rel)), { recursive: true }); writeF(join(root, rel), text); };
+  put('evals/demo/seeded-defects/KEY.md', '1. **thing** (security): the thing → fix: x\n');
+  put('evals/demo/seeded-defects/graders/d1-thing.md', '---\ntype: llm\n---\nPASS if it names the thing.\n');
+  put('evals/demo/clean/resources/app.diff', '+fixed\n');
+  put('evals/demo/no-trigger/case.yaml', 'name: x\ngraders:\n  - name: skill-not-fired\n');
+  put('evals/demo/other/prompt.md', '---\ncriteria: "PASS if"\n---\n');
+  put('evals/demo/results/2026.json', '{}');
+  put('evals/demo/results/2026.summary.json', '{"graders": []}');
+  put('evals/demo/_legacy-old', 'old case\n');
+  const found = leakProblems(root, { skills: ['demo'] }).join('\n');
+  for (const re of [/KEY\.md: held-out content/, /graders\/d1-thing\.md: grader file in public/, /clean\/resources\/app\.diff: held-out input/,
+    /no-trigger\/case\.yaml: declares graders inline/, /other\/prompt\.md: grader expected output/, /results\/2026\.json: raw result output/,
+    /2026\.summary\.json: summary carries per-grader/, /_legacy-old: held-out content/]) assert.match(found, re);
+  const ok = mkdtempSync(join(tmpdir(), 'leak-ok-'));
+  for (const rel of ['evals/demo/seeded-defects/KEY.md', 'evals/demo/seeded-defects/graders', 'evals/demo/clean/resources', 'evals/demo/_legacy-old']) {
+    mkdirS(dirname(join(ok, rel)), { recursive: true }); writeF(join(ok, rel), MARKER);
+  }
+  assert.deepEqual(leakProblems(ok, { skills: ['demo'] }), []);
+});
+
+test('summarizeResult publishes aggregates only: no grader names, verdicts, reasoning, answers or traces', () => {
+  const g = (name, passed, extra = {}) => ({ name, passed, reasoning: 'quotes what the grader looks for', ...extra });
+  const run = (found, alarm = false) => ({ tracePath: 'x/trace.jsonl', costUsd: 0.1, durationSeconds: 30, output: 'the model answer',
+    graders: [...[1, 2].map((n) => g(`d${n}-secret-defect-name`, found.includes(n))), g('no-unsupported-claims', !alarm), g('skill-fired', true, { withOnly: true })] });
+  const result = { costUsd: 1.8, aggregates: { meanDelta: 0.2, overallScore: 0.8 }, cases: [
+    { name: 'seeded-defects', aggregates: { score: 0.8, delta: 0.4 }, arms: { with: [run([1, 2]), run([1, 2]), run([1])], without: [run([1]), run([]), run([])] } },
+    { name: 'clean', aggregates: { score: 0.9, delta: 0.1 }, arms: { with: [run([]), run([]), run([], true)], without: [run([], true), run([], true), run([])] } },
+    { name: 'no-trigger', aggregates: { score: 1, delta: 0 }, arms: { with: [run([]), run([]), run([])], without: [run([]), run([]), run([])] } },
+  ] };
+  const pub = summarizeResult(result, { stamp: 's', claudeVersion: '2.1.310', judgeModel: 'haiku', by: 't', skillHash: 'a', suiteHash: 'b', heldOutHash: 'c', traces: 18 }, { planted: 2 });
+  const text = JSON.stringify(pub);
+  assert.doesNotMatch(text, /secret-defect-name|quotes what|the model answer|tracePath|"graders"|reasoning|no-unsupported|skill-fired/);
+  assert.ok(Math.abs(pub.summary.recall.foundMeanWith - 5 / 3) < 1e-9);
+  assert.ok(Math.abs(pub.summary.recall.foundMeanWithout - 1 / 3) < 1e-9);
+  assert.ok(Math.abs(pub.summary.falseAlarmRate.with - 1 / 3) < 1e-9);
+  assert.ok(Math.abs(pub.summary.falseAlarmRate.without - 2 / 3) < 1e-9);
+  assert.equal(pub.summary.runsPerArm, 3);
+  assert.equal(pub.summary.comparable, true);
+  assert.equal(pub.summary.fired.fired, 6);
+  assert.equal(pub.meta.heldOutHash, 'c');
+  const dir = mkdtempSync(join(tmpdir(), 'sum-'));
+  mkdirS(join(dir, 'evals', 'demo', 'results'), { recursive: true });
+  writeF(join(dir, 'evals', 'demo', 'results', 's.summary.json'), text);
+  assert.deepEqual(leakProblems(dir, { skills: ['demo'] }), [], 'the guard accepts a real summary');
+});
+
+test('the overlay adds held-out graders, inline graders and inputs at staging; the public suite hash ignores them', () => {
+  const repo = mkdtempSync(join(tmpdir(), 'ov-repo-'));
+  const priv = mkdtempSync(join(tmpdir(), 'ov-priv-'));
+  const put = (base, rel, text) => { mkdirS(dirname(join(base, rel)), { recursive: true }); writeF(join(base, rel), text); };
+  put(repo, 'free-skills/demo/SKILL.md', '---\nname: demo\ndescription: d\n---\nbody\n');
+  put(repo, 'evals/demo/clean/prompt.md', '---\nruns: 1\n---\nReview it.\n');
+  put(repo, 'evals/demo/clean/graders', MARKER);
+  put(repo, 'evals/demo/clean/resources', MARKER);
+  put(repo, 'evals/demo/no-trigger/case.yaml', 'name: demo--no-trigger\nexecution:\n  prompt: "x"\n');
+  put(priv, 'evals/demo/clean/graders/no-unsupported-claims.md', '---\ntype: llm\n---\nPASS if.\n');
+  put(priv, 'evals/demo/clean/resources/app.diff', '+ok\n');
+  put(priv, 'evals/demo/no-trigger/graders.yaml', 'graders:\n  - name: skill-not-fired\n    type: tool_used\n');
+  const withHeld = stage(repo, 'demo', mkdtempSync(join(tmpdir(), 'ov-o-')), { root: priv });
+  const pub = stage(repo, 'demo', mkdtempSync(join(tmpdir(), 'ov-o-')), { root: priv, heldOut: false });
+  assert.equal(withHeld.suiteHash, pub.suiteHash);
+  assert.equal(withHeld.graders, 2);
+  assert.match(withHeld.heldOutHash, /^[0-9a-f]{12}$/);
+  assert.ok(existsSync(join(withHeld.plugin, 'evals/clean/graders/no-unsupported-claims.md')));
+  assert.equal(readFileSync(join(withHeld.plugin, 'evals/clean/resources/app.diff'), 'utf8'), '+ok\n');
+  assert.match(readFileSync(join(withHeld.plugin, 'evals/no-trigger/case.yaml'), 'utf8'), /^graders:\n  - name: skill-not-fired/m);
+  assert.ok(!existsSync(join(pub.plugin, 'evals/clean/graders')) && !existsSync(join(pub.plugin, 'evals/clean/resources')), 'placeholders are never staged');
+  put(repo, 'evals/demo/no-trigger/case.yaml', 'name: x\ngraders:\n  - name: public\n');
+  assert.throws(() => stage(repo, 'demo', mkdtempSync(join(tmpdir(), 'ov-o-')), { root: priv }), /public case\.yaml still declares graders/);
+  assert.equal(heldOutStatus('github-code-review', priv).present, false);
+});
+
+// The private tests (answer-key structure, grader checks, fixed-twin regressions) live with the private half.
+const PRIV = privateRoot();
+const PRIV_TESTS = join(PRIV, 'tests', 'held-out.test.mjs');
+if (PACK.skills.every((s) => heldOutStatus(s, PRIV).present) && existsSync(PRIV_TESTS)) {
+  (await import(pathToFileURL(PRIV_TESTS).href)).register({ test, assert, REPO, PRIV, PACK, shadowedRoutes, lintSkill, keyPhraseHits });
+} else {
+  test('private half checks (answer keys, graders, fixed twins)', { skip: 'no private half here; it is never in CI. Set SKILLS_EVALS_PRIVATE to run them' }, () => {});
+}

@@ -19,6 +19,13 @@ git commit -am "ci(skill-eval): apply the G3 workflow fixes" && git push
 | Test job runs `eval-pack.test.mjs`, `trigger-lint --pack` and `eval-card --check` as named steps | P1-4 | Each check shows up as its own CI step instead of hiding inside another test file |
 | Lift lane reads its skills from `pack.json` (`LIFT_PACK`) instead of a hardcoded list of 3 | P1-4 | The `run-lift-eval` label currently measures only ui-ux-design-expert, book-publishing and excellence-book-writing; 7 of 10 pack skills would never run. Reading the manifest means the list cannot drift again |
 
+**Held-out half (24 October 2026):** pack skills now need the private half (answer keys, graders, fixed twins) to run
+a lift eval, and CI does not have it. With the patch applied, the label-triggered lift lane would stop at "the private
+half is not at …" for every pack skill (exit 2, nothing spent). Whether CI ever gets the private half, and how (for
+example a read-only checkout of a private repository), is your decision; until then run G1 locally. Whatever you
+choose, the job may upload `evals/<skill>/results/*.summary.json` only, never raw results, reports, traces or
+scorecards: they carry the graders' verdicts.
+
 **Until it's applied:** the test job already runs `scripts/tests/eval-skill.test.mjs`, which imports
 `scripts/tests/eval-pack.test.mjs`, so the catalog check, the pack-wide trigger lint and the card check run in CI
 today whenever the job triggers. Two gaps remain until the patch lands: the trigger paths (first row), and the CI

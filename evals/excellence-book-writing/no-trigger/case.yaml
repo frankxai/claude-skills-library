@@ -7,11 +7,3 @@ execution:
   prompt: "Proofread this out-of-office reply for typos and return the corrected text only: 'Im away untill Monday 3 November with limited acess to email. For urgent issues please contact Priya on the support desk.'"
   max_turns: 4
   allowed_tools: [Skill, Read]
-graders:
-  - name: skill-not-fired
-    type: tool_used
-    tool: Skill
-    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?excellence-book-writing\""
-    min: 0
-    max: 0
-    arm: both

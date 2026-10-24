@@ -1,12 +1,4 @@
-# Answer key: ai-architect-review seeded-defects
-
-Never staged into a run (scripts/eval-skill.mjs NEVER_STAGED).
-
-1. **prompt-injection-write-tool** (trust-boundary): untrusted retrieved content (customer emails and history, help-center text) being concatenated into the system prompt while the agent holds a `issue_refund` tool that executes immediately, so a crafted email can trigger refunds or plan changes (prompt injection reaching a write tool) → fix: treating retrieved text as untrusted data outside the system prompt and putting money-moving actions behind human approval or strict server-side limits
-2. **unbounded-loop** (loop): the `while (true)` agent loop that only stops when the model writes `DONE`, with no step limit or budget in code → fix: adding a hard step/iteration limit and budget in code, with escalation when it is hit
-3. **no-model-seam** (model-call): the provider SDK (`openai`) imported directly in four modules, so there is no single place for routing, fallback, timeouts or cost tracking → fix: routing every model call through one module/gateway that owns provider choice, fallback and accounting
-4. **long-run-in-request** (durability): long work running inside 60-second Vercel functions: the agent loop in the inbound request handler and the nightly re-index of everything in a single cron invocation → fix: moving the agent run and the re-index to a durable job/workflow with batching, checkpoints and retries
-5. **no-cost-cap** (operations): the absence of any per-request or per-tenant spend limit (one thread made 212 model calls overnight) → fix: adding per-email/per-tenant spend and token budgets enforced in code, with alerts
-6. **no-timeout-fallback** (operations): model calls using SDK defaults with no timeout and no fallback provider, so a slow or down provider fails or hangs every request → fix: setting explicit timeouts and a fallback provider/path
-7. **no-evals** (evaluation): prompt changes going live immediately from the admin panel with quality checked only by reading a few replies on Fridays (no regression evaluation) → fix: versioning prompts and gating changes on an automated regression eval set
-8. **shared-memory-no-tenant** (trust-boundary): one shared vector index of all customers' emails with similarity-only retrieval, so one customer's data can surface in another customer's reply → fix: enforcing tenant isolation in retrieval (a mandatory tenant filter or per-tenant indexes) with a test
+Held out. This file or folder belongs to the private half of the eval suite: the answer keys, the
+grader expected outputs and the raw results. They are never published, because publishing them would leak the
+eval and make every lift number meaningless. scripts/eval-skill.mjs adds the private half back at run time.
+See evals/README.md, "Held-out half".

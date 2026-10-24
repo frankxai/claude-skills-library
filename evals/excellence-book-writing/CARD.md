@@ -22,7 +22,7 @@ Routing text (the only part an agent sees before loading the skill): "High-quali
 | no-trigger | Should NOT trigger excellence-book-writing: a near miss that asks for a quick proofread of a two-sentence email, not long-form nonfiction. | 1 |
 | seeded-defects | Recall. A nonfiction book section with eight seeded prose anti-patterns. | 9 |
 
-8 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+8 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 

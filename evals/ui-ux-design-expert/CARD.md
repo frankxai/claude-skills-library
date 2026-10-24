@@ -22,7 +22,7 @@ Routing text (the only part an agent sees before loading the skill): "Expert gui
 | no-trigger | Should NOT trigger ui-ux-design-expert: an adjacent but different task. | 1 |
 | seeded-defects | Recall. A checkout page with eight seeded WCAG 2.2 AA defects in its markup and CSS. | 9 |
 
-8 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+8 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 

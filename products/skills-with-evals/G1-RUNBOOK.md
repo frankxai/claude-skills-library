@@ -21,7 +21,8 @@ When it finishes:
 
 ```powershell
 node scripts/run-pack-lift.mjs --check-outputs    # every file present, traces match runs, isolation holds, cards current
-git add evals products/skills-with-evals/receipts    # includes g1-ledger.jsonl, the cost ledger
+node scripts/held-out.mjs check                   # nothing held out is in the public tree
+git add evals products/skills-with-evals          # public only: summaries, cards, README, ledger and run receipt
 git commit -m "evals: G1 run (subscription)"
 git push
 ```
@@ -34,7 +35,14 @@ git fetch origin agent/hyperagent/eval-pack-rc1
 git worktree add ..\csl-g1 agent/hyperagent/eval-pack-rc1
 Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
 claude auth status --text        # if not signed in: claude auth login, then choose the Claude subscription
+# The private half (answer keys, graders, fixed twins). Keep it OUTSIDE the repo; never commit it here.
+# Either unpack the tarball from the agent thread to ..\skills-with-evals-private, or rebuild it from history:
+node scripts/held-out.mjs export --from 0ae110c --to ..\skills-with-evals-private
+node scripts/held-out.mjs status                  # all 10 present
 ```
+
+The tarball also carries the private tests (`tests/held-out.test.mjs`); a rebuild from history does not. With the
+private half in place, `node --test scripts/tests/eval-skill.test.mjs` runs them too.
 
 Needs Claude Code 2.1.269 or later (tested on 2.1.310), Node 22 or later, and a repo path without spaces.
 
@@ -64,10 +72,11 @@ Needs Claude Code 2.1.269 or later (tested on 2.1.310), Node 22 or later, and a 
 
 | Per skill | Count |
 |---|---|
-| `evals/<skill>/results/<stamp>.json` (the tool's result, with run metadata and hashes) | 1 |
-| `evals/<skill>/results/<stamp>.report.html` (Claude Code's report: scores, prompts, grader verdicts) | 1 |
-| `evals/<skill>/results/<stamp>/traces/<case>__<with or without>__<n>.jsonl` (unedited run traces) | 18 (skill-builder: 24) |
-| `evals/<skill>/SCORECARD.md` | 1 |
+| Private: `<private>/results/<skill>/<stamp>.json` (the tool's result, with every grader verdict) | 1 |
+| Private: `<private>/results/<skill>/<stamp>.report.html` (Claude Code's report: scores, prompts, grader verdicts) | 1 |
+| Private: `<private>/results/<skill>/<stamp>/traces/<case>__<with or without>__<n>.jsonl` (unedited run traces) | 18 (skill-builder: 24) |
+| Private: `<private>/results/<skill>/SCORECARD.md` | 1 |
+| Public: `evals/<skill>/results/<stamp>.summary.json` (totals only) | 1 |
 | `evals/<skill>/CARD.md` (regenerated) | 1 |
 
 Plus `products/skills-with-evals/receipts/g1-run-<stamp>.md` (the run summary, one per attempt) and
@@ -97,4 +106,5 @@ files. `node scripts/run-pack-lift.mjs --dry-run` prints the exact list.
 | `claude is a .cmd shim … contains spaces` | Repo or TEMP path has spaces | Use the native `claude.exe`, or move the worktree |
 | You stopped it with Ctrl-C | Interrupted runs can leave `claude-eval-*` folders in your temp folder | Delete them, then run the same command again |
 
-Never edit a result, trace, card or the ledger by hand. The cards refuse a result whose skill or tests changed after the run.
+Never edit a result, trace, card or the ledger by hand. Never copy anything from the private half into this repo,
+a PR comment or the buyer page: totals only. The cards refuse a result whose skill or tests changed after the run.

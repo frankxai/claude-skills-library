@@ -27,6 +27,9 @@ evidence cold. You are that check. You did not build any of this and owe it noth
   comments, `products/skills-with-evals/` (README, pack.json, this brief), `evals/<skill>/` for the ten
   skills in `pack.json`, and `scripts/eval-skill.mjs`, `scripts/trigger-lint.mjs`, `scripts/install-test.mjs`,
   `scripts/eval-card.mjs`, `scripts/tests/`.
+- **Held out:** the answer keys, the graders, the fixed twins of the seeded inputs and the raw results are not in
+  the public repo (`evals/README.md`, "Held-out half"). Questions 2 to 4 need them; Frank shares that private half
+  with you directly. Never quote it in your report: name a skill, a case and a grader number, and say what is wrong.
 
 ## Questions to answer
 
@@ -44,8 +47,8 @@ evidence cold. You are that check. You did not build any of this and owe it noth
    guessing? Flag any criterion that needs facts the judge does not have.
 5. **No-trigger cases are honest.** Is each no-trigger prompt adjacent enough to tempt the skill but
    genuinely outside its job? Is any of them so far away that passing it proves nothing?
-6. **No leakage.** Confirm from `scripts/eval-skill.mjs` and its tests that `KEY.md`, graders and old
-   results are never staged into the plugin the model sees.
+6. **No leakage.** Confirm from `scripts/eval-skill.mjs` and its tests that `KEY.md` and old results are never
+   staged into the plugin the model sees, and from `scripts/held-out.mjs check` that nothing held out is public.
 7. **Lift would be valid.** Read `comparability()` in `scripts/eval-skill.mjs` and `scripts/eval-card.mjs`.
    Would they refuse to show a lift when arms are unequal, runs errored, the judge was skipped or the run
    was partial? What is still weak? (The judge is from the same provider as the model under test; say how

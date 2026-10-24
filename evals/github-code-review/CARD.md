@@ -22,7 +22,7 @@ Routing text (the only part an agent sees before loading the skill): "Comprehens
 | no-trigger | Should NOT trigger github-code-review: an adjacent but different task. | 1 |
 | seeded-defects | Recall. A pull-request diff (order search and self-service refunds) with eight seeded correctness and security bugs. | 9 |
 
-8 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+8 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 

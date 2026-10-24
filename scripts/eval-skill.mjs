@@ -1,13 +1,16 @@
 #!/usr/bin/env node
-// Run a skill's eval suite with the official `claude plugin eval` and publish a scorecard.
+// Run a skill's eval suite with the official `claude plugin eval` and record the result.
 //
 // free-skills/<skill>/ stays the only copy of the skill: this script stages a throwaway
-// plugin (manifest + that skill + evals/<skill>/) in the temp dir, runs the eval there with
-// its no-plugin baseline arm, and writes evals/<skill>/SCORECARD.md and results/<stamp>.json,
-// plus the HTML report (results/<stamp>.report.html) and every run's unedited trace
-// (results/<stamp>/traces/<case>__<arm>__<n>.jsonl), so a reader can check what the model did.
-// The eval runs with --threshold 0: this script collects measurements and judges
+// plugin (manifest + that skill + the public half of evals/<skill>/: prompts and inputs) in the temp dir, adds the
+// held-out half (graders, from the private folder; scripts/held-out.mjs), and runs the eval there with its
+// no-plugin baseline arm. The eval runs with --threshold 0: this script collects measurements and judges
 // comparability itself, it does not gate on a score.
+//
+// Output is split the same way. Raw output (the tool's result with every grader verdict, the HTML report, every
+// run's unedited trace, SCORECARD.md) goes to <private>/results/<skill>/, because it reveals the answer key.
+// Only an aggregate summary is public: evals/<skill>/results/<stamp>.summary.json (summarizeResult()), which
+// the cards are built from.
 //
 //   node scripts/eval-skill.mjs <skill> [--runs N] [--max-cost-usd X] [--judge-model M]
 //                                       [--model M] [--by WHO] [--stage-only]
@@ -20,10 +23,12 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, 
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { heldOutCounts, heldOutHash, heldOutStatus, isMarker, overlayHeldOut, privateRoot } from './held-out.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-// The answer key and past results must never reach the model under test.
-const NEVER_STAGED = new Set(['KEY.md', 'results', 'SCORECARD.md']);
+// The answer key and past results must never reach the model under test. Public graders do not exist for the pack
+// (placeholders named "graders" mark where the private ones go); the overlay adds the private ones after the copy.
+const NEVER_STAGED = new Set(['KEY.md', 'results', 'SCORECARD.md', 'graders.yaml']);
 const OPTIONS = {
   '--runs': { def: '3', ok: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 50 },
   '--max-cost-usd': { def: '5', ok: (v) => /^\d+(\.\d+)?$/.test(v) && +v > 0 },
@@ -50,7 +55,9 @@ export function parseArgs(argv) {
   return out;
 }
 
-export function stage(repoRoot, skill, outDir) {
+// Returns the staged plugin, its cases, suiteHash (the public half exactly as staged), and, when the private half
+// is present and heldOut is not false, heldOutHash and the number of grader entries added.
+export function stage(repoRoot, skill, outDir, { heldOut = true, root = privateRoot() } = {}) {
   const skillDir = join(repoRoot, 'free-skills', skill);
   const evalDir = join(repoRoot, 'evals', skill);
   if (!existsSync(join(skillDir, 'SKILL.md'))) throw new Error(`no skill at free-skills/${skill}/SKILL.md`);
@@ -72,10 +79,15 @@ export function stage(repoRoot, skill, outDir) {
   for (const c of cases) {
     cpSync(join(evalDir, c.name), join(plugin, 'evals', c.name), {
       recursive: true,
-      filter: (src) => !NEVER_STAGED.has(basename(src)),
+      filter: (src) => !NEVER_STAGED.has(basename(src)) && !isMarker(src),
     });
   }
-  return { plugin, cases: cases.map((c) => c.name) };
+  // Hash the suite now, before anything runs: `claude plugin eval` writes its results into <plugin>/evals/ during
+  // the run, so a hash taken afterwards would never match the suite that ran (G3 P1-5). This is the public half;
+  // the held-out half added below gets its own hash.
+  const suiteHash = treeHash(join(plugin, 'evals'));
+  const graders = heldOut ? overlayHeldOut(skill, plugin, root) : 0;
+  return { plugin, cases: cases.map((c) => c.name), suiteHash, graders, heldOutHash: heldOut && graders ? heldOutHash(skill, root) : null };
 }
 
 export function treeHash(dir) {
@@ -172,6 +184,66 @@ export function quietLine(result) {
   return typeof w === 'number' ? `${pct(w)} with the skill loaded (100% means it never fired on the unrelated task)` : 'no score';
 }
 
+// Read each run's trace init record and report anything that should not be there (moved from run-pack-lift.mjs).
+export function isolationProblems(result, skill, baseDir) {
+  const problems = [];
+  const models = new Set();
+  const staged = `eval-${skill}`;
+  const packSkills = JSON.parse(readFileSync(join(REPO, 'products', 'skills-with-evals', 'pack.json'), 'utf8')).skills;
+  for (const c of result.cases || []) {
+    for (const [arm, runs] of Object.entries(c.arms || {})) {
+      (runs || []).forEach((r, i) => {
+        const where = `${c.name} ${arm} run ${i + 1}`;
+        const p = r?.tracePath && (existsSync(r.tracePath) ? r.tracePath : join(baseDir, r.tracePath));
+        if (!p || !existsSync(p)) { problems.push(`${where}: no trace`); return; }
+        const init = readFileSync(p, 'utf8').split('\n').filter(Boolean).map((l) => { try { return JSON.parse(l); } catch { return {}; } })
+          .find((e) => e.type === 'system' && e.subtype === 'init');
+        if (!init) { problems.push(`${where}: trace has no init record`); return; }
+        if (init.model) models.add(init.model);
+        const foreign = (init.plugins || []).filter((pl) => !/@builtin$/.test(pl.source || '') && !(arm === 'with' && pl.name === staged));
+        if (foreign.length) problems.push(`${where}: unexpected plugin(s) ${foreign.map((pl) => pl.name).join(', ')}`);
+        if (arm !== 'with' && (init.plugins || []).some((pl) => pl.name === staged)) problems.push(`${where}: the no-skill arm loaded the skill`);
+        const leaked = (init.skills || []).filter((sk) => sk.includes(':') ? !sk.startsWith(`${staged}:`) && !/^cc-plugin-/.test(sk) : packSkills.includes(sk));
+        if (leaked.length) problems.push(`${where}: unexpected skill(s) ${leaked.join(', ')}`);
+      });
+    }
+  }
+  return { problems, models: [...models] };
+}
+
+const mean = (xs) => { const v = xs.filter((x) => typeof x === 'number'); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+const passedCount = (run, re) => (run?.graders || []).filter((g) => re.test(g.name || '') && g.passed).length;
+const caseName = (c) => (c.dir ? c.dir.split(/[\\/]/).filter(Boolean).at(-1) : c.name);
+
+// The public record of a run: aggregates only. No grader names, verdicts, criteria, prompts, answers or traces, so
+// it can be published without revealing what the graders look for. Bugs found is a count per run, never which ones.
+export function summarizeResult(result, meta, { isolation = [], models = [], planted = null } = {}) {
+  const cases = result.cases || [];
+  const arm = (c, a) => c?.arms?.[a] || [];
+  const runsPerArm = cases.length ? Math.min(...cases.flatMap((c) => [arm(c, 'with').length, arm(c, 'without').length])) : 0;
+  const seeded = cases.find((c) => caseName(c) === 'seeded-defects');
+  const clean = cases.find((c) => /^clean/.test(caseName(c) || ''));
+  const found = (a) => (seeded && arm(seeded, a).length ? mean(arm(seeded, a).map((r) => passedCount(r, /^d\d+-/))) : null);
+  const alarms = (a) => (clean && arm(clean, a).length ? arm(clean, a).filter((r) => !passedCount(r, /no-unsupported-claims/)).length / arm(clean, a).length : null);
+  const perRun = (k, a) => mean(cases.flatMap((c) => arm(c, a)).map((r) => r?.[k]));
+  const problems = [...comparability(result), ...(result.partial ? [] : isolation)];
+  return {
+    meta: { stamp: meta.stamp, claudeVersion: meta.claudeVersion, model: meta.model || null, judgeModel: meta.judgeModel, by: meta.by, traces: meta.traces ?? 0,
+      skillHash: meta.skillHash, suiteHash: meta.suiteHash, heldOutHash: meta.heldOutHash || null, modelsSeen: models },
+    summary: {
+      costUsd: result.costUsd ?? null, partial: !!result.partial, partialReason: result.partialReason || null, runsPerArm,
+      comparable: problems.length === 0, problems,
+      reviewLift: reviewLift(result), baselineScore: baselineScore(result), fired: firedRate(result),
+      quietWithScore: cases.find(isQuietCase)?.aggregates?.score ?? null, meanDelta: result.aggregates?.meanDelta ?? null, overallScore: result.aggregates?.overallScore ?? null,
+      cases: cases.map((c) => ({ name: caseName(c), quiet: isQuietCase(c), with: c.aggregates?.score ?? null, delta: c.aggregates?.delta ?? null,
+        runsWith: arm(c, 'with').length, runsWithout: arm(c, 'without').length })),
+      recall: seeded && planted ? { planted, foundMeanWith: found('with'), foundMeanWithout: found('without') } : null,
+      falseAlarmRate: clean ? { with: alarms('with'), without: alarms('without') } : null,
+      perRun: { costUsdWith: perRun('costUsd', 'with'), costUsdWithout: perRun('costUsd', 'without'), secondsWith: perRun('durationSeconds', 'with'), secondsWithout: perRun('durationSeconds', 'without') },
+    },
+  };
+}
+
 export function renderScorecard(skill, result, meta) {
   const problems = comparability(result);
   const rows = (result.cases || []).map((c) => {
@@ -198,7 +270,7 @@ export function renderScorecard(skill, result, meta) {
     '',
     `Lift over the review cases: ${pts(reviewLift(result))}. Stay-quiet case: ${quietLine(result)}. Overall with the skill: ${pct(a.overallScore)}; mean difference over all cases (stay-quiet included, so diluted): ${pts(a.meanDelta)}. Cost about $${(result.costUsd ?? 0).toFixed(2)}.`,
     '',
-    `Cases, fixtures and graders are in this folder. Raw result: \`results/${meta.stamp}.json\`; HTML report: \`results/${meta.stamp}.report.html\`; unedited run traces: \`results/${meta.stamp}/traces/\` (${meta.traces ?? 0} files).`,
+    `Private: this scorecard, the raw result (\`${meta.stamp}.json\`), the HTML report and the unedited traces (\`${meta.stamp}/traces/\`, ${meta.traces ?? 0} files) stay in the private half, next to this file. The public record is \`evals/${skill}/results/${meta.stamp}.summary.json\` (aggregates only).`,
     '',
   ].join('\n');
 }
@@ -220,19 +292,23 @@ function main(argv) {
     return 2;
   }
   const work = mkdtempSync(join(tmpdir(), `skill-eval-${opts.skill}-`));
-  const { plugin, cases } = stage(REPO, opts.skill, work);
-  // Hash the suite now: `claude plugin eval` writes its results into <plugin>/evals/ during the run, so a hash taken
-  // afterwards would never match the suite that ran (found by the card staleness check, G3 P1-5).
-  const suiteHash = treeHash(join(plugin, 'evals'));
-  console.log(`staged ${cases.length} case(s) at ${plugin}`);
+  const root = privateRoot();
+  const { plugin, cases, suiteHash, graders, heldOutHash: hHash } = stage(REPO, opts.skill, work, { root });
+  const counts = heldOutCounts(opts.skill);
+  const held = counts ? heldOutStatus(opts.skill, root) : null;
+  console.log(`staged ${cases.length} case(s) at ${plugin}${counts ? ` · held-out half: ${held.present ? `${graders} graders added (${hHash})` : `MISSING (${held.missing.join('; ')})`}` : ''}`);
   if (opts.stageOnly) return 0;
+  if (held && !held.present) {
+    console.error(`The private half of evals/${opts.skill}/ (graders, answer key) is not at ${root}. Set SKILLS_EVALS_PRIVATE, or rebuild it from history: node scripts/held-out.mjs export --from 0ae110c --to <a folder outside this repo>. Nothing was run.`);
+    return 2;
+  }
 
   const claude = findClaude();
   const jsonOut = join(work, 'result.json');
   const stamp = new Date().toISOString().replace(/[:]/g, '-').replace(/\.\d+Z$/, 'Z');
-  const out = join(REPO, 'evals', opts.skill);
-  mkdirSync(join(out, 'results'), { recursive: true });
-  const report = join(out, 'results', `${stamp}.report.html`);
+  const out = join(root, 'results', opts.skill);
+  mkdirSync(out, { recursive: true });
+  const report = join(out, `${stamp}.report.html`);
   const args = ['plugin', 'eval', plugin, '--trust-plugin', '--ablation', 'with-without', '--no-publish', '--keep-temp', '--report', report,
     '--threshold', '0', '--runs', opts.runs, '--max-cost-usd', opts['max-cost-usd'],
     '--judge-model', opts['judge-model'], '--json', jsonOut, ...(opts.model ? ['--model', opts.model] : [])];
@@ -252,16 +328,20 @@ function main(argv) {
     return run.status || 1;
   }
   const result = JSON.parse(readFileSync(jsonOut, 'utf8'));
-  const traces = collectTraces(result, join(out, 'results', stamp, 'traces'), out);
+  const traces = collectTraces(result, join(out, stamp, 'traces'), out);
   const claudeVersion = spawnSync(claude.cmd, ['--version'], { encoding: 'utf8', shell: claude.shell }).stdout?.trim() || 'unknown version';
   const meta = {
     stamp, claudeVersion, judgeModel: opts['judge-model'], model: opts.model, by: opts.by, traces,
-    skillHash: treeHash(join(REPO, 'free-skills', opts.skill)), suiteHash,
+    skillHash: treeHash(join(REPO, 'free-skills', opts.skill)), suiteHash, heldOutHash: hHash,
   };
-  writeFileSync(join(out, 'results', `${stamp}.json`), JSON.stringify({ meta, result }, null, 2) + '\n');
+  writeFileSync(join(out, `${stamp}.json`), JSON.stringify({ meta, result }, null, 2) + '\n');
   writeFileSync(join(out, 'SCORECARD.md'), renderScorecard(opts.skill, result, meta));
-  const problems = comparability(result);
-  console.log(`wrote evals/${opts.skill}/SCORECARD.md${problems.length ? ' (not comparable: ' + problems.join('; ') + ')' : ''}`);
+  const iso = isolationProblems(result, opts.skill, out);
+  const pub = summarizeResult(result, meta, { isolation: iso.problems, models: iso.models, planted: counts?.planted ?? null });
+  mkdirSync(join(REPO, 'evals', opts.skill, 'results'), { recursive: true });
+  writeFileSync(join(REPO, 'evals', opts.skill, 'results', `${stamp}.summary.json`), JSON.stringify(pub, null, 2) + '\n');
+  const problems = pub.summary.problems;
+  console.log(`wrote ${out}/ (private: result, report, traces, SCORECARD.md) and evals/${opts.skill}/results/${stamp}.summary.json (public, aggregates only)${problems.length ? ' (not comparable: ' + problems.slice(0, 3).join('; ') + ')' : ''}`);
   if (run.status) return run.status;
   return problems.length ? 3 : 0;
 }
