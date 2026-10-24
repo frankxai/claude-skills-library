@@ -572,7 +572,7 @@
         },
         {
           "name": "skill-builder",
-          "description": "Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification.",
+          "description": "Writes Agent Skills. Use when creating, reviewing or fixing a SKILL.md: frontmatter, a description that triggers, progressive disclosure, folder layout.",
           "path": "free-skills/skill-builder",
           "hasEvals": true
         },
@@ -776,7 +776,7 @@
         },
         {
           "name": "skill-builder",
-          "description": "Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification.",
+          "description": "Writes Agent Skills. Use when creating, reviewing or fixing a SKILL.md: frontmatter, a description that triggers, progressive disclosure, folder layout.",
           "path": "free-skills/skill-builder",
           "hasEvals": true
         },

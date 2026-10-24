@@ -25,9 +25,14 @@ firing needs a Codex run with a model).
 | nextjs-expert | 131 → 23 | 260 → 158 | Next.js 16 App Router. Use when building, reviewing or debugging a Next.js app: server vs client components, caching, data fetching, version-specific gotchas. |
 | mcp-architecture | 113 → 20 | 232 → 154 | Builds MCP servers. Use when designing, reviewing or securing a Model Context Protocol server: tools, resources, prompts, input schemas, auth and secrets. |
 | langgraph-patterns | 135 → 18 | 252 → 153 | LangGraph agents. Use when building or debugging a LangGraph app: state and reducers, routing, tool binding, checkpointing, human-in-the-loop interrupts. |
-| skill-builder | 131 → 21 | 268 → 152 | Writes Agent Skills. Use when creating, reviewing or fixing a SKILL.md: frontmatter, a description that triggers, progressive disclosure, folder layout. |
+| skill-builder (**applied 2026-10-24**, see below) | 131 → 21 | 268 → 152 | Writes Agent Skills. Use when creating, reviewing or fixing a SKILL.md: frontmatter, a description that triggers, progressive disclosure, folder layout. |
 | product-management-expert | 126 → 20 | 191 → 141 | Product management. Use when writing or reviewing a PRD, roadmap or metric plan: problem evidence, scope, success metrics, rollout and risks. |
 | excellence-book-writing | 103 → 18 | 221 → 134 | Nonfiction prose. Use when drafting or revising long-form nonfiction: chapter structure, clarity, narrative flow and editorial polish. |
 
 Library-wide, 75 of 114 skills have the same problem. Fix the pack first, measure it, then decide
 whether the rest are worth the same treatment.
+
+**Applied early: skill-builder.** After the G3 P0-2 fix, skill-builder teaches "put the Use-when cue within the first ~100
+characters". Leaving its own cue at character 131 would make it break the rule it teaches, so its description was
+changed together with that fix. This gives up skill-builder's before/after measurement; the other six fixes stay
+unapplied until G1 can measure them.

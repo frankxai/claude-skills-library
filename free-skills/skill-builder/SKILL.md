@@ -1,6 +1,6 @@
 ---
 name: skill-builder
-description: "Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification."
+description: "Writes Agent Skills. Use when creating, reviewing or fixing a SKILL.md: frontmatter, a description that triggers, progressive disclosure, folder layout."
 ---
 
 # Skill Builder
@@ -26,8 +26,8 @@ mkdir -p ~/.claude/skills/my-first-skill
 # 2. Create SKILL.md with proper format
 cat > ~/.claude/skills/my-first-skill/SKILL.md << 'EOF'
 ---
-name: "My First Skill"
-description: "Brief description of what this skill does and when Claude should use it. Maximum 1024 characters."
+name: my-first-skill
+description: "Does X for Y. Use when the user asks for Z. Third person, what plus when, at most 1024 characters."
 ---
 
 # My First Skill
@@ -53,7 +53,7 @@ Every SKILL.md **must** start with YAML frontmatter containing exactly two requi
 
 ```yaml
 ---
-name: "Skill Name"                    # REQUIRED: Max 64 chars
+name: skill-name                      # REQUIRED: lowercase, digits, hyphens; max 64; same as the folder
 description: "What this skill does    # REQUIRED: Max 1024 chars
 and when Claude should use it."       # Include BOTH what & when
 ---
@@ -64,15 +64,18 @@ and when Claude should use it."       # Include BOTH what & when
 **`name`** (REQUIRED):
 - **Type**: String
 - **Max Length**: 64 characters
-- **Format**: Human-friendly display name
-- **Usage**: Shown in skill lists, UI, and loaded into Claude's system prompt
-- **Best Practice**: Use Title Case, be concise and descriptive
+- **Format**: lowercase letters, digits and hyphens only (`^[a-z0-9][a-z0-9-]*$`): no spaces, capitals, underscores or colons
+- **Must match**: the skill's folder name exactly (`skills/api-docs-generator/SKILL.md` → `name: api-docs-generator`)
+- **Usage**: The identifier agents route on and list. Put the human-friendly title in the body's `#` heading, not here
+- **Best Practice**: Short and descriptive; names the job
 - **Examples**:
-  - ✅ "API Documentation Generator"
-  - ✅ "React Component Builder"
-  - ✅ "Database Schema Designer"
-  - ❌ "skill-1" (not descriptive)
-  - ❌ "This is a very long skill name that exceeds sixty-four characters" (too long)
+  - ✅ `api-docs-generator`
+  - ✅ `react-component-builder`
+  - ✅ `database-schema-designer`
+  - ❌ `API Documentation Generator` (spaces and capitals: fails validation)
+  - ❌ `Deploy_Helper` (capitals and an underscore; also differs from a `deploy-helper` folder)
+  - ❌ `skill-1` (valid format, but says nothing about the job)
+  - ❌ a name longer than 64 characters
 
 **`description`** (REQUIRED):
 - **Type**: String
@@ -82,7 +85,10 @@ and when Claude should use it."       # Include BOTH what & when
   1. **What** the skill does (functionality)
   2. **When** Claude should invoke it (trigger conditions)
 - **Usage**: Loaded into Claude's system prompt for autonomous matching
-- **Best Practice**: Front-load key trigger words, be specific about use cases
+- **Voice**: Third person ("Generates…", "Reviews…"), never "I" or "you"
+- **Best Practice**: Put the "Use when…" clause within the first ~100 characters. Codex trims every description to
+  fit one shared budget when many skills are installed (about 104 characters each with 114 skills, codex-cli 0.164.0),
+  so a trigger after that point is cut. Be specific about the situations that should load the skill
 - **Examples**:
   - ✅ "Generate OpenAPI 3.0 documentation from Express.js routes. Use when creating API docs, documenting endpoints, or building API specifications."
   - ✅ "Create React functional components with TypeScript, hooks, and tests. Use when scaffolding new components or converting class components."
@@ -94,22 +100,22 @@ and when Claude should use it."       # Include BOTH what & when
 ```yaml
 ---
 # ✅ CORRECT: Simple string
-name: "API Builder"
+name: api-builder
 description: "Creates REST APIs with Express and TypeScript."
 
 # ✅ CORRECT: Multi-line description
-name: "Full-Stack Generator"
+name: full-stack-generator
 description: "Generates full-stack applications with React frontend and Node.js backend. Use when starting new projects or scaffolding applications."
 
-# ✅ CORRECT: Special characters quoted
-name: "JSON:API Builder"
+# ✅ CORRECT: A description with a colon is quoted
+name: json-api-builder
 description: "Creates JSON:API compliant endpoints: pagination, filtering, relationships."
 
-# ❌ WRONG: Missing quotes with special chars
-name: API:Builder  # YAML parse error!
+# ❌ WRONG: Not lowercase-hyphenated, and the unquoted colon breaks YAML
+name: API:Builder  # YAML parse error, and an invalid name
 
 # ❌ WRONG: Extra fields (ignored but discouraged)
-name: "My Skill"
+name: my-skill
 description: "My description"
 version: "1.0.0"       # NOT part of spec
 author: "Me"           # NOT part of spec
@@ -193,7 +199,7 @@ Claude Code uses a **3-level progressive disclosure system** to scale to 100+ sk
 
 ```yaml
 ---
-name: "API Builder"                   # 11 chars
+name: api-builder                     # 11 chars
 description: "Creates REST APIs..."   # ~50 chars
 ---
 # Total: ~61 chars per skill
@@ -244,11 +250,11 @@ Use template: `resources/templates/api-template.js`
 
 ````markdown
 ---
-name: "Your Skill Name"
-description: "What it does and when to use it"
+name: your-skill-name
+description: "What it does. Use when [specific trigger]."
 ---
 
-# Your Skill Name
+# Your Skill Name   <!-- the human-friendly title lives here, not in name -->
 
 ## Level 1: Overview (Always Read First)
 Brief 2-3 sentence description of the skill.
@@ -561,7 +567,7 @@ Before publishing a skill, verify:
 
 ````markdown
 ---
-name: "My Basic Skill"
+name: my-basic-skill
 description: "One sentence what. One sentence when to use."
 ---
 
@@ -595,7 +601,7 @@ description: "One sentence what. One sentence when to use."
 
 ````markdown
 ---
-name: "My Intermediate Skill"
+name: my-intermediate-skill
 description: "Detailed what with key features. When to use with specific triggers: scaffolding, generating, building."
 ---
 
@@ -650,7 +656,7 @@ Edit `config.json`:
 
 ````markdown
 ---
-name: "My Advanced Skill"
+name: my-advanced-skill
 description: "Comprehensive what with all features and integrations. Use when [trigger 1], [trigger 2], or [trigger 3]. Supports [technology stack]."
 ---
 
@@ -812,7 +818,7 @@ Complete API documentation: [API_REFERENCE.md](docs/API_REFERENCE.md)
 
 ````markdown
 ---
-name: "README Generator"
+name: readme-generator
 description: "Generate comprehensive README.md files for GitHub repositories. Use when starting new projects, documenting code, or improving existing READMEs."
 ---
 
@@ -841,7 +847,7 @@ Edit sections in `resources/templates/sections/` before generating.
 
 ````markdown
 ---
-name: "React Component Generator"
+name: react-component-generator
 description: "Generate React functional components with TypeScript, hooks, tests, and Storybook stories. Use when creating new components, scaffolding UI, or following component architecture patterns."
 ---
 
