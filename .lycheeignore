@@ -5,9 +5,10 @@
 ^https://openai\.com/
 ^https://github\.com/signup
 ^https://neptune\.ai/
-^https://doi\.org/10\.1002/
-^https://onlinelibrary\.wiley\.com/
-# PubMed answers CI crawlers with 203 Non-Authoritative Information; the page exists.
-^https://pubmed\.ncbi\.nlm\.nih\.gov/
+# Two papers cited in docs/craft/claude-skills-eval-pack-2026-10-21.md. Both open in a browser, but CI gets no 200:
+# doi.org redirects to Wiley, which answers crawlers with 403 Forbidden, and PubMed answers with 203 Non-Authoritative
+# Information. Exact URLs only, so any other link on these sites is still checked.
+^https://doi\.org/10\.1002/ejsp\.674$
+^https://pubmed\.ncbi\.nlm\.nih\.gov/19144931/$
 # Placeholder links inside templates that teach how to write a skill or README.
 ^https://github\.com/example/

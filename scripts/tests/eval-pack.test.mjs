@@ -339,3 +339,17 @@ test('the G2 receipt keeps the original install-test output and a clean re-run (
   assert.doesNotMatch(readme, /That is exactly the extra probe that passed \|/);
   assert.match(readme, /kept unedited/);
 });
+
+test('.lycheeignore entries added for this PR exclude exact URLs, not whole domains (Frank, cycle 3)', () => {
+  const lines = readFileSync(join(REPO, '.lycheeignore'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#'));
+  for (const host of ['doi\\.org', 'wiley', 'pubmed']) {
+    const entries = lines.filter((l) => l.includes(host));
+    for (const e of entries) assert.match(e, /\$$/, `${e} must be anchored to one exact URL`);
+  }
+  const doc = readFileSync(join(REPO, 'docs/craft/claude-skills-eval-pack-2026-10-21.md'), 'utf8');
+  for (const url of ['https://doi.org/10.1002/ejsp.674', 'https://pubmed.ncbi.nlm.nih.gov/19144931/']) {
+    assert.ok(doc.includes(url), `${url} is still cited`);
+    assert.ok(lines.some((l) => new RegExp(l).test(url)), `${url} is excluded`);
+    assert.ok(!lines.some((l) => new RegExp(l).test(url.replace(/[^/]+\/?$/, 'another-page'))), `a sibling of ${url} is still checked`);
+  }
+});
