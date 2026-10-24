@@ -47,7 +47,7 @@ Reviews a pull-request diff for merge-blocking correctness and security bugs, li
 
 **Example output:** *placeholder*: one unedited answer from each arm appears here after the run.
 
-**Versions this result belongs to:** skill `531483563389`, suite `19067051e3e0`, Claude Code not run yet (tested install: 2.1.310), model sonnet (planned), judge haiku (planned). A change to the skill or the suite marks any result out of date.
+**Versions this result belongs to:** skill `c22a50d04404`, suite `19067051e3e0`, Claude Code not run yet (tested install: 2.1.310), model sonnet (planned), judge haiku (planned). A change to the skill or the suite marks any result out of date.
 
 **Limits:**
 - The same author wrote the skill and its test suite.

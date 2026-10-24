@@ -12,7 +12,7 @@ Routing text (the only part an agent sees before loading the skill): "Comprehens
 
 - "use when" cue starts at character 131. Would be cut by Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Write an Express.js middleware that logs each request's method, path and duration in milliseconds".
-- Context cost: listed in every session; full body loads only when it fires (body is 707 lines (guide: under 500)).
+- Context cost: listed in every session; full body loads only when it fires (body is 714 lines (guide: under 500)).
 
 ## What the eval checks
 
