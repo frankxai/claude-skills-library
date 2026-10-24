@@ -1,0 +1,27 @@
+diff --git a/.github/workflows/skill-eval.yml b/.github/workflows/skill-eval.yml
+index 69bf73b..75b0fd7 100644
+--- a/.github/workflows/skill-eval.yml
++++ b/.github/workflows/skill-eval.yml
+@@ -19,8 +19,10 @@ on:
+     paths:
+       - 'evals/**'
+       - 'free-skills/**/SKILL.md'
+-      - 'scripts/eval-skill.mjs'
+-      - 'scripts/tests/eval-skill.test.mjs'
++      - 'scripts/**'
++      - '.claude-plugin/**'
++      - 'catalog/**'
++      - 'products/skills-with-evals/**'
+       - '.github/workflows/skill-eval.yml'
+   workflow_dispatch:
+     inputs:
+@@ -49,6 +51,9 @@ jobs:
+           node-version: '22'
+       - name: Unit tests (no network, no keys)
+         run: node --test evals/skill-eval/run.test.mjs scripts/tests/eval-skill.test.mjs
++      # catalog-check.yml only runs on PRs to main; this keeps the catalog honest on stacked PRs too.
++      - name: catalog/skills.json matches marketplace.json and SKILL.md frontmatter
++        run: node scripts/build-catalog.mjs --check
+ 
+   eval:
+     needs: test
