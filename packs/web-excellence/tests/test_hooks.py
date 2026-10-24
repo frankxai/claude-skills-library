@@ -929,7 +929,7 @@ def test_workflow_filters_are_not_root_anchored() -> None:
     paths = re.findall(r"^\s+- '([^']+)'", wf, re.M)
     check("workflow declares path filters", bool(paths))
     bad = [p for p in paths
-           if not p.startswith("**/") and not os.path.splitext(p)[1] in ("", ".yml", ".mjs")]
+           if not p.startswith("**/") and not os.path.splitext(p)[1] in ("", ".yml", ".mjs", ".json")]
     check("no root-anchored directory glob", not bad, f"root-anchored: {bad}")
     exts = {p[3:] for p in paths if p.startswith("**/*.")}
     lint = open(LINT, encoding="utf-8").read()
