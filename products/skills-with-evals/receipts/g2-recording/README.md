@@ -1,6 +1,6 @@
 # G2 · Real recording of a clean install
 
-**What it is:** a live terminal recording made with [asciinema](https://asciinema.org) 3.2.1. It captures
+**What it is:** a live terminal recording made with [asciinema](https://github.com/asciinema/asciinema) 3.2.1. It captures
 the real output stream of a pseudo-terminal with its timing, as the commands ran. It is not a pixel capture of
 a screen. An independent "stranger" agent wrote its own walkthrough from the public README alone, used a brand-new
 empty HOME, and did not log in anywhere or write to GitHub.
