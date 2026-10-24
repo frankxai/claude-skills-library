@@ -137,3 +137,34 @@ test('cardData gives the page the same facts as the card, with lift null until a
     if (!hasResult) assert.equal(d.lift, null);
   }
 });
+
+test('skill-builder teaches the name rule its own graders enforce (G3 P0-2)', () => {
+  const skill = readFileSync(join(REPO, 'free-skills/skill-builder/SKILL.md'), 'utf8');
+  const lines = skill.split('\n');
+  const SPEC = /^[a-z0-9][a-z0-9-]{0,63}$/;
+  // Every name: example must follow the spec unless it is explicitly marked as a wrong example.
+  lines.forEach((l, i) => {
+    const m = /^\s*name:\s*(.+?)\s*(#.*)?$/.exec(l);
+    if (!m) return;
+    const value = m[1].replace(/^["']|["']$/g, '');
+    const markedWrong = /❌|WRONG/.test(l) || lines.slice(Math.max(0, i - 2), i).some((p) => /❌|WRONG/.test(p));
+    if (!markedWrong) assert.match(value, SPEC, `SKILL.md line ${i + 1} teaches name "${value}"`);
+  });
+  assert.doesNotMatch(skill, /Title Case/, 'no Title Case advice for name');
+  // The write-skill grader's regex accepts what the skill teaches and rejects what it forbids.
+  const yaml = readFileSync(join(REPO, 'evals/skill-builder/write-skill/case.yaml'), 'utf8');
+  const raw = /- name: frontmatter-name\n\s+type: regex\n\s+pattern: ("(?:[^"\\]|\\.)*")/.exec(yaml)[1];
+  const re = new RegExp(JSON.parse(raw));
+  const fm = (name) => `---\nname: ${name}\ndescription: "Checks migrations. Use when reviewing a migration."\n---\n`;
+  for (const good of ['my-first-skill', 'db-migration-check', '"db-migration-check"', "'api-builder'"]) assert.match(fm(good), re, good);
+  for (const bad of ['"My First Skill"', 'Deploy_Helper', 'API:Builder', '"API Documentation Generator"']) assert.doesNotMatch(fm(bad), re, bad);
+  // trigger-lint (the static check) agrees with the grader.
+  const dir = mkdtempSync(join(tmpdir(), 'sb-'));
+  for (const [folder, name, ok] of [['my-first-skill', 'my-first-skill', true], ['my-first-skill', '"My First Skill"', false]]) {
+    mkdirS(join(dir, folder), { recursive: true });
+    writeF(join(dir, folder, 'SKILL.md'), fm(name) + 'body\n');
+    assert.equal(lintSkill(join(dir, folder)).errors.some((e) => /name/.test(e)), !ok, `${name}`);
+  }
+  // The recall key still plants the defect the skill now teaches against.
+  assert.match(readFileSync(join(REPO, 'evals/skill-builder/seeded-defects/graders/d1-name-format.md'), 'utf8'), /lowercase-and-hyphens/);
+});
