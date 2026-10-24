@@ -100,23 +100,44 @@ supervisor_graph.add_conditional_edges(
 
 ### Pattern 3: Human-in-the-Loop
 ```python
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.memory import InMemorySaver   # production: a durable saver such as PostgresSaver
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import Command, interrupt
 
-checkpointer = SqliteSaver.from_conn_string("checkpoints.db")
+def human_approval(state: State) -> dict:
+    # interrupt() runs inside a node, at run time. Its argument is what the reviewer sees;
+    # its return value is whatever the caller resumes with.
+    decision = interrupt({"proposed_action": state["proposed_action"]})
+    return {"approved": decision == "approve"}
 
 graph = StateGraph(State)
 graph.add_node("propose_action", propose)
-graph.add_node("human_approval", interrupt())  # Pauses here
+graph.add_node("human_approval", human_approval)
 graph.add_node("execute_action", execute)
+graph.add_edge(START, "propose_action")
+graph.add_edge("propose_action", "human_approval")
+graph.add_conditional_edges("human_approval", lambda s: "execute_action" if s["approved"] else END)
+graph.add_edge("execute_action", END)
 
-app = graph.compile(checkpointer=checkpointer)
+# An interrupt needs a checkpointer: the paused state is saved under the thread_id.
+app = graph.compile(checkpointer=InMemorySaver())
+config = {"configurable": {"thread_id": "123"}}
 
-# Run until human input needed
-result = app.invoke(input, config={"configurable": {"thread_id": "123"}})
+result = app.invoke({"request": "refund order 42"}, config)
+# Paused: result["__interrupt__"] carries the payload passed to interrupt().
 
-# Human reviews, then resume
-app.invoke(None, config={"configurable": {"thread_id": "123"}})
+# Resume the same thread with the human's answer.
+app.invoke(Command(resume="approve"), config)
 ```
+
+Rules that bite:
+- **Resume with `Command(resume=...)`.** `app.invoke(None, config)` only continues past a static breakpoint
+  (`compile(interrupt_before=[...])`); it does not answer an `interrupt()`.
+- **No checkpointer, no resume.** Without one there is nowhere to save the paused state, so the run cannot be
+  resumed; use a durable saver (Postgres, SQLite) in production so a pause survives a restart.
+- **The node re-runs from its first line on resume.** Keep side effects after `interrupt()`, or make the code before
+  it idempotent.
+- **Same `thread_id`** for the pause and the resume, or the run starts over.
 
 ## State Management
 
@@ -241,6 +262,7 @@ app.invoke(input)
 ❌ Use AgentExecutor (deprecated)
 ❌ Skip error handling on nodes
 ❌ Forget to set thread_id for stateful conversations
+❌ Call `interrupt()` while building the graph, or resume an `interrupt()` with `invoke(None)` (use `Command(resume=...)`)
 ❌ Over-complicate graphs unnecessarily
 ❌ Ignore memory management for long conversations
 

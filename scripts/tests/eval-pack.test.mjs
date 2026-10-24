@@ -199,3 +199,23 @@ test('the clean code-review twin reports a refund Stripe already issued instead 
   assert.match(diff, /refundId = refund\.id/);
   assert.match(diff, /json\(refundId\s*\n\+\s*\? \{ error: 'the refund was issued/);
 });
+
+test('langgraph-patterns teaches interrupt() inside a node and Command(resume=...), which its grader requires (G3 P1-2)', () => {
+  const s = readFileSync(join(REPO, 'free-skills/langgraph-patterns/SKILL.md'), 'utf8');
+  assert.doesNotMatch(s, /add_node\([^)]*interrupt\(\)\)/, 'interrupt() passed to add_node at build time');
+  assert.match(s, /def \w+\(state[^)]*\)[^\n]*:\n(?:[^\n]*\n){0,4}?\s+\w+ = interrupt\(/, 'interrupt() called inside a node function');
+  assert.match(s, /invoke\(Command\(resume=/);
+  assert.match(s, /compile\(checkpointer=/);
+  assert.match(readFileSync(join(REPO, 'evals/langgraph-patterns/seeded-defects/graders/d1-interrupt-no-checkpointer.md'), 'utf8'), /Command\(resume=/);
+});
+
+test('github-code-review teaches the review itself; the swarm tooling is an optional reference (G3 P1-2)', () => {
+  const dir = join(REPO, 'free-skills/github-code-review');
+  const s = readFileSync(join(dir, 'SKILL.md'), 'utf8');
+  const body = s.slice(s.indexOf('\n---\n', 4) + 5);
+  for (const topic of [/authoriz/i, /bound parameters/i, /awaited/i, /off-by-one|pagination/i, /registration order/i,
+    /transaction/i, /idempoten/i, /swallowed/i, /secrets?/i, /nothing blocks/i]) assert.match(body, topic, `review method covers ${topic}`);
+  assert.doesNotMatch(body.split('## Optional: multi-agent review')[0], /ruv-swarm|claude-flow|npx /, 'core method needs no swarm tooling');
+  assert.ok(existsSync(join(dir, 'references/swarm-review.md')), 'swarm material kept as a reference');
+  assert.doesNotMatch(body, /pr-412|orders\/search|stripe/i, 'no fixture-specific details in the skill');
+});
