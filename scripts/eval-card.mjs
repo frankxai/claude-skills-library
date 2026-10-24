@@ -17,6 +17,7 @@ import { comparability } from './eval-skill.mjs';
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RC_REF = 'agent/hyperagent/eval-pack-rc1';
 const PACK = JSON.parse(readFileSync(join(REPO, 'products', 'skills-with-evals', 'pack.json'), 'utf8'));
+const minRuns = (r) => Math.min(...(r.cases || []).flatMap((c) => [c.arms?.with?.length ?? 0, c.arms?.without?.length ?? 0]), Infinity);
 const pct = (x) => (typeof x === 'number' ? `${Math.round(x * 100)}%` : 'n/a');
 const pts = (x) => (typeof x === 'number' ? `${x > 0 ? '+' : ''}${Math.round(x * 100)} pts` : 'n/a');
 
@@ -77,13 +78,15 @@ export function renderCard(skill) {
       return `| ${c.name} | ${pct(w)} | ${pct(typeof w === 'number' && typeof dl === 'number' ? w - dl : undefined)} | ${pts(dl)} | ${c.arms?.with?.length ?? 0}/${c.arms?.without?.length ?? 0} |`;
     });
     lift = [
-      problems.length ? `**Not comparable, so no lift is claimed.** ${problems.join('; ')}.` : `**Measured lift (mean over cases): ${pts(r.aggregates?.meanDelta)}.**`,
+      problems.length ? `**Not comparable, so no lift is claimed.** ${problems.join('; ')}.`
+        : minRuns(r) < 3 ? `**Pilot only (${minRuns(r)} run per arm), so no lift is claimed.** Mean difference in this pilot: ${pts(r.aggregates?.meanDelta)}. A lift claim needs at least 3 runs per arm.`
+        : `**Measured lift (mean over cases, ${minRuns(r)} runs per arm): ${pts(r.aggregates?.meanDelta)}.**`,
       '',
       '| Case | With skill | Without | Lift | Runs (with/without) |',
       '|---|---|---|---|---|',
       ...rows,
       '',
-      `Source: \`evals/${skill}/results/${res.file}\`, \`claude plugin eval\` ${res.meta?.claudeVersion || ''}, model ${res.meta?.model || 'CLI default'}, judge ${res.meta?.judgeModel || 'n/a'}, cost about $${(r.costUsd ?? 0).toFixed(2)}. Judge is the same provider as the model under test until the G3 cross-family check.`,
+      `Source: \`evals/${skill}/results/${res.file}\` (traces: \`results/${res.file.replace(/\.json$/, '')}/traces/\`, report: \`results/${res.file.replace(/\.json$/, '.report.html')}\`), \`claude plugin eval\` ${res.meta?.claudeVersion || ''}, model ${res.meta?.model || 'CLI default'}, judge ${res.meta?.judgeModel || 'n/a'}, cost about $${(r.costUsd ?? 0).toFixed(2)}. Judge is the same provider as the model under test until the G3 cross-family check.`,
     ];
   }
 

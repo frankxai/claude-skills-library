@@ -5,7 +5,7 @@
 >
 > ```bash
 > codex plugin marketplace add frankxai/claude-skills-library
-> codex plugin add claude-skills-library@claude-skills-library   # the full library
+> codex plugin add frankx-skills@claude-skills-library   # the full library (renamed from claude-skills-library on 2026-10-24)
 > ```
 >
 > The 10-skill `skills-with-evals` pack is on a release-candidate branch until merged; pin it with `@`:

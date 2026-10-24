@@ -110,7 +110,7 @@ def main() -> int:
     </div>
     <div class="install">
       <code>/plugin marketplace add frankxai/claude-skills-library
-/plugin install claude-skills-library@claude-skills-library</code>
+/plugin install frankx-skills@claude-skills-library</code>
     </div>
   </header>
 

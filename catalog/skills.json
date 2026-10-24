@@ -5,17 +5,17 @@
     "name": "claude-skills-library",
     "repo": "frankxai/claude-skills-library",
     "description": "FrankX multi-brand plugin marketplace: the Agent Skills library plus validated brand packs for GenCreator creators and Starlight Academy.",
-    "pluginCount": 4
+    "pluginCount": 5
   },
   "totals": {
-    "pluginsWithListedSkills": 1,
+    "pluginsWithListedSkills": 2,
     "skills": 114,
-    "skillsWithEvals": 0,
+    "skillsWithEvals": 17,
     "pluginsFromOtherRepos": 3
   },
   "plugins": [
     {
-      "name": "claude-skills-library",
+      "name": "frankx-skills",
       "brand": "Tooling",
       "description": "The complete library of Agent Skills — AI agents & orchestration, MCP & SDKs, Oracle & cloud, frontend & animation, engineering workflow, content & brand, and creative production. Skills auto-activate when relevant.",
       "source": {
@@ -46,7 +46,7 @@
           "name": "agentic-orchestration",
           "description": "Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Use when designing or debugging agent systems, splitting a large task across sub-agents, defining handoff contracts, or choosing an orchestration topology.",
           "path": "free-skills/agentic-orchestration",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "ai-architect-newsletter",
@@ -58,7 +58,7 @@
           "name": "ai-architect-review",
           "description": "Review the architecture of a system that calls a language model. Use when adding an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system that worked in a demo is being prepared for production; or when asked to audit, review, or plan AI/agent architecture. Checks the four decisions that are expensive to reverse, then the seven planes and their boundaries.",
           "path": "free-skills/ai-architect-review",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "ai-architecture",
@@ -172,7 +172,7 @@
           "name": "book-publishing",
           "description": "Multi-book content, voice, and production workflows for nonfiction authoring. Use when planning a book, maintaining consistent voice across chapters, structuring a manuscript, or running an end-to-end publishing pipeline.",
           "path": "free-skills/book-publishing",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "brand-voice",
@@ -232,13 +232,13 @@
           "name": "excellence-book-writing",
           "description": "High-quality nonfiction writing patterns for structure, clarity, narrative flow, and editorial polish. Use when drafting or revising long-form nonfiction, tightening chapters, or raising prose from competent to excellent.",
           "path": "free-skills/excellence-book-writing",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "feynman-thinking",
           "description": "Transform Claude into a Feynman mentor. Focuses on simple explanations, architectural models, Socratic questioning, and stripping away unnecessary complexity. Triggers on: feynman, feynman alignment, explain simply, explain architecture, explain logic, explain concept, build mental model.",
           "path": "free-skills/feynman-thinking",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "framer-expert",
@@ -256,7 +256,7 @@
           "name": "github-code-review",
           "description": "Comprehensive GitHub pull-request code review with multi-agent coordination. Use when reviewing a PR or diff, auditing changes for correctness/security/style before merge, or generating actionable inline review comments.",
           "path": "free-skills/github-code-review",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "github-multi-repo",
@@ -334,7 +334,7 @@
           "name": "hooks-automation",
           "description": "Automated coordination, formatting, and learning from Claude Code operations using intelligent hooks with MCP integration. Includes pre/post task hooks, session management, Git integration, memory coordination, and neural pattern training for enhanced development workflows. Use when configuring Claude Code hooks, automating pre/post-task coordination, or wiring Git and memory hooks.",
           "path": "free-skills/hooks-automation",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "hyperframes-cli",
@@ -358,13 +358,13 @@
           "name": "langgraph-patterns",
           "description": "Production-grade agentic workflows with LangGraph — graph orchestration, state machines, human-in-the-loop, and advanced control flow. Use when building or debugging a LangGraph app, modeling agent state, or adding checkpoints and human approval steps.",
           "path": "free-skills/langgraph-patterns",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "loop-designer",
           "description": "Compile a goal into a durable, file-backed agent loop — a .loop/<name>/ charter any coding agent (Claude Code, Codex, Gemini, Grok) can execute unattended. Use when the user wants to \"build a loop\", \"design a loop\", \"run X continuously/24-7\", \"make an agent keep working on Y\", automate recurring work, or convert a big backlog into autonomous iteration. Produces LOOP.md + state.json + backlog.md, ready for loop-runner.",
           "path": "free-skills/loop-designer",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "loop-orchestrator",
@@ -394,7 +394,7 @@
           "name": "mcp-architecture",
           "description": "Design and implement Model Context Protocol servers with resources, tools, prompts, and security best practices. Use when architecting an MCP server, modeling its resources/tools/prompts, or integrating a service as an MCP endpoint.",
           "path": "free-skills/mcp-architecture",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "memory-prune",
@@ -406,7 +406,7 @@
           "name": "model-routing",
           "description": "Intelligent model selection — routes tasks to Haiku (fast/cheap), Sonnet (balanced), or Opus (complex/strategic) by analyzing task complexity. Use when deciding which model to run, optimizing cost vs quality, or building a tiered routing layer.",
           "path": "free-skills/model-routing",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "nextjs-agent-team",
@@ -418,7 +418,7 @@
           "name": "nextjs-expert",
           "description": "Comprehensive Next.js expertise across App Router, server/client boundaries, data and caching patterns, and production operations. Use when building, debugging, or optimizing a Next.js app, deciding server vs client components, or resolving App Router gotchas.",
           "path": "free-skills/nextjs-expert",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "nextjs-react-expert",
@@ -538,7 +538,7 @@
           "name": "product-management-expert",
           "description": "Product management expertise for strategy, discovery, prioritization, roadmaps, PRDs, metrics, and stakeholder communication. Use when defining what to build, why, and how to measure success.",
           "path": "free-skills/product-management-expert",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "prompt-hub",
@@ -574,7 +574,7 @@
           "name": "skill-builder",
           "description": "Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification.",
           "path": "free-skills/skill-builder",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "social-media-strategy",
@@ -652,13 +652,13 @@
           "name": "todo-discipline",
           "description": "Use when starting any complex task (3+ steps) or before declaring work complete. Enforces todo/task state to match reality — merge updates + read verification. Prevents false completion.",
           "path": "free-skills/todo-discipline",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "ui-ux-design-expert",
           "description": "Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user research, and creating inclusive, user-centered interfaces with 2025 best practices. Use when designing or auditing an interface, building a design system, or checking accessibility against WCAG 2.2.",
           "path": "free-skills/ui-ux-design-expert",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "v-swarm",
@@ -670,7 +670,7 @@
           "name": "verification-quality",
           "description": "Truth scoring, code-quality verification, and automatic rollback with a high accuracy threshold. Use when validating agent output before it ships, gating changes on quality, or adding a verify-and-rollback safety loop.",
           "path": "free-skills/verification-quality",
-          "hasEvals": false
+          "hasEvals": true
         },
         {
           "name": "video-production-workflow",
@@ -710,7 +710,85 @@
         }
       ],
       "install": {
-        "claudeCode": "/plugin marketplace add frankxai/claude-skills-library then /plugin install claude-skills-library@claude-skills-library",
+        "claudeCode": "/plugin marketplace add frankxai/claude-skills-library then /plugin install frankx-skills@claude-skills-library",
+        "codex": "Copy any skill folder listed under skills[].path into ~/.agents/skills/ (user) or <repo>/.agents/skills/ (project); Codex discovers SKILL.md folders there.",
+        "skillsCli": "npx skills add frankxai/claude-skills-library",
+        "note": "codex paths from https://learn.chatgpt.com/docs/build-skills; skillsCli syntax (owner/repo, -a codex|claude-code, -s <skill>) from https://github.com/vercel-labs/skills. Neither was executed against this repo."
+      }
+    },
+    {
+      "name": "skills-with-evals",
+      "brand": "Tooling",
+      "description": "Ten skills from this library, each with an eval suite in evals/<skill>/: a no-skill baseline arm, a trigger test, seeded-defect recall and clean-input precision cases, run with `claude plugin eval`. Release candidate; see evals/<skill>/CARD.md.",
+      "source": {
+        "type": "local",
+        "path": "./"
+      },
+      "skillCount": 10,
+      "skills": [
+        {
+          "name": "ai-architect-review",
+          "description": "Review the architecture of a system that calls a language model. Use when adding an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system that worked in a demo is being prepared for production; or when asked to audit, review, or plan AI/agent architecture. Checks the four decisions that are expensive to reverse, then the seven planes and their boundaries.",
+          "path": "free-skills/ai-architect-review",
+          "hasEvals": true
+        },
+        {
+          "name": "book-publishing",
+          "description": "Multi-book content, voice, and production workflows for nonfiction authoring. Use when planning a book, maintaining consistent voice across chapters, structuring a manuscript, or running an end-to-end publishing pipeline.",
+          "path": "free-skills/book-publishing",
+          "hasEvals": true
+        },
+        {
+          "name": "excellence-book-writing",
+          "description": "High-quality nonfiction writing patterns for structure, clarity, narrative flow, and editorial polish. Use when drafting or revising long-form nonfiction, tightening chapters, or raising prose from competent to excellent.",
+          "path": "free-skills/excellence-book-writing",
+          "hasEvals": true
+        },
+        {
+          "name": "github-code-review",
+          "description": "Comprehensive GitHub pull-request code review with multi-agent coordination. Use when reviewing a PR or diff, auditing changes for correctness/security/style before merge, or generating actionable inline review comments.",
+          "path": "free-skills/github-code-review",
+          "hasEvals": true
+        },
+        {
+          "name": "langgraph-patterns",
+          "description": "Production-grade agentic workflows with LangGraph — graph orchestration, state machines, human-in-the-loop, and advanced control flow. Use when building or debugging a LangGraph app, modeling agent state, or adding checkpoints and human approval steps.",
+          "path": "free-skills/langgraph-patterns",
+          "hasEvals": true
+        },
+        {
+          "name": "mcp-architecture",
+          "description": "Design and implement Model Context Protocol servers with resources, tools, prompts, and security best practices. Use when architecting an MCP server, modeling its resources/tools/prompts, or integrating a service as an MCP endpoint.",
+          "path": "free-skills/mcp-architecture",
+          "hasEvals": true
+        },
+        {
+          "name": "nextjs-expert",
+          "description": "Comprehensive Next.js expertise across App Router, server/client boundaries, data and caching patterns, and production operations. Use when building, debugging, or optimizing a Next.js app, deciding server vs client components, or resolving App Router gotchas.",
+          "path": "free-skills/nextjs-expert",
+          "hasEvals": true
+        },
+        {
+          "name": "product-management-expert",
+          "description": "Product management expertise for strategy, discovery, prioritization, roadmaps, PRDs, metrics, and stakeholder communication. Use when defining what to build, why, and how to measure success.",
+          "path": "free-skills/product-management-expert",
+          "hasEvals": true
+        },
+        {
+          "name": "skill-builder",
+          "description": "Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification.",
+          "path": "free-skills/skill-builder",
+          "hasEvals": true
+        },
+        {
+          "name": "ui-ux-design-expert",
+          "description": "Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user research, and creating inclusive, user-centered interfaces with 2025 best practices. Use when designing or auditing an interface, building a design system, or checking accessibility against WCAG 2.2.",
+          "path": "free-skills/ui-ux-design-expert",
+          "hasEvals": true
+        }
+      ],
+      "install": {
+        "claudeCode": "/plugin marketplace add frankxai/claude-skills-library then /plugin install skills-with-evals@claude-skills-library",
         "codex": "Copy any skill folder listed under skills[].path into ~/.agents/skills/ (user) or <repo>/.agents/skills/ (project); Codex discovers SKILL.md folders there.",
         "skillsCli": "npx skills add frankxai/claude-skills-library",
         "note": "codex paths from https://learn.chatgpt.com/docs/build-skills; skillsCli syntax (owner/repo, -a codex|claude-code, -s <skill>) from https://github.com/vercel-labs/skills. Neither was executed against this repo."
