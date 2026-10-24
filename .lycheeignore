@@ -5,5 +5,9 @@
 ^https://openai\.com/
 ^https://github\.com/signup
 ^https://neptune\.ai/
+^https://doi\.org/10\.1002/
+^https://onlinelibrary\.wiley\.com/
+# PubMed answers CI crawlers with 203 Non-Authoritative Information; the page exists.
+^https://pubmed\.ncbi\.nlm\.nih\.gov/
 # Placeholder links inside templates that teach how to write a skill or README.
 ^https://github\.com/example/
