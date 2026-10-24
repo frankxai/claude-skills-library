@@ -29,6 +29,13 @@ codex plugin add skills-with-evals@claude-skills-library
 
 After merge, drop the `#…` / `@…` suffix. `node scripts/install-test.mjs` checks both runtimes in a throwaway HOME.
 
+**Before you add the branch:** if you already added this marketplace from `main`, both runtimes refuse a
+second source under the same name. Remove it first (`claude plugin marketplace remove claude-skills-library`,
+`codex plugin marketplace remove claude-skills-library`), then add the branch. After the pack merges, remove it
+again and re-add without the suffix. `#` (Claude Code) and `@` (Codex) both pin the branch, which moves until it
+merges; Codex can pin an exact commit (`@<sha>`), Claude Code 2.1.310 only branches and tags.
+`/plugin …` inside Claude Code and `claude plugin …` in a terminal are the same command.
+
 ## The ten skills
 
 | Skill | Buyer job | Suite |

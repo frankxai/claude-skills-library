@@ -44,4 +44,4 @@ codex plugin marketplace add frankxai/claude-skills-library@agent/hyperagent/eva
 codex plugin add skills-with-evals@claude-skills-library
 ```
 
-After merge, drop the `#…` / `@…` suffix.
+After merge, drop the `#…` / `@…` suffix. Already added this marketplace from `main`? Remove it first (`claude plugin marketplace remove claude-skills-library`, `codex plugin marketplace remove claude-skills-library`): both runtimes refuse a second source under the same name.
