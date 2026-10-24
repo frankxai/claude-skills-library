@@ -90,11 +90,25 @@ export function treeHash(dir) {
   return hash.digest('hex').slice(0, 12);
 }
 
+// The stay-quiet (should-not-trigger) case scores the same with and without the skill when the skill behaves, so
+// its delta is 0 by design. Averaging it into the lift would dilute it by a quarter to a third: it is reported on
+// its own instead (G3 P1-5).
+export const isQuietCase = (c) => /(^|[-_/])no-trigger$/.test(c?.name || '') || /(^|[\\/])no-trigger[\\/]?$/.test(c?.dir || '');
+
+// Lift = mean difference (with minus without) over the review cases only.
+export function reviewLift(result) {
+  const ds = (result.cases || []).filter((c) => !isQuietCase(c)).map((c) => c.aggregates?.delta).filter((d) => typeof d === 'number');
+  return ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null;
+}
+
 // A delta is evidence only when both arms completed the same number of runs, nothing
 // errored, no paid grader was skipped, and the run was not cut short.
 export function comparability(result) {
   const problems = [];
   if (result.partial) problems.push(`partial run (${result.partialReason || 'stopped early'})`);
+  if (!(result.cases || []).length) problems.push('the result has no cases');
+  else if (!result.cases.some((c) => !isQuietCase(c))) problems.push('the result has no review cases, only the stay-quiet case');
+  if (typeof result.aggregates?.meanDelta !== 'number') problems.push('no mean difference reported');
   for (const c of result.cases || []) {
     const w = c.arms?.with || [];
     const wo = c.arms?.without || [];
@@ -135,6 +149,13 @@ export function collectTraces(result, destDir, relBase) {
 const pct = (x) => (typeof x === 'number' ? `${Math.round(x * 100)}%` : 'n/a');
 const pts = (x) => (typeof x === 'number' ? `${x > 0 ? '+' : ''}${Math.round(x * 100)} pts` : 'n/a');
 
+export function quietLine(result) {
+  const q = (result.cases || []).find(isQuietCase);
+  if (!q) return 'none in this run';
+  const w = q.aggregates?.score;
+  return typeof w === 'number' ? `${pct(w)} with the skill loaded (100% means it never fired on the unrelated task)` : 'no score';
+}
+
 export function renderScorecard(skill, result, meta) {
   const problems = comparability(result);
   const rows = (result.cases || []).map((c) => {
@@ -159,7 +180,7 @@ export function renderScorecard(skill, result, meta) {
     '|---|---|---|---|---|',
     ...rows,
     '',
-    `Overall with the skill: ${pct(a.overallScore)}. Mean difference: ${pts(a.meanDelta)}. Cost about $${(result.costUsd ?? 0).toFixed(2)}.`,
+    `Lift over the review cases: ${pts(reviewLift(result))}. Stay-quiet case: ${quietLine(result)}. Overall with the skill: ${pct(a.overallScore)}; mean difference over all cases (stay-quiet included, so diluted): ${pts(a.meanDelta)}. Cost about $${(result.costUsd ?? 0).toFixed(2)}.`,
     '',
     `Cases, fixtures and graders are in this folder. Raw result: \`results/${meta.stamp}.json\`; HTML report: \`results/${meta.stamp}.report.html\`; unedited run traces: \`results/${meta.stamp}/traces/\` (${meta.traces ?? 0} files).`,
     '',
@@ -184,6 +205,9 @@ function main(argv) {
   }
   const work = mkdtempSync(join(tmpdir(), `skill-eval-${opts.skill}-`));
   const { plugin, cases } = stage(REPO, opts.skill, work);
+  // Hash the suite now: `claude plugin eval` writes its results into <plugin>/evals/ during the run, so a hash taken
+  // afterwards would never match the suite that ran (found by the card staleness check, G3 P1-5).
+  const suiteHash = treeHash(join(plugin, 'evals'));
   console.log(`staged ${cases.length} case(s) at ${plugin}`);
   if (opts.stageOnly) return 0;
 
@@ -216,7 +240,7 @@ function main(argv) {
   const claudeVersion = spawnSync(claude.cmd, ['--version'], { encoding: 'utf8', shell: claude.shell }).stdout?.trim() || 'unknown version';
   const meta = {
     stamp, claudeVersion, judgeModel: opts['judge-model'], model: opts.model, by: opts.by, traces,
-    skillHash: treeHash(join(REPO, 'free-skills', opts.skill)), suiteHash: treeHash(join(plugin, 'evals')),
+    skillHash: treeHash(join(REPO, 'free-skills', opts.skill)), suiteHash,
   };
   writeFileSync(join(out, 'results', `${stamp}.json`), JSON.stringify({ meta, result }, null, 2) + '\n');
   writeFileSync(join(out, 'SCORECARD.md'), renderScorecard(opts.skill, result, meta));
