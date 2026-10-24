@@ -23,6 +23,90 @@
     "update channel: re-run on model or skill change"
   ],
   "eval_runner": "claude plugin eval (Claude Code 2.1.310) via scripts/eval-skill.mjs, no-plugin baseline arm",
+  "held_out": "Answer keys, grader expected outputs and raw results live in a private folder, never in this repo (scripts/held-out.mjs). Publishing them would leak the eval. Public: each case's prompt and inputs, the counts below, the runner, and aggregate results (evals/<skill>/results/<stamp>.summary.json, CARD.md).",
+  "heldOut": {
+    "ui-ux-design-expert": {
+      "planted": 8,
+      "graders": {
+        "clean-form": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "github-code-review": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "nextjs-expert": {
+      "planted": 9,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 10
+      }
+    },
+    "mcp-architecture": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "ai-architect-review": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "langgraph-patterns": {
+      "planted": 7,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 8
+      }
+    },
+    "skill-builder": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9,
+        "write-skill": 5
+      }
+    },
+    "product-management-expert": {
+      "planted": 8,
+      "graders": {
+        "clean": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "book-publishing": {
+      "planted": 8,
+      "graders": {
+        "clean-chapter": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    },
+    "excellence-book-writing": {
+      "planted": 8,
+      "graders": {
+        "clean-section": 2,
+        "no-trigger": 1,
+        "seeded-defects": 9
+      }
+    }
+  },
   "jobs": {
     "ui-ux-design-expert": "Reviews a page's markup and CSS for WCAG 2.2 AA accessibility defects and names the element and the fix.",
     "github-code-review": "Reviews a pull-request diff for merge-blocking correctness and security bugs, line by line.",

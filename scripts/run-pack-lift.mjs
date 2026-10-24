@@ -44,7 +44,10 @@ import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, re
 import { hostname, userInfo } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { comparability, reviewLift } from './eval-skill.mjs';
+import { comparability, isolationProblems, reviewLift } from './eval-skill.mjs';
+import { heldOutHash, heldOutStatus, privateRoot } from './held-out.mjs';
+
+export { isolationProblems };
 import { coverage, currentHashes, staleness } from './eval-card.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -95,6 +98,9 @@ function claudeCmd() {
 function preflight(o) {
   const say = (s) => console.log(s);
   const fail = (s) => { console.error(`\nPREFLIGHT FAILED: ${s}\nNothing was run.`); return false; };
+  const missing = o.skillList.map((s) => heldOutStatus(s)).filter((h) => !h.present);
+  if (missing.length) return fail(`the private half (graders, answer keys) is missing for ${missing.map((h) => h.skill).join(', ')} at ${privateRoot()}. Set SKILLS_EVALS_PRIVATE to its folder, or rebuild it from history: node scripts/held-out.mjs export --from 0ae110c --to <a folder outside this repo>.`);
+  say(`private half: ${privateRoot()} (present for all ${o.skillList.length} skill(s))`);
   const c = claudeCmd();
   if (!c) return fail('claude is not on PATH.');
   const ver = spawnSync(c.cmd, ['--version'], { encoding: 'utf8', shell: c.shell }).stdout?.trim();
@@ -110,51 +116,27 @@ function preflight(o) {
   return c;
 }
 
-// Read each run's trace init record and report anything that should not be there.
-export function isolationProblems(result, skill, baseDir) {
-  const problems = [];
-  const models = new Set();
-  const staged = `eval-${skill}`;
-  for (const c of result.cases || []) {
-    for (const [arm, runs] of Object.entries(c.arms || {})) {
-      (runs || []).forEach((r, i) => {
-        const where = `${c.name} ${arm} run ${i + 1}`;
-        const p = r?.tracePath && (existsSync(r.tracePath) ? r.tracePath : join(baseDir, r.tracePath));
-        if (!p || !existsSync(p)) { problems.push(`${where}: no trace`); return; }
-        const init = readFileSync(p, 'utf8').split('\n').filter(Boolean).map((l) => { try { return JSON.parse(l); } catch { return {}; } })
-          .find((e) => e.type === 'system' && e.subtype === 'init');
-        if (!init) { problems.push(`${where}: trace has no init record`); return; }
-        if (init.model) models.add(init.model);
-        const foreign = (init.plugins || []).filter((pl) => !/@builtin$/.test(pl.source || '') && !(arm === 'with' && pl.name === staged));
-        if (foreign.length) problems.push(`${where}: unexpected plugin(s) ${foreign.map((pl) => pl.name).join(', ')}`);
-        if (arm !== 'with' && (init.plugins || []).some((pl) => pl.name === staged)) problems.push(`${where}: the no-skill arm loaded the skill`);
-        const leaked = (init.skills || []).filter((sk) => sk.includes(':') ? !sk.startsWith(`${staged}:`) && !/^cc-plugin-/.test(sk) : PACK.skills.includes(sk));
-        if (leaked.length) problems.push(`${where}: unexpected skill(s) ${leaked.join(', ')}`);
-      });
-    }
-  }
-  return { problems, models: [...models] };
-}
-
 // The files one skill's run writes (relative to the repo), and how many traces to expect.
 export function expectedOutputs(skill, cases, runs) {
   return {
     traces: cases * runs * 2,
     files: [
-      `evals/${skill}/results/<stamp>.json`,
-      `evals/${skill}/results/<stamp>.report.html`,
-      `evals/${skill}/results/<stamp>/traces/<case>__<with|without>__<n>.jsonl  (${cases * runs * 2} files)`,
-      `evals/${skill}/SCORECARD.md`,
-      `evals/${skill}/CARD.md  (regenerated)`,
+      `<private>/results/${skill}/<stamp>.json  (private: every grader verdict)`,
+      `<private>/results/${skill}/<stamp>.report.html  (private)`,
+      `<private>/results/${skill}/<stamp>/traces/<case>__<with|without>__<n>.jsonl  (private, ${cases * runs * 2} files)`,
+      `<private>/results/${skill}/SCORECARD.md  (private)`,
+      `evals/${skill}/results/<stamp>.summary.json  (public: aggregates only)`,
+      `evals/${skill}/CARD.md  (public, regenerated from the summary)`,
     ],
   };
 }
 
-// After a run: does the newest result for each skill have everything it should, and is it usable?
-export function checkOutputs(skill, root = REPO) {
-  const dir = join(root, 'evals', skill, 'results');
+// After a run: does the newest result for each skill have everything it should, and is it usable? Raw output is
+// in the private half; the public side must have exactly the aggregate summary for the same run.
+export function checkOutputs(skill, root = REPO, priv = privateRoot()) {
+  const dir = join(priv, 'results', skill);
   const out = { skill, ok: false, notes: [] };
-  if (!existsSync(dir)) { out.notes.push('no results/ folder (not run yet)'); return out; }
+  if (!existsSync(dir)) { out.notes.push('no private results folder (not run yet, or the private half is elsewhere)'); return out; }
   const json = readdirSync(dir).filter((n) => n.endsWith('.json')).sort().at(-1);
   if (!json) { out.notes.push('no result file (not run yet)'); return out; }
   const stamp = json.replace(/\.json$/, '');
@@ -166,8 +148,9 @@ export function checkOutputs(skill, root = REPO) {
   out.stamp = stamp;
   if (!existsSync(join(dir, `${stamp}.report.html`))) out.notes.push('HTML report missing');
   if (traces !== runs) out.notes.push(`${traces} traces for ${runs} runs`);
-  if (!existsSync(join(root, 'evals', skill, 'SCORECARD.md'))) out.notes.push('SCORECARD.md missing');
-  const problems = [...comparability(r), ...(r.partial ? [] : isolationProblems(r, skill, join(root, 'evals', skill)).problems)];
+  if (!existsSync(join(dir, 'SCORECARD.md'))) out.notes.push('SCORECARD.md missing (private)');
+  if (!existsSync(join(root, 'evals', skill, 'results', `${stamp}.summary.json`))) out.notes.push('public summary missing');
+  const problems = [...comparability(r), ...(r.partial ? [] : isolationProblems(r, skill, dir).problems)];
   out.notes.push(...problems.slice(0, 3));
   out.runs = runs;
   out.traces = traces;
@@ -241,7 +224,8 @@ export function decide(skill, o, { hashes, latest, isolation, finished }) {
   let why = 'not run yet';
   if (res) {
     const r = res.result || {};
-    const problems = [...staleness(res, now), ...coverage(res, now), ...comparability(r), ...(r.partial ? [`partial: ${r.partialReason || 'stopped early'}`] : []),
+    const problems = [...staleness(res, now), ...(now.heldOutHash && res.meta?.heldOutHash && now.heldOutHash !== res.meta.heldOutHash ? [`the held-out half (graders or inputs) changed since the run (${res.meta.heldOutHash} → ${now.heldOutHash})`] : []),
+      ...coverage(res, now), ...comparability(r), ...(r.partial ? [`partial: ${r.partialReason || 'stopped early'}`] : []),
       ...(r.partial ? [] : isolation(r, skill)), ...(minRunsPerArm(r) < +o.runs ? [`${minRunsPerArm(r)} run(s) per arm, ${o.runs} requested`] : [])];
     if (!problems.length) return { action: 'skip', reason: `already measured (${res.file}: current, complete, comparable, ${minRunsPerArm(r)} runs per arm)`, res };
     why = `newest result not usable: ${problems[0]}`;
@@ -275,8 +259,9 @@ export function acquireLock(ledger, { breakLock = false } = {}) {
   }
 }
 
+// The newest raw result (private half). Raw output never goes in the public repo.
 function latestResult(skill, since) {
-  const dir = join(REPO, 'evals', skill, 'results');
+  const dir = join(privateRoot(), 'results', skill);
   if (!existsSync(dir)) return null;
   const f = readdirSync(dir).filter((n) => n.endsWith('.json')).sort().at(-1);
   if (!f) return null;
@@ -311,7 +296,9 @@ function main(argv) {
     console.log('Files the run will write:');
     for (const s of o.skillList) for (const f of expectedOutputs(s, plannedRuns(s).cases, +o.runs).files) console.log(`  ${f}`);
     console.log('  products/skills-with-evals/receipts/g1-run-<stamp>.md  (the run summary)');
-    let bad = 0;
+    const held = o.skillList.map((s) => heldOutStatus(s));
+    console.log(`Private half: ${privateRoot()} · ${held.filter((h) => h.present).length} of ${held.length} skill(s) present${held.some((h) => !h.present) ? ` · MISSING: ${held.filter((h) => !h.present).map((h) => h.skill).join(', ')} (a real run would stop at preflight)` : ''}`);
+    let bad = held.filter((h) => !h.present).length;
     for (const s of o.skillList) {
       const r = spawnSync(process.execPath, [join(REPO, 'scripts', 'eval-skill.mjs'), s, '--stage-only'], { encoding: 'utf8' });
       console.log(`  stage ${s}: ${r.status === 0 ? r.stdout.trim().replace(/ at .*/, '') : 'FAILED ' + r.stderr.trim()}`);
@@ -326,7 +313,7 @@ function main(argv) {
         console.log(`  ${dec.action === 'run' ? 'would run ' : 'would skip'} ${s.padEnd(27)} ${dec.reason}`);
       }
     }
-    console.log(bad ? `dry run: ${bad} skill(s) failed to stage` : 'dry run: every skill stages. Nothing was sent to a model.');
+    console.log(bad ? `dry run: ${bad} skill(s) not ready (staging failed or the private half is missing). Nothing was sent to a model.` : "dry run: every skill stages with its private half. Nothing was sent to a model.");
     return bad ? 1 : 0;
   }
   if (!preflight(o)) return 2;
@@ -337,11 +324,11 @@ function main(argv) {
 }
 
 const realDeps = () => ({
-  hashes: (s) => currentHashes(s),
+  hashes: (s) => ({ ...currentHashes(s), heldOutHash: heldOutHash(s) }),
   latest: (s) => latestResult(s, ''),
   resultSince: (s, since) => latestResult(s, since),
-  isolation: (r, s) => isolationProblems(r, s, join(REPO, 'evals', s)).problems,
-  models: (r, s) => isolationProblems(r, s, join(REPO, 'evals', s)).models,
+  isolation: (r, s) => isolationProblems(r, s, join(privateRoot(), 'results', s)).problems,
+  models: (r, s) => isolationProblems(r, s, join(privateRoot(), 'results', s)).models,
   runSkill: (s, cap, o) => spawnSync(process.execPath, [join(REPO, 'scripts', 'eval-skill.mjs'), s, '--runs', o.runs, '--max-cost-usd', cap,
     '--judge-model', o['judge-model'], '--model', o.model, '--by', o.by], { stdio: 'inherit' }).status,
   regenerateCards: () => spawnSync(process.execPath, [join(REPO, 'scripts', 'eval-card.mjs')], { stdio: 'inherit' }),

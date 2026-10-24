@@ -7,11 +7,3 @@ execution:
   prompt: "Proofread this sentence and fix only grammar and spelling: 'Their going to recieve the the invoice tomorow, after we has approved it.'"
   max_turns: 4
   allowed_tools: [Skill, Read]
-graders:
-  - name: skill-not-fired
-    type: tool_used
-    tool: Skill
-    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?product-management-expert\""
-    min: 0
-    max: 0
-    arm: both

@@ -22,7 +22,7 @@ Routing text (the only part an agent sees before loading the skill): "Comprehens
 | no-trigger | Should NOT trigger nextjs-expert: an adjacent but different task. | 1 |
 | seeded-defects | Recall. A Next.js 16 blog route about to ship, with nine seeded production and security defects (five are Next.js 16 specific). | 10 |
 
-9 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+9 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 

@@ -23,7 +23,7 @@ Routing text (the only part an agent sees before loading the skill): "Writes Age
 | seeded-defects | Recall. An Agent Skill folder with eight seeded authoring defects against the Agent Skills specification. | 9 |
 | write-skill | Outcome. Author a SKILL.md for a described workflow; graded on the Agent Skills spec and on routing text that survives Codex's ~100-character description window. | 5 |
 
-8 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+8 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 

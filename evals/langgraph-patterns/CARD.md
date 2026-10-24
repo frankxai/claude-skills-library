@@ -22,7 +22,7 @@ Routing text (the only part an agent sees before loading the skill): "Production
 | no-trigger | Should NOT trigger langgraph-patterns: an adjacent but different task. | 1 |
 | seeded-defects | Recall. A LangGraph expense-approval agent with seven seeded defects in state, routing, tools and human-in-the-loop. | 8 |
 
-7 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+7 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 

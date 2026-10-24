@@ -76,3 +76,6 @@ evals/skill-eval/scorecards/
 
 # G1 run lock (exists only while a run is active)
 products/skills-with-evals/receipts/*.lock
+
+# The held-out half of the pack evals lives OUTSIDE this repo (scripts/held-out.mjs). Never commit it here.
+skills-with-evals-private/

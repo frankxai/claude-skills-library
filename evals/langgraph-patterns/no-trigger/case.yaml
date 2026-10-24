@@ -7,11 +7,3 @@ execution:
   prompt: "Write a Python function that retries an HTTP GET with exponential backoff (max 5 attempts) using the requests library."
   max_turns: 4
   allowed_tools: [Skill, Read]
-graders:
-  - name: skill-not-fired
-    type: tool_used
-    tool: Skill
-    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?langgraph-patterns\""
-    min: 0
-    max: 0
-    arm: both

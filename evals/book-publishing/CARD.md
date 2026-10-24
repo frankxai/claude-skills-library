@@ -22,7 +22,7 @@ Routing text (the only part an agent sees before loading the skill): "Multi-book
 | no-trigger | Should NOT trigger book-publishing: a near miss that mentions a PDF and a review but has nothing to do with books. | 1 |
 | seeded-defects | Recall. A Spartan Mindset chapter draft with eight seeded violations of the book's voice and publishing rules. | 9 |
 
-8 planted defects in the recall case (answer key never shown to the model). Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
+8 planted defects in the recall case. The answer key and the graders are held out: never shown to the model, and not published. Every case runs twice: with the skill and with no skill (baseline), same model and prompt.
 
 ## Measured lift
 
