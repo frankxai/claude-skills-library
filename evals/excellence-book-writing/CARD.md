@@ -32,11 +32,15 @@ Measure it: `node scripts/eval-skill.mjs excellence-book-writing --runs 3 --max-
 
 ## Install
 
+Release candidate: until this pack is merged to `main`, pin the branch (`#` for Claude Code, `@` for Codex).
+
 ```bash
-# Claude Code
-claude plugin marketplace add frankxai/claude-skills-library
+# Claude Code (2.1.310 tested)
+claude plugin marketplace add frankxai/claude-skills-library#agent/hyperagent/eval-pack-rc1
 claude plugin install skills-with-evals@claude-skills-library
-# Codex
-codex plugin marketplace add frankxai/claude-skills-library
+# Codex (codex-cli 0.164.0 tested)
+codex plugin marketplace add frankxai/claude-skills-library@agent/hyperagent/eval-pack-rc1
 codex plugin add skills-with-evals@claude-skills-library
 ```
+
+After merge, drop the `#…` / `@…` suffix.
