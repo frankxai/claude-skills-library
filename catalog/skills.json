@@ -9,7 +9,7 @@
   },
   "totals": {
     "pluginsWithListedSkills": 1,
-    "skills": 114,
+    "skills": 115,
     "skillsWithEvals": 0,
     "pluginsFromOtherRepos": 3
   },
@@ -22,7 +22,7 @@
         "type": "local",
         "path": "./"
       },
-      "skillCount": 114,
+      "skillCount": 115,
       "skills": [
         {
           "name": "acos-meta",
@@ -34,6 +34,12 @@
           "name": "acos-visual-gen",
           "description": "Generate research-grounded visuals using the InfoGenius pipeline. Use when creating infographics, diagrams, educational visuals, or any image that benefits from factual accuracy. Supports 8 visual styles (3D, technical, minimalist, photorealistic, futuristic, vintage, cartoon, standard) and 4 audience levels.",
           "path": "free-skills/acos-visual-gen",
+          "hasEvals": false
+        },
+        {
+          "name": "agent-hygiene",
+          "description": "The quality bar for any agent working on agent definitions, skills, commands, hooks, AGENTS.md or CLAUDE.md, in any repo and any harness. Use at session start, before editing a file under .claude/agents, agents/, .claude/commands or any SKILL.md, before handing work back, and whenever choosing which model tier (Haiku, Sonnet, Opus, Fable) or effort level a task deserves. Carries the estate guardrails, the agent-file contract the linter enforces, the verification line every hand-back ends with, and the routing rule for spending the top tier.",
+          "path": "free-skills/agent-hygiene",
           "hasEvals": false
         },
         {

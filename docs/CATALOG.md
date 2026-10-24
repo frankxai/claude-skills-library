@@ -1,13 +1,14 @@
 # 📚 Skills Catalog
-The complete index of all **114 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **115 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
 ## AI Agents & Orchestration
-_16 skills_
+_17 skills_
 
 | Skill | Description |
 |---|---|
+| [`agent-hygiene`](../free-skills/agent-hygiene/SKILL.md) | The quality bar for any agent working on agent definitions, skills, commands, hooks, AGENTS.md or CLAUDE.md, in any repo and any harness. Use at session start, before editing a... |
 | [`agentic-jujutsu`](../free-skills/agentic-jujutsu/SKILL.md) | Quantum-resistant, self-learning version control for AI agents, with ReasoningBank intelligence and multi-agent coordination. Use when designing agent memory/versioning, coordin... |
 | [`agentic-orchestration`](../free-skills/agentic-orchestration/SKILL.md) | Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Use when designing or debugging agent systems, splitting a large task across sub... |
 | [`ai-architect-review`](../free-skills/ai-architect-review/SKILL.md) | Review the architecture of a system that calls a language model. Use when adding an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system t... |
