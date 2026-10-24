@@ -303,3 +303,39 @@ test('a card refuses a result from an older skill or suite, or one missing a cas
   assert.deepEqual(coverage(runOf(now.cases), now), []);
   assert.match(coverage(runOf(['clean']), now).join(' '), /no runs for no-trigger, seeded-defects|no runs for seeded-defects, no-trigger/);
 });
+
+test('evals/README.md status table matches the suites on disk and the cross-model lane (G3 P1-6)', () => {
+  const md = readFileSync(join(REPO, 'evals/README.md'), 'utf8');
+  const caseDirs = (s) => readdirSync(join(REPO, 'evals', s), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith('_') && d.name !== 'results'
+      && (existsSync(join(REPO, 'evals', s, d.name, 'case.yaml')) || existsSync(join(REPO, 'evals', s, d.name, 'prompt.md'))))
+    .map((d) => d.name).sort();
+  const suites = readdirSync(join(REPO, 'evals'), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith('_') && d.name !== 'skill-eval').map((d) => d.name);
+  const lane = new Set(JSON.parse(readFileSync(join(REPO, 'evals/skill-eval/cases.json'), 'utf8')).cases.map((c) => c.skill.replace(/\/$/, '').split('/').at(-1)));
+  const table = md.slice(md.indexOf('## Status'));
+  const rows = table.split('\n').filter((l) => /^\| [a-z]/.test(l) && !/^\| Skill/.test(l)).map((l) => l.split('|').map((x) => x.trim()));
+  const seen = new Set();
+  for (const [, names, cases, , xm] of rows) {
+    for (const s of names.split(',').map((x) => x.trim())) {
+      seen.add(s);
+      assert.deepEqual(cases.split(',').map((x) => x.trim()).sort(), caseDirs(s), `${s}: lift cases column`);
+      assert.equal(xm, lane.has(s) ? 'yes' : 'no', `${s}: cross-model column`);
+    }
+  }
+  assert.deepEqual(suites.filter((s) => !seen.has(s)), [], 'every suite on disk has a row');
+  const none = /covers \w+ skills with no lift suite yet: ([^.]+)\./.exec(md)[1].split(',').map((x) => x.trim());
+  assert.deepEqual(none.filter((s) => existsSync(join(REPO, 'evals', s))), [], 'a skill with a suite is listed as having none');
+  assert.deepEqual(none.filter((s) => !lane.has(s)), [], 'listed skills are in the cross-model lane');
+});
+
+test('the G2 receipt keeps the original install-test output and a clean re-run (G3 P1-6)', () => {
+  const dir = join(REPO, 'products/skills-with-evals/receipts/g2');
+  const rerun = JSON.parse(readFileSync(join(dir, 'install-test-rerun-af15ec6.json'), 'utf8'));
+  assert.equal(rerun.pass, true);
+  assert.doesNotMatch(rerun.versions.codex, /WARNING|\n/);
+  assert.match(JSON.parse(readFileSync(join(dir, 'install-test.json'), 'utf8')).versions.codex, /WARNING/, 'original evidence stays unedited');
+  const readme = readFileSync(join(dir, 'README.md'), 'utf8');
+  assert.doesNotMatch(readme, /That is exactly the extra probe that passed \|/);
+  assert.match(readme, /kept unedited/);
+});
