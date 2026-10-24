@@ -91,6 +91,46 @@ test('contextMain with invalid config', async (t) => {
   }
 });
 
+test('contextMain handles invalid schema', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'neutron-context-test-schema-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+
+  const configPath = join(dir, 'context.config.json');
+  writeFileSync(configPath, '[]');
+
+  let err = '';
+  const originalError = console.error;
+  console.error = (msg) => { err += msg + '\n'; };
+
+  try {
+    const code = contextMain(['--config', configPath]);
+    assert.strictEqual(code, 1);
+    assert.match(err, /Invalid config schema/);
+  } finally {
+    console.error = originalError;
+  }
+});
+
+test('contextMain handles invalid harness patterns', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'neutron-context-test-patterns-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+
+  const configPath = join(dir, 'context.config.json');
+  writeFileSync(configPath, JSON.stringify({ "test-harness": "file.md" }));
+
+  let err = '';
+  const originalError = console.error;
+  console.error = (msg) => { err += msg + '\n'; };
+
+  try {
+    const code = contextMain(['--config', configPath]);
+    assert.strictEqual(code, 1);
+    assert.match(err, /Invalid patterns array/);
+  } finally {
+    console.error = originalError;
+  }
+});
+
 test('contextMain deduplicates overlapping globs', async (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'neutron-context-test-dedup-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));

@@ -2,6 +2,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { globSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 function expandTilde(filepath) {
   if (filepath.startsWith('~/')) {
@@ -52,7 +53,7 @@ function analyzeLongSections(text) {
 }
 
 export function contextMain(argv) {
-  let configPath = 'context.config.json';
+  let configPath = null;
   let targetTokens = 8000;
   let propose = false;
 
@@ -64,6 +65,10 @@ export function contextMain(argv) {
     } else if (argv[i] === '--propose') {
       propose = true;
     }
+  }
+
+  if (!configPath) {
+      configPath = join(dirname(fileURLToPath(import.meta.url)), '../context.config.json');
   }
 
   const absoluteConfigPath = isAbsolute(configPath) ? configPath : resolve(process.cwd(), configPath);
@@ -81,9 +86,18 @@ export function contextMain(argv) {
     return 1;
   }
 
+  if (!config || typeof config !== 'object' || Array.isArray(config)) {
+      console.error(`Invalid config schema: Expected an object`);
+      return 1;
+  }
+
   const configDir = dirname(absoluteConfigPath);
 
   for (const [harness, patterns] of Object.entries(config)) {
+    if (!Array.isArray(patterns)) {
+        console.error(`Invalid patterns array for harness '${harness}'`);
+        return 1;
+    }
     console.log(`\nHarness: ${harness}`);
     console.log(`=========================================`);
 
@@ -109,6 +123,11 @@ export function contextMain(argv) {
     }
 
     fileStats.sort((a, b) => b.bytes - a.bytes);
+
+    for (const stat of fileStats) {
+      console.log(`${stat.file}: ${stat.bytes} bytes`);
+    }
+    console.log('');
 
     const estimatedTokens = Math.ceil(totalBytes / 4);
     const gap = targetTokens - estimatedTokens;
