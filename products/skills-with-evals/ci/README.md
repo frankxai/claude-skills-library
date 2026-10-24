@@ -1,5 +1,8 @@
 # CI changes that need Frank's hands
 
+Two files here are for `.github/workflows/`: `skill-eval.yml.patch` (apply to the existing workflow) and
+`install-matrix.yml` (a new workflow, copy as `.github/workflows/install-matrix.yml`).
+
 The agent's GitHub connector cannot modify `.github/workflows/*`: GitHub refuses with `403 Resource not accessible by
 integration`, because the app lacks the `workflows` permission. Workflow fixes from the G3 review are kept here as a patch
 to apply with a token that has that scope:
@@ -20,3 +23,21 @@ git commit -am "ci(skill-eval): apply the G3 workflow fixes" && git push
 `scripts/tests/eval-pack.test.mjs`, so the catalog check, the pack-wide trigger lint and the card check run in CI
 today whenever the job triggers. Two gaps remain until the patch lands: the trigger paths (first row), and the CI
 lift lane covering only 3 skills. For G1, use `scripts/run-pack-lift.mjs`, which runs all 10 locally.
+
+## install-matrix.yml (new workflow)
+
+Copy to `.github/workflows/install-matrix.yml`. On `ubuntu-latest` and `windows-latest`, each at Claude Code 2.1.310 (the
+tested version) and `latest`, it starts from a fresh clone of the PR head and runs:
+
+| Step | Checks |
+|---|---|
+| `claude plugin validate .` | The marketplace manifest passes Claude Code's own validator |
+| `node scripts/install-test.mjs` | Claude Code installs `skills-with-evals` and lists all 10 skills; Codex 0.164.0 adds it and shows all 10 in the model-visible skill list (throwaway HOME, no login) |
+| `install-test.mjs --claude-source owner/repo#branch --codex-source owner/repo@branch` | The same from GitHub, pinned to the PR branch (the buyer's command); same-repo PRs only |
+
+Receipts (`install-*.json`) are uploaded as artifacts. No secret and no model call.
+
+**Checked before handing over:** `actionlint` 1.7.12 with shellcheck 0.11.0 passes on `install-matrix.yml` and on
+`skill-eval.yml` with the patch applied. Both install-test modes pass locally on Linux (Claude Code 2.1.310, codex-cli
+0.164.0). **Windows has not run yet:** the Windows command handling (`.exe` preferred, `.cmd`/`.bat` through the shell,
+quoted arguments) is unit-tested, but the first real Windows result will come from this workflow.
