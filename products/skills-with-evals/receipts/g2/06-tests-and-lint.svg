@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="964" height="985" viewBox="0 0 964 985" font-family="Liberation Mono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13">
+<rect width="964" height="985" fill="#0d1117"/><rect width="964" height="39" fill="#161b22"/>
+<circle cx="20" cy="20" r="5.5" fill="#ff5f56"/>
+<circle cx="38" cy="20" r="5.5" fill="#ffbd2e"/>
+<circle cx="56" cy="20" r="5.5" fill="#27c93f"/>
+<text x="78" y="24" fill="#e6edf3" font-weight="bold" xml:space="preserve">06 repo checks: trigger-lint --pack + node --test  |  2026-10-24T01:01:54Z</text>
+<text x="14" y="64" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-uEVl  # new empty HOME</text>
+<text x="14" y="82" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="100" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ cd /agent/workspace/g2-clone; node scripts/trigger-lint.mjs --pack products/skills-with-evals/</text>
+<text x="14" y="118" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="70.2" lengthAdjust="spacingAndGlyphs">pack.json</text>
+<text x="14" y="136" fill="#e6edf3" xml:space="preserve" textLength="429.0" lengthAdjust="spacingAndGlyphs">WARN ui-ux-design-expert              desc= 279 cue@165</text>
+<text x="14" y="154" fill="#e6edf3" xml:space="preserve" textLength="468.0" lengthAdjust="spacingAndGlyphs">       trigger cue starts at char 165; Codex shows only ~100</text>
+<text x="14" y="172" fill="#e6edf3" xml:space="preserve" textLength="335.4" lengthAdjust="spacingAndGlyphs">       body is 713 lines (guide: under 500)</text>
+<text x="14" y="190" fill="#e6edf3" xml:space="preserve" textLength="421.2" lengthAdjust="spacingAndGlyphs">ok   github-code-review               desc= 220 cue@77</text>
+<text x="14" y="208" fill="#e6edf3" xml:space="preserve" textLength="429.0" lengthAdjust="spacingAndGlyphs">WARN nextjs-expert                    desc= 260 cue@131</text>
+<text x="14" y="226" fill="#e6edf3" xml:space="preserve" textLength="468.0" lengthAdjust="spacingAndGlyphs">       trigger cue starts at char 131; Codex shows only ~100</text>
+<text x="14" y="244" fill="#e6edf3" xml:space="preserve" textLength="335.4" lengthAdjust="spacingAndGlyphs">       body is 707 lines (guide: under 500)</text>
+<text x="14" y="262" fill="#e6edf3" xml:space="preserve" textLength="429.0" lengthAdjust="spacingAndGlyphs">WARN mcp-architecture                 desc= 232 cue@113</text>
+<text x="14" y="280" fill="#e6edf3" xml:space="preserve" textLength="468.0" lengthAdjust="spacingAndGlyphs">       trigger cue starts at char 113; Codex shows only ~100</text>
+<text x="14" y="298" fill="#e6edf3" xml:space="preserve" textLength="421.2" lengthAdjust="spacingAndGlyphs">ok   ai-architect-review              desc= 395 cue@65</text>
+<text x="14" y="316" fill="#e6edf3" xml:space="preserve" textLength="429.0" lengthAdjust="spacingAndGlyphs">WARN langgraph-patterns               desc= 252 cue@135</text>
+<text x="14" y="334" fill="#e6edf3" xml:space="preserve" textLength="468.0" lengthAdjust="spacingAndGlyphs">       trigger cue starts at char 135; Codex shows only ~100</text>
+<text x="14" y="352" fill="#e6edf3" xml:space="preserve" textLength="429.0" lengthAdjust="spacingAndGlyphs">WARN skill-builder                    desc= 268 cue@131</text>
+<text x="14" y="370" fill="#e6edf3" xml:space="preserve" textLength="468.0" lengthAdjust="spacingAndGlyphs">       trigger cue starts at char 131; Codex shows only ~100</text>
+<text x="14" y="388" fill="#e6edf3" xml:space="preserve" textLength="335.4" lengthAdjust="spacingAndGlyphs">       body is 907 lines (guide: under 500)</text>
+<text x="14" y="406" fill="#e6edf3" xml:space="preserve" textLength="429.0" lengthAdjust="spacingAndGlyphs">WARN product-management-expert        desc= 191 cue@126</text>
+<text x="14" y="424" fill="#e6edf3" xml:space="preserve" textLength="468.0" lengthAdjust="spacingAndGlyphs">       trigger cue starts at char 126; Codex shows only ~100</text>
+<text x="14" y="442" fill="#e6edf3" xml:space="preserve" textLength="421.2" lengthAdjust="spacingAndGlyphs">ok   book-publishing                  desc= 221 cue@78</text>
+<text x="14" y="460" fill="#e6edf3" xml:space="preserve" textLength="429.0" lengthAdjust="spacingAndGlyphs">WARN excellence-book-writing          desc= 221 cue@103</text>
+<text x="14" y="478" fill="#e6edf3" xml:space="preserve" textLength="468.0" lengthAdjust="spacingAndGlyphs">       trigger cue starts at char 103; Codex shows only ~100</text>
+<text x="14" y="496" fill="#e6edf3" xml:space="preserve" textLength="546.0" lengthAdjust="spacingAndGlyphs">trigger-lint: 10 checked, 0 failed, 7 with warnings (Codex cutoff 100)</text>
+<text x="14" y="514" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:01:54Z)</text>
+<text x="14" y="550" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ cd /agent/workspace/g2-clone; node --test scripts/tests/eval-pack.test.mjs scripts/tests/eval-</text>
+<text x="14" y="568" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="109.2" lengthAdjust="spacingAndGlyphs">skill.test.mjs</text>
+<text x="14" y="586" fill="#e6edf3" xml:space="preserve" textLength="904.8" lengthAdjust="spacingAndGlyphs">✔ every pack skill has a recall, a precision and a no-trigger case, and one grader per answer-key entry (1.910127ms)</text>
+<text x="14" y="604" fill="#e6edf3" xml:space="preserve" textLength="928.2" lengthAdjust="spacingAndGlyphs">✔ no case.yaml uses an escape YAML double-quoted strings reject (a case that cannot load is a silent hole) (6.011305ms)</text>
+<text x="14" y="622" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">✔ the pack marketplace entry lists exactly the pack skills, by paths that exist, under a name Claude Code allows (0.4104</text>
+<text x="14" y="640" fill="#e6edf3" xml:space="preserve" textLength="39.0" lengthAdjust="spacingAndGlyphs">29ms)</text>
+<text x="14" y="658" fill="#e6edf3" xml:space="preserve" textLength="795.6" lengthAdjust="spacingAndGlyphs">✔ trigger-lint finds the cue position, parses folded descriptions, and fails a broken name (0.92445ms)</text>
+<text x="14" y="676" fill="#e6edf3" xml:space="preserve" textLength="686.4" lengthAdjust="spacingAndGlyphs">✔ cards are generated from files and never claim lift without a result file (4.987647ms)</text>
+<text x="14" y="694" fill="#e6edf3" xml:space="preserve" textLength="842.4" lengthAdjust="spacingAndGlyphs">✔ stage builds a plugin from the single skill copy and keeps the answer key and old results out (4.440229ms)</text>
+<text x="14" y="712" fill="#e6edf3" xml:space="preserve" textLength="405.6" lengthAdjust="spacingAndGlyphs">✔ stage refuses a skill without a suite (0.741887ms)</text>
+<text x="14" y="730" fill="#e6edf3" xml:space="preserve" textLength="624.0" lengthAdjust="spacingAndGlyphs">✔ parseArgs rejects unknown flags, missing values and unsafe values (0.508392ms)</text>
+<text x="14" y="748" fill="#e6edf3" xml:space="preserve" textLength="772.2" lengthAdjust="spacingAndGlyphs">✔ a complete two-arm result is comparable and the scorecard derives the no-skill score (0.395072ms)</text>
+<text x="14" y="766" fill="#e6edf3" xml:space="preserve" textLength="678.6" lengthAdjust="spacingAndGlyphs">✔ unequal arms, errors, skipped judges and partial runs block a lift claim (0.244848ms)</text>
+<text x="14" y="784" fill="#e6edf3" xml:space="preserve" textLength="842.4" lengthAdjust="spacingAndGlyphs">✔ every suite in evals/ tests the free-skills/ copy and stages, with no second copy of a skill (27.470979ms)</text>
+<text x="14" y="802" fill="#e6edf3" xml:space="preserve" textLength="538.2" lengthAdjust="spacingAndGlyphs">✔ treeHash ignores line endings and changes with content (1.117766ms)</text>
+<text x="14" y="820" fill="#e6edf3" xml:space="preserve" textLength="78.0" lengthAdjust="spacingAndGlyphs">ℹ tests 12</text>
+<text x="14" y="838" fill="#e6edf3" xml:space="preserve" textLength="78.0" lengthAdjust="spacingAndGlyphs">ℹ suites 0</text>
+<text x="14" y="856" fill="#e6edf3" xml:space="preserve" textLength="70.2" lengthAdjust="spacingAndGlyphs">ℹ pass 12</text>
+<text x="14" y="874" fill="#e6edf3" xml:space="preserve" textLength="62.4" lengthAdjust="spacingAndGlyphs">ℹ fail 0</text>
+<text x="14" y="892" fill="#e6edf3" xml:space="preserve" textLength="101.4" lengthAdjust="spacingAndGlyphs">ℹ cancelled 0</text>
+<text x="14" y="910" fill="#e6edf3" xml:space="preserve" textLength="85.8" lengthAdjust="spacingAndGlyphs">ℹ skipped 0</text>
+<text x="14" y="928" fill="#e6edf3" xml:space="preserve" textLength="62.4" lengthAdjust="spacingAndGlyphs">ℹ todo 0</text>
+<text x="14" y="946" fill="#e6edf3" xml:space="preserve" textLength="187.2" lengthAdjust="spacingAndGlyphs">ℹ duration_ms 164.593061</text>
+<text x="14" y="964" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:01:54Z)</text>
+</svg>

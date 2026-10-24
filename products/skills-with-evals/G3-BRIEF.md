@@ -51,7 +51,8 @@ evidence cold. You are that check. You did not build any of this and owe it noth
    was partial? What is still weak? (The judge is from the same provider as the model under test; say how
    much that matters for these graders.)
 8. **Trigger lint is right.** Spot-check five skills: is the reported character position of the
-   "use when" cue correct, and is the ~100-character Codex window claim consistent with the PR's evidence?
+   "use when" cue correct? Is the Codex trimming claim (load-dependent, `receipts/codex-skill-list-budget.md`)
+   consistent with the evidence? Reproduce one row if you have `codex`.
 9. **Install.** If you have a shell with `claude` and `codex`, run `node scripts/install-test.mjs` from a
    fresh clone and compare with the G2 report. If you do not, say so and judge the G2 report on its own.
 10. **Market bar.** If `BAR.md` exists in the starlight-estate PR or is quoted in the PR thread, check that

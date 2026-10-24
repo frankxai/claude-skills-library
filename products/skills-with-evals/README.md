@@ -9,8 +9,9 @@ Status: **release candidate, not for sale.** No price, no checkout, nothing publ
 2. **A no-skill baseline:** every case also runs with no skill loaded, same model and prompt, so lift is a
    measured difference, not an opinion (`--ablation with-without`).
 3. **A trigger test:** a should-trigger case with a `tool_used: Skill` indicator, a should-not-trigger case on
-   an adjacent task, and a static check (`scripts/trigger-lint.mjs`) that the "use when" cue sits inside the
-   ~100 characters Codex shows.
+   an adjacent task, and a static check (`scripts/trigger-lint.mjs`) that the "use when" cue comes early enough to
+   survive Codex trimming descriptions on large installs (about 104 characters with 114 skills installed,
+   full text with 40 or fewer: `receipts/codex-skill-list-budget.md`).
 4. **A measured lift** on a one-page card (`evals/<skill>/CARD.md`), generated from the tool's result file. Until a
    comparable run exists, the card says "Not measured yet. No lift is claimed."
 
@@ -75,5 +76,5 @@ a private repository. Nothing here changes a licence.
 |---|---|---|
 | G0 | Every public claim is listed with its evidence | Posted on the PR |
 | G1 | Eval counts printed by `claude plugin eval` | Load check done (31 cases load, 0 errors); measured runs wait for a Claude credential |
-| G2 | A stranger installs from a clean clone, with screenshots | Install level: see PR comment. Outcome level (a buyer-agent reaches a result with the skill on three providers, as `PRODUCT-RELEASE-GATE.md` requires for agentic products) needs model credentials and is not done |
+| G2 | A stranger installs from a clean clone, with screenshots | Install level: **local clean clone PASS in both runtimes**; the remote command failed before the pinned-branch fix (`receipts/g2/`). Outcome level (a buyer-agent reaches a result with the skill on three providers, as `PRODUCT-RELEASE-GATE.md` requires for agentic products) needs model credentials and is not done |
 | G3 | Different-family model checks the claims | Brief in `G3-BRIEF.md`; not run yet |

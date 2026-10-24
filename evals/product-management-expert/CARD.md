@@ -10,7 +10,7 @@ Reviews PRDs and product plans for missing evidence, unmeasurable metrics, scope
 
 Routing text (the only part an agent sees before loading the skill): "Product management expertise for strategy, discovery, prioritization, roadmaps, PRDs, metrics, and stakeholder communication. Use when defining what to build, why, and how to measure success."
 
-- "use when" cue starts at character 126. Outside the ~100 characters Codex shows in its skill list, so Codex has to guess from the first sentence.
+- "use when" cue starts at character 126. Would be cut by Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Proofread this sentence and fix only grammar and spelling: 'Their going to recieve the the invoice tomorow, after we has approved it.'".
 - Context cost: listed in every session; full body loads only when it fires (body under 500 lines).
 

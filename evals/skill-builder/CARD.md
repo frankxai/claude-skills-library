@@ -10,7 +10,7 @@ Writes and reviews Agent Skills (SKILL.md) so they load, trigger at the right ti
 
 Routing text (the only part an agent sees before loading the skill): "Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification."
 
-- "use when" cue starts at character 131. Outside the ~100 characters Codex shows in its skill list, so Codex has to guess from the first sentence.
+- "use when" cue starts at character 131. Would be cut by Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Summarise the difference between a git merge and a git rebase in three bullet points".
 - Context cost: listed in every session; full body loads only when it fires (body is 907 lines (guide: under 500)).
 

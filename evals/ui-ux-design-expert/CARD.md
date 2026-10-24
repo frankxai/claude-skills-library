@@ -10,7 +10,7 @@ Reviews a page's markup and CSS for WCAG 2.2 AA accessibility defects and names 
 
 Routing text (the only part an agent sees before loading the skill): "Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user research, and creating inclusive, user-centered interfaces with 2025 best practices. Use when designing or auditing an interface, building a design system, or checking accessibility against WCAG 2.2."
 
-- "use when" cue starts at character 165. Outside the ~100 characters Codex shows in its skill list, so Codex has to guess from the first sentence.
+- "use when" cue starts at character 165. Would be cut by Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Write a Bash one-liner that finds every .png file larger than 1 MB under ./public and prints its size and path".
 - Context cost: listed in every session; full body loads only when it fires (body is 713 lines (guide: under 500)).
 

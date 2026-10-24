@@ -1,8 +1,9 @@
 # Proposed description fixes (not applied)
 
-Seven of the ten pack skills put their "use when" cue after character 100. Codex (0.164.0) shows only
-about the first 100 characters of a description, so for these skills it routes on a title and half a
-sentence. The proposals below move the cue to characters 18–25. They pass `scripts/trigger-lint.mjs`
+Seven of the ten pack skills put their "use when" cue after character 100. Codex (0.164.0) trims every
+description evenly once the installed skills overflow its skill-list budget: about 108 characters at 80
+installed skills, about 104 at 114 (`receipts/codex-skill-list-budget.md`). On such an install these seven
+route on a title and half a sentence. With the 10-skill pack alone, Codex shows them in full. The proposals below move the cue to characters 18–25. They pass `scripts/trigger-lint.mjs`
 with 0 errors and keep each skill's scope.
 
 **Why they are not applied yet:** the fix is itself a claim ("the skill fires more reliably"). It

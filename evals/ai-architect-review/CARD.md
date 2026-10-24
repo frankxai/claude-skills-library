@@ -10,7 +10,7 @@ Reviews the architecture of an LLM-calling system before launch: model seam, loo
 
 Routing text (the only part an agent sees before loading the skill): "Review the architecture of a system that calls a language model. Use when adding an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system that worked in a demo is being prepared for production; or when asked to audit, review, or plan AI/agent architecture. Checks the four decisions that are expensive to reverse, then the seven planes and their boundaries."
 
-- "use when" cue starts at character 65. Inside the ~100 characters Codex shows in its skill list.
+- "use when" cue starts at character 65. Survives Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Write a Python script that reads a CSV of support tickets (columns: id, created_at, closed_at) and prints the median time to close in hours".
 - Context cost: listed in every session; full body loads only when it fires (body under 500 lines).
 

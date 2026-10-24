@@ -12,9 +12,11 @@
 > `codex plugin marketplace add frankxai/claude-skills-library@agent/hyperagent/eval-pack-rc1`, then
 > `codex plugin add skills-with-evals@claude-skills-library`.
 >
-> `codex debug prompt-input "hello"` then lists each skill as `<plugin>:<skill>: <description>`. Codex shows
-> only about the first 100 characters of each description (measured: 102 to 106), so put the "use when"
-> cue early. `node scripts/trigger-lint.mjs` flags descriptions whose cue starts later. The options below
+> `codex debug prompt-input "hello"` then lists each skill as `<plugin>:<skill>: <description>`. The list has
+> a fixed budget shared by every installed skill: descriptions show in full on small installs and are trimmed
+> evenly on large ones (about 104 characters with all 114 library skills installed). Put the "use when" cue
+> early; `node scripts/trigger-lint.mjs` flags cues after character 100. Measurements:
+> `products/skills-with-evals/receipts/codex-skill-list-budget.md`. The options below
 > are the older fallback for Codex versions without plugin marketplaces.
 
 

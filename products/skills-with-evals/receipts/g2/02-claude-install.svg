@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="964" height="427" viewBox="0 0 964 427" font-family="Liberation Mono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13">
+<rect width="964" height="427" fill="#0d1117"/><rect width="964" height="39" fill="#161b22"/>
+<circle cx="20" cy="20" r="5.5" fill="#ff5f56"/>
+<circle cx="38" cy="20" r="5.5" fill="#ffbd2e"/>
+<circle cx="56" cy="20" r="5.5" fill="#27c93f"/>
+<text x="78" y="24" fill="#e6edf3" font-weight="bold" xml:space="preserve">02 Claude Code: marketplace add (local clean clone) + install  |  2026-10-24T01:00:45Z</text>
+<text x="14" y="64" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-uEVl  # new empty HOME</text>
+<text x="14" y="82" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="100" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="725.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 120 claude plugin marketplace add /agent/workspace/g2-clone</text>
+<text x="14" y="118" fill="#e6edf3" xml:space="preserve" textLength="795.6" lengthAdjust="spacingAndGlyphs">Adding marketplace…✔ Successfully added marketplace: claude-skills-library (declared in user settings)</text>
+<text x="14" y="136" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:00:45Z)</text>
+<text x="14" y="172" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="772.2" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 claude plugin install skills-with-evals@claude-skills-library</text>
+<text x="14" y="190" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">Installing plugin &quot;skills-with-evals@claude-skills-library&quot;...✔ Successfully installed plugin: skills-with-evals@claude-</text>
+<text x="14" y="208" fill="#e6edf3" xml:space="preserve" textLength="218.4" lengthAdjust="spacingAndGlyphs">skills-library (scope: user)</text>
+<text x="14" y="226" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:00:46Z)</text>
+<text x="14" y="262" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="436.8" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 120 claude plugin list</text>
+<text x="14" y="280" fill="#e6edf3" xml:space="preserve" textLength="140.4" lengthAdjust="spacingAndGlyphs">Installed plugins:</text>
+<text x="14" y="316" fill="#e6edf3" xml:space="preserve" textLength="335.4" lengthAdjust="spacingAndGlyphs">  ❯ skills-with-evals@claude-skills-library</text>
+<text x="14" y="334" fill="#e6edf3" xml:space="preserve" textLength="195.0" lengthAdjust="spacingAndGlyphs">    Version: 12228498b880</text>
+<text x="14" y="352" fill="#e6edf3" xml:space="preserve" textLength="312.0" lengthAdjust="spacingAndGlyphs">    Read from: /agent/workspace/g2-clone</text>
+<text x="14" y="370" fill="#e6edf3" xml:space="preserve" textLength="117.0" lengthAdjust="spacingAndGlyphs">    Scope: user</text>
+<text x="14" y="388" fill="#e6edf3" xml:space="preserve" textLength="163.8" lengthAdjust="spacingAndGlyphs">    Status: ✔ enabled</text>
+<text x="14" y="406" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:00:59Z)</text>
+</svg>

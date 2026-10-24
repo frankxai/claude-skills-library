@@ -10,7 +10,7 @@ Revises long-form nonfiction prose for structure, clarity and voice, removing AI
 
 Routing text (the only part an agent sees before loading the skill): "High-quality nonfiction writing patterns for structure, clarity, narrative flow, and editorial polish. Use when drafting or revising long-form nonfiction, tightening chapters, or raising prose from competent to excellent."
 
-- "use when" cue starts at character 103. Outside the ~100 characters Codex shows in its skill list, so Codex has to guess from the first sentence.
+- "use when" cue starts at character 103. Would be cut by Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Proofread this out-of-office reply for typos and return the corrected text only: 'Im away untill Monday 3 November with limited acess to email. For urgent issues please contact Priya on the support desk.'".
 - Context cost: listed in every session; full body loads only when it fires (body under 500 lines).
 

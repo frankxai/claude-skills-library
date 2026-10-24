@@ -10,7 +10,7 @@ Reviews and builds Next.js 16 App Router code, including the version-specific ch
 
 Routing text (the only part an agent sees before loading the skill): "Comprehensive Next.js expertise across App Router, server/client boundaries, data and caching patterns, and production operations. Use when building, debugging, or optimizing a Next.js app, deciding server vs client components, or resolving App Router gotchas."
 
-- "use when" cue starts at character 131. Outside the ~100 characters Codex shows in its skill list, so Codex has to guess from the first sentence.
+- "use when" cue starts at character 131. Would be cut by Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Write an Express.js middleware that logs each request's method, path and duration in milliseconds".
 - Context cost: listed in every session; full body loads only when it fires (body is 707 lines (guide: under 500)).
 

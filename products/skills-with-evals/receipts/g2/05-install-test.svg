@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="964" height="319" viewBox="0 0 964 319" font-family="Liberation Mono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13">
+<rect width="964" height="319" fill="#0d1117"/><rect width="964" height="39" fill="#161b22"/>
+<circle cx="20" cy="20" r="5.5" fill="#ff5f56"/>
+<circle cx="38" cy="20" r="5.5" fill="#ffbd2e"/>
+<circle cx="56" cy="20" r="5.5" fill="#27c93f"/>
+<text x="78" y="24" fill="#e6edf3" font-weight="bold" xml:space="preserve">05 repo check: scripts/install-test.mjs (own throwaway HOME under /tmp)  |  2026-10-24T01:01:46Z</text>
+<text x="14" y="64" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-uEVl  # new empty HOME</text>
+<text x="14" y="82" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="100" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ cd /agent/workspace/g2-clone; node scripts/install-test.mjs --repo /agent/workspace/g2-clone -</text>
+<text x="14" y="118" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="405.6" lengthAdjust="spacingAndGlyphs">-json /agent/workspace/g2-receipts/install-test.json</text>
+<text x="14" y="136" fill="#e6edf3" xml:space="preserve" textLength="655.2" lengthAdjust="spacingAndGlyphs">install-test: skills-with-evals@claude-skills-library from /agent/workspace/g2-clone</text>
+<text x="14" y="154" fill="#e6edf3" xml:space="preserve" textLength="358.8" lengthAdjust="spacingAndGlyphs">throwaway HOME /tmp/skills-install-home-hBT2kM</text>
+<text x="14" y="172" fill="#e6edf3" xml:space="preserve" textLength="397.8" lengthAdjust="spacingAndGlyphs">versions: 2.1.310 (Claude Code) | codex-cli 0.164.0</text>
+<text x="14" y="190" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary di</text>
+<text x="14" y="208" fill="#e6edf3" xml:space="preserve" textLength="624.0" lengthAdjust="spacingAndGlyphs">r &quot;/tmp&quot; (codex_home: AbsolutePathBuf(&quot;/tmp/skills-install-home-hBT2kM/.codex&quot;))</text>
+<text x="14" y="226" fill="#e6edf3" xml:space="preserve" textLength="374.4" lengthAdjust="spacingAndGlyphs">PASS claude-code: 10 skill(s) visible, 0 missing</text>
+<text x="14" y="244" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">     always-on context cost: ~727 tok per session</text>
+<text x="14" y="262" fill="#e6edf3" xml:space="preserve" textLength="327.6" lengthAdjust="spacingAndGlyphs">PASS codex: 10 skill(s) visible, 0 missing</text>
+<text x="14" y="280" fill="#e6edf3" xml:space="preserve" textLength="468.0" lengthAdjust="spacingAndGlyphs">install-test: PASS (10 pack skills expected in each runtime)</text>
+<text x="14" y="298" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:01:46Z)</text>
+</svg>
