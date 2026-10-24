@@ -519,3 +519,15 @@ test('skill quality: body size budget in lines and tokens, and the frontmatter a
   assert.match(qualitySkill(fixtureSkill('h-skill', { description: '', body: GOOD_BOUNDARIES })).errors.join('\n'), /^frontmatter: description is empty/m);
   assert.match(qualitySkill(fixtureSkill('Bad_Name', { body: GOOD_BOUNDARIES })).errors.join('\n'), /^frontmatter: name/m);
 });
+
+test('pack gate: every skill in the pack passes the skill quality lint', () => {
+  const pack = JSON.parse(readFileSync(join(REPO, 'products/skills-with-evals/pack.json'), 'utf8'));
+  for (const s of pack.skills) {
+    const r = qualitySkill(join(REPO, 'free-skills', s));
+    assert.deepEqual(r.errors, [], `${s}: ${r.errors.join('; ')}`);
+    const refs = join(REPO, 'free-skills', s, 'references');
+    for (const f of existsSync(refs) ? readdirSync(refs, { withFileTypes: true }) : []) {
+      if (f.isFile()) assert.ok(readFileSync(join(REPO, 'free-skills', s, 'SKILL.md'), 'utf8').includes(`references/${f.name}`), `${s}: references/${f.name} is not linked from SKILL.md`);
+    }
+  }
+});
