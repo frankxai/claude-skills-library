@@ -48,7 +48,7 @@
       "source": "./",
       "strict": false,
       "category": "productivity",
-      "homepage": "https://github.com/frankxai/claude-skills-library/tree/main/evals",
+      "homepage": "https://github.com/frankxai/claude-skills-library",
       "keywords": [
         "agent-skills",
         "evals",

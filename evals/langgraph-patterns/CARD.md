@@ -10,7 +10,7 @@ Builds and debugs LangGraph agents: state reducers, routing, tool binding, check
 
 Routing text (the only part an agent sees before loading the skill): "Production-grade agentic workflows with LangGraph — graph orchestration, state machines, human-in-the-loop, and advanced control flow. Use when building or debugging a LangGraph app, modeling agent state, or adding checkpoints and human approval steps."
 
-- "use when" cue starts at character 135. Outside the ~100 characters Codex shows in its skill list, so Codex has to guess from the first sentence.
+- "use when" cue starts at character 135. Would be cut by Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Write a Python function that retries an HTTP GET with exponential backoff (max 5 attempts) using the requests library".
 - Context cost: listed in every session; full body loads only when it fires (body under 500 lines).
 

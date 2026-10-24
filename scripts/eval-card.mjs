@@ -100,7 +100,7 @@ export function renderCard(skill) {
     '',
     `Routing text (the only part an agent sees before loading the skill): "${desc}"`,
     '',
-    `- ${cueText}. ${codexVisible ? 'Inside' : 'Outside'} the ~100 characters Codex shows in its skill list${codexVisible ? '' : ', so Codex has to guess from the first sentence'}.`,
+    `- ${cueText}. ${codexVisible ? 'Survives' : 'Would be cut by'} Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).`,
     quiet ? `- Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "${(quiet.prompt || quiet.desc).replace(/\.$/, "")}".` : '- Trigger test: no should-not-trigger case yet.',
     `- Context cost: listed in every session; full body loads only when it fires (${lint.warnings.find((w) => w.startsWith('body')) || 'body under 500 lines'}).`,
     '',

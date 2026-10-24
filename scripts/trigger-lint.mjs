@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Static trigger check for Agent Skills: will the routing text reach the model, in every runtime?
 //
-// Both Claude Code and Codex route on a skill's name + description only. Codex 0.164 shows each
-// description truncated to about 100 characters in the model-visible skill list (measured
-// 2026-10-24 with `codex debug prompt-input`: 114 of 114 library descriptions cut at 102-106
-// characters). A "when to use" clause after that point is invisible to Codex.
+// Both Claude Code and Codex route on a skill's name + description only. Codex 0.164 fits all
+// installed skills into one list with a fixed budget (~21,000 characters measured) and trims every
+// description evenly when it overflows: full text at 40 skills, ~190 characters at 60, ~108 at 80,
+// ~104 at 114 (products/skills-with-evals/receipts/codex-skill-list-budget.md). On a large install a
+// "when to use" clause after about character 100 is cut, so the cue belongs up front.
 //
 //   node scripts/trigger-lint.mjs [skill ...] [--pack <manifest.json>] [--json] [--cutoff N]
 //
@@ -60,7 +61,7 @@ export function lintSkill(dir, { cutoff = 100 } = {}) {
   const cue = CUE.exec(desc);
   out.cueAt = cue ? cue.index : null;
   if (!cue) out.errors.push('description has no "use when" style trigger cue');
-  else if (cue.index > cutoff) out.warnings.push(`trigger cue starts at char ${cue.index}; Codex shows only ~${cutoff}`);
+  else if (cue.index > cutoff) out.warnings.push(`trigger cue starts at char ${cue.index}; cut when Codex trims descriptions on a large install (~${cutoff} chars at 80+ skills)`);
   if (/^(i |i'm |i am |we |this skill (will|helps you))/i.test(desc)) out.warnings.push('description is not third person');
   if (bodyLines > 500) out.warnings.push(`body is ${bodyLines} lines (guide: under 500)`);
   return out;

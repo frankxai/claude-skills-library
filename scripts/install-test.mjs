@@ -64,7 +64,8 @@ if (!claude || !codex) {
   log(`missing runtime: ${!claude ? 'claude ' : ''}${!codex ? 'codex' : ''}`.trim());
   process.exit(2);
 }
-receipt.versions = { claude: run(claude, ['--version']).out.trim(), codex: run(codex, ['--version']).out.trim() };
+const ver = (r) => r.out.split('\n').filter((l) => l.trim() && !/^WARNING:/.test(l)).join(' ').trim();
+receipt.versions = { claude: ver(run(claude, ['--version'])), codex: ver(run(codex, ['--version'])) };
 log(`versions: ${receipt.versions.claude} | ${receipt.versions.codex}`);
 
 // Claude Code

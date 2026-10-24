@@ -10,7 +10,7 @@ Reviews a pull-request diff for merge-blocking correctness and security bugs, li
 
 Routing text (the only part an agent sees before loading the skill): "Comprehensive GitHub pull-request code review with multi-agent coordination. Use when reviewing a PR or diff, auditing changes for correctness/security/style before merge, or generating actionable inline review comments."
 
-- "use when" cue starts at character 77. Inside the ~100 characters Codex shows in its skill list.
+- "use when" cue starts at character 77. Survives Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Write a short README section that explains how to run this project's test suite with `npm test` and how to run a single test file".
 - Context cost: listed in every session; full body loads only when it fires (body under 500 lines).
 

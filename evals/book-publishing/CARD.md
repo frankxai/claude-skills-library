@@ -10,7 +10,7 @@ Edits nonfiction book chapters against a house voice and production rules.
 
 Routing text (the only part an agent sees before loading the skill): "Multi-book content, voice, and production workflows for nonfiction authoring. Use when planning a book, maintaining consistent voice across chapters, structuring a manuscript, or running an end-to-end publishing pipeline."
 
-- "use when" cue starts at character 78. Inside the ~100 characters Codex shows in its skill list.
+- "use when" cue starts at character 78. Survives Codex trimming descriptions on a large install (about 100 characters once roughly 80 or more skills are installed; full text on small installs).
 - Trigger test: fires on the review tasks below; must stay quiet on an adjacent task such as "Write a one-line git commit message for a change that fixes the PDF export of invoices, then a one-sentence note for the teammate who approves it".
 - Context cost: listed in every session; full body loads only when it fires (body under 500 lines).
 

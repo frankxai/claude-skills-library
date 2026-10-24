@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="964" height="427" viewBox="0 0 964 427" font-family="Liberation Mono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13">
+<rect width="964" height="427" fill="#0d1117"/><rect width="964" height="39" fill="#161b22"/>
+<circle cx="20" cy="20" r="5.5" fill="#ff5f56"/>
+<circle cx="38" cy="20" r="5.5" fill="#ffbd2e"/>
+<circle cx="56" cy="20" r="5.5" fill="#27c93f"/>
+<text x="78" y="24" fill="#e6edf3" font-weight="bold" xml:space="preserve">01 clone (HTTPS) + commit under test  |  2026-10-24T01:00:12Z</text>
+<text x="14" y="64" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ git clone --branch agent/hyperagent/eval-pack-rc1 https://github.com/frankxai/claude-skills-li</text>
+<text x="14" y="82" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="273.0" lengthAdjust="spacingAndGlyphs">brary.git /agent/workspace/g2-clone</text>
+<text x="14" y="100" fill="#e6edf3" xml:space="preserve" textLength="335.4" lengthAdjust="spacingAndGlyphs">Cloning into &#x27;/agent/workspace/g2-clone&#x27;...</text>
+<text x="14" y="118" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:00:12Z)</text>
+<text x="14" y="154" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ cd /agent/workspace/g2-clone &amp;&amp; git rev-parse HEAD &amp;&amp; git log -1 --format=&#x27;%H %cI %s&#x27; &amp;&amp; git b</text>
+<text x="14" y="172" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="390.0" lengthAdjust="spacingAndGlyphs">ranch --show-current &amp;&amp; git status --short | wc -l</text>
+<text x="14" y="190" fill="#e6edf3" xml:space="preserve" textLength="312.0" lengthAdjust="spacingAndGlyphs">12228498b880fc045b38c04782fec126633f7962</text>
+<text x="14" y="208" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">12228498b880fc045b38c04782fec126633f7962 2026-10-24T02:58:44+02:00 chore(evals): move langgraph-patterns outcome-b to _l</text>
+<text x="14" y="226" fill="#e6edf3" xml:space="preserve" textLength="124.8" lengthAdjust="spacingAndGlyphs">egacy-2026-10-06</text>
+<text x="14" y="244" fill="#e6edf3" xml:space="preserve" textLength="234.0" lengthAdjust="spacingAndGlyphs">agent/hyperagent/eval-pack-rc1</text>
+<text x="14" y="262" fill="#e6edf3" xml:space="preserve" textLength="7.8" lengthAdjust="spacingAndGlyphs">0</text>
+<text x="14" y="280" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:00:18Z)</text>
+<text x="14" y="316" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ cd /agent/workspace/g2-clone &amp;&amp; git rev-parse origin/main &amp;&amp; git ls-remote --symref https://gi</text>
+<text x="14" y="334" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="374.4" lengthAdjust="spacingAndGlyphs">thub.com/frankxai/claude-skills-library.git HEAD</text>
+<text x="14" y="352" fill="#e6edf3" xml:space="preserve" textLength="312.0" lengthAdjust="spacingAndGlyphs">8f323a8b59a9bf706edbf940d040b5a2a6798efc</text>
+<text x="14" y="370" fill="#e6edf3" xml:space="preserve" textLength="218.4" lengthAdjust="spacingAndGlyphs">ref: refs/heads/main    HEAD</text>
+<text x="14" y="388" fill="#e6edf3" xml:space="preserve" textLength="405.6" lengthAdjust="spacingAndGlyphs">8f323a8b59a9bf706edbf940d040b5a2a6798efc        HEAD</text>
+<text x="14" y="406" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:00:18Z)</text>
+</svg>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="964" height="931" viewBox="0 0 964 931" font-family="Liberation Mono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13">
+<rect width="964" height="931" fill="#0d1117"/><rect width="964" height="39" fill="#161b22"/>
+<circle cx="20" cy="20" r="5.5" fill="#ff5f56"/>
+<circle cx="38" cy="20" r="5.5" fill="#ffbd2e"/>
+<circle cx="56" cy="20" r="5.5" fill="#27c93f"/>
+<text x="78" y="24" fill="#e6edf3" font-weight="bold" xml:space="preserve">03 Claude Code: plugin details + plugin validate (full output)  |  2026-10-24T01:00:54Z</text>
+<text x="14" y="64" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-uEVl  # new empty HOME</text>
+<text x="14" y="82" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="100" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="772.2" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 120 claude plugin details skills-with-evals@claude-skills-library</text>
+<text x="14" y="118" fill="#e6edf3" xml:space="preserve" textLength="413.4" lengthAdjust="spacingAndGlyphs">Skills that ship with their evals (skills-with-evals)</text>
+<text x="14" y="136" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">  Description: Ten skills from this library, each with an eval suite in evals/&lt;skill&gt;/: a no-skill baseline arm, a trigg</text>
+<text x="14" y="154" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">er test, seeded-defect recall and clean-input precision cases, run with `claude plugin eval`. Release candidate; see eva</text>
+<text x="14" y="172" fill="#e6edf3" xml:space="preserve" textLength="148.2" lengthAdjust="spacingAndGlyphs">ls/&lt;skill&gt;/CARD.md.</text>
+<text x="14" y="190" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  Source: skills-with-evals@claude-skills-library</text>
+<text x="14" y="226" fill="#e6edf3" xml:space="preserve" textLength="148.2" lengthAdjust="spacingAndGlyphs">Component inventory</text>
+<text x="14" y="244" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">  Skills (10)  ai-architect-review, book-publishing, excellence-book-writing, github-code-review, langgraph-patterns, mc</text>
+<text x="14" y="262" fill="#e6edf3" xml:space="preserve" textLength="717.6" lengthAdjust="spacingAndGlyphs">p-architecture, nextjs-expert, product-management-expert, skill-builder, ui-ux-design-expert</text>
+<text x="14" y="280" fill="#e6edf3" xml:space="preserve" textLength="93.6" lengthAdjust="spacingAndGlyphs">  Agents (0)</text>
+<text x="14" y="298" fill="#e6edf3" xml:space="preserve" textLength="85.8" lengthAdjust="spacingAndGlyphs">  Hooks (0)</text>
+<text x="14" y="316" fill="#e6edf3" xml:space="preserve" textLength="132.6" lengthAdjust="spacingAndGlyphs">  MCP servers (0)</text>
+<text x="14" y="334" fill="#e6edf3" xml:space="preserve" textLength="132.6" lengthAdjust="spacingAndGlyphs">  LSP servers (0)</text>
+<text x="14" y="370" fill="#e6edf3" xml:space="preserve" textLength="156.0" lengthAdjust="spacingAndGlyphs">Projected token cost</text>
+<text x="14" y="388" fill="#e6edf3" xml:space="preserve" textLength="374.4" lengthAdjust="spacingAndGlyphs">  Always-on:   ~727 tok   added to every session</text>
+<text x="14" y="424" fill="#e6edf3" xml:space="preserve" textLength="179.4" lengthAdjust="spacingAndGlyphs">Per-component (rounded)</text>
+<text x="14" y="442" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  component                  always-on  on-invoke</text>
+<text x="14" y="460" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  ui-ux-design-expert              ~80      ~5.4k</text>
+<text x="14" y="478" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  github-code-review               ~60      ~1.5k</text>
+<text x="14" y="496" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  nextjs-expert                    ~70      ~4.7k</text>
+<text x="14" y="514" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  mcp-architecture                 ~70      ~2.6k</text>
+<text x="14" y="532" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  ai-architect-review             ~110      ~2.7k</text>
+<text x="14" y="550" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  langgraph-patterns               ~70      ~1.8k</text>
+<text x="14" y="568" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  skill-builder                    ~80      ~5.3k</text>
+<text x="14" y="586" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  product-management-expert        ~60       ~780</text>
+<text x="14" y="604" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  book-publishing                  ~60      ~4.1k</text>
+<text x="14" y="622" fill="#e6edf3" xml:space="preserve" textLength="382.2" lengthAdjust="spacingAndGlyphs">  excellence-book-writing          ~70      ~2.1k</text>
+<text x="14" y="658" fill="#e6edf3" xml:space="preserve" textLength="452.4" lengthAdjust="spacingAndGlyphs">  On-invoke cost is paid each time a skill or agent fires.</text>
+<text x="14" y="676" fill="#e6edf3" xml:space="preserve" textLength="483.6" lengthAdjust="spacingAndGlyphs">  Token counts are estimates and may differ from actual usage.</text>
+<text x="14" y="694" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:00:54Z)</text>
+<text x="14" y="730" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="670.8" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 120 claude plugin validate /agent/workspace/g2-clone</text>
+<text x="14" y="748" fill="#e6edf3" xml:space="preserve" textLength="702.0" lengthAdjust="spacingAndGlyphs">Validating marketplace manifest: /agent/workspace/g2-clone/.claude-plugin/marketplace.json</text>
+<text x="14" y="784" fill="#e6edf3" xml:space="preserve" textLength="124.8" lengthAdjust="spacingAndGlyphs">✘ Found 1 error:</text>
+<text x="14" y="820" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">  ❯ plugins[0].name: Plugin name &quot;claude-skills-library&quot; is reserved: it passes as one of Anthropic&#x27;s own. A third party</text>
+<text x="14" y="838" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">&#x27;s plugin name cannot start with &quot;claude-&quot;, &quot;anthropic-&quot;, &quot;anthropics-&quot;, or &quot;cc-plugin-&quot;, be &quot;claude&quot;, &quot;anthropic&quot;, &quot;ant</text>
+<text x="14" y="856" fill="#e6edf3" xml:space="preserve" textLength="920.4" lengthAdjust="spacingAndGlyphs">hropics&quot;, &quot;claude-code&quot;, or &quot;claude-mods&quot;, or put &quot;official&quot; beside &quot;claude&quot; or &quot;anthropic&quot;. Name it for what it does.</text>
+<text x="14" y="892" fill="#e6edf3" xml:space="preserve" textLength="148.2" lengthAdjust="spacingAndGlyphs">✘ Validation failed</text>
+<text x="14" y="910" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 1  (started 2026-10-24T01:00:54Z)</text>
+</svg>
