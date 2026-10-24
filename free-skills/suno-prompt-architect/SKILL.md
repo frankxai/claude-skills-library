@@ -1,419 +1,128 @@
 ---
 name: suno-prompt-architect
-description: Expert Suno AI prompt engineering for professional music creation. Use this skill when creating Suno prompts for any AI-generated music that needs commercial quality.
-version: 2.0.0
-last_updated: 2026-01-24
-external_version: "Suno v4.5+ (2026)"
-changelog: |
-  - 2.0.0: Rebrand to professional focus, removed spiritual language
-  - 1.1.0: Added versioning, confirmed compatibility with v4.5+ features
-  - 1.0.0: Initial skill
+description: "Convert a finished creative brief and lyrics into a precise Suno Custom Mode packet: title, style, exclusions, structure/performance tags, pronunciation notes, and one controlled alternate. Use before any Suno browser generation."
+version: 3.0.0
 ---
 
 # Suno Prompt Architect
-## Professional Music Generation with Suno AI
 
-This skill transforms musical intentions into precisely crafted Suno AI prompts that generate commercial-quality tracks for focus sessions, content creation, and professional use.
+## Input requirement
 
----
+Do not prompt from a vague mood alone when the full workflow is requested. First establish:
+- listener/use case;
+- emotional start → turn → ending;
+- song form and duration intent;
+- lyric or instrumental status;
+- sonic thesis and negative space.
 
-## Core Philosophy
+If lyrics are part of the work, run `lyric-composer` first. For meditations, run `guided-meditation-composer` and prefer a separate instrumental bed.
 
-**Professional Music Production**
-Every Suno-generated track should meet commercial standards - suitable for streaming, licensing, or professional use.
+## Build this exact packet
 
-**Prompt Engineering as Composition**
-Writing Suno prompts is like composing a detailed arrangement. Every element matters: genre, mood, instrumentation, production quality, tempo.
+### TITLE
 
----
+Concrete, memorable, easy to pronounce. Usually 1–5 words. Avoid generic mood labels.
 
-## Suno Prompt Anatomy
+### MODE
 
-### The 5-Layer Structure
+- Custom Mode: on.
+- Instrumental: on only for a true instrumental/meditation bed.
+- Model: choose the newest stable model visible in UI at execution time.
 
-```
-[FOUNDATION] + [MOOD] + [INSTRUMENTATION] + [PRODUCTION] + [USE CASE]
-```
+### STYLE
 
-**1. FOUNDATION (Genre/Style)**
-- Primary genre + fusion elements
-- Reference aesthetic periods or movements
-- Define rhythmic foundation
+Write one compact natural-language paragraph in priority order:
 
-**2. MOOD (Emotional Character)**
-- Core emotion (one word)
-- Secondary feeling (supporting)
-- Energy level (low/mid/high)
-
-**3. INSTRUMENTATION (Sonic Palette)**
-- Lead instruments (2-3 max)
-- Rhythmic elements
-- Atmospheric textures
-- Avoid over-specifying
-
-**4. PRODUCTION (Sonic Quality)**
-- Mix characteristics (spacious, intimate, cinematic)
-- Effects (reverb, delay, compression feel)
-- Frequency balance
-- Reference quality level
-
-**5. USE CASE (Purpose)**
-- What is this track for?
-- Listening context
-- Desired listener experience
-
----
-
-## Genre Vocabulary & Fusion Patterns
-
-### Focus & Productivity Styles
-
-**Deep Focus**
-```
-"Ambient downtempo with steady pulse"
-"Minimal techno for sustained concentration"
-"Lo-fi electronic with subtle textures"
-```
-- Base: Ambient, Downtempo, Minimal
-- Add: Steady, focused, non-distracting
-- Instrumentation: Synth pads, soft beats, subtle textures
-- Tempo: 60-90 BPM
-
-**High Energy**
-```
-"Cinematic orchestral hybrid with driving energy"
-"Epic trailer music meets modern electronic"
-"Motivational orchestral with powerful builds"
-```
-- Base: Cinematic, Orchestral, Epic
-- Add: Electronic elements, modern production
-- Instrumentation: Strings, brass, epic drums, synths
-- Tempo: 120-140 BPM
-
-**Creative Flow**
-```
-"Lo-fi hip hop with smooth progressions"
-"Jazzy electronic with flowing groove"
-"Atmospheric trip-hop for creative work"
-```
-- Base: Lo-fi, Jazz, Trip-hop
-- Add: Flowing, evolving elements
-- Instrumentation: Rhodes, soft beats, atmospheric pads
-- Tempo: 80-110 BPM
-
-**Relaxation**
-```
-"Ambient soundscape with natural textures"
-"Soft electronic with gentle movement"
-"Peaceful acoustic with subtle atmosphere"
-```
-- Base: Ambient, Acoustic, Drone
-- Add: Gentle, peaceful, spacious
-- Instrumentation: Soft synths, nature sounds, light instruments
-- Tempo: <60 BPM or free
-
-**Tech/Work**
-```
-"Minimal techno for focused work"
-"Deep progressive house with hypnotic patterns"
-"Intelligent dance music without vocals"
-```
-- Base: Techno, Progressive House, IDM
-- Add: Minimal, hypnotic, evolving
-- Instrumentation: Clean synths, precise drums
-- Tempo: 120-128 BPM
-
----
-
-## Mood Mapping System
-
-### Primary Moods & Musical Translation
-
-**Calm / Reflective**
-- Tempo: 60-80 BPM
-- Key: Minor modes, Dorian, Phrygian
-- Dynamics: Consistent, gentle swells
-- Space: Wide, reverberant
-- Example: "contemplative and spacious"
-
-**Energizing / Motivating**
-- Tempo: 128-145 BPM
-- Key: Major, Mixolydian
-- Dynamics: Building, crescendos
-- Space: Powerful, present
-- Example: "uplifting and determined"
-
-**Creative / Flowing**
-- Tempo: 90-110 BPM
-- Key: Major 7ths, jazz harmony
-- Dynamics: Evolving, conversational
-- Space: Balanced, intimate
-- Example: "exploratory and fluid"
-
-**Relaxing / Restorative**
-- Tempo: <60 BPM or free
-- Key: Drones, perfect 5ths
-- Dynamics: Minimal variation
-- Space: Expansive, oceanic
-- Example: "nurturing and gentle"
-
-**Focused / Concentrated**
-- Tempo: 120-128 BPM (consistent)
-- Key: Modal, minimal harmony
-- Dynamics: Stable, hypnotic
-- Space: Clear, organized
-- Example: "precise and steady"
-
-### Emotional Gradient Words
-
-**Low Energy → High Energy**
-- Tranquil → Peaceful → Calm → Contemplative → Serene
-- Gentle → Soft → Flowing → Moving → Energetic
-- Intimate → Present → Vibrant → Powerful → Intense
-
-**Dark → Light**
-- Mysterious → Introspective → Reflective → Hopeful → Bright
-- Deep → Rich → Warm → Radiant → Luminous
-
-**Simple → Complex**
-- Minimal → Clean → Balanced → Textured → Layered
-- Spacious → Open → Full → Dense → Intricate
-
----
-
-## Instrumentation Vocabulary
-
-### By Function
-
-**Melodic Leaders**
-- Piano (acoustic, electric, Rhodes)
-- Synth leads (analog, digital, modular)
-- Strings (solo violin, string ensemble, cellos)
-- Guitar (acoustic, electric, ambient)
-- Woodwinds (flute, clarinet, saxophone)
-
-**Rhythmic Foundation**
-- Drums (acoustic, electronic, hybrid, hand percussion)
-- Bass (upright, electric, sub bass, synthesized)
-- Percussion (shakers, congas, tabla, frame drums)
-
-**Atmospheric Textures**
-- Synth pads (ambient, evolving, swelling)
-- String pads (sustained, lush, cinematic)
-- Vocal textures (wordless, ethereal, choir)
-- Nature sounds (water, wind, birds, rain)
-- Found sounds (field recordings, environmental)
-
-### Combination Patterns
-
-**Minimalist (2-3 elements)**
-```
-"soft piano, ambient pads, gentle rain"
-"electric bass, minimal beats, atmospheric synth"
-"acoustic guitar, soft strings, subtle reverb"
+```text
+<genre/fusion and era attributes>; <emotional state>; <BPM/meter/pocket>; <focal instruments and negative space>; <vocal persona/delivery or no vocals>; <section dynamic journey>; <mix/spatial character>; <ending>.
 ```
 
-**Balanced (4-5 elements)**
-```
-"acoustic piano, soft strings, light percussion, warm bass, subtle synth"
-"electric piano, jazzy bass, brush drums, string pads, vinyl crackle"
-"ambient synths, soft beats, gentle bass, atmospheric textures, subtle voices"
-```
+Use semicolons to separate layers. Prefer specific verbs and acoustic behavior over long adjective lists.
 
-**Rich (6+ elements)**
-```
-"orchestral strings, epic brass, cinematic drums, soaring choir, deep bass, atmospheric pads, subtle electronics"
-"full band with drums, bass, guitars, keys, strings, and subtle electronic elements"
-```
+### EXCLUDE STYLES
 
----
+List only the highest-risk drift: 3–8 concise exclusions.
 
-## Production Quality Descriptors
+### LYRICS / STRUCTURE
 
-### Mix Characteristics
+Use clean tags and whitespace. Put performance cues in the section heading only when needed. Example:
 
-**Spatial Qualities**
-- Spacious, wide, panoramic, expansive
-- Intimate, close, personal, focused
-- Cavernous, cathedral-like, reverberant
-- Dry, direct, present, immediate
+```text
+[Intro - sparse, 4 bars]
 
-**Frequency Balance**
-- Warm (emphasized low-mids, gentle highs)
-- Bright (present highs, clear articulation)
-- Deep (strong sub bass, foundational lows)
-- Airy (open highs, breathing room)
-- Full spectrum (balanced across all frequencies)
+[Verse 1 - close, conversational]
+...
 
-**Production Style**
-- Pristine, crystal clear, hi-fi
-- Lo-fi, vintage, analog warmth
-- Cinematic, epic, film-quality
-- Organic, natural, unprocessed feel
-- Modern, polished, radio-ready
-- Experimental, textured, layered
+[Pre-Chorus - rising]
+...
 
-**Dynamic Range**
-- Compressed, consistent, even
-- Dynamic, breathing, natural
-- Building, evolving, crescendoing
-- Minimal variation, steady
+[Chorus - open, harmonized]
+...
 
----
+[Bridge - stripped]
+...
 
-## Tempo & Rhythm Guidance
+[Final Chorus - full lift]
+...
 
-### BPM Ranges by Use Case
-
-**Sleep & Deep Relaxation (0-60 BPM)**
-- Free-flowing, arhythmic soundscapes
-- Very slow pulse (40-60 BPM)
-- Example: "slow and drifting"
-
-**Deep Focus & Study (60-80 BPM)**
-- Gentle, consistent rhythm
-- Non-distracting pulse
-- Example: "steady and calm"
-
-**Creative Flow (80-110 BPM)**
-- Natural walking pace
-- Conversational rhythm
-- Example: "flowing and organic"
-
-**Productivity & Energy (110-128 BPM)**
-- Motivated, forward motion
-- Consistent drive
-- Example: "steady and uplifting"
-
-**High Energy & Motivation (128-150 BPM)**
-- Powerful, driving force
-- Peak performance pace
-- Example: "powerful and determined"
-
-### Rhythmic Patterns
-- Straight (4/4, metronomic, consistent)
-- Swung (triplet feel, jazz, groove)
-- Syncopated (off-beat, complex, engaging)
-- Polyrhythmic (layered, evolving, textural)
-- Free (rubato, breathing, organic)
-
----
-
-## Complete Prompt Examples
-
-### Example 1: Deep Focus
-```
-Ambient electronic, calm and spacious, with soft synth pads, subtle beats at 70 BPM, gentle bass, atmospheric textures, wide reverb, pristine production, for sustained concentration and deep work.
+[Outro - intimate hard stop]
+...
 ```
 
-### Example 2: High Energy Motivation
-```
-Cinematic orchestral hybrid, powerful and uplifting, with soaring strings, epic brass, thunderous drums, modern electronic elements, wide stereo field, film-quality production, building from 120 to 140 BPM with dramatic crescendo.
-```
+Do not add production prose between every lyric line.
 
-### Example 3: Creative Flow
-```
-Lo-fi hip hop with smooth jazz elements, exploratory and fluid, featuring warm Rhodes piano, jazzy bass, soft brush drums, vinyl crackle, atmospheric space, intimate mix with analog warmth, steady 95 BPM with evolving textures.
-```
+### PRONUNCIATION NOTES
 
-### Example 4: Relaxation
-```
-Ambient soundscape, gentle and peaceful, with soft synth drones, nature sounds, light chimes, expansive reverb, crystal clear production, for relaxation and unwinding, free-flowing and spacious.
-```
+List only risky names, numbers, acronyms, multilingual words, or deliberate stretched vowels. Apply phonetic fixes directly in the lyrics after approval.
 
-### Example 5: Tech Productivity
-```
-Minimal techno for deep focus, precise and steady, with clean analog synths, crisp electronic drums at 124 BPM, subtle bass progression, dry and organized mix, modern polished production, hypnotic and consistent.
-```
+## Prompt checks
 
----
+- No named artists, bands, songs, labels, franchises, or cloned voices.
+- No contradictory genre, tempo, vocal, or energy instructions.
+- No impossible precision disguised as control.
+- No more than one main vocal persona.
+- Style and lyrics describe the same dynamic arc.
+- Exclusions do not negate the positive prompt.
+- The strongest words appear early.
+- The ending is specified.
 
-## Session Templates
+## Controlled alternate
 
-### Focus Session Pack
+Create an alternate only when it tests one useful variable, such as:
+- pulse: free-time vs 72 BPM;
+- texture: organic acoustic vs glassy electronic;
+- vocal delivery: restrained close-mic vs open ensemble chorus.
 
-**Track 1: "Entry Point"**
-```
-Ambient electronic, calm and steady, with soft pads, gentle pulse at 65 BPM, atmospheric textures, spacious production, for easing into focused work.
-```
+Keep hook, lyrics, and emotional contract fixed. State the single variable changed.
 
-**Track 2: "Deep Work"**
-```
-Minimal techno, precise and focused, with clean synths, steady beats at 120 BPM, subtle evolution, dry mix, for sustained concentration.
-```
+## Final delivery
 
-**Track 3: "Flow State"**
-```
-Progressive electronic, building and evolving, with layered synths, driving rhythm, subtle builds, wide production, for peak creative output.
-```
+Return:
+1. recommended title;
+2. full copy/paste STYLE field;
+3. EXCLUDE STYLES field;
+4. complete LYRICS field (or `instrumental, no vocals`);
+5. pronunciation notes;
+6. one-sentence reason this packet serves the brief;
+7. optional one-variable alternate.
 
-### Creative Session Pack
+Before browser execution, write the packet into the run's `style-prompt.md` and run the taste gate.
 
-**Track 1: "Open Mind"**
-```
-Ambient jazz fusion, relaxed and exploratory, with soft piano, gentle bass, brushed drums, warm production, for creative openness.
-```
+## Shared fundamentals and provider boundary
 
-**Track 2: "Ideas Flow"**
-```
-Lo-fi electronic with organic textures, flowing and inspiring, with Rhodes, soft beats, atmospheric pads, intimate mix, for creative exploration.
-```
+Read the relevant modules in `https://github.com/frankxai/agentic-music-producer-os/blob/18dc9bee02001befb3a2a3bd7747b78f798dff13/docs/MUSIC-FUNDAMENTALS.md`, then `https://github.com/frankxai/agentic-music-producer-os/blob/18dc9bee02001befb3a2a3bd7747b78f798dff13/docs/PROVIDER-CAPABILITIES.md` and `https://github.com/frankxai/agentic-music-producer-os/blob/18dc9bee02001befb3a2a3bd7747b78f798dff13/docs/MUSIC-FACTORY-CONTRACT.md` when selecting tools or executing production. Canonical public source: https://github.com/frankxai/agentic-music-producer-os. The craft precedes the provider packet.
 
-**Track 3: "Momentum"**
-```
-Uplifting electronic, energetic and forward-moving, with bright synths, driving rhythm, building energy, pristine production, for productive finishing.
-```
+Suno v6 is the documented baseline checked 2026-10-01; capture the actual account model, settings, limits and credit cost before operating. No official public generation API was verified. Preserve the approved lyrics across adapters. Score/text analysis and a prompt review do not prove audio quality. Record real listening and measurements separately; keep unknown values null. Personal preferences and artist canon remain in their owner project.
 
----
+For MiniMax Music 3, translate section tags to their own lines; never share inline Suno performance tags blindly. For Eleven Music, use a prompt or a chunk plan and preserve exact approved lyric text. For Lyria, treat duration and harmony as requested direction. These are separate provider packets, not Suno endpoints.
 
-## Quality Checklist
+Resolve `docs/...` paths from the repository root, not from the skill folder. If using only this skill outside a checkout, read the same named documents from the canonical public source.
 
-Before finalizing a Suno prompt, verify:
 
-- [ ] Clear genre/style foundation
-- [ ] Specific mood descriptors (2-3 words)
-- [ ] Instrumentation details (3-6 elements)
-- [ ] Production quality specified
-- [ ] Use case clearly stated
-- [ ] Tempo or rhythmic feel indicated
-- [ ] Avoids over-specification (let Suno be creative)
-- [ ] Reads naturally (not just keyword list)
+## Current craft and production integration
 
----
+Checked 2026-10-01. Use the public [music fundamentals](https://github.com/frankxai/agentic-music-producer-os/blob/18dc9bee02001befb3a2a3bd7747b78f798dff13/docs/MUSIC-FUNDAMENTALS.md), [provider register](https://github.com/frankxai/agentic-music-producer-os/blob/18dc9bee02001befb3a2a3bd7747b78f798dff13/docs/PROVIDER-CAPABILITIES.md) and [factory contract](https://github.com/frankxai/agentic-music-producer-os/blob/18dc9bee02001befb3a2a3bd7747b78f798dff13/docs/MUSIC-FACTORY-CONTRACT.md). They cover harmony/voice leading, groove, motif, prosody, hooks, form, vocals, arrangement, low end, mixing, measured delivery, provenance and durable jobs. Load only the modules needed for this task.
 
-## Common Pitfalls to Avoid
+Keep local artist/persona canon, identity, preferences and account entitlements scoped to this project. Shared craft does not assign a singer or overwrite canon. Select the current account-visible Suno model (documented baseline v6); no official public Suno generation API was verified. Lyria, Eleven Music and fal MiniMax Music 3 have separate documented API routes and constraints. A skill or MCP tool is not a connected generation account.
 
-❌ **Too Generic**
-"Relaxing music with piano"
-- Missing: mood depth, production, use case, specificity
-
-❌ **Over-Specified**
-"C major scale piano with exactly 4 chords, reverb at 2.3 seconds..."
-- Too technical, Suno can't control that detail level
-
-❌ **Contradictory Elements**
-"Energizing music for deep sleep"
-- Conflicting purposes
-
-❌ **Missing Purpose**
-Technically perfect prompt but no clear use case
-- Lacks direction
-
----
-
-## When to Use This Skill
-
-Activate `suno-prompt-architect` when:
-- Creating focus/productivity music
-- Designing background tracks for content
-- Building playlists for different activities
-- Generating music for courses or products
-- Need professional-quality Suno prompts
-
-This skill ensures every Suno-generated track meets professional standards for its intended purpose.
-
----
-
-**Skill Version:** 2.0.0
-**Last Updated:** January 24, 2026
-**Optimized For:** Suno AI v4.5+
+Preserve approved lyrics across adapters. Prepare, authorize/reserve, submit, reconcile, archive, listen, measure, attest rights and stage release separately. Bind receipts to exact contract/asset hashes. Never infer audio quality, measured BPM, playback, rights or publication from a text review or completed job. Unknown paid submissions remain held for reconciliation; no blind rerender.
