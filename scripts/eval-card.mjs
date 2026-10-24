@@ -3,6 +3,7 @@
 //
 //   node scripts/eval-card.mjs [skill ...]      (default: every skill in the pack manifest)
 //   node scripts/eval-card.mjs --check          (exit 1 if any CARD.md is stale)
+//   node scripts/eval-card.mjs --json [out]     (the same facts as data, for the buyer page)
 //
 // Every number on a card comes from a file: the skill's frontmatter, the suite's case files and
 // answer key, scripts/trigger-lint.mjs, and the latest results/<stamp>.json written by
@@ -137,7 +138,52 @@ export function renderCard(skill) {
   ].join('\n');
 }
 
+// The facts behind a card, as data. Lift is null until a result file exists; then it carries the
+// numbers and whether they are comparable and backed by at least 3 runs per arm.
+export function cardData(skill) {
+  const dir = skillDir(skill);
+  const { fm } = parseFrontmatter(readFileSync(join(dir, 'SKILL.md'), 'utf8'));
+  const lint = lintSkill(dir);
+  const suite = join(REPO, 'evals', skill);
+  const cases = readdirSync(suite, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith('_') && d.name !== 'results'
+      && (existsSync(join(suite, d.name, 'case.yaml')) || existsSync(join(suite, d.name, 'prompt.md'))))
+    .map((d) => ({ name: d.name, ...readCase(join(suite, d.name)) }));
+  const keyFile = join(suite, 'seeded-defects', 'KEY.md');
+  const planted = existsSync(keyFile) ? readFileSync(keyFile, 'utf8').split('\n').filter((l) => /^\d+\.\s/.test(l) || /^\|\s*\d+\s*\|/.test(l)).length : 0;
+  const recall = cases.find((c) => c.name === 'seeded-defects');
+  const quiet = cases.find((c) => c.noTrigger);
+  const res = latestResult(skill);
+  let lift = null;
+  if (res) {
+    const r = res.result || {};
+    const problems = comparability(r);
+    lift = {
+      comparable: !problems.length, problems, runsPerArm: minRuns(r) === Infinity ? 0 : minRuns(r),
+      meanDelta: r.aggregates?.meanDelta ?? null, withScore: r.aggregates?.overallScore ?? null,
+      cases: (r.cases || []).map((c) => ({ name: c.name, with: c.aggregates?.score ?? null, delta: c.aggregates?.delta ?? null })),
+      model: res.meta?.model || null, claudeVersion: res.meta?.claudeVersion || null, stamp: res.meta?.stamp || null, file: `evals/${skill}/results/${res.file}`,
+    };
+  }
+  return {
+    skill, job: PACK.jobs?.[skill] || (fm.description || ''),
+    test: (recall?.desc || '').replace(/^Recall\.\s*/, ''), planted,
+    cases: cases.map((c) => c.name), clean: cases.some((c) => /^clean/.test(c.name)),
+    quietTask: quiet ? (quiet.prompt || quiet.desc).replace(/\.$/, '') : null,
+    cueAt: lint.cueAt, cueSurvivesLargeCodexInstall: lint.cueAt !== null && lint.cueAt <= 100,
+    lift,
+  };
+}
+
 function main(argv) {
+  const j = argv.indexOf('--json');
+  if (j > -1) {
+    const out = argv[j + 1] && !argv[j + 1].startsWith('--') ? argv[j + 1] : null;
+    const data = { generatedBy: 'scripts/eval-card.mjs --json', pack: 'skills-with-evals', skills: PACK.skills.map(cardData) };
+    const text = JSON.stringify(data, null, 2) + '\n';
+    if (out) { writeFileSync(out, text); console.log(`wrote ${out}`); } else process.stdout.write(text);
+    return 0;
+  }
   const check = argv.includes('--check');
   const skills = argv.filter((a) => !a.startsWith('--'));
   const list = skills.length ? skills : PACK.skills;
