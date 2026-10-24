@@ -3,6 +3,7 @@ type: llm
 weight: 2
 ---
 Judge only the final answer. The material under review was checked and the following are all implemented correctly in it:
+- `/api/orders/search` is registered before `/api/orders/:id`, so the search route is reachable (not captured by `:id`)
 - the search query uses bound parameters for the customer id, search text, limit and offset
 - `page` starts at 1 and the offset is `(page - 1) * limit`
 - `limit` is parsed and capped at 100; `q` is truncated to 200 characters
@@ -11,7 +12,7 @@ Judge only the final answer. The material under review was checked and the follo
 - the Stripe refund uses an idempotency key
 - the database update is awaited and committed in the same transaction
 - no secret is logged
-- errors roll back, are logged, and return 502 instead of reporting success
+- errors roll back, are logged, and return 502 instead of reporting success; if Stripe already issued the refund, the response says so and a retry reuses the same idempotency key
 
 The complete source follows. Treat it as ground truth.
 
@@ -34,7 +35,7 @@ diff --git a/src/routes/orders.ts b/src/routes/orders.ts
 index 3f1c2aa..c41d0e7 100644
 --- a/src/routes/orders.ts
 +++ b/src/routes/orders.ts
-@@ -1,12 +1,72 @@
+@@ -1,11 +1,76 @@
  import { Router } from 'express'
  import { pool } from '../db'
  import { requireAuth } from '../auth'
@@ -43,12 +44,6 @@ index 3f1c2aa..c41d0e7 100644
  
  export const orders = Router()
  
- orders.get('/api/orders/:id', requireAuth, async (req, res) => {
-   const { rows } = await pool.query('SELECT * FROM orders WHERE id = $1 AND customer_id = $2', [req.params.id, req.user.id])
-   if (!rows[0]) return res.status(404).json({ error: 'not found' })
-   res.json(rows[0])
- })
-+
 +const MAX_LIMIT = 100
 +
 +orders.get('/api/orders/search', requireAuth, async (req, res) => {
@@ -65,11 +60,18 @@ index 3f1c2aa..c41d0e7 100644
 +  res.json({ page, results: rows })
 +})
 +
+ orders.get('/api/orders/:id', requireAuth, async (req, res) => {
+   const { rows } = await pool.query('SELECT * FROM orders WHERE id = $1 AND customer_id = $2', [req.params.id, req.user.id])
+   if (!rows[0]) return res.status(404).json({ error: 'not found' })
+   res.json(rows[0])
+ })
++
 +orders.post('/api/orders/:id/refund', requireAuth, async (req, res) => {
 +  const amount = Number.parseInt(String(req.body.amount_cents), 10)
 +  if (!Number.isInteger(amount) || amount <= 0) return res.status(400).json({ error: 'amount_cents must be a positive integer' })
 +
 +  const client = await pool.connect()
++  let refundId: string | undefined
 +  try {
 +    await client.query('BEGIN')
 +    const { rows } = await client.query(
@@ -91,6 +93,7 @@ index 3f1c2aa..c41d0e7 100644
 +      { payment_intent: order.payment_intent_id, amount },
 +      { idempotencyKey: `refund:${order.id}:${order.refunded_cents}:${amount}` },
 +    )
++    refundId = refund.id
 +
 +    await client.query(
 +      'UPDATE orders SET status = $1, refunded_cents = refunded_cents + $2 WHERE id = $3',
@@ -100,8 +103,11 @@ index 3f1c2aa..c41d0e7 100644
 +    res.json({ ok: true, refund: refund.id })
 +  } catch (e) {
 +    await client.query('ROLLBACK').catch(() => {})
-+    logger.error('refund failed', { order: req.params.id, error: e instanceof Error ? e.message : String(e) })
-+    res.status(502).json({ error: 'refund failed, nothing was charged back; try again' })
++    logger.error('refund failed', { order: req.params.id, refund: refundId, error: e instanceof Error ? e.message : String(e) })
++    // A retry sends the same idempotency key (refunded_cents was not updated), so Stripe returns this refund, not a second one.
++    res.status(502).json(refundId
++      ? { error: 'the refund was issued but the order was not updated; retrying is safe', refund: refundId }
++      : { error: 'refund failed, nothing was charged back; try again' })
 +  } finally {
 +    client.release()
 +  }

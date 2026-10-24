@@ -168,3 +168,34 @@ test('skill-builder teaches the name rule its own graders enforce (G3 P0-2)', ()
   // The recall key still plants the defect the skill now teaches against.
   assert.match(readFileSync(join(REPO, 'evals/skill-builder/seeded-defects/graders/d1-name-format.md'), 'utf8'), /lowercase-and-hyphens/);
 });
+
+// Express matches routes in registration order: a static path registered after a param path of the same method
+// that matches it (GET /orders/search after GET /orders/:id) is dead code.
+export function shadowedRoutes(source) {
+  const routes = [];
+  for (const line of source.split('\n')) {
+    if (/^(---|\+\+\+|-)/.test(line)) continue; // diffs: keep the new file only
+    const m = /\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/.exec(line);
+    if (m) routes.push({ method: m[1], path: m[2] });
+  }
+  const out = [];
+  routes.forEach((r, i) => routes.slice(0, i).forEach((p) => {
+    if (p.method !== r.method || !p.path.includes(':') || r.path === p.path) return;
+    const re = new RegExp('^' + p.path.replace(/:[^/]+/g, '[^/]+') + '$');
+    if (re.test(r.path)) out.push(`${r.method.toUpperCase()} ${r.path} is shadowed by ${p.path}`);
+  }));
+  return out;
+}
+
+test('no review fixture registers an Express route that an earlier param route shadows (G3 P1-1)', () => {
+  const fixtures = walk(join(REPO, 'evals')).filter((f) => /\/(seeded-defects|clean[^/]*)\/resources\//.test(f) && /\.(diff|ts|js|mjs)$/.test(f));
+  const found = fixtures.flatMap((f) => shadowedRoutes(readFileSync(f, 'utf8')).map((s) => `${f.slice(REPO.length + 1)}: ${s}`));
+  assert.deepEqual(found, []);
+  assert.deepEqual(shadowedRoutes(" r.get('/api/orders/:id', h)\n+r.get('/api/orders/search', h)\n"), ['GET /api/orders/search is shadowed by /api/orders/:id']);
+});
+
+test('the clean code-review twin reports a refund Stripe already issued instead of claiming nothing was charged', () => {
+  const diff = readFileSync(join(REPO, 'evals/github-code-review/clean/resources/pr-412.diff'), 'utf8');
+  assert.match(diff, /refundId = refund\.id/);
+  assert.match(diff, /json\(refundId\s*\n\+\s*\? \{ error: 'the refund was issued/);
+});
