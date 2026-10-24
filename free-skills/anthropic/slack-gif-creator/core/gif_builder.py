@@ -16,7 +16,7 @@ import numpy as np
 class GIFBuilder:
     """Builder for creating optimized GIFs from frames."""
 
-    def __init__(self, width: int = 480, height: int = 480, fps: int = 15):
+    def __init__(self, width: int = 480, height: int = 480, fps: int = 15) -> None:
         """
         Initialize GIF builder.
 
@@ -30,7 +30,7 @@ class GIFBuilder:
         self.fps = fps
         self.frames: list[np.ndarray] = []
 
-    def add_frame(self, frame: np.ndarray | Image.Image):
+    def add_frame(self, frame: np.ndarray | Image.Image) -> None:
         """
         Add a frame to the GIF.
 
@@ -48,7 +48,7 @@ class GIFBuilder:
 
         self.frames.append(frame)
 
-    def add_frames(self, frames: list[np.ndarray | Image.Image]):
+    def add_frames(self, frames: list[np.ndarray | Image.Image]) -> None:
         """Add multiple frames at once."""
         for frame in frames:
             self.add_frame(frame)
@@ -241,6 +241,6 @@ class GIFBuilder:
 
         return info
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear all frames (useful for creating multiple GIFs)."""
         self.frames = []
