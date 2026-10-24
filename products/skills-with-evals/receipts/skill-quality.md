@@ -31,4 +31,7 @@ measurement and are not part of this lint's hard rules.
 
 ## After
 
-Filled in by the commits that fix each finding.
+**Fix 1, boundaries (9 skills).** Each skill without one gained a short "When not to use" section, placed after its
+opening (or after its Purpose section), that names the adjacent job it should leave alone and, where the pack has
+one, the skill to use instead. The sections are consistent with each suite's stay-out task without quoting it.
+Descriptions are unchanged, so routing is unchanged. Result: 3 of 10 fail, all on size.

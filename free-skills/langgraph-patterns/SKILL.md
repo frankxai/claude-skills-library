@@ -9,6 +9,13 @@ version: 1.0.0
 ## Purpose
 Master LangGraph for building production-ready AI agents with fine-grained control, checkpointing, streaming, and complex state management.
 
+## When not to use
+
+- General Python utilities (HTTP retries, file parsing, CLIs) that do not involve a LangGraph graph.
+- Other agent frameworks (CrewAI, AutoGen, the OpenAI Agents SDK, the Claude Agent SDK), unless the question is how to move to or from LangGraph.
+- A framework-neutral architecture review of an LLM system before launch: use `ai-architect-review`.
+- Designing the MCP servers an agent calls: use `mcp-architecture`.
+
 ## Core Philosophy
 
 **LangGraph is:** An orchestration framework with both declarative and imperative APIs focused on control and durability for production agents.

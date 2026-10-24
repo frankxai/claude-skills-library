@@ -9,6 +9,12 @@ description: "Writes Agent Skills. Use when creating, reviewing or fixing a SKIL
 
 Creates production-ready Claude Code Skills with proper YAML frontmatter, progressive disclosure architecture, and complete file/folder structure. This skill guides you through building skills that Claude can autonomously discover and use across all surfaces (Claude.ai, Claude Code, SDK, API).
 
+## When not to use
+
+- General questions about git, programming or tools that are not about writing or reviewing a skill.
+- Configuring hooks, subagents, MCP servers or a plugin manifest: those are separate features with their own formats. Use this skill for the SKILL.md files inside them.
+- Proving that a skill improves results. This skill checks the specification and whether the description will trigger; measuring the effect needs the same tasks run with and without the skill.
+
 ## Prerequisites
 
 - Claude Code 2.0+ or Claude.ai with Skills support

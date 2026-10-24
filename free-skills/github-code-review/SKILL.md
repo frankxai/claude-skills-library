@@ -19,6 +19,13 @@ capabilities:
 Reviews a pull request the way a careful senior engineer does: find what must block the merge, say exactly where and
 why, and give the fix. Style comes last, and only if asked.
 
+## When not to use
+
+- Writing documentation, READMEs, changelogs or commit messages: nothing is being reviewed.
+- Style and formatting on their own: leave them to the linter and formatter unless the author asks.
+- Questions where framework or protocol behaviour decides the answer: pair this with `nextjs-expert` for Next.js App Router code, `mcp-architecture` for MCP servers, or `ai-architect-review` for systems that call a language model.
+- A security audit, penetration test or threat model of the running system. This review covers what the diff and its context show.
+
 ## How to review a diff
 
 1. **Read the description, then the whole diff**, before writing anything. Note what the change claims to do.

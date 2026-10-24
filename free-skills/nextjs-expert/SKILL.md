@@ -10,6 +10,13 @@ version: 2.1.0
 **Author:** FrankX AI Systems
 **Last Updated:** 2026-05-13
 
+## When not to use
+
+- Other Node.js servers and frameworks (Express, Fastify, Hono, Remix) or general JavaScript and TypeScript questions with nothing Next.js-specific in them.
+- Visual design or accessibility review: use `ui-ux-design-expert`.
+- A general pull-request review where Next.js behaviour is not the question: use `github-code-review`.
+- Older Pages Router conventions as the target. The guidance here is for the App Router on Next.js 16; older versions differ in exactly the places listed under the gotchas.
+
 ## Platform baseline (Next.js 16 + Vercel, May 2026)
 
 - **Next.js:** 16.x (Turbopack is the default build/dev engine; webpack is opt-in only)
