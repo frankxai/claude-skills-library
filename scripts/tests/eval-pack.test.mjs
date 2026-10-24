@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from '../trigger-lint.mjs';
-import { cardData, coverage, currentHashes, renderCard, staleness } from '../eval-card.mjs';
+import { cardData, coverage, currentHashes, firstClause, flagshipData, flagshipMeasures, plantedDefects, renderCard, renderFlagshipMd, staleness, withFlagship } from '../eval-card.mjs';
 import { pickCommand, shellArgs } from '../install-test.mjs';
 import { baselineScore, comparability, firedRate, reviewLift } from '../eval-skill.mjs';
 import { checkOutputs, expectedOutputs, haltsPack, isolationProblems, parseArgs as packArgs } from '../run-pack-lift.mjs';
@@ -428,4 +428,48 @@ test('the install matrix covers ubuntu and windows, validate, local and pinned-r
   assert.match(y, /CODEX_VERSION: '0\.164\.0'/);
   assert.doesNotMatch(y, /secrets\./, 'no secret needed');
   assert.match(y, /permissions:\n  contents: read/);
+});
+
+test('the checks validate.yml runs on PRs to main also pass here (catalog, site, counts, links, skill spec)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  for (const args of [['scripts/generate_catalog.py', '--check'], ['scripts/generate_site.py', '--check'], ['scripts/check_counts.py'],
+    ['scripts/check_links.py'], ['scripts/validate_skills.py']]) {
+    const r = spawnSync('python3', args, { cwd: REPO, encoding: 'utf8' });
+    assert.equal(r.status, 0, `${args.join(' ')}: ${(r.stdout + r.stderr).trim().split('\n').slice(-2).join(' ')}`);
+  }
+});
+
+test('flagship: the worked comparison comes from the suite files and stays a labelled placeholder until measured', () => {
+  const f = flagshipData('github-code-review');
+  assert.equal(f.planted.length, 8);
+  const graders = readdirSync(join(REPO, 'evals/github-code-review/seeded-defects/graders')).filter((g) => /^d\d+-/.test(g)).sort();
+  assert.deepEqual(f.planted.map((d) => `d${d.n}-${d.id}.md`).sort(), graders, 'one planted bug per grader');
+  assert.match(f.task, /review pull request #412/i);
+  assert.equal(f.measured, null);
+  assert.equal(f.limits.length, 3);
+  const md = renderFlagshipMd(f);
+  assert.match(md, /\*\*Placeholder\.\*\* Nothing below is measured yet/);
+  assert.equal((md.match(/\*placeholder\*/g) || []).length >= 10, true);
+  const readme = readFileSync(join(REPO, 'products/skills-with-evals/README.md'), 'utf8');
+  assert.equal(withFlagship(readme, md), readme, 'README flagship section is current (run node scripts/eval-card.mjs)');
+  assert.equal(firstClause("the `catch (e) { x, y }` block, which hides it"), 'the `catch (e) { x, y }` block');
+});
+
+test('flagship measures per arm: bugs found, false alarms on the clean copy, cost and time, per planted bug', () => {
+  const defects = [{ n: 1, id: 'a' }, { n: 2, id: 'b' }];
+  const run = (found, extra = {}) => ({ graders: found.map((n) => ({ name: `d${n}-x`, passed: true })), costUsd: 0.1, durationSeconds: 30, ...extra });
+  const result = { cases: [
+    { name: 'seeded-defects', arms: { with: [run([1, 2]), run([1, 2]), run([1])], without: [run([1]), run([]), run([])] } },
+    { name: 'clean', arms: { with: [{ graders: [{ name: 'no-unsupported-claims', passed: true }] }, { graders: [{ name: 'no-unsupported-claims', passed: false }] }],
+      without: [{ graders: [{ name: 'no-unsupported-claims', passed: true }] }, { graders: [{ name: 'no-unsupported-claims', passed: true }] }] } },
+  ] };
+  const m = flagshipMeasures(result, defects, tmpdir());
+  assert.ok(Math.abs(m.with.meanFound - 5 / 3) < 1e-9);
+  assert.ok(Math.abs(m.without.meanFound - 1 / 3) < 1e-9);
+  assert.equal(m.with.falseAlarmRate, 0.5);
+  assert.equal(m.without.falseAlarmRate, 0);
+  assert.deepEqual(m.with.perDefect.map((d) => +d.found.toFixed(3)), [1, 0.667]);
+  assert.ok(Math.abs(m.with.costPerRunUsd - 0.1) < 1e-9);
+  assert.equal(m.with.secondsPerRun, 30);
+  assert.deepEqual(plantedDefects('nextjs-expert').length, 9);
 });

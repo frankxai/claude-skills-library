@@ -52,6 +52,7 @@ git pull origin main
 ## Best practices
 
 1. Put trigger phrases in `description:` (e.g., "Use when creating infographics") so Claude auto-invokes
-2. Keep SKILL.md body under ~500 lines (Claude needs to load it on every session)
+2. Keep SKILL.md body under ~500 lines: only the name and description sit in context every session, and the body
+   loads in full whenever the skill is used
 3. Move long reference material to `references/` (loaded on-demand)
 4. Test by triggering with the description's keywords — confirm Claude picks it up
