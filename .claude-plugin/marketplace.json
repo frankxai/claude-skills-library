@@ -148,6 +148,36 @@
           ]
         }
       }
+    },
+    {
+      "name": "starlight-web-studio",
+      "displayName": "Starlight Web Studio",
+      "description": "A proactive web design studio as a team: eleven specialist agents, a routed graph from audit to shipped page, a model-free scanner for search, answer-engine, mobile, access, craft and speed, and maker-checker gates.",
+      "source": "./plugins/starlight-web-studio",
+      "category": "design",
+      "tags": [
+        "web-design",
+        "design-team",
+        "multi-agent",
+        "seo",
+        "aeo",
+        "motion",
+        "visual-qa"
+      ],
+      "homepage": "https://github.com/frankxai/claude-skills-library/tree/main/plugins/starlight-web-studio",
+      "license": "MIT",
+      "relevance": {
+        "topic": "Web design and site audits",
+        "signals": {
+          "cwd": [
+            "**/*-website",
+            "**/*.ai",
+            "**/*-web",
+            "**/site",
+            "**/web"
+          ]
+        }
+      }
     }
   ]
 }
