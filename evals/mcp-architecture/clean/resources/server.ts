@@ -32,8 +32,12 @@ server.registerTool('update_ticket', {
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
 }, async ({ id, status, assignee, priority }, extra) => {
   requireScope(extra, 'tickets:write')
-  await sql`UPDATE tickets SET ${sql({ status, assignee, priority }, 'status', 'assignee', 'priority')} WHERE id = ${id}`
-  return { content: [{ type: 'text', text: 'updated' }] }
+  // Write only the fields the caller set: an omitted field must not become NULL or reach postgres.js as undefined.
+  const changes = Object.fromEntries(Object.entries({ status, assignee, priority }).filter(([, v]) => v !== undefined))
+  if (Object.keys(changes).length === 0) throw new Error('nothing to update: pass status, assignee or priority')
+  const rows = await sql`UPDATE tickets SET ${sql(changes)} WHERE id = ${id} RETURNING id`
+  if (rows.length === 0) throw new Error('ticket not found')
+  return { content: [{ type: 'text', text: `updated ${Object.keys(changes).join(', ')}` }] }
 })
 
 server.registerTool('delete_ticket', {
