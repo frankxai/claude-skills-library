@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--outcome-a
+description: "Should trigger feynman-thinking; outcome graded."
+tags: [feynman-thinking, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Explain simply how a request flows through our auth middleware to the suggestion engine. Build me a mental model, Feynman style."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it opens with a plain-English statement of the problem, gives a mental model (inputs, outputs, data flow), and shows the flow as a simple text or ASCII diagram, avoiding jargon."

@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: hooks-automation--outcome-b
+description: "Should trigger hooks-automation; outcome graded."
+tags: [hooks-automation, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Set up a Claude Code hook that saves session state when a session ends."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?hooks-automation\""
+  - name: rx-0
+    type: regex
+    pattern: "SessionEnd|Stop"
+    flags: i
+  - name: judged-1
+    type: llm
+    criteria: "PASS only if it uses a real Claude Code hook event (SessionEnd or Stop) in a settings hooks block with a command that saves state."
