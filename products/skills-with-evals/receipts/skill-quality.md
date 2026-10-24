@@ -61,3 +61,13 @@ folder, references included. `install-test.mjs`: Claude Code and Codex both see 
 if a file in a skill's `references/` is not linked from its SKILL.md.
 
 These changes are made before any lift run, so the first measured results describe the skills as they are now.
+
+## Found along the way (not a lint rule)
+
+**nextjs-expert taught two Next.js 16 deprecations as current.** Its middleware examples used `middleware.ts` /
+`export function middleware`, and its caching example called `revalidateTag('posts')` with one argument. Next.js 16
+renamed Middleware to Proxy (`proxy.ts`, Node.js runtime only) and requires a cacheLife profile for `revalidateTag`,
+with `updateTag` for read-your-writes in Server Actions (nextjs.org/blog/next-16; the version 16 upgrade guide).
+"Use middleware for auth" also contradicted Next.js's own guidance: Proxy is for optimistic checks only, and data is
+protected in the Data Access Layer and inside each Server Action (nextjs.org/docs/app/guides/authentication). Fixed in
+the reference files and in the body's gotchas list. No nextjs fixture uses either API, so the suite is unaffected.

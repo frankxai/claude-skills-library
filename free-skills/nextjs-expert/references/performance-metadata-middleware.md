@@ -1,4 +1,4 @@
-# Performance, metadata and request interception
+# Performance, metadata and Proxy
 
 Part of the `nextjs-expert` skill. SKILL.md links here; read it when tuning performance, adding metadata or SEO, or intercepting requests.
 
@@ -130,18 +130,23 @@ export const metadata: Metadata = {
 }
 ```
 
-## Middleware
+## Proxy (formerly Middleware)
 
-**Authentication Middleware:**
+Next.js 16 renamed the `middleware.ts` file to `proxy.ts` and the exported `middleware` function to `proxy`. The old
+names are deprecated and will be removed; `npx @next/codemod@canary middleware-to-proxy .` renames both. Proxy runs on
+the Node.js runtime only, so an app that needs the Edge runtime keeps `middleware.ts` for now. Sources: the Next.js 16
+release post (nextjs.org/blog/next-16) and the version 16 upgrade guide.
+
+**Optimistic auth redirect:**
 ```typescript
-// middleware.ts
+// proxy.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')
+export function proxy(request: NextRequest) {
+  const session = request.cookies.get('session')?.value
 
-  if (!token && request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!session && request.nextUrl.pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -149,13 +154,22 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/api/:path*'],
+  matcher: ['/dashboard/:path*'],
 }
 ```
 
-**Custom Headers Middleware:**
+Proxy only makes optimistic checks: it reads the cookie and redirects, without querying a database. It is not what
+protects data. Verify the session and the user's right to the specific resource as close to the data as possible: in a
+server-only Data Access Layer, and again inside every Server Action and route handler, because each one can be called
+directly (nextjs.org/docs/app/guides/authentication, nextjs.org/docs/app/guides/data-security).
+
+**Custom headers:**
 ```typescript
-export function middleware(request: NextRequest) {
+// proxy.ts
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function proxy(request: NextRequest) {
   const response = NextResponse.next()
 
   response.headers.set('X-Custom-Header', 'my-value')

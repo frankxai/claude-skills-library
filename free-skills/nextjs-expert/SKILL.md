@@ -22,7 +22,7 @@ version: 2.1.0
 Load these only when the task needs them:
 
 - [`references/architecture-data-routes.md`](references/architecture-data-routes.md): Project layout and the server/client component split, fetch caching and revalidation, and route handlers. Read when structuring an app, choosing how data is fetched and cached, or writing an API route.
-- [`references/performance-metadata-middleware.md`](references/performance-metadata-middleware.md): Images, fonts, bundles and streaming; metadata and SEO; request interception before a route runs. Read when tuning performance, adding metadata or SEO, or intercepting requests.
+- [`references/performance-metadata-middleware.md`](references/performance-metadata-middleware.md): Images, fonts, bundles and streaming; metadata and SEO; Proxy (`proxy.ts`, formerly `middleware.ts`). Read when tuning performance, adding metadata or SEO, or intercepting requests.
 - [`references/common-patterns.md`](references/common-patterns.md): Loading states, error boundaries, and parallel versus sequential data fetching. Read when adding loading or error UI, or untangling a slow data waterfall.
 
 ## Platform baseline (Next.js 16 + Vercel, May 2026)
@@ -68,6 +68,11 @@ If you have `app/sitemap.ts`, `app/robots.ts`, `app/manifest.ts`, `app/icon.ts`,
 ### 3. Verify with `next build` before pushing
 
 Turbopack catches collisions, missing `await params`, and metadata conflicts only at build time. Dev server is lenient. Always run `pnpm build` (or `npm run build`) locally before pushing to main.
+
+### 4. Renamed or changed in 16 that still runs, with a deprecation warning
+
+- `middleware.ts` is now `proxy.ts`, and the exported function is `proxy`. Proxy runs on Node.js only and is for optimistic redirects, never the only auth check (see `references/performance-metadata-middleware.md`).
+- `revalidateTag(tag)` with one argument is deprecated: pass a cacheLife profile, `revalidateTag(tag, 'max')`, or call `updateTag(tag)` inside a Server Action for read-your-writes.
 
 ## Overview
 
@@ -259,7 +264,7 @@ Use the `'use cache'` directive on a component or function to mark it static; ev
 - Never expose secrets to client
 - Validate all inputs in Server Actions
 - Implement CSRF protection
-- Use middleware for auth
+- Use Proxy (`proxy.ts`, formerly middleware) only for optimistic redirects; check the session and ownership in the data layer and in every Server Action
 
 ## Troubleshooting Guide
 
@@ -283,7 +288,7 @@ Use the `'use cache'` directive on a component or function to mark it static; ev
 
 **Cache Not Invalidating:**
 - Check revalidate settings
-- Use revalidatePath or revalidateTag
+- Use `revalidatePath`, or `revalidateTag(tag, 'max')` (Next.js 16 requires the profile); in a Server Action, `updateTag(tag)` for read-your-writes
 - Verify cache tags are properly set
 
 **Server Actions Not Working:**
