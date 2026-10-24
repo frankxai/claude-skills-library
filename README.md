@@ -4,7 +4,7 @@
 
 # Claude Skills Library
 
-### 114 Agent Skills for every skills-aware runtime, and 7 enforcement packs for Claude Code
+### 114 Agent Skills for every skills-aware runtime, and 8 enforcement packs for Claude Code
 
 Skills teach an agent a domain. Packs make the agent go through the gate. This is the only public
 library that ships both, with provenance pinned to commits, counts that check themselves in CI, and
@@ -12,7 +12,7 @@ hooks that block "done" until the evidence exists.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-10b981.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/skills-114-blue.svg)](docs/CATALOG.md)
-[![Packs](https://img.shields.io/badge/packs-7-06b6d4.svg)](#packs-skills-that-enforce)
+[![Packs](https://img.shields.io/badge/packs-8-06b6d4.svg)](#packs-skills-that-enforce)
 [![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#works-with-six-runtimes)
 [![Validate](https://github.com/frankxai/claude-skills-library/actions/workflows/validate.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/validate.yml)
 [![Pack tests](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml)
@@ -70,7 +70,7 @@ Two layers. The first is what every skills repo has. The second is what none of 
 | Layer | What it is | Where |
 |---|---|---|
 | **Skills** | 114 self-contained `SKILL.md` folders. Spec-validated frontmatter, trigger-rich descriptions, deep guidance in `references/` loaded only on use. | [`free-skills/`](free-skills) · [catalog](docs/CATALOG.md) |
-| **Packs** | 7 installable contracts. Each bundles the skills for one kind of work with whatever enforcement it has: hooks, CI scripts, drift checks, or templates. The packs table below says which. | [`packs/`](packs) |
+| **Packs** | 8 installable contracts. Each bundles the skills for one kind of work with whatever enforcement it has: hooks, CI scripts, drift checks, or templates. The packs table below says which. | [`packs/`](packs) |
 
 A skill is loaded when the task matches its description. That makes it *available*, not *mandatory*.
 A pack adds what turns a suggestion into a default, and the mechanism differs by pack.
@@ -89,7 +89,7 @@ templates and is advisory.
 ## Packs: skills that enforce
 
 Installed into 19 repositories across the FrankX, Starlight, and Arcanea estate as of 2026-10-09.
-Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-infrastructure` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
+Re-run an installer to upgrade. `web-excellence`, `routine-contract`, `agent-infrastructure` and `queen-ops` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
 
 | Pack | What it gates | Enforced by |
 |---|---|---|
@@ -99,6 +99,7 @@ Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-
 | [`risk-classifier`](packs/risk-classifier) | PR readiness. Classifies every changed file against eight risk classes. Unknown fails closed. Secret-shaped content anywhere fails closed. | CI script, `classes.json`, tests |
 | [`routine-contract`](packs/routine-contract) | Scheduled agents. Once a routine is wired to the digest primitive, it cannot report `SUCCEEDED` while committing nothing: preflight proves the output sink exists, the primitive exits non-zero if it could not persist, and the drift detector catches a routine that stopped reporting. The installer puts the pieces in place; you enumerate the routines and point each at the primitive. | Skill, digest script, fleet drift detector, daily CI, 12 tests |
 | [`film-excellence`](packs/film-excellence) | Narrative film and short-form video. Doctrine, dialogue tells that mark machine writing, token contract, crew chairs, eight-stage pipeline. The film counterpart to `web-excellence`. | Native skill, templates, design and taste contracts |
+| [`queen-ops`](packs/queen-ops) | Multi-agent dispatch. A task is created only from a complete Brief, completed only from an independent verifier's re-run receipt plus a taste receipt, and the turn cannot end with briefed work uncredited. Human-gated actions (move funds, bulk send, key rotation, force-push to main) are denied at the tool call. Inert until a repo is armed. | 6 hooks (SessionStart, PreToolUse, TaskCreated, TaskCompleted, TeammateIdle, Stop), 1 skill, zero-dependency tests; rules ported from `@starlight-intelligence/queen` |
 
 ```bash
 git clone --depth 1 https://github.com/frankxai/claude-skills-library /tmp/csl
@@ -176,7 +177,7 @@ Browse the **[full catalog](docs/CATALOG.md)**, or the generated site at [`docs/
 ```mermaid
 flowchart LR
     SIS["Starlight Intelligence System<br/>substrate: memory, agents, SIP"] --> ACOS["Agentic Creator OS<br/>canonical skill source"]
-    ACOS -->|"mirror the strongest"| LIB["claude-skills-library<br/>114 skills · 7 packs"]
+    ACOS -->|"mirror the strongest"| LIB["claude-skills-library<br/>114 skills · 8 packs"]
     UP["Upstreams<br/>Vercel · Emil Kowalski · Anthropic · ..."] -->|"pinned, licensed, drift-checked"| LIB
     LIB -->|"/plugin · npx skills add · cp"| CC["Claude Code"]
     LIB -->|"runtimes/"| RT["Cursor · Codex · Gemini CLI<br/>OpenCode · Antigravity"]
