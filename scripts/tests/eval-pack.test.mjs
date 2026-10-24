@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from '../trigger-lint.mjs';
 import { cardData, coverage, currentHashes, renderCard, staleness } from '../eval-card.mjs';
 import { baselineScore, comparability, firedRate, reviewLift } from '../eval-skill.mjs';
-import { haltsPack, isolationProblems, parseArgs as packArgs } from '../run-pack-lift.mjs';
+import { checkOutputs, expectedOutputs, haltsPack, isolationProblems, parseArgs as packArgs } from '../run-pack-lift.mjs';
 import { mkdtempSync, writeFileSync as writeF, mkdirSync as mkdirS } from 'node:fs';
 import { tmpdir } from 'node:os';
 
@@ -366,4 +366,41 @@ test('trigger and baseline come from the tool output: fired share on review case
   assert.equal(firedRate({ cases: [] }), null);
   assert.equal(baselineScore({ cases: [] }), null);
   for (const s of PACK.skills) { const d = cardData(s); if (!d.lift) assert.equal(d.lift, null); }
+});
+
+test('G1 prep: --pilot, expected outputs, and --check-outputs on a synthetic complete run and on broken ones', () => {
+  const p = packArgs(['--pilot']);
+  assert.deepEqual([p.skillList, p.runs, p['per-skill-usd']], [['github-code-review'], '1', '1']);
+  assert.match(packArgs([]).by, /\S/, 'run-by defaults to the local user');
+  assert.equal(expectedOutputs('nextjs-expert', 3, 3).traces, 18);
+  assert.equal(expectedOutputs('skill-builder', 4, 3).traces, 24);
+  const make = ({ dropTrace = false, foreign = false } = {}) => {
+    const root = mkdtempSync(join(tmpdir(), 'g1-out-'));
+    const base = join(root, 'evals', 'nextjs-expert');
+    const stamp = '2026-10-24T08-00-00Z';
+    mkdirS(join(base, 'results', stamp, 'traces'), { recursive: true });
+    const init = (arm) => JSON.stringify({ type: 'system', subtype: 'init', model: 'claude-sonnet-5-5',
+      plugins: [...(arm === 'with' ? [{ name: 'eval-nextjs-expert', source: 'eval-nextjs-expert@inline' }] : []),
+        ...(foreign ? [{ name: 'frankx-skills', source: 'frankx-skills@claude-skills-library' }] : [])],
+      skills: arm === 'with' ? ['eval-nextjs-expert:nextjs-expert'] : [] }) + '\n';
+    const cases = ['seeded-defects', 'clean', 'no-trigger'].map((name) => {
+      const arms = {};
+      for (const arm of ['with', 'without']) arms[arm] = [1, 2, 3].map((n) => {
+        const rel = `results/${stamp}/traces/${name}__${arm}__${n}.jsonl`;
+        if (!(dropTrace && name === 'clean' && arm === 'without' && n === 3)) writeF(join(base, rel), init(arm));
+        return { tracePath: rel, graders: [] };
+      });
+      return { name, dir: `/tmp/x/evals/${name}`, aggregates: { score: 0.8, delta: name === 'no-trigger' ? 0 : 0.2 }, arms };
+    });
+    writeF(join(base, 'results', `${stamp}.json`), JSON.stringify({ meta: { stamp }, result: { aggregates: { meanDelta: 0.13, overallScore: 0.8 }, cases } }));
+    writeF(join(base, 'results', `${stamp}.report.html`), '<html></html>');
+    writeF(join(base, 'SCORECARD.md'), '# scorecard\n');
+    return root;
+  };
+  const good = checkOutputs('nextjs-expert', make());
+  assert.equal(good.ok, true, good.notes.join('; '));
+  assert.deepEqual([good.runs, good.traces], [18, 18]);
+  assert.match(checkOutputs('nextjs-expert', make({ dropTrace: true })).notes.join(' '), /17 traces for 18 runs/);
+  assert.match(checkOutputs('nextjs-expert', make({ foreign: true })).notes.join(' '), /unexpected plugin/);
+  assert.match(checkOutputs('nextjs-expert', mkdtempSync(join(tmpdir(), 'g1-none-'))).notes.join(' '), /not run yet/);
 });
