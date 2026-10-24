@@ -15,6 +15,7 @@ import { lintSkill, parseFrontmatter } from './trigger-lint.mjs';
 import { comparability } from './eval-skill.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const RC_REF = 'agent/hyperagent/eval-pack-rc1';
 const PACK = JSON.parse(readFileSync(join(REPO, 'products', 'skills-with-evals', 'pack.json'), 'utf8'));
 const pct = (x) => (typeof x === 'number' ? `${Math.round(x * 100)}%` : 'n/a');
 const pts = (x) => (typeof x === 'number' ? `${x > 0 ? '+' : ''}${Math.round(x * 100)} pts` : 'n/a');
@@ -117,14 +118,18 @@ export function renderCard(skill) {
     '',
     '## Install',
     '',
+    `Release candidate: until this pack is merged to \`main\`, pin the branch (\`#\` for Claude Code, \`@\` for Codex).`,
+    '',
     '```bash',
-    '# Claude Code',
-    'claude plugin marketplace add frankxai/claude-skills-library',
+    '# Claude Code (2.1.310 tested)',
+    `claude plugin marketplace add frankxai/claude-skills-library#${RC_REF}`,
     'claude plugin install skills-with-evals@claude-skills-library',
-    '# Codex',
-    'codex plugin marketplace add frankxai/claude-skills-library',
+    '# Codex (codex-cli 0.164.0 tested)',
+    `codex plugin marketplace add frankxai/claude-skills-library@${RC_REF}`,
     'codex plugin add skills-with-evals@claude-skills-library',
     '```',
+    '',
+    'After merge, drop the `#…` / `@…` suffix.',
     '',
   ].join('\n');
 }

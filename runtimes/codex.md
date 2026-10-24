@@ -5,8 +5,12 @@
 >
 > ```bash
 > codex plugin marketplace add frankxai/claude-skills-library
-> codex plugin add skills-with-evals@claude-skills-library   # or claude-skills-library@claude-skills-library
+> codex plugin add claude-skills-library@claude-skills-library   # the full library
 > ```
+>
+> The 10-skill `skills-with-evals` pack is on a release-candidate branch until merged; pin it with `@`:
+> `codex plugin marketplace add frankxai/claude-skills-library@agent/hyperagent/eval-pack-rc1`, then
+> `codex plugin add skills-with-evals@claude-skills-library`.
 >
 > `codex debug prompt-input "hello"` then lists each skill as `<plugin>:<skill>: <description>`. Codex shows
 > only about the first 100 characters of each description (measured: 102 to 106), so put the "use when"
