@@ -9,9 +9,9 @@ import { BUDGET, boundarySection, dollarArgs, qualitySkill, scanBody } from '../
 import { cardData, coverage, currentHashes, firstClause, flagshipData, flagshipMeasures, plantedDefects, renderCard, renderFlagshipMd, staleness, withFlagship } from '../eval-card.mjs';
 import { pickCommand, shellArgs } from '../install-test.mjs';
 import { baselineScore, comparability, firedRate, reviewLift } from '../eval-skill.mjs';
-import { checkOutputs, expectedOutputs, haltsPack, isolationProblems, parseArgs as packArgs } from '../run-pack-lift.mjs';
-import { mkdtempSync, writeFileSync as writeF, mkdirSync as mkdirS } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { acquireLock, appendLedger, checkOutputs, decide, expectedOutputs, haltsPack, isolationProblems, ledgerState, parseArgs as packArgs, readLedger, reconcile, runPack } from '../run-pack-lift.mjs';
+import { mkdtempSync, rmSync, writeFileSync as writeF, mkdirSync as mkdirS } from 'node:fs';
+import { hostname, tmpdir } from 'node:os';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PACK = JSON.parse(readFileSync(join(REPO, 'products/skills-with-evals/pack.json'), 'utf8'));
@@ -530,4 +530,162 @@ test('pack gate: every skill in the pack passes the skill quality lint', () => {
       if (f.isFile()) assert.ok(readFileSync(join(REPO, 'free-skills', s, 'SKILL.md'), 'utf8').includes(`references/${f.name}`), `${s}: references/${f.name} is not linked from SKILL.md`);
     }
   }
+});
+
+// ---- G1 resumable, idempotent, ledgered (quality program 4) ----
+// A fake world: results per skill, a runner that can "crash", a clock. No model, no staging.
+function fakeWorld({ crashOn = null, costs = {}, partial = {} } = {}) {
+  const results = {}; const runs = []; let tick = 0;
+  const H = (s) => ({ skillHash: `sk-${s}`, suiteHash: `su-${s}`, cases: ['seeded-defects', 'clean', 'no-trigger'] });
+  const mk = (s, stamp, n, cost, part) => ({ file: `${stamp}.json`, meta: { stamp, skillHash: H(s).skillHash, suiteHash: H(s).suiteHash, traces: n * 6 },
+    result: { costUsd: cost, partial: !!part, partialReason: part || undefined, aggregates: { meanDelta: 0.2 },
+      cases: ['seeded-defects', 'clean', 'no-trigger'].map((name) => ({ name, aggregates: { delta: 0.2, score: 0.8 },
+        arms: { with: Array.from({ length: n }, () => ({})), without: Array.from({ length: n }, () => ({})) } })) } });
+  const deps = {
+    now: () => `2026-10-24T14-00-${String(tick++).padStart(2, '0')}Z`,
+    hashes: H,
+    latest: (s) => results[s]?.at(-1) || null,
+    resultSince: (s, since) => { const r = results[s]?.at(-1); return r && r.meta.stamp >= since ? r : null; },
+    isolation: () => [], models: () => ['claude-sonnet-5-5'],
+    runSkill: (s, cap, o) => {
+      runs.push({ s, cap: +cap });
+      if (crashOn && crashOn.skill === s && !crashOn.done) { crashOn.done = true; throw new Error('SIGKILL (simulated)'); }
+      const stamp = deps.now();
+      (results[s] ||= []).push(mk(s, stamp, +o.runs, Math.min(costs[s] ?? 1, +cap), partial[s]));
+      return 0;
+    },
+    regenerateCards: () => {}, log: () => {},
+  };
+  return { deps, results, runs, mk, H };
+}
+const g1opts = (extra = []) => {
+  const dir = mkdtempSync(join(tmpdir(), 'g1-'));
+  return { ...packArgs(['--skills', 'github-code-review,nextjs-expert,mcp-architecture', '--ledger', join(dir, 'ledger.jsonl'), ...extra]), receiptsDir: dir };
+};
+
+test('G1 ledger: a crash mid-skill is reconciled at its full cap, finished skills are skipped, the campaign cap holds', () => {
+  const o = g1opts(['--per-skill-usd', '5', '--total-usd', '10']);
+  const w = fakeWorld({ crashOn: { skill: 'nextjs-expert' }, costs: { 'github-code-review': 4 } });
+  const deps = { ...w.deps, receiptsDir: o.receiptsDir };
+  assert.throws(() => runPack(o, deps), /SIGKILL/);
+  let st = ledgerState(readLedger(o.ledger).records);
+  assert.equal(st.spent, 4); assert.equal(st.open.length, 1); assert.equal(st.reserved, 5, 'the open start counts at its cap');
+
+  const second = runPack(o, deps);
+  assert.equal(second.reconciled.length, 1);
+  assert.equal(second.reconciled[0].status, 'interrupted');
+  assert.equal(second.reconciled[0].costUsd, 5);
+  assert.deepEqual(w.runs.map((r) => [r.s, r.cap]), [['github-code-review', 5], ['nextjs-expert', 5], ['nextjs-expert', 1]],
+    'github-code-review is not run again; nextjs gets only what is left of the $10 campaign');
+  assert.match(second.stopped, /campaign cap \$10\.00 reached/, 'mcp-architecture is not started: nothing left');
+  st = ledgerState(readLedger(o.ledger).records);
+  assert.ok(st.spent <= 10 + 1e-9, `campaign spent ${st.spent}`);
+  assert.equal(st.open.length, 0);
+  assert.match(readFileSync(second.receipt, 'utf8'), /interrupted \(reconciled\) \| \$5\.00 \| \$5\.00 \| no, counted at cap/);
+});
+
+test('G1 ledger: an interrupted run whose result file exists is reconciled at its reported cost, not the cap', () => {
+  const o = g1opts();
+  const w = fakeWorld();
+  appendLedger(o.ledger, { type: 'start', id: '2026-10-24T13-00-00Z:github-code-review', skill: 'github-code-review', at: '2026-10-24T13-00-00Z', capUsd: 5, skillHash: 'sk-github-code-review', suiteHash: 'su-github-code-review' });
+  w.results['github-code-review'] = [w.mk('github-code-review', '2026-10-24T13-00-02Z', 3, 2.25)];
+  const fin = reconcile(ledgerState(readLedger(o.ledger).records).open, w.deps.resultSince, 'now');
+  assert.equal(fin[0].costUsd, 2.25); assert.equal(fin[0].costKnown, true); assert.equal(fin[0].status, 'complete');
+});
+
+test('G1 ledger: re-running a finished campaign runs nothing and spends nothing (idempotent)', () => {
+  const o = g1opts();
+  const w = fakeWorld();
+  const deps = { ...w.deps, receiptsDir: o.receiptsDir };
+  const first = runPack(o, deps);
+  assert.equal(first.exitCode, 0); assert.equal(w.runs.length, 3);
+  const spent = ledgerState(readLedger(o.ledger).records).spent;
+  const again = runPack(o, deps);
+  assert.equal(w.runs.length, 3, 'no new runs');
+  assert.equal(again.spentNow, 0);
+  assert.equal(ledgerState(readLedger(o.ledger).records).spent, spent);
+  assert.ok(again.rows.every((r) => /^already measured/.test(r.skipped)));
+  assert.equal(again.exitCode, 0);
+  // --force re-runs; a changed skill (new hash) or fewer runs than asked also re-run
+  const res = w.results['nextjs-expert'].at(-1);
+  assert.equal(decide('nextjs-expert', { ...o, force: true }, { ...w.deps, finished: [] }).action, 'run');
+  assert.equal(decide('nextjs-expert', o, { ...w.deps, hashes: (s) => ({ ...w.H(s), skillHash: 'changed' }), finished: [] }).action, 'run');
+  assert.match(decide('nextjs-expert', { ...o, runs: '5' }, { ...w.deps, finished: [] }).reason, /3 run\(s\) per arm, 5 requested/);
+  assert.ok(res);
+});
+
+test('G1 ledger: a skill that stopped on its cost cap is not retried at the same cap', () => {
+  const o = g1opts(['--skills', 'github-code-review', '--per-skill-usd', '2']);
+  const w = fakeWorld({ partial: { 'github-code-review': 'max cost reached' } });
+  const deps = { ...w.deps, receiptsDir: o.receiptsDir };
+  runPack(o, deps);
+  assert.equal(w.runs.length, 1);
+  runPack(o, deps);
+  assert.equal(w.runs.length, 1, 'not retried at the same $2 cap');
+  runPack({ ...o, 'per-skill-usd': '4' }, deps);
+  assert.equal(w.runs.length, 2, 'a higher cap retries it');
+});
+
+test('G1 ledger: torn last line is ignored and the next record starts on a fresh line; the lock blocks a second run', () => {
+  const o = g1opts();
+  writeF(o.ledger, '{"type":"finish","id":"a","skill":"x","costUsd":1}\n{"type":"start","id":"b","sk');
+  appendLedger(o.ledger, { type: 'finish', id: 'c', skill: 'y', costUsd: 2 });
+  const { records, torn } = readLedger(o.ledger);
+  assert.equal(torn, 1); assert.equal(records.length, 2); assert.equal(ledgerState(records).spent, 3);
+  const held = acquireLock(o.ledger);
+  assert.throws(() => acquireLock(o.ledger), /another G1 run \(pid \d+/);
+  rmSync(held.lock);
+  writeF(`${o.ledger}.lock`, JSON.stringify({ pid: 2 ** 22 + 12345, host: hostname(), at: 'earlier' }));
+  const again = acquireLock(o.ledger);
+  assert.match(again.cleared, /cleared a lock left by pid/);
+  rmSync(again.lock);
+  writeF(`${o.ledger}.lock`, JSON.stringify({ pid: 1, host: 'some-other-machine', at: 'earlier' }));
+  assert.throws(() => acquireLock(o.ledger), /--break-lock/);
+  assert.ok(acquireLock(o.ledger, { breakLock: true }).cleared);
+});
+
+test('G1 end to end with a fake claude (no model): SIGKILL mid-skill, resume with the same command, then an idempotent re-run', { skip: process.platform === 'win32' && 'POSIX process groups' }, async () => {
+  const { spawn, spawnSync } = await import('node:child_process');
+  const { cpSync, chmodSync } = await import('node:fs');
+  const root = mkdtempSync(join(tmpdir(), 'g1e2e-'));
+  const repo = join(root, 'repo');
+  try {
+    cpSync(REPO, repo, { recursive: true, filter: (src) => !/[\\/](\.git|node_modules)([\\/]|$)/.test(src) && !/[\\/]evals[\\/][^\\/]+[\\/]results([\\/]|$)/.test(src) && !/g1-(ledger|run-)/.test(src) });
+    const bin = join(root, 'bin');
+    mkdirS(bin);
+    cpSync(join(REPO, 'scripts/tests/fixtures/fake-claude.cjs'), join(bin, 'claude'));
+    chmodSync(join(bin, 'claude'), 0o755);
+    const env = { ...process.env, PATH: `${bin}:${process.env.PATH}` };
+    delete env.ANTHROPIC_API_KEY;
+    const ledger = join(repo, 'products/skills-with-evals/receipts/g1-ledger.jsonl');
+    const args = [join(repo, 'scripts/run-pack-lift.mjs'), '--skills', 'github-code-review,nextjs-expert', '--per-skill-usd', '5', '--total-usd', '50', '--by', 'ci'];
+
+    const child = spawn(process.execPath, args, { env: { ...env, FAKE_HANG_SKILL: 'nextjs-expert' }, detached: true, stdio: 'ignore' });
+    const exited = new Promise((r) => child.on('exit', r));
+    const deadline = Date.now() + 90_000;
+    while (!(existsSync(ledger) && /"type":"start"[^\n]*"skill":"nextjs-expert"/.test(readFileSync(ledger, 'utf8')))) {
+      assert.ok(Date.now() < deadline, 'nextjs-expert never started');
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    process.kill(-child.pid, 'SIGKILL');
+    await exited;
+    let st = ledgerState(readLedger(ledger).records);
+    assert.equal(st.open.length, 1, 'the killed skill has a start and no finish');
+    assert.ok(existsSync(`${ledger}.lock`), 'the killed run left its lock');
+
+    const r2 = spawnSync(process.execPath, args, { env, encoding: 'utf8' });
+    assert.equal(r2.status, 0, r2.stdout.slice(-1500) + r2.stderr);
+    assert.match(r2.stdout, /ledger: cleared a lock left by pid \d+/);
+    assert.match(r2.stdout, /reconciled interrupted run \S+:nextjs-expert: no result, counted at its \$5\.00 cap/);
+    assert.match(r2.stdout, /=== github-code-review · skipped: already measured/);
+    assert.match(r2.stdout, /=== nextjs-expert · not run yet · cap \$5\.00/);
+
+    const r3 = spawnSync(process.execPath, args, { env, encoding: 'utf8' });
+    assert.equal(r3.status, 0, r3.stdout.slice(-1500));
+    assert.match(r3.stdout, /Reported cost this invocation: \$0\.00/);
+    st = ledgerState(readLedger(ledger).records);
+    assert.equal(st.open.length, 0);
+    assert.deepEqual(st.finished.map((f) => `${f.skill}:${f.status}`), ['github-code-review:complete', 'nextjs-expert:interrupted', 'nextjs-expert:complete']);
+    assert.ok(!existsSync(`${ledger}.lock`), 'lock released');
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });

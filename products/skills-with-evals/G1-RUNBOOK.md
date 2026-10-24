@@ -3,6 +3,10 @@
 One command, on your Claude subscription, no API key. It runs every skill's tests twice (with the skill and with no
 skill), keeps every unedited trace, stops at the cost caps, and regenerates the cards from the results.
 
+**If it stops for any reason (crash, Ctrl-C, closed laptop, rate limit), run the same command again.** It continues
+where it stopped: finished skills are skipped, and the cost ledger guarantees the $50 cap covers every attempt
+together, so nothing is paid for twice.
+
 ## At breakfast
 
 ```powershell
@@ -17,7 +21,7 @@ When it finishes:
 
 ```powershell
 node scripts/run-pack-lift.mjs --check-outputs    # every file present, traces match runs, isolation holds, cards current
-git add evals products/skills-with-evals/receipts
+git add evals products/skills-with-evals/receipts    # includes g1-ledger.jsonl, the cost ledger
 git commit -m "evals: G1 run (subscription)"
 git push
 ```
@@ -42,10 +46,19 @@ Needs Claude Code 2.1.269 or later (tested on 2.1.310), Node 22 or later, and a 
 3. **Caps:** $5 per skill, $50 in total (`--per-skill-usd`, `--total-usd`). A skill that hits its cap is marked not
    comparable and the run moves on. On a subscription these figures are the harness's own estimate counted against
    your plan, not a bill.
-4. **Stops early** on a login or rate-limit failure. Resume later with `--skills <the rest>`.
-5. Reads every run's trace and marks a skill not comparable if anything besides the skill under test and Claude Code's
+4. **Stops early** on a login or rate-limit failure. Resume by running the same command again.
+5. **Keeps a cost ledger** in `products/skills-with-evals/receipts/g1-ledger.jsonl`. Before each skill runs, it writes
+   down what that skill may spend; afterwards, what it reported. The $50 cap applies to everything in the ledger, across
+   every attempt. If a run was killed before it wrote a result, that skill counts at its full cap; the cost is unknown,
+   so it assumes the worst. A run that did write a result counts at its reported cost.
+6. **Skips what is done.** A skill whose newest result is current (skill and tests unchanged), complete, comparable and
+   has 3 runs per arm is not run again. A skill that stopped on its $5 cap is not retried at $5 (pass a higher
+   `--per-skill-usd`, or `--retry-capped`). `--force` re-runs everything you name.
+7. **One run at a time.** A lock file next to the ledger stops a second copy. A lock left by a killed run on the same
+   machine is cleared automatically.
+8. Reads every run's trace and marks a skill not comparable if anything besides the skill under test and Claude Code's
    built-ins loaded, or if the no-skill arm loaded the skill.
-6. Regenerates every `CARD.md` and writes a run summary.
+9. Regenerates every `CARD.md` and writes a run summary with the whole ledger in it.
 
 ## Expected output files
 
@@ -57,7 +70,8 @@ Needs Claude Code 2.1.269 or later (tested on 2.1.310), Node 22 or later, and a 
 | `evals/<skill>/SCORECARD.md` | 1 |
 | `evals/<skill>/CARD.md` (regenerated) | 1 |
 
-Plus `products/skills-with-evals/receipts/g1-run-<stamp>.md`, the run summary. A full run is 186 runs and 186 trace
+Plus `products/skills-with-evals/receipts/g1-run-<stamp>.md` (the run summary, one per attempt) and
+`products/skills-with-evals/receipts/g1-ledger.jsonl` (the cost ledger, appended to by every attempt). A full run is 186 runs and 186 trace
 files. `node scripts/run-pack-lift.mjs --dry-run` prints the exact list.
 
 ## What "done" looks like
@@ -73,10 +87,14 @@ files. `node scripts/run-pack-lift.mjs --dry-run` prints the exact list.
 |---|---|---|
 | `PREFLIGHT FAILED: not signed in` | No Claude login in this shell | `claude auth login`, choose the subscription |
 | `PREFLIGHT FAILED: this would bill an API key` | `ANTHROPIC_API_KEY` is set, or the login is an API key | Remove the variable; sign in with the subscription |
-| `Stopped early: … rate` or `… auth` | Plan limit or login expired mid-run | Wait, then `node scripts/run-pack-lift.mjs --skills <the ones not run>` |
-| A row says `partial run (cost…)` | That skill hit its $5 cap | Leave it, or re-run that skill with a higher `--per-skill-usd` (your call) |
+| `Stopped early: … rate` or `… auth` | Plan limit or login expired mid-run | Wait, then run the same command again |
+| A row says `partial run (cost…)` | That skill hit its $5 cap | Leave it, or re-run with a higher `--per-skill-usd` (your call); it is not retried at the same cap |
+| `Stopped early: campaign cap $50.00 reached (ledger)` | Earlier attempts used the budget | Your call: raise `--total-usd`, or stop here |
+| `ledger: reconciled interrupted run … counted at its $5.00 cap` | A run was killed before it wrote a result | Nothing to do; that skill is re-run if budget remains |
+| `LEDGER LOCKED: another G1 run … holds` | A second copy is running | Wait for it, or close it |
+| `LEDGER LOCKED: … left by <other machine>` | The repo folder is synced from another machine | Check nothing is running there, then add `--break-lock` |
 | `unexpected plugin(s)` or `the no-skill arm loaded the skill` | Something leaked into a run | Don't publish that skill's number; tell the agent |
 | `claude is a .cmd shim … contains spaces` | Repo or TEMP path has spaces | Use the native `claude.exe`, or move the worktree |
-| You stopped it with Ctrl-C | Interrupted runs can leave `claude-eval-*` folders in your temp folder | Delete them; a finished run removes its own |
+| You stopped it with Ctrl-C | Interrupted runs can leave `claude-eval-*` folders in your temp folder | Delete them, then run the same command again |
 
-Never edit a result, trace or card by hand. The cards refuse a result whose skill or tests changed after the run.
+Never edit a result, trace, card or the ledger by hand. The cards refuse a result whose skill or tests changed after the run.
