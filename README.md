@@ -20,6 +20,8 @@ hooks that block "done" until the evidence exists.
 
 [**Install**](#install) · [**Packs**](#packs-skills-that-enforce) · [**Catalog**](docs/CATALOG.md) · [**Strategy**](docs/STRATEGY.md) · [**Contribute**](CONTRIBUTING.md) · [**FAQ**](#faq)
 
+**[Subscribe to the Waitlist](https://frankx.ai/waitlist?utm_source=github&utm_medium=readme&utm_campaign=claude-skills-library)**
+
 </div>
 
 ---
