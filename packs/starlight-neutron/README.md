@@ -39,6 +39,33 @@ This proves RTK shrinks command output. It does not prove an agent finishes a ta
 - **End-to-end savings.** Needs the session protocol in `neutron-log` with billed tokens and an acceptance check.
 - **Always-loaded instructions.** On the author's machine, global instructions, rules, the memory index and the home `AGENTS.md` total 61.9 KB (about 15.5k tokens at bytes/4; measured with a byte count on 2026-10-12, one machine, not part of the committed results) before skill and agent listings. That is likely the largest single cost and no tool here has touched it yet.
 
+## Context
+
+`neutron.mjs context` measures the always-loaded instruction bytes for a harness and proposes cuts. It never edits a file.
+Input is a list of files or globs per harness from a small JSON config (`context.config.json`).
+Output is bytes per file and group, estimated tokens, a total, the gap to a target (default 8000 tokens), and the largest files with their share of the total.
+The `--propose` flag prints cut candidates as text (duplicate paragraphs across files, sections over N lines) and never writes.
+
+Worked example, **fixture data, not a result**:
+
+```
+Harness: claude-code
+=========================================
+Total bytes: 63385
+Estimated tokens (bytes/4): 15847
+Target tokens: 8000
+Gap to target: -7847 tokens
+
+Top 5 largest files:
+  - CLAUDE.md: 4000 bytes (6% of total)
+  - AGENTS.md: 3000 bytes (5% of total)
+
+--- Proposals (Heuristics only, files are never edited) ---
+
+In CLAUDE.md:
+  - File has over 100 lines (150 lines total). Consider summarizing or extracting.
+```
+
 ## Ledger
 
 `neutron.mjs ledger` turns billed usage into a savings figure only when quality was checked. Rows are JSONL: `date, harness, model, taskId, arm, uncachedInput, cacheWrite, cacheRead, output, check, notes`. `arm` is `baseline` or a candidate name. `check` is `pass`, `fail` or `not-checked`.
