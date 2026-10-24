@@ -5,7 +5,8 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from '../trigger-lint.mjs';
-import { cardData, renderCard } from '../eval-card.mjs';
+import { cardData, coverage, currentHashes, renderCard, staleness } from '../eval-card.mjs';
+import { comparability, reviewLift } from '../eval-skill.mjs';
 import { haltsPack, isolationProblems, parseArgs as packArgs } from '../run-pack-lift.mjs';
 import { mkdtempSync, writeFileSync as writeF, mkdirSync as mkdirS } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -272,4 +273,33 @@ test('the proposed CI patch runs the lift lane on every pack skill, read from pa
   assert.match(patch, /^\+\s+LIFT_SKILLS=\$\(node -p "require\('\.\/\$LIFT_PACK'\)\.skills\.join\(' '\)"\)$/m);
   assert.match(patch, /^\+.*scripts\/tests\/eval-pack\.test\.mjs$/m);
   assert.match(patch, /^\+\s+run: node scripts\/build-catalog\.mjs --check$/m);
+});
+
+test('comparability refuses empty, quiet-only and mean-less results; lift leaves out the stay-quiet case (G3 P1-5)', () => {
+  const arms = { with: [{}, {}, {}], without: [{}, {}, {}] };
+  const full = {
+    aggregates: { overallScore: 0.8, meanDelta: 0.2 },
+    cases: [
+      { name: 'seeded-defects', aggregates: { score: 0.7, delta: 0.4 }, arms },
+      { name: 'clean', aggregates: { score: 0.9, delta: 0.2 }, arms },
+      { name: 'no-trigger', aggregates: { score: 1, delta: 0 }, arms },
+    ],
+  };
+  assert.deepEqual(comparability(full), []);
+  assert.ok(Math.abs(reviewLift(full) - 0.3) < 1e-9, 'lift is the mean of 0.4 and 0.2, not diluted to 0.2 by the quiet case');
+  assert.match(comparability({ cases: [] }).join(' '), /no cases/);
+  assert.match(comparability({ aggregates: { meanDelta: 0 }, cases: [full.cases[2]] }).join(' '), /only the stay-quiet case/);
+  assert.match(comparability({ ...full, aggregates: {} }).join(' '), /no mean difference/);
+  assert.equal(reviewLift({ cases: [full.cases[2]] }), null);
+});
+
+test('a card refuses a result from an older skill or suite, or one missing a case (G3 P1-5)', () => {
+  const now = currentHashes('nextjs-expert');
+  assert.deepEqual(now.cases.sort(), ['clean', 'no-trigger', 'seeded-defects']);
+  const runOf = (cases) => ({ result: { cases: cases.map((c) => ({ name: c, dir: `/tmp/x/evals/${c}` })) } });
+  assert.deepEqual(staleness({ meta: { skillHash: now.skillHash, suiteHash: now.suiteHash }, ...runOf(now.cases) }, now), []);
+  assert.match(staleness({ meta: { skillHash: 'old', suiteHash: now.suiteHash }, ...runOf(now.cases) }, now).join(' '), /skill changed/);
+  assert.match(staleness({ meta: { skillHash: now.skillHash, suiteHash: 'old' }, ...runOf(now.cases) }, now).join(' '), /suite changed/);
+  assert.deepEqual(coverage(runOf(now.cases), now), []);
+  assert.match(coverage(runOf(['clean']), now).join(' '), /no runs for no-trigger, seeded-defects|no runs for seeded-defects, no-trigger/);
 });

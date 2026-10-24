@@ -26,7 +26,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { comparability } from './eval-skill.mjs';
+import { comparability, reviewLift } from './eval-skill.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PACK = JSON.parse(readFileSync(join(REPO, 'products', 'skills-with-evals', 'pack.json'), 'utf8'));
@@ -163,7 +163,7 @@ function main(argv) {
     const iso = isolationProblems(r, s, join(REPO, 'evals', s));
     const problems = [...comparability(r), ...(r.partial ? [] : iso.problems)];
     rows.push({ s, file: res.file, cost: r.costUsd || 0, partial: r.partial ? r.partialReason || 'yes' : '', comparable: !problems.length,
-      lift: r.aggregates?.meanDelta, traces: res.meta?.traces ?? 0, models: iso.models, problems });
+      lift: reviewLift(r), traces: res.meta?.traces ?? 0, models: iso.models, problems });
     if (r.partial && haltsPack(r.partialReason)) { stopped = `${s} stopped: ${r.partialReason}`; break; }
   }
 
@@ -174,7 +174,7 @@ function main(argv) {
     `Run by: ${o.by}. Model ${o.model}, judge ${o['judge-model']}, ${o.runs} run(s) per case per arm. Caps: $${o['per-skill-usd']} per skill, $${o['total-usd']} total.`,
     `Reported cost: $${spent.toFixed(2)} (the harness's own figure; on a subscription this is usage against the plan, not a bill).`,
     stopped ? `**Stopped early:** ${stopped}.` : 'Every requested skill ran.', '',
-    '| Skill | Comparable | Mean difference (with − without) | Cost | Traces | Model (from traces) | Notes |', '|---|---|---|---|---|---|---|',
+    '| Skill | Comparable | Lift over review cases (with − without) | Cost | Traces | Model (from traces) | Notes |', '|---|---|---|---|---|---|---|',
     ...rows.map((x) => `| ${x.s} | ${x.comparable ? 'yes' : 'no'} | ${x.comparable ? pts(x.lift) : '—'} | ${x.cost != null ? '$' + x.cost.toFixed(2) : '—'} | ${x.traces ?? '—'} | ${(x.models || []).join(', ') || '—'} | ${x.status || x.partial || (x.problems || []).slice(0, 4).join('; ') || ''} |`),
     ...o.skillList.filter((s) => !rows.find((x) => x.s === s)).map((s) => `| ${s} | not run | — | — | — | — | skipped after stop |`),
     '', 'A lift claim needs a comparable row with at least 3 runs per arm. Cards: `evals/<skill>/CARD.md` (regenerated).', '',

@@ -9,11 +9,12 @@
 // answer key, scripts/trigger-lint.mjs, and the latest results/<stamp>.json written by
 // scripts/eval-skill.mjs from `claude plugin eval`. A card never carries a typed-in lift figure.
 
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from './trigger-lint.mjs';
-import { comparability } from './eval-skill.mjs';
+import { comparability, isQuietCase, quietLine, reviewLift, stage, treeHash } from './eval-skill.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RC_REF = 'agent/hyperagent/eval-pack-rc1';
@@ -38,6 +39,32 @@ function readCase(dir) {
     : (yaml.match(/^\s+- name:/gm) || []).length;
   const execPrompt = (/execution:\s*\n\s+prompt:\s*("(?:[^"\\]|\\.)*")/.exec(yaml) || [])[1];
   return { desc, graders, noTrigger: /should-not-trigger/.test(yaml + prompt), prompt: execPrompt ? JSON.parse(execPrompt) : null };
+}
+
+// Hashes of the skill and of the suite exactly as scripts/eval-skill.mjs stages them for a run.
+export function currentHashes(skill) {
+  const tmp = mkdtempSync(join(tmpdir(), 'card-hash-'));
+  try {
+    const { plugin, cases } = stage(REPO, skill, tmp);
+    return { skillHash: treeHash(join(REPO, 'free-skills', skill)), suiteHash: treeHash(join(plugin, 'evals')), cases };
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
+}
+
+// A result only describes the skill and suite it ran against (G3 P1-5): if either changed since, the card must not
+// show its numbers as the skill's lift.
+export function staleness(res, current) {
+  const out = [];
+  const meta = res?.meta || {};
+  if (meta.skillHash !== current.skillHash) out.push(`the skill changed since the run (${meta.skillHash || 'no hash'} → ${current.skillHash})`);
+  if (meta.suiteHash !== current.suiteHash) out.push(`the suite changed since the run (${meta.suiteHash || 'no hash'} → ${current.suiteHash})`);
+  return out;
+}
+
+// Every case in the suite must have runs in the result, or the lift describes only part of the suite.
+export function coverage(res, current) {
+  const ran = new Set((res?.result?.cases || []).map((c) => (c.dir ? c.dir.split(/[\\/]/).filter(Boolean).at(-1) : c.name)));
+  const missing = current.cases.filter((c) => !ran.has(c));
+  return missing.length ? [`the result has no runs for ${missing.join(', ')}`] : [];
 }
 
 function latestResult(skill) {
@@ -73,15 +100,18 @@ export function renderCard(skill) {
     ];
   } else {
     const r = res.result || {};
-    const problems = comparability(r);
+    const now = currentHashes(skill);
+    const stale = staleness(res, now);
+    const problems = [...stale, ...coverage(res, now), ...comparability(r)];
     const rows = (r.cases || []).map((c) => {
       const w = c.aggregates?.score; const dl = c.aggregates?.delta;
       return `| ${c.name} | ${pct(w)} | ${pct(typeof w === 'number' && typeof dl === 'number' ? w - dl : undefined)} | ${pts(dl)} | ${c.arms?.with?.length ?? 0}/${c.arms?.without?.length ?? 0} |`;
     });
     lift = [
-      problems.length ? `**Not comparable, so no lift is claimed.** ${problems.join('; ')}.`
-        : minRuns(r) < 3 ? `**Pilot only (${minRuns(r)} run per arm), so no lift is claimed.** Mean difference in this pilot: ${pts(r.aggregates?.meanDelta)}. A lift claim needs at least 3 runs per arm.`
-        : `**Measured lift (mean over cases, ${minRuns(r)} runs per arm): ${pts(r.aggregates?.meanDelta)}.**`,
+      stale.length ? `**Stale result, so no lift is claimed.** ${stale.join('; ')}. Re-run the suite.`
+        : problems.length ? `**Not comparable, so no lift is claimed.** ${problems.join('; ')}.`
+        : minRuns(r) < 3 ? `**Pilot only (${minRuns(r)} run per arm), so no lift is claimed.** Lift over the review cases in this pilot: ${pts(reviewLift(r))}. A lift claim needs at least 3 runs per arm.`
+        : `**Measured lift over the review cases (${minRuns(r)} runs per arm): ${pts(reviewLift(r))}.** Stay-quiet case: ${quietLine(r)}.`,
       '',
       '| Case | With skill | Without | Lift | Runs (with/without) |',
       '|---|---|---|---|---|',
@@ -157,9 +187,13 @@ export function cardData(skill) {
   let lift = null;
   if (res) {
     const r = res.result || {};
-    const problems = comparability(r);
+    const now = currentHashes(skill);
+    const stale = staleness(res, now);
+    const problems = [...stale, ...coverage(res, now), ...comparability(r)];
+    const quiet = (r.cases || []).find(isQuietCase);
     lift = {
-      comparable: !problems.length, problems, runsPerArm: minRuns(r) === Infinity ? 0 : minRuns(r),
+      comparable: !problems.length, stale: stale.length > 0, problems, runsPerArm: minRuns(r) === Infinity ? 0 : minRuns(r),
+      reviewLift: reviewLift(r), quietWithScore: quiet?.aggregates?.score ?? null,
       meanDelta: r.aggregates?.meanDelta ?? null, withScore: r.aggregates?.overallScore ?? null,
       cases: (r.cases || []).map((c) => ({ name: c.name, with: c.aggregates?.score ?? null, delta: c.aggregates?.delta ?? null })),
       model: res.meta?.model || null, claudeVersion: res.meta?.claudeVersion || null, stamp: res.meta?.stamp || null, file: `evals/${skill}/results/${res.file}`,
