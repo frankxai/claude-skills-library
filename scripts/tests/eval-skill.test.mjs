@@ -6,6 +6,11 @@ import test, { after } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { collectTraces, comparability, parseArgs, renderScorecard, stage, treeHash } from '../eval-skill.mjs';
+// CI's skill-eval test job runs only this file and evals/skill-eval/run.test.mjs. Changing that workflow needs a
+// token with the GitHub `workflows` permission, which the agent's connector lacks, so the pack tests (catalog
+// check, suite shape, trigger lint, cards, runner) are pulled in here to run in CI today. The proper workflow
+// change is in products/skills-with-evals/ci/skill-eval.yml.patch for Frank to apply.
+import './eval-pack.test.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const made = [];

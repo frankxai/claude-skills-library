@@ -55,6 +55,19 @@ test('the pack marketplace entry lists exactly the pack skills, by paths that ex
   for (const p of entry.skills) assert.ok(existsSync(join(REPO, p, 'SKILL.md')), p);
 });
 
+test('catalog/skills.json is regenerated whenever marketplace.json or a SKILL.md changes (build-catalog --check)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const r = spawnSync(process.execPath, [join(REPO, 'scripts', 'build-catalog.mjs'), '--check'], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  const cat = JSON.parse(readFileSync(join(REPO, 'catalog', 'skills.json'), 'utf8'));
+  const paths = new Set(cat.plugins.flatMap((p) => (p.skills || []).map((s) => s.path)));
+  assert.equal(cat.totals.skills, paths.size, 'a skill listed by two plugins is counted once');
+  for (const s of PACK.skills) {
+    const entry = cat.plugins.flatMap((p) => p.skills || []).find((x) => x.name === s);
+    assert.equal(entry?.hasEvals, true, `${s}: hasEvals sees evals/${s}/`);
+  }
+});
+
 test('no plugin in the marketplace uses a name Claude Code reserves (claude plugin validate rule)', () => {
   const reserved = /^(claude-|anthropic-|anthropics-|cc-plugin-)|^(claude|anthropic|anthropics|claude-code|claude-mods)$|official.*(claude|anthropic)|(claude|anthropic).*official/;
   for (const p of MARKET.plugins) assert.doesNotMatch(p.name, reserved, `plugin name "${p.name}" is reserved`);
