@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: ui-ux-design-expert--no-trigger
+description: "Should NOT trigger ui-ux-design-expert: an adjacent but different task."
+tags: [ui-ux-design-expert, should-not-trigger]
+runs: 3
+execution:
+  prompt: "Write a Bash one-liner that finds every .png file larger than 1 MB under ./public and prints its size and path."
+  max_turns: 4
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ui-ux-design-expert\""
+    min: 0
+    max: 0
+    arm: both

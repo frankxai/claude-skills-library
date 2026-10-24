@@ -62,5 +62,9 @@ AI_GATEWAY_API_KEY=... MAX_USD=2 SKILL=ui-ux-design-expert node run.mjs
 | feynman-thinking, langgraph-patterns, mcp-architecture | outcome-a, outcome-b, no-trigger | 2026-10-06, partial and self-graded (`_runs/`) | yes |
 | agentic-orchestration, ai-architect-review, hooks-automation, loop-designer | outcome-a, outcome-b, no-trigger | 2026-10-06, partial and self-graded (`_runs/`) | no |
 | model-routing, todo-discipline, verification-quality | outcome-a, outcome-b, no-trigger | never ran (cost ceiling hit first) | no |
+| github-code-review, nextjs-expert, product-management-expert | seeded-defects, clean, no-trigger | none yet (added for the skills-with-evals pack, RC1) | no |
+| skill-builder | seeded-defects, clean, write-skill, no-trigger | none yet (RC1) | no |
+
+RC1 (2026-10-24) also replaced the outcome-a/outcome-b cases of mcp-architecture, ai-architect-review and langgraph-patterns with seeded-defects and clean cases (the old ones are in each suite's `_legacy-2026-10-06/`, not staged), added a no-trigger case to ui-ux-design-expert, and fixed the book-publishing and excellence-book-writing no-trigger cases, which never loaded (invalid `\s` escapes in double-quoted YAML). Pack manifest: `products/skills-with-evals/pack.json`.
 
 The cross-model lane also covers six skills with no lift suite yet: social-media-strategy, nextjs-react-expert, product-management-expert, claude-sdk, suno-ai-mastery, video-production-workflow. No skill has a comparable, independently graded result yet.
