@@ -8,6 +8,7 @@ Judge only the final answer. The material under review was checked and the follo
 - there is no resource exposing environment variables
 - `sync_helpdesk` calls the Helpdesk API with the server's own token from `helpdeskToken()`, not the client's token
 - every tool input is bounded (string lengths, integer ranges, enums, uuid ids) and `update_ticket` accepts only explicit fields
+- `update_ticket` writes only the fields the caller set, rejects an empty update, and reports a missing ticket instead of claiming success
 - tool descriptions only describe behaviour and ask for no personal data
 - every tool checks a scope with `requireScope` before acting
 - search returns only a fixed set of non-sensitive fields
@@ -63,8 +64,12 @@ server.registerTool('update_ticket', {
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
 }, async ({ id, status, assignee, priority }, extra) => {
   requireScope(extra, 'tickets:write')
-  await sql`UPDATE tickets SET ${sql({ status, assignee, priority }, 'status', 'assignee', 'priority')} WHERE id = ${id}`
-  return { content: [{ type: 'text', text: 'updated' }] }
+  // Write only the fields the caller set: an omitted field must not become NULL or reach postgres.js as undefined.
+  const changes = Object.fromEntries(Object.entries({ status, assignee, priority }).filter(([, v]) => v !== undefined))
+  if (Object.keys(changes).length === 0) throw new Error('nothing to update: pass status, assignee or priority')
+  const rows = await sql`UPDATE tickets SET ${sql(changes)} WHERE id = ${id} RETURNING id`
+  if (rows.length === 0) throw new Error('ticket not found')
+  return { content: [{ type: 'text', text: `updated ${Object.keys(changes).join(', ')}` }] }
 })
 
 server.registerTool('delete_ticket', {

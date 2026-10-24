@@ -219,3 +219,43 @@ test('github-code-review teaches the review itself; the swarm tooling is an opti
   assert.ok(existsSync(join(dir, 'references/swarm-review.md')), 'swarm material kept as a reference');
   assert.doesNotMatch(body, /pr-412|orders\/search|stripe/i, 'no fixture-specific details in the skill');
 });
+
+test('the langgraph clean twin respects the agent proposal under 1,000 EUR and pauses above it or on escalation (G3 P1-3)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  // Run the real finance_review from the fixture with a stubbed interrupt(); no LangGraph needed.
+  const py = `
+import ast, json, sys
+src = open(sys.argv[1]).read()
+fn = next(n for n in ast.parse(src).body if isinstance(n, ast.FunctionDef) and n.name == "finance_review")
+calls = []
+def interrupt(payload):
+    calls.append(payload)
+    return "approve"
+ns = {"interrupt": interrupt, "State": dict}
+exec(compile(ast.Module(body=[fn], type_ignores=[]), "fixture", "exec"), ns)
+out = []
+for amount, proposal in [(500, "approve"), (500, "reject"), (500, "escalate"), (1500, "approve"), (1500, "reject")]:
+    before = len(calls)
+    r = ns["finance_review"]({"amount_eur": amount, "proposal": proposal, "reason": "r"})
+    out.append([amount, proposal, r["approved"], len(calls) > before])
+print(json.dumps(out))
+`;
+  const r = spawnSync('python3', ['-c', py, join(REPO, 'evals/langgraph-patterns/clean/resources/expense_agent.py')], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  // [amount, proposal, approved, paused]
+  assert.deepEqual(JSON.parse(r.stdout), [
+    [500, 'approve', true, false], [500, 'reject', false, false], [500, 'escalate', true, true],
+    [1500, 'approve', true, true], [1500, 'reject', true, true],
+  ]);
+  const src = readFileSync(join(REPO, 'evals/langgraph-patterns/clean/resources/expense_agent.py'), 'utf8');
+  assert.match(src, /def propose\(state: State\):\n\s+if getattr\(state\["messages"\]\[-1\], "tool_calls", None\):/, 'escalates on pending tool calls without a model call');
+});
+
+test('the mcp clean twin updates only the fields given and does not claim success for a missing ticket (G3 P1-3)', () => {
+  const src = readFileSync(join(REPO, 'evals/mcp-architecture/clean/resources/server.ts'), 'utf8');
+  const handler = src.slice(src.indexOf("registerTool('update_ticket'"), src.indexOf("registerTool('delete_ticket'"));
+  assert.doesNotMatch(handler, /sql\(\{ status, assignee, priority \}/, 'optional fields passed to sql() unconditionally');
+  assert.match(handler, /filter\(\(\[, v\]\) => v !== undefined\)/);
+  assert.match(handler, /nothing to update/);
+  assert.match(handler, /RETURNING id[\s\S]*rows\.length === 0/);
+});
