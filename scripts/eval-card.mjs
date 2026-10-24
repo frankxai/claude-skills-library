@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from './trigger-lint.mjs';
-import { comparability, isQuietCase, quietLine, reviewLift, stage, treeHash } from './eval-skill.mjs';
+import { baselineScore, comparability, firedRate, isQuietCase, quietLine, reviewLift, stage, treeHash } from './eval-skill.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RC_REF = 'agent/hyperagent/eval-pack-rc1';
@@ -111,7 +111,7 @@ export function renderCard(skill) {
       stale.length ? `**Stale result, so no lift is claimed.** ${stale.join('; ')}. Re-run the suite.`
         : problems.length ? `**Not comparable, so no lift is claimed.** ${problems.join('; ')}.`
         : minRuns(r) < 3 ? `**Pilot only (${minRuns(r)} run per arm), so no lift is claimed.** Lift over the review cases in this pilot: ${pts(reviewLift(r))}. A lift claim needs at least 3 runs per arm.`
-        : `**Measured lift over the review cases (${minRuns(r)} runs per arm): ${pts(reviewLift(r))}.** Stay-quiet case: ${quietLine(r)}.`,
+        : `**Measured lift over the review cases (${minRuns(r)} runs per arm): ${pts(reviewLift(r))}.** No-skill baseline: ${pct(baselineScore(r))}. Fires on its job: ${firedRate(r) ? `${firedRate(r).fired} of ${firedRate(r).of} with-skill runs` : 'n/a'}. Stay-quiet case: ${quietLine(r)}.`,
       '',
       '| Case | With skill | Without | Lift | Runs (with/without) |',
       '|---|---|---|---|---|',
@@ -193,7 +193,7 @@ export function cardData(skill) {
     const quiet = (r.cases || []).find(isQuietCase);
     lift = {
       comparable: !problems.length, stale: stale.length > 0, problems, runsPerArm: minRuns(r) === Infinity ? 0 : minRuns(r),
-      reviewLift: reviewLift(r), quietWithScore: quiet?.aggregates?.score ?? null,
+      reviewLift: reviewLift(r), baselineScore: baselineScore(r), fired: firedRate(r), quietWithScore: quiet?.aggregates?.score ?? null,
       meanDelta: r.aggregates?.meanDelta ?? null, withScore: r.aggregates?.overallScore ?? null,
       cases: (r.cases || []).map((c) => ({ name: c.name, with: c.aggregates?.score ?? null, delta: c.aggregates?.delta ?? null })),
       model: res.meta?.model || null, claudeVersion: res.meta?.claudeVersion || null, stamp: res.meta?.stamp || null, file: `evals/${skill}/results/${res.file}`,

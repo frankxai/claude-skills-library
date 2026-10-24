@@ -149,6 +149,22 @@ export function collectTraces(result, destDir, relBase) {
 const pct = (x) => (typeof x === 'number' ? `${Math.round(x * 100)}%` : 'n/a');
 const pts = (x) => (typeof x === 'number' ? `${x > 0 ? '+' : ''}${Math.round(x * 100)} pts` : 'n/a');
 
+// Trigger, from the tool's own grader records: the share of with-skill runs on review cases where the with-only
+// "fired" indicator passed (the skill loaded on its own job). null when no such runs exist.
+export function firedRate(result) {
+  const runs = (result.cases || []).filter((c) => !isQuietCase(c)).flatMap((c) => c.arms?.with || []);
+  const flags = runs.map((r) => (r?.graders || []).find((g) => g.withOnly && /fired/.test(g.name || ''))).filter(Boolean);
+  return flags.length ? { fired: flags.filter((g) => g.passed).length, of: flags.length } : null;
+}
+
+// Baseline: the mean no-skill score over the review cases (with-skill score minus the reported difference).
+export function baselineScore(result) {
+  const xs = (result.cases || []).filter((c) => !isQuietCase(c))
+    .map((c) => (typeof c.aggregates?.score === 'number' && typeof c.aggregates?.delta === 'number' ? c.aggregates.score - c.aggregates.delta : null))
+    .filter((x) => x !== null);
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+}
+
 export function quietLine(result) {
   const q = (result.cases || []).find(isQuietCase);
   if (!q) return 'none in this run';
