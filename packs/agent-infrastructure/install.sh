@@ -10,7 +10,7 @@
 #
 # Idempotent. A copy already matching canon is left untouched and reported
 # `ok`. A copy that DIVERGES from canon is never overwritten silently: it is
-# set aside to .claude/skills/.replaced/<name>/ and named in the output, so a
+# set aside to .claude/skills/.replaced/<name>.<timestamp>/ and named in the output, so a
 # deliberate local fork (FrankX's swarm-orchestration rewrite, see SOURCES.md)
 # survives on disk and the divergence is impossible to miss.
 set -euo pipefail
@@ -57,11 +57,14 @@ while IFS= read -r entry; do
       continue
     fi
     # Never delete a diverged copy — it may be a deliberate local fork.
-    say "  DIVERGED $name — local copy differs from canon; preserved at .claude/skills/.replaced/$name"
+    say "  DIVERGED $name — local copy differs from canon; preserved at .claude/skills/.replaced/$name.<timestamp>"
     DIVERGED="$DIVERGED $name"
     run mkdir -p "$DEST_SKILLS/.replaced"
-    run rm -rf "$DEST_SKILLS/.replaced/$name"
-    run mv "$DEST_SKILLS/$name" "$DEST_SKILLS/.replaced/$name"
+    # Versioned set-aside: never overwrite an earlier set-aside copy, so a
+    # customised skill survives any number of re-runs.
+    aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ)"
+    n=0; while [ -e "$aside" ]; do n=$((n+1)); aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ).$n"; done
+    run mv "$DEST_SKILLS/$name" "$aside"
   else
     say "  add    $name"
   fi
