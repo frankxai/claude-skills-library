@@ -5,6 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintSkill, parseFrontmatter } from '../trigger-lint.mjs';
+import { BUDGET, boundarySection, dollarArgs, qualitySkill, scanBody } from '../skill-quality.mjs';
 import { cardData, coverage, currentHashes, firstClause, flagshipData, flagshipMeasures, plantedDefects, renderCard, renderFlagshipMd, staleness, withFlagship } from '../eval-card.mjs';
 import { pickCommand, shellArgs } from '../install-test.mjs';
 import { baselineScore, comparability, firedRate, reviewLift } from '../eval-skill.mjs';
@@ -472,4 +473,49 @@ test('flagship measures per arm: bugs found, false alarms on the clean copy, cos
   assert.ok(Math.abs(m.with.costPerRunUsd - 0.1) < 1e-9);
   assert.equal(m.with.secondsPerRun, 30);
   assert.deepEqual(plantedDefects('nextjs-expert').length, 9);
+});
+
+// ---- skill quality lint (quality program 3) ----
+function fixtureSkill(name, { description = 'Reviews widgets. Use when a widget review is asked for.', body = '' } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'sq-'));
+  const dir = join(root, name);
+  mkdirS(dir);
+  writeF(join(dir, 'SKILL.md'), `---\nname: ${name}\ndescription: ${description}\n---\n${body}`);
+  return dir;
+}
+const GOOD_BOUNDARIES = '\n## When not to use\n\n- Writing new widgets from scratch: use widget-builder.\n- Anything that is not a widget.\n';
+
+test('skill quality: a clean skill passes every hard rule', () => {
+  const r = qualitySkill(fixtureSkill('widget-review', { body: '# Widget review\n\nCheck the widget.\n' + GOOD_BOUNDARIES }));
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.boundaries.heading, 'When not to use');
+});
+
+test('skill quality: missing or empty boundaries section fails', () => {
+  assert.match(qualitySkill(fixtureSkill('a-skill', { body: '# A\n\nText.\n' })).errors.join('\n'), /^boundaries: no /m);
+  assert.match(qualitySkill(fixtureSkill('b-skill', { body: '# B\n\n## Boundaries\n\nTBD.\n\n## Next\n\nlots of text here that is not boundaries at all\n' })).errors.join('\n'), /almost nothing under it/);
+  for (const h of ['What this skill does not do', 'Out of scope', 'Boundaries', 'When to use something else'])
+    assert.ok(boundarySection(scanBody(`## ${h}\n\n- one thing it does not do, with a reason\n- another\n`).prose), h);
+  assert.equal(boundarySection(scanBody('```md\n## When not to use\n- x\n- y\n```\n').prose), null, 'a heading inside a code block does not count');
+});
+
+test('skill quality: $<digit> matches Claude Code substitution exactly, in prose fails, in code warns, escaped passes', () => {
+  const hits = (s) => dollarArgs(scanBody(s).prose).map((h) => h.token);
+  assert.deepEqual(hits('It costs $5 a month.'), ['$5']);
+  assert.deepEqual(hits('SQL uses `WHERE id = $1` here.'), ['$1'], 'inline code is still prose, and still substituted');
+  assert.deepEqual(hits('A $250B market, $1x, $2_a, \\$1 escaped, $ARGUMENTS.'), [], 'followed by a word char, escaped, or named: not substituted');
+  const r = qualitySkill(fixtureSkill('d-skill', { body: 'Price: $5 per seat.\n\n```sql\nSELECT * FROM t WHERE id = $1\n```\n' + GOOD_BOUNDARIES }));
+  assert.equal(r.errors.filter((e) => e.startsWith('dollar-arg')).length, 1);
+  assert.match(r.warnings.join('\n'), /\$1 in a code block .* 2\+ arguments/);
+  assert.equal(scanBody('````md\n```\n$1\n```\n````\n$2 here\n').prose.map((p) => p.line).filter(Boolean).join('|'), '$2 here', 'nested fences close on the matching marker');
+});
+
+test('skill quality: body size budget in lines and tokens, and the frontmatter and trigger rules', () => {
+  const long = qualitySkill(fixtureSkill('e-skill', { body: 'x\n'.repeat(BUDGET.lines + 5) + GOOD_BOUNDARIES }));
+  assert.match(long.errors.join('\n'), /size: body is \d+ lines/);
+  const heavy = qualitySkill(fixtureSkill('f-skill', { body: `${'word '.repeat(4200)}\n${GOOD_BOUNDARIES}` }));
+  assert.match(heavy.errors.join('\n'), /size: body is about \d+ tokens/);
+  assert.match(qualitySkill(fixtureSkill('g-skill', { description: 'Reviews widgets carefully.', body: GOOD_BOUNDARIES })).errors.join('\n'), /^trigger: /m);
+  assert.match(qualitySkill(fixtureSkill('h-skill', { description: '', body: GOOD_BOUNDARIES })).errors.join('\n'), /^frontmatter: description is empty/m);
+  assert.match(qualitySkill(fixtureSkill('Bad_Name', { body: GOOD_BOUNDARIES })).errors.join('\n'), /^frontmatter: name/m);
 });
