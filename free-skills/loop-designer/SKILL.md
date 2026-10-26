@@ -1,15 +1,17 @@
 ---
 name: loop-designer
 description: Compile a goal into a durable, file-backed agent loop — a .loop/<name>/ charter any coding agent (Claude Code, Codex, Gemini, Grok) can execute unattended. Use when the user wants to "build a loop", "design a loop", "run X continuously/24-7", "make an agent keep working on Y", automate recurring work, or convert a big backlog into autonomous iteration. Produces LOOP.md + state.json + backlog.md, ready for loop-runner.
+version: 2.0.0
 ---
 
 # Loop Designer
 
 You are compiling a **loop**, not writing a prompt. A prompt asks an agent to do something once; a loop is a durable program — goal, state, iteration discipline, verification, and exit conditions — stored in files so that *any* agent can pick it up cold, run exactly one iteration, and leave it resumable. The agent is the interpreter; the loop is the program. Design accordingly: everything that matters must survive a context wipe.
 
-## When to use this
+## Trigger Boundaries
 
-Use when converting a goal into an unattended or semi-attended iteration system: draining a backlog, keeping CI green, optimizing a metric, watching a system, producing content on cadence. Do NOT design a loop for one-shot tasks (just do them) or for work with no checkable outcome (loops without verification diverge into slop — fix the verifiability problem first).
+- **Activate when**: Converting a recurring or multi-iteration objective into a file-backed `.loop/<name>/` contract (`LOOP.md`, `state.json`, `backlog.md`, `signs.md`, `runs.jsonl`), defining ratchet metrics, budgets, independent verifier gates, or stall/escalation triggers.
+- **Do NOT activate when**: Executing a one-shot task that fits in a single session, or when no mechanically checkable `Done-when` predicate exists (fix verifiability first).
 
 ## The compilation pipeline
 
@@ -66,6 +68,76 @@ Run the checks in `references/loop-doctor.md` against what you just wrote (done-
 - Codex / any CLI: `while :; do codex exec "run one iteration of .loop/<name> per the loop-runner skill"; sleep 1800; done`
 - Cloud cron: schedule the same one-iteration instruction.
 
+---
+
+## Self-Contained Worked Example: `.loop/skill-hygiene-ratchet/`
+
+Below is a complete, self-contained `.loop/skill-hygiene-ratchet/` package (`LOOP.md`, `state.json`, and `backlog.md`) that runs cleanly in any sandbox without external dependencies:
+
+### 1. `.loop/skill-hygiene-ratchet/LOOP.md`
+```markdown
+# Loop Charter: skill-hygiene-ratchet
+
+- **Goal**: Bring all 30 flagship skills in `graph/skills.graph.json` to 100% deterministic and adversarial eval pass rate (`30/30 PASS`, `0` conflicts).
+- **Done-when**: `node tools/eval-skills-suite.mjs && node tools/gen-skills-graph.mjs --check` exits `0` with `verdicts.FAIL === 0` and `verdicts.REVISE === 0`.
+- **Archetype**: `backlog-drain` + `ratchet-climb`
+- **Actor Model**:
+  - **Maker**: Single agent on branch `agent/<harness>/skill-hygiene` (max 1 skill per iteration).
+  - **Independent Verifier**: Separate harness running `node tools/eval-skills-suite.mjs` in read-only mode.
+  - **Human Gate**: Frank approves any public catalog release or pricing/spend action.
+- **Verification**:
+  - Primary: `node tools/eval-skills-suite.mjs`
+  - Fallback: `node tools/gen-skills-graph.mjs --check`
+- **Ratchet**:
+  - Metric: `counts.verdicts.PASS` (monotonic non-decreasing, target `30`).
+  - Regression Policy: `git checkout -- <touched-files>` immediately if `PASS` count drops or planted-fault recall falls below `90/90`.
+- **Guardrails (Never-Do)**:
+  - Never delete or weaken tests, rubric checks, or planted-fault probes to make a skill pass.
+  - Never push directly to `main` or modify files outside `free-skills/*/SKILL.md`.
+- **Budgets**: `max_iterations: 10`, `max_elapsed_minutes: 120`, `no_progress_stop: 3`, `max_spend_usd: 0`.
+- **Escalation**: After 3 consecutive iterations with `delta_pass === 0`, set `status: "stalled"` in `state.json` and emit a blocker report.
+```
+
+### 2. `.loop/skill-hygiene-ratchet/state.json`
+```json
+{
+  "name": "skill-hygiene-ratchet",
+  "archetype": "ratchet-climb",
+  "status": "designed",
+  "iteration": 0,
+  "ratchet": {
+    "metric": "counts.verdicts.PASS",
+    "direction": "up",
+    "baseline": 22,
+    "current": 22,
+    "target": 30
+  },
+  "promotion": {
+    "mode": "propose-only",
+    "clean_cycles": 0,
+    "required_cycles": 3
+  },
+  "budget": {
+    "max_iterations": 10,
+    "max_elapsed_minutes": 120,
+    "no_progress_stop": 3,
+    "max_spend_usd": 0
+  },
+  "last_run": null
+}
+```
+
+### 3. `.loop/skill-hygiene-ratchet/backlog.md`
+```markdown
+# Backlog: skill-hygiene-ratchet
+
+- [ ] Unit 1: Fix unguarded `$<digit>` token at line 72 of `free-skills/book-publishing/SKILL.md`
+- [ ] Unit 2: Fix unguarded `$<digit>` tokens across lines 264, 505–532 of `free-skills/social-media-strategy/SKILL.md`
+- [ ] Unit 3: Upgrade `free-skills/hooks-automation/SKILL.md` to native `.claude/settings.json` hooks
+```
+
+---
+
 ## Design rules (the ones that decide convergence)
 
 1. **State in files, never in conversation.** Every iteration starts from a fresh context reading LOOP.md + state.json + journal tail. If a fact matters, it's in a file.
@@ -79,6 +151,13 @@ Run the checks in `references/loop-doctor.md` against what you just wrote (done-
 9. **Watch loops need a silence contract.** A monitor that reports "all fine" every cycle trains the human to stop reading. Charter the exact OK-token for no-change cycles ("reply `LOOP_OK`, suppressed from the channel") and cap proactive reports (~3–5/day); "check whether X failed" is a valid watch item, "keep an eye on things" is not.
 10. **Every failure becomes a sign.** When the loop fails a specific way, a one-line rule goes into `signs.md` so that exact failure cannot recur ("SLIDE DOWN, DON'T JUMP"). Signs are written reactively from observed failures, never speculatively; prune signs that newer models make obsolete. This accumulation layer is what makes a loop converge over weeks instead of circling.
 11. **Forbid weakening the ratchet, in writing.** Agents under pressure delete tests, skip gates, and relax lint rules to "pass". The charter's Guardrails must say verbatim that removing or editing tests/checks to make work pass is unacceptable, and protect gate configs as no-touch paths.
+
+## Verification Checklist & Anti-Slop Guardrails
+
+1. **Mechanically Checkable `Done-when`**: Every `LOOP.md` must specify an exact shell command that returns exit code `0` when done and non-zero otherwise.
+2. **Actor Separation**: `LOOP.md` explicitly names one Maker, one Independent Verifier, and the Human Gate.
+3. **Hard Budgets Declared**: `state.json` and `LOOP.md` declare `max_iterations`, `max_elapsed_minutes`, `no_progress_stop`, and `max_spend_usd`.
+4. **Ratchet Integrity**: Removing or weakening test assertions or gate scripts is explicitly forbidden in `Guardrails`.
 
 ## References
 

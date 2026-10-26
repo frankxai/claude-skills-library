@@ -81,6 +81,18 @@ const TARGET_SKILLS = [
     name: 'hooks-automation',
     relPath: 'free-skills/hooks-automation/SKILL.md',
   },
+  {
+    name: 'agentic-orchestration',
+    relPath: 'free-skills/agentic-orchestration/SKILL.md',
+  },
+  {
+    name: 'feynman-thinking',
+    relPath: 'free-skills/feynman-thinking/SKILL.md',
+  },
+  {
+    name: 'loop-designer',
+    relPath: 'free-skills/loop-designer/SKILL.md',
+  },
 ];
 
 describe('Skill Contract Hygiene (T009 & T010)', () => {

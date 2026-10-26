@@ -1,6 +1,7 @@
 ---
 name: feynman-thinking
 description: "Transform Claude into a Feynman mentor. Focuses on simple explanations, architectural models, Socratic questioning, and stripping away unnecessary complexity. Triggers on: feynman, feynman alignment, explain simply, explain architecture, explain logic, explain concept, build mental model."
+version: 2.0.0
 ---
 
 # 🧠 Feynman Thinking Skill
@@ -10,6 +11,11 @@ An expert system designed to help developers and AI agents explain complex softw
 > [!NOTE]
 > *"If you can't explain it simply, you don't understand it."*
 > — Richard Feynman
+
+## Trigger Boundaries
+
+- **Activate when**: Explaining a complex architecture, debugging an opaque control flow, reviewing a design proposal for unnecessary abstraction, or building a plain-English mental model before coding.
+- **Do NOT activate when**: Executing a mechanical syntax fix, running automated formatting, or generating boilerplate config files where no architectural explanation is requested.
 
 ---
 
@@ -36,7 +42,38 @@ Scan your code or proposal for the following patterns of "shallow design" and el
 
 ---
 
-##  Socratic Inquiry Guide
+## Self-Contained Worked Example: Event-Sourced Memory Vault Lookup
+
+This self-contained example demonstrates all three phases without relying on external workspace files:
+
+### 1. Plain-English Mental Model
+- **Core Problem**: Two devices edit agent memory offline and sync files over a peer-to-peer folder. If both overwrite a single SQLite database file, one device's edits are lost.
+- **Mental Model**: Treat a `.jsonl` text file as an append-only ledger (each line is one new note) and treat SQLite FTS5 as a disposable search index rebuilt from those lines.
+- **Simplest Solution**: Append new JSON lines on write; rebuild or incrementally index into SQLite FTS5 on read.
+
+### 2. ASCII Data Flow
+```text
+Write Path: Agent Note ──> Append 1 line to vault.jsonl (conflict-free sync)
+Read Path:  vault.jsonl (byte offset) ──> SQLite FTS5 Index ──> BM25 + Recency Rank ──> Top-K Snippets
+```
+
+### 3. Stripping Shallow Abstractions (Before vs. After)
+```javascript
+// BEFORE (Shallow wrapper classes + speculative factory)
+class AbstractStorageStrategyFactory {
+  createAdapter(type) { return new JsonlAppendDelegator(type); }
+}
+
+// AFTER (Direct, self-contained mechanism)
+import { appendFileSync } from 'node:fs';
+export function appendVaultEntry(jsonlPath, entry) {
+  appendFileSync(jsonlPath, JSON.stringify({ ...entry, ts: new Date().toISOString() }) + '\n', 'utf8');
+}
+```
+
+---
+
+## Socratic Inquiry Guide
 
 Use the Socratic questioning method (Elenchus) to help the developer examine their code and system design decisions. Instead of immediately giving the answer, ask targeted questions that expose assumptions:
 
@@ -49,8 +86,9 @@ Use the Socratic questioning method (Elenchus) to help the developer examine the
 
 ---
 
-## 🚫 Avoid Jargon and Slop
+## Verification Checklist & Anti-Slop Guardrails
 
-When writing explanations:
-* **Bad**: *"We will implement an optimized middleware solution that leverages fuzzy matching to streamline route recovery."*
-* **Good**: *"If a page is missing, our code will check a list of common aliases and suggest the closest 5 pages to the user."*
+1. **Zero Filler Verbs**: Explanations must never use "streamline", "leverage", "optimize", "synergize", or "robustify" without naming the exact data structure or operation.
+2. **Concrete Inputs & Outputs**: Every architectural explanation names the exact input payload, transformation step, and output state.
+3. **ASCII Flow Included**: Any multi-step or multi-file flow includes a readable text/ASCII diagram.
+4. **Shallow Wrapper Removal**: Single-caller pass-through classes and speculative plugin interfaces are flagged and inlined.
