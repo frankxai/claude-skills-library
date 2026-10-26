@@ -44,7 +44,7 @@
         },
         {
           "name": "agentic-orchestration",
-          "description": "Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Use when designing or debugging agent systems, splitting a large task across sub-agents, defining handoff contracts, or choosing an orchestration topology.",
+          "description": "Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Best practices for building and managing agent systems. Use when designing how multiple agents coordinate — splitting up tasks, defining handoffs, or choosing an orchestration topology.",
           "path": "free-skills/agentic-orchestration",
           "hasEvals": false
         },
@@ -332,7 +332,7 @@
         },
         {
           "name": "hooks-automation",
-          "description": "Automated coordination, formatting, and learning from Claude Code operations using intelligent hooks with MCP integration. Includes pre/post task hooks, session management, Git integration, memory coordination, and neural pattern training for enhanced development workflows. Use when configuring Claude Code hooks, automating pre/post-task coordination, or wiring Git and memory hooks.",
+          "description": "Configure and automate Claude Code hooks in .claude/settings.json (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStop, SessionEnd). Use when setting up Claude Code hooks to auto-format files after edits, run pre-commit or safety checks before Bash commands, guard secrets or protected files, save session state on Stop or SessionEnd, or wire optional external CLI and MCP hook runners.",
           "path": "free-skills/hooks-automation",
           "hasEvals": false
         },

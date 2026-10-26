@@ -1,16 +1,17 @@
 ---
 name: agentic-orchestration
-description: Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Use when designing or debugging agent systems, splitting a large task across sub-agents, defining handoff contracts, or choosing an orchestration topology.
-version: 1.0.0
-last_updated: 2025-12-19
-external_version: "Claude Agent SDK 2025"
-changelog: |
-  - 1.0.0: Initial skill with orchestration patterns from Claude Agent SDK and FrankX system
+description: Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Best practices for building and managing agent systems. Use when designing how multiple agents coordinate — splitting up tasks, defining handoffs, or choosing an orchestration topology.
+version: 2.0.0
 ---
 
 # Agentic Orchestration Patterns
 
 This skill covers patterns for coordinating multiple AI agents, decomposing complex tasks, managing handoffs, and building robust agent workflows.
+
+## Trigger Boundaries
+
+- **Activate when**: Designing multi-agent topologies (Conductor, Pipeline, Swarm, Blackboard), defining structured handoff packets between Maker and Independent Verifier agents, isolating write lanes across git worktrees, or enforcing context-compression boundaries.
+- **Do NOT activate when**: Executing a single-file bug fix, a deterministic rename, or a task a single agent can complete in one context window (`hybrid_orchestrator_first` rule: never escalate to a swarm just to make a simple task look autonomous).
 
 ---
 
@@ -229,35 +230,361 @@ function compressForHandoff(fullContext: any): CompressedContext {
 
 ---
 
+## Coordination Patterns
 
-## Reference
+### Pattern 1: Conductor Model
+```
+One orchestrator coordinates all activity:
 
+┌─────────────────────────────────────────────┐
+│             CONDUCTOR AGENT                  │
+│  - Receives initial request                  │
+│  - Decomposes into subtasks                  │
+│  - Assigns to specialist agents              │
+│  - Monitors progress                         │
+│  - Synthesizes results                       │
+│  - Handles failures and retries              │
+└─────────────────────────────────────────────┘
 
-The full detail lives in `references/` and loads only when needed:
+Best for: Complex projects with many dependencies
+Example: the Starlight Orchestrator (see case study below)
+```
 
-- [`references/advanced-patterns.md`](references/advanced-patterns.md) — coordination, error handling, observability & system application patterns.
+### Pattern 2: Pipeline Model
+```
+Sequential processing through specialized stages:
+
+Request → [Agent A] → [Agent B] → [Agent C] → Result
+             │            │            │
+           Stage 1     Stage 2      Stage 3
+          Research     Design      Execute
+
+Best for: Well-defined workflows with clear stages
+Example: Content creation pipeline
+```
+
+### Pattern 3: Swarm Model
+```
+Multiple agents work in parallel, coordinating peer-to-peer:
+
+     ┌────────┐
+     │Agent A │←──────────────────┐
+     └───┬────┘                   │
+         │                        │
+    ┌────▼────┐              ┌────┴───┐
+    │ Agent B │◄────────────►│Agent D │
+    └────┬────┘              └────┬───┘
+         │                        │
+     ┌───▼────┐                   │
+     │Agent C │◄──────────────────┘
+     └────────┘
+
+Best for: Exploratory tasks, parallel research
+Example: Codebase analysis from multiple angles
+```
+
+### Pattern 4: Blackboard Model
+```
+Shared workspace that all agents read/write:
+
+┌─────────────────────────────────────────┐
+│             BLACKBOARD                   │
+│  ┌─────────────────────────────────┐    │
+│  │ Current State: { ... }          │    │
+│  │ Hypotheses: [ ... ]             │    │
+│  │ Evidence: [ ... ]               │    │
+│  │ Conclusions: [ ... ]            │    │
+│  └─────────────────────────────────┘    │
+└─────────────────────────────────────────┘
+        │           │           │
+   ┌────▼───┐  ┌────▼───┐  ┌────▼───┐
+   │Agent A │  │Agent B │  │Agent C │
+   │ reads  │  │ reads  │  │ reads  │
+   │ writes │  │ writes │  │ writes │
+   └────────┘  └────────┘  └────────┘
+
+Best for: Complex problem-solving with evolving understanding
+Example: Debugging a complex system issue
+```
+
+---
+
+## Error Handling & Recovery
+
+### Pattern 1: Retry with Backoff
+```typescript
+async function executeWithRetry(agent, task, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await agent.execute(task);
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+
+      const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
+      console.log(`Attempt ${attempt} failed, retrying in ${delay}ms`);
+      await sleep(delay);
+    }
+  }
+}
+```
+
+### Pattern 2: Fallback Agents
+```typescript
+const agentFallbacks = {
+  "SpecialistCodeReviewer": ["GeneralCodeReviewer", "SeniorDeveloper"],
+  "SecurityAnalyst": ["GeneralAnalyst", "SeniorDeveloper"],
+  "PerformanceExpert": ["GeneralAnalyst", "SeniorDeveloper"]
+};
+
+async function executeWithFallback(primaryAgent, task) {
+  try {
+    return await primaryAgent.execute(task);
+  } catch (error) {
+    const fallbacks = agentFallbacks[primaryAgent.name] || [];
+
+    for (const fallbackName of fallbacks) {
+      try {
+        console.log(`Primary failed, trying ${fallbackName}`);
+        return await getAgent(fallbackName).execute(task);
+      } catch (fallbackError) {
+        continue;
+      }
+    }
+
+    throw new Error(`All agents failed for task: ${task.id}`);
+  }
+}
+```
+
+### Pattern 3: Checkpoint & Resume
+```typescript
+interface Checkpoint {
+  task_id: string;
+  completed_steps: string[];
+  current_step: string;
+  state: any;
+  timestamp: Date;
+}
+
+async function executeWithCheckpoints(task, steps) {
+  const checkpoint = await loadCheckpoint(task.id);
+  const startIndex = checkpoint
+    ? steps.indexOf(checkpoint.current_step)
+    : 0;
+
+  for (let i = startIndex; i < steps.length; i++) {
+    const step = steps[i];
+
+    try {
+      await executeStep(step, task);
+      await saveCheckpoint({
+        task_id: task.id,
+        completed_steps: steps.slice(0, i + 1),
+        current_step: steps[i + 1] || "complete",
+        state: task.state,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      // Checkpoint is saved, can resume from here
+      throw error;
+    }
+  }
+}
+```
+
+---
+
+## Observability Patterns
+
+### Pattern 1: Structured Logging
+```typescript
+function agentLog(agent, event, details) {
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    agent: agent.name,
+    task_id: agent.currentTask?.id,
+    event: event,
+    details: details,
+    duration_ms: details.duration,
+    tokens_used: details.tokens
+  }));
+}
+
+// Usage
+agentLog(agent, "TASK_START", { task: task.description });
+agentLog(agent, "TOOL_CALL", { tool: "read_file", path: "/src/index.ts" });
+agentLog(agent, "TASK_COMPLETE", { result: "success", duration: 5230 });
+```
+
+### Pattern 2: Progress Tracking
+```typescript
+interface TaskProgress {
+  task_id: string;
+  total_steps: number;
+  completed_steps: number;
+  current_step: string;
+  estimated_remaining: number; // seconds
+  agents_involved: string[];
+}
+
+// Expose progress for UI/monitoring
+function getProgress(task): TaskProgress {
+  return {
+    task_id: task.id,
+    total_steps: task.steps.length,
+    completed_steps: task.completedSteps.length,
+    current_step: task.currentStep?.description || "idle",
+    estimated_remaining: estimateRemaining(task),
+    agents_involved: task.agentHistory
+  };
+}
+```
+
+### Pattern 3: Decision Audit Trail
+```typescript
+interface Decision {
+  timestamp: Date;
+  agent: string;
+  decision: string;
+  options_considered: string[];
+  rationale: string;
+  confidence: number; // 0-1
+  reversible: boolean;
+}
+
+// Track all significant decisions
+const decisionLog: Decision[] = [];
+
+function recordDecision(agent, decision, options, rationale, confidence) {
+  decisionLog.push({
+    timestamp: new Date(),
+    agent: agent.name,
+    decision,
+    options_considered: options,
+    rationale,
+    confidence,
+    reversible: true
+  });
+}
+```
+
+---
+
+## Case study: weighted synthesis in my own stack
+
+How I run this pattern in production — the [Starlight Intelligence System](https://github.com/frankxai/Starlight-Intelligence-System) and [Agentic Creator OS](https://github.com/frankxai/agentic-creator-os), both public.
+
+### Starlight Orchestrator Pattern
+```
+The orchestrator coordinates specialists through weighted synthesis:
+
+┌────────────────────────────────────────────────────┐
+│              STARLIGHT ORCHESTRATOR                 │
+│        (Meta-intelligence coordinator)              │
+├────────────────────────────────────────────────────┤
+│                                                     │
+│  Specialist Domains:                                │
+│  ├── Starlight Architect   (Systems design)        │
+│  ├── Creation Engine       (Content/product)       │
+│  ├── Visionary        (Future strategy)       │
+│  └── Sonic Engineer        (Music/audio)           │
+│                                                     │
+│  Synthesis Process:                                 │
+│  1. Each agent provides perspective                 │
+│  2. Orchestrator weights by domain relevance       │
+│  3. Conflicts are explicitly surfaced              │
+│  4. Final recommendation synthesizes all views     │
+│                                                     │
+└────────────────────────────────────────────────────┘
+```
+
+### Agent team patterns from the same stack
+
+**Book Writing Team:**
+- Master Story Architect → Design
+- Genre Writer → Draft
+- Editor → Review cycles
+- Sensitivity Reader → Final check
+- Continuity Guardian → Consistency
+
+**Arcanea Development Team:**
+- Architect → Design
+- Frontend Specialist → UI
+- Backend Specialist → API
+- AI Specialist → Luminor integration
+- DevOps → Deployment
 
 ---
 
 ## Anti-Patterns to Avoid
 
-### ❌ God Agent
+### God Agent
 One agent that does everything - no specialization, no delegation.
 
-### ❌ Agent Explosion
+### Agent Explosion
 Too many tiny agents with overlapping responsibilities.
 
-### ❌ Lost Context
+### Lost Context
 Handoffs that don't preserve essential information.
 
-### ❌ Infinite Loops
+### Infinite Loops
 Agents that keep handing work back and forth.
 
-### ❌ Silent Failures
+### Silent Failures
 Agents that fail without proper error reporting.
 
-### ❌ Unobservable Execution
+### Unobservable Execution
 Can't see what agents are doing or why.
+
+---
+
+## Self-Contained Runnable Example: Maker-to-Verifier Handoff Contract
+
+Below is a complete, runnable Node.js (`node --input-type=module`) handoff validator that enforces **single-maker write-lane isolation** and **independent cross-provider verification** before allowing a slice to close:
+
+```javascript
+import assert from 'node:assert/strict';
+
+export function validateHandoffPacket(packet) {
+  const errors = [];
+  if (!packet.sliceId || typeof packet.sliceId !== 'string') errors.push('missing sliceId');
+  if (!packet.maker?.agent || !packet.maker?.modelFamily) errors.push('missing maker identity');
+  if (!packet.verifier?.agent || !packet.verifier?.modelFamily) errors.push('missing verifier identity');
+
+  // Rule 1: Independent verifier must not share the maker's execution context or write lane
+  if (packet.maker?.agent === packet.verifier?.agent) {
+    errors.push('maker and verifier cannot be the same agent instance');
+  }
+
+  // Rule 2: Non-empty write allowlist and deterministic verification commands
+  if (!Array.isArray(packet.writeAllowlist) || packet.writeAllowlist.length === 0) {
+    errors.push('writeAllowlist must declare explicit file globs');
+  }
+  if (!Array.isArray(packet.verificationReceipts) || packet.verificationReceipts.some((r) => r.exitCode !== 0)) {
+    errors.push('all verificationReceipts must record exitCode === 0');
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+// Self-test fixture
+const sampleHandoff = {
+  sliceId: 'O2-polar-checkout-gate',
+  maker: { agent: 'claude-opus', modelFamily: 'anthropic', branch: 'agent/claude/polar-gate' },
+  verifier: { agent: 'codex-verifier', modelFamily: 'openai', mode: 'read-only' },
+  writeAllowlist: ['app/api/checkout/route.ts', 'tests/polar-checkout.test.mjs'],
+  verificationReceipts: [{ cmd: 'node --test tests/polar-checkout.test.mjs', exitCode: 0 }],
+};
+
+assert.deepEqual(validateHandoffPacket(sampleHandoff), { valid: true, errors: [] });
+```
+
+## Verification Checklist & Anti-Slop Guardrails
+
+1. **Single-Maker Write Lane**: Exactly one maker agent owns a given branch/worktree and `writeAllowlist`; parallel agents never commit to the same working tree.
+2. **Independent Verifier Required**: Every consequential slice is verified by a separate execution context (preferably a different model family) running in read-only mode.
+3. **Artifact + Exit-Code Proof**: Handoff packets must attach exact file paths, git SHA, and command exit codes (`0`) — never prose claims of completion ("should work", "looks good").
+4. **Anti-Slop Escalation Gate**: Reject swarm fan-out when task dependencies are strictly sequential or fit comfortably inside one context window.
 
 ---
 

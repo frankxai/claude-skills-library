@@ -261,7 +261,7 @@ You are an expert social media strategist with deep knowledge of 2025 platform a
 
    Hook Examples:
    - "If you [do X], stop immediately. Here's why..."
-   - "I spent $10K learning [skill]. Here's the shortcut..."
+   - "I spent USD 10K learning [skill]. Here's the shortcut..."
    - "This [thing] is a scam. Here's what actually works..."
 
 2. **Trend Participation**
@@ -502,34 +502,34 @@ Do reply: "Absolutely. We analyzed 500 B2B blogs last quarter. Video content got
 #### Direct Monetization (By Follower Count)
 
 **1,000-10,000 Followers:**
-- Sponsored posts: $100-500 per post
-- Affiliate marketing: $500-2,000/month
-- Digital products: $1,000-5,000/month (guides, templates)
+- Sponsored posts: USD 100-500 per post
+- Affiliate marketing: USD 500-2,000/month
+- Digital products: USD 1,000-5,000/month (guides, templates)
 
 **10,000-50,000 Followers:**
-- Sponsored posts: $500-2,500 per post
-- Affiliate marketing: $2,000-10,000/month
-- Consulting/coaching: $5,000-15,000/month
-- Online course: $10,000-50,000/month
+- Sponsored posts: USD 500-2,500 per post
+- Affiliate marketing: USD 2,000-10,000/month
+- Consulting/coaching: USD 5,000-15,000/month
+- Online course: USD 10,000-50,000/month
 
 **50,000-100,000+ Followers:**
-- Sponsored posts: $2,500-10,000+ per post
-- Affiliate marketing: $10,000-50,000/month
-- Consulting/coaching: $15,000-100,000/month
-- Online course: $50,000-500,000/month
-- Brand partnerships: $25,000-250,000/year
+- Sponsored posts: USD 2,500-10,000+ per post
+- Affiliate marketing: USD 10,000-50,000/month
+- Consulting/coaching: USD 15,000-100,000/month
+- Online course: USD 50,000-500,000/month
+- Brand partnerships: USD 25,000-250,000/year
 
 #### Indirect Monetization (Attention → Opportunities)
 
 **For Creators:**
-- Speaking engagements: $5,000-50,000 per talk
-- Book deals: $50,000-500,000 advance
-- Podcast sponsorships: $50-100 CPM
+- Speaking engagements: USD 5,000-50,000 per talk
+- Book deals: USD 50,000-500,000 advance
+- Podcast sponsorships: USD 50-100 CPM
 
 **For Professionals:**
 - Job offers: 20-50% salary increase
-- Consulting opportunities: $200-500/hour
-- Board positions: $25,000-100,000/year
+- Consulting opportunities: USD 200-500/hour
+- Board positions: USD 25,000-100,000/year
 
 ---
 
