@@ -581,6 +581,76 @@ def test_r2g_gt_inside_a_prop_does_not_end_the_tag() -> None:
               "Bare.tsx:1" in out and rc == 1, out)
 
 
+# Codex review on PR #95, third round.
+def test_r3a_tag_text_inside_a_quoted_attribute_is_not_a_tag() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        config(d, {"gradientText": "error"})
+        write(d, "components/Key.tsx",
+              "export const K = () => (\n"
+              "  <div>\n"
+              '    <h1 title="<Enter" className="bg-clip-text text-transparent bg-[url(/paper.jpg)]">Hi</h1>\n'
+              '    <div className="bg-gradient-to-b from-black to-transparent" />\n'
+              "  </div>\n"
+              ");\n")
+        write(d, "components/KeyGrad.tsx",
+              'export const G = () => <h1 title="<Enter" className="bg-gradient-to-r from-sky-400 '
+              'to-pink-400 bg-clip-text text-transparent">Hi</h1>;\n')
+        out, rc = lint(d, "components/Key.tsx", "components/KeyGrad.tsx")
+        check("r3a '<Enter' inside a title does not let a sibling's gradient count",
+              "Key.tsx" not in out, out)
+        check("r3a real gradient text with a '<' in its title is still caught",
+              "KeyGrad.tsx:1" in out and rc == 1, out)
+
+
+def test_r3b_escaped_quote_in_a_prop_does_not_hide_the_tag() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        write(d, "components/Esc.tsx",
+              "export const E = () => <img title={'it\\'s > fine'} src=\"/a.png\" alt=\"A\" />;\n"
+              "export const F = () => <img title={'it\\'s > fine'} src=\"/b.png\" alt=\"B\" "
+              "width={1} height={1} />;\n")
+        out, rc = lint(d, "components/Esc.tsx")
+        check("r3b an escaped quote in a prop string does not mask the tag's end",
+              "Esc.tsx:1 - [error] <img> without explicit width/height" in out, out)
+        check("r3b dimensions after an escaped quote still count", "Esc.tsx:2" not in out, out)
+
+
+def test_r3c_protocol_relative_url_in_a_component_style_block() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        config(d, {"bannedHex": ["#ab47c7"]})
+        write(d, "components/P.vue",
+              "<template><div class=\"a\">x</div></template>\n"
+              "<script>\n"
+              "// was #ab47c7\n"
+              "export default {};\n"
+              "</script>\n"
+              "<style>\n"
+              ".a { background: url(//cdn.example.com/p.png); color: #ab47c7; }\n"
+              "</style>\n")
+        write(d, "components/S.vue",
+              "<template><div class=\"a\">x</div></template>\n"
+              "<style lang=\"scss\">\n"
+              "// was #ab47c7\n"
+              ".a { background: url(//cdn.example.com/p.png); }\n"
+              "</style>\n")
+        out, rc = lint(d, "components/P.vue", "components/S.vue")
+        check("r3c a declaration after url(//cdn…) in a <style> block is still linted",
+              "P.vue:7" in out and rc == 1, out)
+        check("r3c a // comment in the component script is still a comment",
+              "P.vue:3" not in out, out)
+        check("r3c a // comment in a <style lang=\"scss\"> block is still a comment",
+              "S.vue" not in out, out)
+
+
+def test_r3d_uppercase_vf_suffix_folds() -> None:
+    out, rc = budget_out({"app/fonts.ts":
+        "import localFont from 'next/font/local';\n"
+        "export const a = localFont({ src: [\n"
+        "  { path: './InterVF.woff2' },\n  { path: './Inter-Regular.woff2' },\n] });\n"},
+        {"maxFontFamilies": 1})
+    check("r3d InterVF and Inter-Regular are one family",
+          rc == 0 and "Inter (next/font/local)" in out and "InterVF" not in out, out)
+
+
 if __name__ == "__main__":
     if not shutil.which("node"):
         print("skip: node not available")
