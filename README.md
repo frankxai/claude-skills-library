@@ -267,6 +267,7 @@ python3 scripts/check_counts.py              # README counts match the tree
 python3 scripts/check_links.py               # no broken internal links
 node scripts/build-catalog.mjs --check       # catalog/skills.json matches the marketplace
 node --test scripts/tests/absorb.test.mjs    # the four absorption gates still refuse
+node --test scripts/tests/harness-e2e.test.mjs # harness end-to-end tests
 ```
 
 Inbound external work runs through [`ABSORPTION.md`](ABSORPTION.md): license, provenance,
