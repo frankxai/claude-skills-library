@@ -1,0 +1,53 @@
+name: Agent hygiene
+
+# The Stop hook covers a working session. This covers every PR that touches
+# an agent definition, a skill, a command or a harness contract, whoever or
+# whatever opened it. Mechanical checks only (no model, no network, ~1 second);
+# the judgment half is the reviewer's, per the agent-hygiene skill.
+#
+# Ratchet: lints the files the PR changed, so existing debt never blocks a PR
+# that did not touch it. Installed by packs/agent-hygiene/install.sh; edit
+# upstream in frankxai/claude-skills-library.
+
+on:
+  pull_request:
+    paths:
+      - '.claude/agents/**'
+      - 'agents/**'
+      - '**/*.agent.md'
+      - '**/AGENT.md'
+      - '**/SKILL.md'
+      - '.claude/commands/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - '.github/workflows/agent-hygiene.yml'
+      - '.claude/ci/agent-lint.py'
+      - '.claude/hooks/agent-hygiene-stop.py'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: agent-lint (changed files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Smoke-test the hook
+        # The hook's real tests live with the pack upstream. This is the floor:
+        # the vendored file still parses and exits clean on an empty payload.
+        run: |
+          [ -e .claude/hooks/agent-hygiene-stop.py ] && { echo '{}' | python3 .claude/hooks/agent-hygiene-stop.py >/dev/null && echo "ok hook"; } || echo "no hook installed"
+          python3 -m py_compile .claude/ci/agent-lint.py && echo "ok linter parses"
+
+      - name: Lint changed agent and skill files
+        run: python3 .claude/ci/agent-lint.py --changed --base "origin/${{ github.base_ref }}"
