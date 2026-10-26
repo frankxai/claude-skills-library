@@ -35,6 +35,9 @@
 //     "fontScanIgnore": ["public/games/"]   // path prefixes the font count skips
 //   }
 //
+// Any other key (except `$`-prefixed metadata such as `$schema`) is a
+// malformed config and exits 2, so a misspelt key cannot disarm a check.
+//
 // font-family-budget is the one check that is not a ratchet: a family budget is
 // a property of the whole site, so it counts every tracked file. A repo that
 // sets maxFontFamilies below what it ships fails until it cuts a family; set
@@ -115,6 +118,7 @@ const files = candidates.filter(f => {
 // A config that is present but wrong exits 2. Silently falling back to the
 // defaults would turn a typo into a gate that looks armed and checks nothing.
 const BRAND_CONFIG = '.claude/ci/brand-lint.json';
+const BRAND_KEYS = ['bannedHex', 'gradientText', 'maxFontFamilies', 'fontScanIgnore'];
 function loadBrandConfig() {
   if (!existsSync(BRAND_CONFIG)) return {};
   const fail = why => {
@@ -124,6 +128,13 @@ function loadBrandConfig() {
   let cfg;
   try { cfg = JSON.parse(readFileSync(BRAND_CONFIG, 'utf8')); } catch (e) { fail(`not valid JSON (${e.message})`); }
   if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) fail('must be a JSON object');
+  // An unknown key is a misspelt known one until proven otherwise: `maxfontFamilies`
+  // would otherwise leave the budget unset and pass. `$schema`-style keys are metadata.
+  for (const k of Object.keys(cfg)) {
+    if (k.startsWith('$') || BRAND_KEYS.includes(k)) continue;
+    const near = BRAND_KEYS.find(b => b.toLowerCase() === k.toLowerCase().replace(/[-_\s]/g, ''));
+    fail(`unknown key "${k}"${near ? ` (did you mean "${near}"?)` : ''}; known keys: ${BRAND_KEYS.join(', ')}`);
+  }
   // A key that is present must hold the right type: `null` is a typo, not a default.
   const has = k => Object.prototype.hasOwnProperty.call(cfg, k);
   const hex = has('bannedHex') ? cfg.bannedHex : [];
@@ -155,14 +166,31 @@ const SFC_EXT = /\.(vue|svelte|astro)$/;
 
 // Comments become spaces (newlines kept), so offsets and line numbers still
 // line up. String-aware, so 'https://fonts.googleapis.com/…' is not a comment.
+// Plain CSS has no // comment (and `url(//cdn…)` is common there); Sass does,
+// except inside an unquoted url(…), which it parses as a raw token. A <style>
+// block in markup follows the same rules for its own lang, not the file's.
 function stripComments(src, file) {
-  const css = CSS_EXT.test(file);
+  const fileSass = /\.(scss|sass)$/.test(file);
+  const fileCss = CSS_EXT.test(file) && !fileSass;
   const html = /\.(html|vue|svelte|astro)$/.test(file);
   const blank = s => s.replace(/[^\n]/g, ' ');
+  let sass = fileSass;
+  let css = fileCss;
   let out = '';
   let q = null;
   for (let i = 0; i < src.length;) {
     const c = src[i];
+    if (html && !q && c === '<') {
+      const open = /^<style\b[^>]*>/i.exec(src.slice(i, i + 200));
+      if (open) {
+        sass = /\blang\s*=\s*["']?(?:scss|sass)\b/i.test(open[0]);
+        css = !sass;
+        out += open[0];
+        i += open[0].length;
+        continue;
+      }
+      if (/^<\/style\s*>/i.test(src.slice(i, i + 10))) { sass = fileSass; css = fileCss; }
+    }
     if (q) {
       out += c;
       if (c === '\\' && i + 1 < src.length) { out += src[i + 1]; i += 2; continue; }
@@ -174,7 +202,8 @@ function stripComments(src, file) {
     if (c === '/' && src[i + 1] === '*') {
       const e = src.indexOf('*/', i + 2);
       end = e === -1 ? src.length : e + 2;
-    } else if (!css && c === '/' && src[i + 1] === '/' && src[i - 1] !== ':') {
+    } else if (!css && c === '/' && src[i + 1] === '/' && src[i - 1] !== ':' &&
+               !(sass && /url\(\s*$/i.test(src.slice(Math.max(0, i - 8), i)))) {
       const e = src.indexOf('\n', i);
       end = e === -1 ? src.length : e;
     } else if (html && src.startsWith('<!--', i)) {
@@ -223,27 +252,77 @@ function ownBlock(text, pos) {
   return { text: own, key: open };
 }
 
-// The JSX/HTML element whose opening tag contains `pos`: from `<Tag` to the
-// `>` that closes it at brace depth 0 (so `=>` and `{…}` props do not end it).
-function ownElement(text, pos) {
+// Offset of the `>` that closes the opening tag starting at `start`: the first
+// one outside quotes and outside {…} props, so `title="a > b"`, `[&>svg]:…`
+// and `onClick={() => …}` do not end the tag. Unclosed: end of text.
+function tagEnd(text, start) {
   let d = 0;
-  let start = -1;
-  for (let p = pos - 1; p >= 0; p--) {
-    const c = text[p];
-    if (c === '}') d++;
-    else if (c === '{') d = Math.max(0, d - 1);
-    else if (d === 0 && c === '>' && text[p - 1] !== '=') return null;
-    else if (d === 0 && c === '<' && /[A-Za-z]/.test(text[p + 1] || '')) { start = p; break; }
-  }
-  if (start === -1) return null;
-  d = 0;
+  let q = null;
   for (let p = start + 1; p < text.length; p++) {
     const c = text[p];
-    if (c === '{') d++;
+    if (q) {
+      if (c === '\\') p++;
+      else if (c === q) q = null;
+    } else if (c === '"' || c === "'" || c === '`') q = c;
+    else if (c === '{') d++;
     else if (c === '}') d = Math.max(0, d - 1);
-    else if (d === 0 && c === '>' && text[p - 1] !== '=') return { text: text.slice(start, p + 1), key: start };
+    else if (c === '>' && d === 0) return p;
   }
-  return { text: text.slice(start), key: start };
+  return text.length - 1;
+}
+
+// The JSX/HTML element whose opening tag contains `pos`: the nearest `<Tag`
+// before it whose own closing `>` lies at or after `pos`. A nearer tag that
+// closes first (`icon={<Icon />}`, an earlier sibling) is skipped, so the
+// answer never depends on what characters sit between the tag and `pos`.
+const TAG_LOOKBACK = 4000;
+// Offsets of the tag starts between `from` and `to`, read forward so a `<`
+// inside a quoted attribute (`title="<Enter"`) is text, not a tag. A `<Tag`
+// inside a {…} prop (`icon={<Icon />}`) is a real nested element.
+function tagStarts(text, from, to) {
+  const starts = [];
+  let inTag = false;
+  let q = null;
+  let d = 0;
+  for (let p = from; p < to; p++) {
+    const c = text[p];
+    const opens = c === '<' && /[A-Za-z]/.test(text[p + 1] || '') &&
+      !/[\w$)\]]/.test(text[p - 1] || ''); // `i<n`, `f()<x`: a comparison
+    if (!inTag) {
+      if (opens) { starts.push(p); inTag = true; d = 0; q = null; }
+    } else if (q) {
+      if (c === '\\') p++;
+      else if (c === q) q = null;
+    } else if (c === '"' || c === "'" || c === '`') q = c;
+    else if (c === '{') d++;
+    else if (c === '}') d = Math.max(0, d - 1);
+    else if (opens && d > 0) starts.push(p);
+    else if (c === '>' && d === 0) inTag = false;
+  }
+  return starts;
+}
+
+function ownElement(text, pos) {
+  let from = Math.max(0, pos - TAG_LOOKBACK);
+  if (from > 0) from = text.indexOf('\n', from) + 1 || pos; // a line start, not mid-attribute
+  const starts = tagStarts(text, from, pos);
+  for (let k = starts.length - 1; k >= 0; k--) {
+    const p = starts[k];
+    const end = tagEnd(text, p);
+    if (end >= pos) return { text: text.slice(p, end + 1), key: p };
+  }
+  return null;
+}
+
+// True when the `{` at `open` starts an object literal (`= {`, `({`, `: {`,
+// `return {`), not a function body, block or JSX child expression (`) {`,
+// `=> {`, `> {`).
+function isObjectLiteral(text, open) {
+  let p = open - 1;
+  while (p >= 0 && /\s/.test(text[p])) p--;
+  if (p < 0) return false;
+  if (text[p] === '>') return false;
+  return /[(,:=[?&|]/.test(text[p]) || /\breturn$/.test(text.slice(Math.max(0, p - 6), p + 1));
 }
 
 const lineStarts = new WeakMap();
@@ -272,11 +351,12 @@ function scopeOf(lines, i, col, file) {
   const all = lines.join('\n');
   const pos = offsetOf(lines, i) + col;
   let hit = inStyle ? ownBlock(all, pos) : ownElement(all, pos);
-  // Outside a tag, an enclosing object literal is a CSS-in-JS style; a block
-  // that large is a function body, which is no scope at all.
+  // Outside a tag, an enclosing object literal is a CSS-in-JS style. A function
+  // body or block is no scope at all: it holds unrelated siblings, and reading
+  // them as the second signal is how this rule would report what is not there.
   if (!hit && !inStyle) {
     const obj = ownBlock(all, pos);
-    if (obj && obj.text.length <= 800) hit = obj;
+    if (obj && obj.text.length <= 800 && isObjectLiteral(all, obj.key)) hit = obj;
   }
   return hit ? { text: hit.text, key: `s${hit.key}` } : { text: lines[i], key: `l${i}` };
 }
@@ -405,15 +485,46 @@ if (brand.gradientText !== 'off') {
 // The finding still anchors to the opening line, which is what the ratchet checks.
 const TAG_SCOPED = new Set(['div-onclick', 'img-no-dims', 'img-empty-alt']);
 const TAG_OPEN = /<(?:div|span|img|Image)\b/;
+// Stands in for a `>` that does not close a tag, so the rules' `[^>]*` runs to
+// the real end of the tag: `className="[&>svg]:…"`, `onClick={() => …}`.
+const INNER_GT = '›';
 
+// The line, from the first tag it opens onward, with every `>` inside a quoted
+// prop or a {…} prop masked, joined forward until the last tag it opens closes.
 function tagText(lines, i) {
   const line = lines[i];
   const m = TAG_OPEN.exec(line);
-  if (!m || line.slice(m.index).includes('>')) return line;
-  let out = line;
-  for (let j = i + 1; j < Math.min(lines.length, i + 30); j++) {
-    out += ' ' + lines[j].trim();
-    if (lines[j].includes('>')) break;
+  if (!m) return line;
+  let out = line.slice(0, m.index);
+  let inTag = false;
+  let q = null;
+  let d = 0;
+  for (let j = i; j < Math.min(lines.length, i + 30); j++) {
+    const s = j === i ? line.slice(m.index) : ' ' + lines[j].trim();
+    for (let k = 0; k < s.length; k++) {
+      const c = s[k];
+      if (!inTag) {
+        if (c === '<' && /[A-Za-z]/.test(s[k + 1] || '')) { inTag = true; d = 0; q = null; }
+      } else if (q) {
+        // Inside a {…} prop the string is JavaScript, so `\'` does not close it.
+        // An HTML attribute has no escapes: `title="C:\"` ends at its quote.
+        if (c === '\\' && d > 0 && k + 1 < s.length) {
+          out += c + (s[k + 1] === '>' ? INNER_GT : s[k + 1]);
+          k++;
+          continue;
+        }
+        if (c === q) q = null;
+        else if (c === '>') { out += INNER_GT; continue; }
+      } else if (c === '"' || c === "'" || c === '`') q = c;
+      else if (c === '{') d++;
+      else if (c === '}') d = Math.max(0, d - 1);
+      else if (c === '>') {
+        if (d > 0) { out += INNER_GT; continue; }
+        inTag = false;
+      }
+      out += c;
+    }
+    if (!inTag) break;
   }
   return out;
 }
@@ -429,9 +540,12 @@ for (const file of files) {
   let text;
   try { text = readFileSync(file, 'utf8'); } catch { continue; }
   const lines = text.split('\n');
-  let code = null; // comment-stripped lines, built only when a two-signal rule fires
   const added = scope ? scope.get(file) : null;
   if (scope && (!added || added.size === 0)) continue;
+  // Every rule reads code with comments blanked out (same offsets, same line
+  // numbers): `{/* was #ab47c7 */}` is not a use of the colour, and a
+  // commented-out gradient neither triggers nor supplies a second signal.
+  const code = stripComments(text, file).split('\n');
 
   for (const [id, severity, re, message, guard, near] of RULES) {
     if (guard && guard.test(text)) continue;
@@ -441,12 +555,9 @@ for (const file of files) {
       // skip obvious comment lines to cut noise
       const t = line.trim();
       if (t.startsWith('//') || t.startsWith('*') || t.startsWith('/*')) return;
-      const subject = TAG_SCOPED.has(id) ? tagText(lines, i) : line;
+      const subject = TAG_SCOPED.has(id) ? tagText(code, i) : code[i];
       if (!re.test(subject)) return;
       if (near) {
-        // Two-signal rules read code with comments removed, so a commented-out
-        // gradient or grid neither triggers nor supplies the second signal.
-        code ??= stripComments(text, file).split('\n');
         const m = re.exec(code[i]);
         if (!m) return;
         const sc = scopeOf(code, i, m.index, file);
@@ -474,13 +585,27 @@ const FONT_SCAN_SKIP = /(^|\/)(node_modules|\.next|dist|build|out|\.claude)\/|\.
 // A local font is identified by its file, not by the variable that holds it:
 // `const font = localFont({ src: [Alpha.woff2, Beta.woff2] })` is two families,
 // Satoshi-Regular.woff2 + Satoshi-Bold.woff2 is one.
-const WEIGHT_SUFFIX = /[-_ ]?(thin|hairline|extra-?light|ultra-?light|light|regular|book|normal|medium|semi-?bold|demi-?bold|bold|extra-?bold|ultra-?bold|black|heavy|italic|oblique|variable|var|vf|wght|\d{3})$/i;
+// A suffix is a weight only at a word boundary: after a separator
+// (Satoshi-Bold, inter_semi-bold) or at a camelCase hump (InterVariable).
+// Without the boundary, Highlight-Regular folds to "High" and merges with
+// High-Bold, hiding a family from the budget.
+const WEIGHTS = ['thin', 'hairline', 'extra-?light', 'ultra-?light', 'light', 'regular', 'book',
+  'normal', 'medium', 'semi-?bold', 'demi-?bold', 'bold', 'extra-?bold', 'ultra-?bold', 'black',
+  'heavy', 'italic', 'oblique', 'variable', 'var', 'vf', 'wght', '\\d{3}'];
+const humped = w => w.replace(/^[a-z]/, c => c.toUpperCase())
+  .replace(/-\?([a-z])/g, (_, c) => `-?[${c}${c.toUpperCase()}]`);
+const WEIGHT_AFTER_SEP = new RegExp(`[-_ ](?:${WEIGHTS.join('|')})$`, 'i');
+// `VF` is an acronym, so it humps as `InterVF`, not `InterVf`; both occur.
+const WEIGHT_AFTER_HUMP = new RegExp(`(?<=[a-z0-9])(?:${[...WEIGHTS.map(humped), 'VF'].join('|')})$`);
 function localFamilies(args) {
   const names = new Set();
   for (const m of args.matchAll(/['"`]([^'"`]+\.(?:woff2?|ttf|otf|eot))['"`]/gi)) {
     let base = m[1].split(/[\\/]/).pop().replace(/\.(woff2?|ttf|otf|eot)$/i, '');
     let prev;
-    do { prev = base; base = base.replace(WEIGHT_SUFFIX, ''); } while (base && base !== prev);
+    do {
+      prev = base;
+      base = base.replace(WEIGHT_AFTER_SEP, '').replace(WEIGHT_AFTER_HUMP, '');
+    } while (base && base !== prev);
     names.add(base || prev);
   }
   return [...names];
@@ -497,7 +622,13 @@ function fontFamilies(raw, file) {
       if (name) found.push(name.replace(/_/g, ' '));
     }
   }
-  const local = /(?:const|let|var)\s+(\w+)\s*=\s*localFont\s*\(/g;
+  // The loader is whatever name the file imports next/font/local's default
+  // export under; `localFont` is only the convention.
+  const loaders = new Set(['localFont']);
+  for (const im of src.matchAll(/import\s+([A-Za-z_$][\w$]*)\s*(?:,\s*\{[^}]*\})?\s*from\s*['"]next\/font\/local['"]/g)) {
+    loaders.add(im[1]);
+  }
+  const local = new RegExp(`(?:const|let|var)\\s+([\\w$]+)\\s*=\\s*(?:${[...loaders].map(n => n.replace(/\$/g, '\\$')).join('|')})\\s*\\(`, 'g');
   while ((m = local.exec(src))) {
     let d = 1;
     let p = local.lastIndex;
