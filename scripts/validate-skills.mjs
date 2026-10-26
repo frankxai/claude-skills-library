@@ -12,15 +12,18 @@ if (!fs.existsSync(skillsDir)) {
 }
 
 const folders = [];
-function findFolders(dir, rel = '') {
-    for (const name of fs.readdirSync(dir)) {
+const MAX_DEPTH = 8;
+function findFolders(dir, rel = '', depth = 0) {
+    if (depth > MAX_DEPTH) return;
+    // withFileTypes reports symlinks as non-directories, so links are never followed (no cycles).
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const name = entry.name;
         const fullPath = path.join(dir, name);
-        if (fs.statSync(fullPath).isDirectory()) {
-            if (fs.existsSync(path.join(fullPath, 'SKILL.md'))) {
-                folders.push(path.join(rel, name));
-            } else {
-                findFolders(fullPath, path.join(rel, name));
-            }
+        if (fs.existsSync(path.join(fullPath, 'SKILL.md'))) {
+            folders.push(path.join(rel, name));
+        } else {
+            findFolders(fullPath, path.join(rel, name), depth + 1);
         }
     }
 }
