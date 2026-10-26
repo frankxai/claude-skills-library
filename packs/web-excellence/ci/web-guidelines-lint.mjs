@@ -167,16 +167,30 @@ const SFC_EXT = /\.(vue|svelte|astro)$/;
 // Comments become spaces (newlines kept), so offsets and line numbers still
 // line up. String-aware, so 'https://fonts.googleapis.com/…' is not a comment.
 // Plain CSS has no // comment (and `url(//cdn…)` is common there); Sass does,
-// except inside an unquoted url(…), which it parses as a raw token.
+// except inside an unquoted url(…), which it parses as a raw token. A <style>
+// block in markup follows the same rules for its own lang, not the file's.
 function stripComments(src, file) {
-  const sass = /\.(scss|sass)$/.test(file);
-  const css = CSS_EXT.test(file) && !sass;
+  const fileSass = /\.(scss|sass)$/.test(file);
+  const fileCss = CSS_EXT.test(file) && !fileSass;
   const html = /\.(html|vue|svelte|astro)$/.test(file);
   const blank = s => s.replace(/[^\n]/g, ' ');
+  let sass = fileSass;
+  let css = fileCss;
   let out = '';
   let q = null;
   for (let i = 0; i < src.length;) {
     const c = src[i];
+    if (html && !q && c === '<') {
+      const open = /^<style\b[^>]*>/i.exec(src.slice(i, i + 200));
+      if (open) {
+        sass = /\blang\s*=\s*["']?(?:scss|sass)\b/i.test(open[0]);
+        css = !sass;
+        out += open[0];
+        i += open[0].length;
+        continue;
+      }
+      if (/^<\/style\s*>/i.test(src.slice(i, i + 10))) { sass = fileSass; css = fileCss; }
+    }
     if (q) {
       out += c;
       if (c === '\\' && i + 1 < src.length) { out += src[i + 1]; i += 2; continue; }
@@ -262,10 +276,38 @@ function tagEnd(text, start) {
 // closes first (`icon={<Icon />}`, an earlier sibling) is skipped, so the
 // answer never depends on what characters sit between the tag and `pos`.
 const TAG_LOOKBACK = 4000;
+// Offsets of the tag starts between `from` and `to`, read forward so a `<`
+// inside a quoted attribute (`title="<Enter"`) is text, not a tag. A `<Tag`
+// inside a {…} prop (`icon={<Icon />}`) is a real nested element.
+function tagStarts(text, from, to) {
+  const starts = [];
+  let inTag = false;
+  let q = null;
+  let d = 0;
+  for (let p = from; p < to; p++) {
+    const c = text[p];
+    const opens = c === '<' && /[A-Za-z]/.test(text[p + 1] || '') &&
+      !/[\w$)\]]/.test(text[p - 1] || ''); // `i<n`, `f()<x`: a comparison
+    if (!inTag) {
+      if (opens) { starts.push(p); inTag = true; d = 0; q = null; }
+    } else if (q) {
+      if (c === '\\') p++;
+      else if (c === q) q = null;
+    } else if (c === '"' || c === "'" || c === '`') q = c;
+    else if (c === '{') d++;
+    else if (c === '}') d = Math.max(0, d - 1);
+    else if (opens && d > 0) starts.push(p);
+    else if (c === '>' && d === 0) inTag = false;
+  }
+  return starts;
+}
+
 function ownElement(text, pos) {
-  for (let p = pos - 1; p >= Math.max(0, pos - TAG_LOOKBACK); p--) {
-    if (text[p] !== '<' || !/[A-Za-z]/.test(text[p + 1] || '')) continue;
-    if (/[\w$)\]]/.test(text[p - 1] || '')) continue; // `i<n`, `f()<x`: a comparison
+  let from = Math.max(0, pos - TAG_LOOKBACK);
+  if (from > 0) from = text.indexOf('\n', from) + 1 || pos; // a line start, not mid-attribute
+  const starts = tagStarts(text, from, pos);
+  for (let k = starts.length - 1; k >= 0; k--) {
+    const p = starts[k];
     const end = tagEnd(text, p);
     if (end >= pos) return { text: text.slice(p, end + 1), key: p };
   }
@@ -464,6 +506,13 @@ function tagText(lines, i) {
       if (!inTag) {
         if (c === '<' && /[A-Za-z]/.test(s[k + 1] || '')) { inTag = true; d = 0; q = null; }
       } else if (q) {
+        // Inside a {…} prop the string is JavaScript, so `\'` does not close it.
+        // An HTML attribute has no escapes: `title="C:\"` ends at its quote.
+        if (c === '\\' && d > 0 && k + 1 < s.length) {
+          out += c + (s[k + 1] === '>' ? INNER_GT : s[k + 1]);
+          k++;
+          continue;
+        }
         if (c === q) q = null;
         else if (c === '>') { out += INNER_GT; continue; }
       } else if (c === '"' || c === "'" || c === '`') q = c;
@@ -546,7 +595,8 @@ const WEIGHTS = ['thin', 'hairline', 'extra-?light', 'ultra-?light', 'light', 'r
 const humped = w => w.replace(/^[a-z]/, c => c.toUpperCase())
   .replace(/-\?([a-z])/g, (_, c) => `-?[${c}${c.toUpperCase()}]`);
 const WEIGHT_AFTER_SEP = new RegExp(`[-_ ](?:${WEIGHTS.join('|')})$`, 'i');
-const WEIGHT_AFTER_HUMP = new RegExp(`(?<=[a-z0-9])(?:${WEIGHTS.map(humped).join('|')})$`);
+// `VF` is an acronym, so it humps as `InterVF`, not `InterVf`; both occur.
+const WEIGHT_AFTER_HUMP = new RegExp(`(?<=[a-z0-9])(?:${[...WEIGHTS.map(humped), 'VF'].join('|')})$`);
 function localFamilies(args) {
   const names = new Set();
   for (const m of args.matchAll(/['"`]([^'"`]+\.(?:woff2?|ttf|otf|eot))['"`]/gi)) {
