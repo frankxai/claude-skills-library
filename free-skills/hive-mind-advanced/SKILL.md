@@ -155,3 +155,15 @@ The full detail lives in `references/` and loads only when needed:
 **Last Updated**: 2025-10-19
 **Maintained By**: Claude Flow Team
 **License**: MIT
+
+## Status in the FrankX estate (2026-10-19)
+
+Reference only. The queen-coordinator / hierarchical-coordinator idiom this
+skill describes comes from claude-flow, and the estate rule is one chair per
+session with no external coordinator. What was worth keeping was absorbed into
+the Starlight Queen kernel (`@starlight-intelligence/queen`, starlight-swarm)
+and the [`queen-ops`](../../packs/queen-ops) pack: the three governance modes
+(emergency gated behind a human), the default budget split, and the status
+heartbeat. Coup prevention, triple-vote arbitration and Byzantine consensus
+were dropped on purpose. Install `queen-ops` for enforced dispatch; read this
+skill for the history.
