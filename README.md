@@ -22,6 +22,8 @@ hooks that block "done" until the evidence exists.
 
 **[Subscribe to the Waitlist](https://frankx.ai/waitlist?utm_source=github&utm_medium=readme&utm_campaign=claude-skills-library)**
 
+Already using AI for real work? **[Join the Starlight operator lab waitlist](https://starlightintelligence.academy/waitlist?utm_source=github&utm_medium=readme&utm_campaign=claude-skills-library)**: a small group, each building one workflow they can trust.
+
 </div>
 
 ---
