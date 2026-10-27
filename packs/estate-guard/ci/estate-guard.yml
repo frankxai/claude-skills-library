@@ -5,12 +5,19 @@ name: estate-guard
 # the ways an autonomous agent can be hijacked through it. Installed from
 # frankxai/claude-skills-library packs/estate-guard; edit it there.
 #
-# Runs on every PR and push to main, and weekly so a repo nobody touched still
-# gets re-checked against the current rules. A high or critical finding fails
-# the check. The full report is uploaded as an artifact either way.
+# Runs on every non-draft PR and push to main, and weekly so a repo nobody
+# touched still gets re-checked against the current rules. A high or critical
+# finding fails the check. The full report is uploaded as an artifact either way.
+#
+# Cost: the scan is one zero-dependency node script (node and git only, about a
+# second of work), so it runs on the 1-vCPU ubuntu-slim runner. Draft PRs skip
+# the job (a skipped job reports success, and a draft cannot merge); marking the
+# PR ready for review runs the scan. A new commit on a PR cancels that PR's
+# older run; push, schedule and manual runs are never cancelled in progress.
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   schedule:
@@ -21,12 +28,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: estate-guard-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   scan:
-    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
