@@ -81,6 +81,27 @@ pwsh -File scripts/Register-NeutronDaily.ps1          # prints the scheduled tas
 
 Rows inside the window are recomputed each run; older rows stay as written. The figures are a usage trend, not a savings claim: a lower Turn-0 says the prefix shrank, not that work got done as well. Savings claims still go through the ledger below.
 
+## Floor
+
+`neutron.mjs floor` starts one headless `claude -p` per config variant with a trivial prompt and reports the billed Turn-0 of each, so a config change is judged by what the API charged, not by a byte estimate. Each run spends real usage.
+
+```
+node scripts/neutron.mjs floor --cwd C:\path\to\repo --variants default,no-mcp,core-tools --out floor.json
+```
+
+Measured 2026-10-30, Claude Code 2.1.312, one machine (36 plugins, 54 MCP servers, 120 agents, 727 skills). Headless runs, so the desktop app's own layer is not in these numbers:
+
+| Folder | Variant | Turn-0 |
+|---|---|---|
+| empty scratch folder | default | 93,958 |
+| empty scratch folder | no MCP (`--strict-mcp-config`) | 84,169 |
+| empty scratch folder | no MCP, no skills | 80,926 |
+| empty scratch folder | no MCP, no skills, 8 core tools | 49,747 |
+| estate repos folder | default | 141,089 |
+| estate repos folder | no MCP, no skills, 8 core tools | 94,365 |
+
+Read with the daily digest, where interactive desktop sessions start at about 240k and CLI sessions at 107k-149k: the desktop app adds roughly 100k on top of the headless default. Starting in the estate folder rather than a child repo adds about 47k of inherited instruction files. MCP tool schemas are already deferred (about 10k), skills about 3k, and the full built-in tool list about 31k.
+
 ## Ledger
 
 `neutron.mjs ledger` turns billed usage into a savings figure only when quality was checked. Rows are JSONL: `date, harness, model, taskId, arm, uncachedInput, cacheWrite, cacheRead, output, check, notes`. `arm` is `baseline` or a candidate name. `check` is `pass`, `fail` or `not-checked`.
