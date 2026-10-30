@@ -3,7 +3,7 @@ name: tailwindcss
 description: Tailwind CSS v4 utility-first styling patterns including responsive design, dark mode, and custom configuration. Use when styling with Tailwind, adding utility classes, configuring Tailwind, setting up dark mode, or customizing the theme.
 metadata:
   version: "1.0.0"
-  displayName: Tailwind CSS
+  displayName: "Tailwind CSS"
 ---
 
 # Tailwind CSS v4 Development Guidelines

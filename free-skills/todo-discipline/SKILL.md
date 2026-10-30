@@ -4,7 +4,7 @@ description: "Use when starting any complex task (3+ steps) or before declaring 
 license: MIT
 metadata:
   version: "1.0.0"
-  author: Frank Riemer / GenCreator
+  author: "Frank Riemer / GenCreator"
 ---
 
 # Todo Discipline

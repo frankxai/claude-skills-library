@@ -3,15 +3,9 @@ name: sparc-methodology
 description: SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) development methodology with multi-agent orchestration. Use when running a structured spec-to-code workflow or decomposing a feature through the SPARC phases.
 metadata:
   version: "2.7.0"
-  category: development
-  tags:
-    - sparc
-    - tdd
-    - architecture
-    - orchestration
-    - methodology
-    - multi-agent
-  author: Claude Flow
+  category: "development"
+  tags: "sparc, tdd, architecture, orchestration, methodology, multi-agent"
+  author: "Claude Flow"
 ---
 
 # SPARC Methodology - Comprehensive Development Framework

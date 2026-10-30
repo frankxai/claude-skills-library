@@ -4,7 +4,7 @@ description: Truth scoring, code-quality verification, and automatic rollback wi
 metadata:
   version: "2.0.0"
   category: "quality-assurance"
-  tags: ["verification", "truth-scoring", "quality", "rollback", "metrics", "ci-cd"]
+  tags: "verification, truth-scoring, quality, rollback, metrics, ci-cd"
 ---
 
 # Verification & Quality Assurance Skill

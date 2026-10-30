@@ -2,7 +2,7 @@
 name: creator-intelligence
 description: Transform Claude Code into your personal Jarvis - an AI operating system that knows your projects, preferences, and workflows across sessions. Use this skill when setting up personal AI systems, building context-aware assistants, or creating persistent memory across projects.
 metadata:
-  author: FrankX
+  author: "FrankX"
   version: "1.0.0"
 ---
 
