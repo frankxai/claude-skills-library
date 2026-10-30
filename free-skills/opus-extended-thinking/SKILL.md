@@ -1,13 +1,14 @@
 ---
 name: opus-extended-thinking
 description: Use Claude's extended/adaptive thinking for deep reasoning, complex analysis, and multi-step synthesis — both the prompt patterns that elicit deliberation and the current thinking API (adaptive thinking + the effort parameter). Use when a problem needs thorough deliberation before answering, or when configuring thinking on a Claude request.
-version: 2.1.0
-last_updated: 2026-08-28
-external_version: "Current Claude family — Fable 5, Opus 5, Sonnet 5, Haiku 4.5 (August 2026)"
-changelog: |
-  - 2.1.0: Model family bump — Opus 5 and Sonnet 5 supersede Opus 4.8 and Sonnet 4.6 as current/default. The adaptive-thinking + effort API and budget_tokens removal are unchanged; patterns remain model-agnostic.
-  - 2.0.0: Update to the current model family and the adaptive-thinking + effort API (budget_tokens is removed on current models). Patterns are model-agnostic.
-  - 1.0.0: Initial skill for Opus 4.5 extended thinking patterns
+metadata:
+  version: "2.1.0"
+  last_updated: 2026-08-28
+  external_version: "Current Claude family — Fable 5, Opus 5, Sonnet 5, Haiku 4.5 (August 2026)"
+  changelog: |
+    - 2.1.0: Model family bump — Opus 5 and Sonnet 5 supersede Opus 4.8 and Sonnet 4.6 as current/default. The adaptive-thinking + effort API and budget_tokens removal are unchanged; patterns remain model-agnostic.
+    - 2.0.0: Update to the current model family and the adaptive-thinking + effort API (budget_tokens is removed on current models). Patterns are model-agnostic.
+    - 1.0.0: Initial skill for Opus 4.5 extended thinking patterns
 ---
 
 # Extended & Adaptive Thinking
