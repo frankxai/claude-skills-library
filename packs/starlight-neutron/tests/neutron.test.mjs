@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { bench, doctor, findOnPath, formatMarkdown, formatTable, hasRtkHook, resolveRtk, savedPercent } from '../scripts/neutron.mjs';
 import { commandHitsRule, loadGuardRules, run as runHook, sanitizeHookOutput } from '../hooks/rtk-rewrite.mjs';
-import { applyPlan, main as installMain, planInstall } from '../install.mjs';
+import { applyPlan, hookEntry, main as installMain, planInstall } from '../install.mjs';
 
 const PACK = join(dirname(fileURLToPath(import.meta.url)), '..');
 const node = process.execPath;
@@ -366,11 +366,11 @@ test('hook ignores input without a command string', () => {
   assert.deepEqual(runHook('not json'), { stdout: '', status: 0 });
 });
 
-test('planInstall lists skills and scripts and writes nothing', () => {
+test('planInstall lists skills, scripts and the hook shim and writes nothing', () => {
   const target = tmp('target');
   try {
     const plan = planInstall(target, PACK);
-    assert.deepEqual(plan.map((s) => s.name).sort(), ['neutron', 'neutron-log', 'scripts']);
+    assert.deepEqual(plan.map((s) => s.name).sort(), ['hooks', 'neutron', 'neutron-log', 'scripts']);
     assert.equal(existsSync(join(target, '.claude')), false);
   } finally {
     rmSync(target, { recursive: true, force: true });
@@ -384,12 +384,29 @@ test('applyPlan installs skills and scripts, and moves an edited skill to backup
     const skill = join(target, '.claude', 'skills', 'neutron', 'SKILL.md');
     assert.match(readFileSync(skill, 'utf8'), /^---\nname: neutron\n/);
     assert.ok(existsSync(join(target, '.claude', 'neutron', 'scripts', 'neutron.mjs')));
+    assert.ok(existsSync(join(target, '.claude', 'neutron', 'hooks', 'rtk-rewrite.mjs')));
     writeFileSync(skill, 'MY LOCAL EDIT');
     writeFileSync(join(target, '.claude', 'skills', 'neutron', 'stale.txt'), 'old');
     applyPlan(planInstall(target, PACK), 2);
     assert.equal(readFileSync(join(target, '.claude', 'neutron', 'backup', 'neutron-2', 'SKILL.md'), 'utf8'), 'MY LOCAL EDIT');
     assert.equal(existsSync(join(target, '.claude', 'skills', 'neutron', 'stale.txt')), false);
     assert.deepEqual(readdirSync(join(target, '.claude', 'skills')).sort(), ['neutron', 'neutron-log']);
+  } finally {
+    rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test('the printed hooks entry wires the installed shim for Bash and PowerShell, and the shim runs from there', () => {
+  const target = tmp('wire');
+  try {
+    applyPlan(planInstall(target, PACK), 1);
+    const [entry] = hookEntry(target).PreToolUse;
+    assert.equal(entry.matcher, 'Bash|PowerShell');
+    const shim = /^node "(.+)"$/.exec(entry.hooks[0].command)[1];
+    assert.ok(existsSync(shim), 'the command points at the copied shim');
+    assert.ok(hasRtkHook({ hooks: hookEntry(target) }), 'doctor counts the shim as a wired rtk hook');
+    const r = spawnSync(process.execPath, [shim], { input: 'not json', encoding: 'utf8' });
+    assert.equal(r.status, 0, 'the installed shim resolves its ../scripts import and fails open');
   } finally {
     rmSync(target, { recursive: true, force: true });
   }
