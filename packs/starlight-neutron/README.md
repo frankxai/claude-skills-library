@@ -89,7 +89,7 @@ Rows inside the window are recomputed each run; older rows stay as written. The 
 node scripts/neutron.mjs floor --cwd C:\path\to\repo --variants default,no-mcp,core-tools --out floor.json
 ```
 
-Measured 2026-10-30, Claude Code 2.1.312, one machine (36 plugins, 54 MCP servers, 120 agents, 727 skills). Headless runs, so the desktop app's own layer is not in these numbers:
+Measured 2026-10-30 (`results/floor/2026-10-30-turn0-floor.json`), Claude Code 2.1.312, one machine (36 plugins, 54 MCP servers, 120 agents, 727 skills). Headless runs, so the desktop app's own layer is not in these numbers:
 
 | Folder | Variant | Turn-0 |
 |---|---|---|

@@ -28,37 +28,44 @@ export function percentile(values, p) {
 }
 
 // Reads one transcript. A streamed reply is written as several lines sharing one message id with the same usage,
-// so usage is counted once per id; counting lines would multiply every total.
+// so usage is counted once per id; counting lines would multiply every total. Each call keeps its own timestamp:
+// a session that runs past midnight bills the next day, so usage is bucketed per call, Turn-0 per session start.
+const count = (v) => (Number.isFinite(v) && v >= 0 ? v : 0);
+const validTs = (v) => typeof v === 'string' && !Number.isNaN(Date.parse(v));
+// Measurement probes (neutron floor) are not work sessions. 'Reply' alone is the shell-split form of the probe
+// from the first floor runs on 2026-10-30, which also inherited the desktop entrypoint from their parent.
+export const PROBE_PROMPTS = new Set(['Reply with the single word ok.', 'Reply']);
+const userText = (m) => typeof m?.content === 'string' ? m.content : Array.isArray(m?.content) ? m.content.find(c => c?.type === 'text')?.text ?? null : null;
+
 export async function readSession(file) {
   const rl = createInterface({ input: createReadStream(file), crlfDelay: Infinity });
   const seen = new Set();
-  const s = { entrypoint: null, start: null, turn0: null, calls: 0, uncached: 0, cacheWrite: 0, cacheRead: 0, output: 0, model: null, sidechain: false };
+  const s = { entrypoint: null, start: null, turn0: null, model: null, sidechain: false, firstPrompt: undefined, calls: [] };
   for await (const line of rl) {
     let j;
     try { j = JSON.parse(line); } catch { continue; }
+    if (!j || typeof j !== 'object') continue;
     if (j.isSidechain) s.sidechain = true;
     if (!s.entrypoint && typeof j.entrypoint === 'string') s.entrypoint = j.entrypoint;
+    if (s.firstPrompt === undefined && j.type === 'user' && !j.isMeta) s.firstPrompt = userText(j.message);
     const u = j.message?.usage;
-    if (j.type !== 'assistant' || !u) continue;
+    if (j.type !== 'assistant' || !u || typeof u !== 'object' || !validTs(j.timestamp)) continue;
     const id = j.message.id ?? j.uuid;
     if (seen.has(id)) continue;
     seen.add(id);
-    const uncached = u.input_tokens ?? 0, cacheWrite = u.cache_creation_input_tokens ?? 0, cacheRead = u.cache_read_input_tokens ?? 0;
+    const call = { ts: j.timestamp, uncached: count(u.input_tokens), cacheWrite: count(u.cache_creation_input_tokens), cacheRead: count(u.cache_read_input_tokens), output: count(u.output_tokens) };
     if (s.turn0 === null) {
-      s.turn0 = uncached + cacheWrite + cacheRead;
-      s.start = j.timestamp ?? null;
+      s.turn0 = call.uncached + call.cacheWrite + call.cacheRead;
+      s.start = call.ts;
       s.model = j.message.model ?? null;
     }
-    s.calls++;
-    s.uncached += uncached;
-    s.cacheWrite += cacheWrite;
-    s.cacheRead += cacheRead;
-    s.output += u.output_tokens ?? 0;
+    s.calls.push(call);
   }
   return s;
 }
 
 // Top-level transcripts only: subagent transcripts sit in <session>/subagents/ and are billed inside their parent.
+// A session is kept when any of its calls falls in the window, even if it started before it.
 export async function collectSessions(projectsDir, sinceMs) {
   const sessions = [];
   if (!existsSync(projectsDir)) return sessions;
@@ -70,24 +77,32 @@ export async function collectSessions(projectsDir, sinceMs) {
       const file = join(dir, f);
       if (statSync(file).mtimeMs < sinceMs) continue;
       const s = await readSession(file);
-      if (s.turn0 === null || s.sidechain || !s.start || Date.parse(s.start) < sinceMs) continue;
+      if (s.turn0 === null || s.sidechain || PROBE_PROMPTS.has(s.firstPrompt?.trim()) || !s.calls.some(c => Date.parse(c.ts) >= sinceMs)) continue;
       sessions.push(s);
     }
   }
   return sessions;
 }
 
-export function aggregate(sessions) {
-  const byDay = new Map();
+// One row per UTC day from sinceMs: session counts and Turn-0 on the day a session started, usage totals on the day
+// each call was made. Days before sinceMs are dropped; they are outside the window being recomputed.
+export function aggregate(sessions, sinceMs = 0) {
+  const days = new Map();
+  const day = (d) => {
+    if (!days.has(d)) days.set(d, { starts: [], uncachedInput: 0, cacheWrite: 0, cacheRead: 0, output: 0 });
+    return days.get(d);
+  };
   for (const s of sessions) {
-    const day = s.start.slice(0, 10);
-    if (!byDay.has(day)) byDay.set(day, []);
-    byDay.get(day).push(s);
+    if (Date.parse(s.start) >= sinceMs) day(s.start.slice(0, 10)).starts.push(s);
+    for (const c of s.calls) {
+      if (Date.parse(c.ts) < sinceMs) continue;
+      const d = day(c.ts.slice(0, 10));
+      d.uncachedInput += c.uncached; d.cacheWrite += c.cacheWrite; d.cacheRead += c.cacheRead; d.output += c.output;
+    }
   }
-  return [...byDay.keys()].sort().map(date => {
-    const all = byDay.get(date);
+  return [...days.keys()].sort().map(date => {
+    const { starts: all, ...totals } = days.get(date);
     const inter = all.filter(s => INTERACTIVE.has(s.entrypoint));
-    const sum = (k) => all.reduce((a, s) => a + s[k], 0);
     return {
       date,
       sessions: all.length,
@@ -96,17 +111,14 @@ export function aggregate(sessions) {
       turn0Median: median(inter.map(s => s.turn0)),
       turn0P90: percentile(inter.map(s => s.turn0), 90),
       headlessTurn0Median: median(all.filter(s => !INTERACTIVE.has(s.entrypoint)).map(s => s.turn0)),
-      callsMedian: median(inter.map(s => s.calls)),
+      callsMedian: median(inter.map(s => s.calls.length)),
       // Desktop and CLI load different prefixes (about 240k against 110-150k on 2026-10-30), so a day's mix of
       // the two moves the interactive median more than any instruction change does. The trend reads desktop.
       byEntrypoint: Object.fromEntries([...INTERACTIVE].map(e => {
         const t0 = inter.filter(s => s.entrypoint === e).map(s => s.turn0);
         return [e, { sessions: t0.length, turn0Median: median(t0) }];
       })),
-      uncachedInput: sum('uncached'),
-      cacheWrite: sum('cacheWrite'),
-      cacheRead: sum('cacheRead'),
-      output: sum('output'),
+      ...totals,
     };
   });
 }
@@ -114,12 +126,12 @@ export function aggregate(sessions) {
 async function rtkDaily() {
   const { resolveRtk } = await import('./neutron.mjs');
   const rtk = resolveRtk();
-  if (!rtk) return new Map();
+  if (!rtk) return null;
   const r = spawnSync(rtk.command, ['gain', '--daily', '--format', 'json'], { encoding: 'utf8', timeout: 30_000 });
-  if (r.status !== 0) return new Map();
+  if (r.status !== 0) return null;
   try {
     return new Map(JSON.parse(r.stdout).daily.map(d => [d.date, { commands: d.commands, savedTokens: d.saved_tokens }]));
-  } catch { return new Map(); }
+  } catch { return null; }
 }
 
 function fileFact(path) {
@@ -150,12 +162,19 @@ export function snapshot(home) {
   };
 }
 
-// Rows already in the ledger outside the window stay as written; rows inside it are recomputed from transcripts.
-export function mergeLedger(existing, fresh, today, snap) {
+// Every date inside the window is replaced, including days that now have no sessions, so a stale count cannot
+// survive a recompute. Rows before the window stay as written. Snapshots are never recomputed, and an RTK figure
+// already recorded is kept when RTK could not be read this run (rtk === null), never wiped.
+export function mergeLedger(existing, fresh, { since, today, snap, rtk }) {
   const rows = new Map(existing.map(r => [r.date, r]));
-  for (const r of fresh) rows.set(r.date, { ...r, snapshot: rows.get(r.date)?.snapshot ?? null });
-  if (rows.has(today)) rows.get(today).snapshot = snap;
-  else rows.set(today, { date: today, sessions: 0, interactive: 0, headless: 0, snapshot: snap });
+  const freshByDate = new Map(fresh.map(r => [r.date, r]));
+  for (let t = Date.parse(since); t <= Date.parse(today); t += DAY_MS) {
+    const date = new Date(t).toISOString().slice(0, 10);
+    const old = rows.get(date);
+    const row = freshByDate.get(date) ?? { date, sessions: 0, interactive: 0, headless: 0, uncachedInput: 0, cacheWrite: 0, cacheRead: 0, output: 0 };
+    const rtkRow = rtk === null ? old?.rtk : rtk.get(date);
+    rows.set(date, { ...row, ...(rtkRow ? { rtk: rtkRow } : {}), snapshot: date === today ? snap : old?.snapshot ?? null });
+  }
   return [...rows.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -214,13 +233,13 @@ export async function dailyMain(flags, { home = homedir(), now = new Date() } = 
   const today = now.toISOString().slice(0, 10);
   const since = Date.parse(today) - (days - 1) * DAY_MS;
 
-  const fresh = aggregate(await collectSessions(projects, since));
+  const sessions = await collectSessions(projects, since);
+  const fresh = aggregate(sessions, since);
   const rtk = await rtkDaily();
-  for (const r of fresh) if (rtk.has(r.date)) r.rtk = rtk.get(r.date);
 
   const ledgerPath = join(out, 'daily.jsonl');
   const existing = existsSync(ledgerPath) ? readFileSync(ledgerPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
-  const rows = mergeLedger(existing, fresh, today, snapshot(home));
+  const rows = mergeLedger(existing, fresh, { since: new Date(since).toISOString().slice(0, 10), today, snap: snapshot(home), rtk });
   const tr = trend(rows, today);
   const digest = formatDigest(rows, tr, days, today);
 
@@ -233,7 +252,7 @@ export async function dailyMain(flags, { home = homedir(), now = new Date() } = 
   // The heartbeat is derived from the artifact: a day with zero sessions read is reported, not called green.
   const todayRow = rows.find(r => r.date === today);
   if (heartbeat) {
-    writeAtomic(heartbeat, JSON.stringify({ ts: now.toISOString(), source: 'neutron-daily', status: fresh.length ? 'ok' : 'no-sessions', days: fresh.length, todaySessions: todayRow.sessions, ledger: ledgerPath }) + '\n');
+    writeAtomic(heartbeat, JSON.stringify({ ts: now.toISOString(), source: 'neutron-daily', status: sessions.length ? 'ok' : 'no-sessions', sessions: sessions.length, rtk: rtk === null ? 'unavailable' : 'ok', todaySessions: todayRow.sessions, ledger: ledgerPath }) + '\n');
   }
   return 0;
 }

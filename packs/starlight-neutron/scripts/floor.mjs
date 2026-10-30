@@ -16,13 +16,18 @@ export const VARIANTS = {
 
 const PROMPT = 'Reply with the single word ok.';
 
-// Pure: the row for one run, from the stream-json events `claude -p --output-format json` prints.
+// Pure: the row for one run. `claude -p --output-format json` printed an array of events on 2.1.312 and a single
+// result object in the published docs, so both are read. Turn-0 comes from the first assistant call's usage; the
+// result's usage is the run total, used only when the run made exactly one call.
 export function parseRun(stdout) {
-  const events = JSON.parse(stdout);
-  const res = events.find(e => e.type === 'result');
+  const parsed = JSON.parse(stdout);
+  const events = Array.isArray(parsed) ? parsed : [parsed];
+  const res = events.find(e => e?.type === 'result');
   if (!res?.usage) throw new Error('no result event with usage');
-  const init = events.find(e => e.type === 'system' && e.subtype === 'init') ?? {};
-  const u = res.usage;
+  const init = events.find(e => e?.type === 'system' && e.subtype === 'init') ?? {};
+  const first = events.find(e => e?.type === 'assistant' && e.message?.usage)?.message.usage;
+  if (!first && res.num_turns !== 1) throw new Error(`run made ${res.num_turns ?? 'an unknown number of'} calls and no per-call usage was printed`);
+  const u = first ?? res.usage;
   const turn0 = (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0);
   // A run that never reached the model (logged out, refused) bills nothing; zero is a failure, not a floor.
   if (turn0 === 0) throw new Error(`no billed input: ${String(res.result ?? '').slice(0, 120)}`);
@@ -35,6 +40,7 @@ export function parseRun(stdout) {
     agents: init.agents?.length ?? null,
     skills: init.skills?.length ?? null,
     costUsd: res.total_cost_usd ?? null,
+    calls: res.num_turns ?? null,
   };
 }
 
@@ -64,8 +70,9 @@ export async function floorMain(flags, { run = spawnSync } = {}) {
   const rows = [];
   for (const cwd of cwds) {
     for (const variant of names) {
-      // No shell: the prompt must reach claude as one argument, and a shell would split it on spaces.
-      const r = run(claude, ['-p', PROMPT, '--output-format', 'json', ...VARIANTS[variant]], { cwd, encoding: 'utf8', input: '', timeout: 180_000, maxBuffer: 64 << 20 });
+      // No shell: the prompt must reach claude as one argument, and a shell would split it on spaces. A parent
+      // desktop session exports CLAUDE_CODE_ENTRYPOINT=claude-desktop; probes must not be logged as desktop sessions.
+      const r = run(claude, ['-p', PROMPT, '--output-format', 'json', ...VARIANTS[variant]], { cwd, env: { ...process.env, CLAUDE_CODE_ENTRYPOINT: 'sdk-cli' }, encoding: 'utf8', input: '', timeout: 180_000, maxBuffer: 64 << 20 });
       try { rows.push({ cwd, variant, ...parseRun(r.stdout) }); }
       catch (e) { rows.push({ cwd, variant, error: (e.message || String(r.stderr)).replace(/\s+/g, ' ') }); }
     }

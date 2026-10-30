@@ -2,21 +2,27 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { formatFloor, parseRun, VARIANTS } from '../scripts/floor.mjs';
 
-const events = (usage, extra = {}) => JSON.stringify([
-  { type: 'system', subtype: 'init', tools: ['Bash', 'Read'], mcp_servers: [{}], agents: ['a'], skills: [] },
-  { type: 'result', usage, total_cost_usd: 0.2, result: 'ok', ...extra },
-]);
+const init = { type: 'system', subtype: 'init', tools: ['Bash', 'Read'], mcp_servers: [{}], agents: ['a'], skills: [] };
+const first = (u) => ({ type: 'assistant', message: { id: 'm1', usage: u } });
+const result = (u, extra = {}) => ({ type: 'result', usage: u, total_cost_usd: 0.2, num_turns: 1, result: 'ok', ...extra });
+const u = (input, write, read) => ({ input_tokens: input, cache_creation_input_tokens: write, cache_read_input_tokens: read });
 
-test('parseRun sums uncached, cache write and cache read into Turn-0', () => {
-  const row = parseRun(events({ input_tokens: 4, cache_creation_input_tokens: 46900, cache_read_input_tokens: 47054 }));
+test('parseRun reads Turn-0 from the first assistant call in the event array (2.1.312 shape)', () => {
+  const stdout = JSON.stringify([init, first(u(4, 46900, 47054)), { type: 'rate_limit_event' }, result(u(9, 50000, 99000), { num_turns: 2 })]);
+  const row = parseRun(stdout);
   assert.equal(row.turn0, 93958);
+  assert.equal(row.calls, 2);
   assert.equal(row.tools, 2);
   assert.equal(row.mcpServers, 1);
-  assert.equal(row.costUsd, 0.2);
+});
+
+test('parseRun accepts a single result object for a one-call run and refuses run totals for multi-call runs', () => {
+  assert.equal(parseRun(JSON.stringify(result(u(2, 24051, 1679)))).turn0, 25732);
+  assert.throws(() => parseRun(JSON.stringify(result(u(2, 24051, 1679), { num_turns: 3 }))), /run made 3 calls/);
 });
 
 test('parseRun treats a run that billed nothing as a failure, not a zero floor', () => {
-  assert.throws(() => parseRun(events({ input_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 }, { result: 'Not logged in' })), /no billed input: Not logged in/);
+  assert.throws(() => parseRun(JSON.stringify([init, result(u(0, 0, 0), { result: 'Not logged in' })])), /no billed input: Not logged in/);
   assert.throws(() => parseRun(JSON.stringify([{ type: 'system' }])), /no result event/);
 });
 

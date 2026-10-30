@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-30T04:43:36.646Z",
+  "claudeCode": "2.1.312",
+  "unit": "tokens",
+  "method": "one headless claude -p per variant; Turn-0 = input + cache write + cache read of the run, each run made one call (num_turns 1)",
+  "notes": [
+    "These runs passed the prompt through a shell, which split it to the single word Reply. Turn-0 is the prefix and does not depend on the prompt; the same core-tools variant re-measured through floor.mjs without a shell gave 49,752 against 49,747 here.",
+    "Variants that billed nothing (--bare, --setting-sources project) are omitted: they did not reach the model.",
+    "A separate run with --tools Read only, empty folder: 25,732 (24,051 cache write + 1,679 cache read + 2)."
+  ],
+  "rows": [
+    {
+      "folder": "empty scratch folder",
+      "variant": "default",
+      "turn0": 93958,
+      "cacheWrite": 46900,
+      "cacheRead": 47056,
+      "tools": 1267,
+      "mcpServers": 54,
+      "agents": 120,
+      "skills": 727,
+      "costUsd": 0.3870592
+    },
+    {
+      "folder": "empty scratch folder",
+      "variant": "no-mcp",
+      "turn0": 84169,
+      "cacheWrite": 37111,
+      "cacheRead": 47056,
+      "tools": 31,
+      "mcpServers": 0,
+      "agents": 120,
+      "skills": 727,
+      "costUsd": 0.30992719999999996
+    },
+    {
+      "folder": "empty scratch folder",
+      "variant": "no-mcp-no-skills",
+      "turn0": 80926,
+      "cacheWrite": 24681,
+      "cacheRead": 56243,
+      "tools": 30,
+      "mcpServers": 0,
+      "agents": 120,
+      "skills": 0,
+      "costUsd": 0.2126046
+    },
+    {
+      "folder": "empty scratch folder",
+      "variant": "core-tools",
+      "turn0": 49747,
+      "cacheWrite": 24498,
+      "cacheRead": 25247,
+      "tools": 8,
+      "mcpServers": 0,
+      "agents": 120,
+      "skills": 0,
+      "costUsd": 0.20382139999999999
+    },
+    {
+      "folder": "C:Users\frankstarlight\repos",
+      "variant": "default",
+      "turn0": 141089,
+      "cacheWrite": 49154,
+      "cacheRead": 91933,
+      "tools": 436,
+      "mcpServers": 13,
+      "agents": 120,
+      "skills": 727,
+      "costUsd": 0.41710660000000005
+    },
+    {
+      "folder": "C:Users\frankstarlight\repos",
+      "variant": "no-mcp",
+      "turn0": 128780,
+      "cacheWrite": 36845,
+      "cacheRead": 91933,
+      "tools": 31,
+      "mcpServers": 0,
+      "agents": 120,
+      "skills": 727,
+      "costUsd": 0.31525460000000005
+    },
+    {
+      "folder": "C:Users\frankstarlight\repos",
+      "variant": "no-mcp-no-skills",
+      "turn0": 125551,
+      "cacheWrite": 24429,
+      "cacheRead": 101120,
+      "tools": 30,
+      "mcpServers": 0,
+      "agents": 120,
+      "skills": 0,
+      "costUsd": 0.218744
+    },
+    {
+      "folder": "C:Users\frankstarlight\repos",
+      "variant": "core-tools",
+      "turn0": 94365,
+      "cacheWrite": 24239,
+      "cacheRead": 70124,
+      "tools": 8,
+      "mcpServers": 0,
+      "agents": 120,
+      "skills": 0,
+      "costUsd": 0.2126048
+    }
+  ]
+}
