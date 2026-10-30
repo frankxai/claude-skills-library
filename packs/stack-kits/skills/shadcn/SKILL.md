@@ -1,8 +1,9 @@
 ---
 name: shadcn
-displayName: shadcn/ui
 description: shadcn/ui component library patterns with Radix UI primitives and Tailwind CSS. Use when creating tables, forms, dialogs, cards, buttons, or any UI component using shadcn/ui, installing shadcn components, or styling with shadcn patterns.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
+  displayName: shadcn/ui
 ---
 
 # shadcn/ui Development Guidelines

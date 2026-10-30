@@ -1,13 +1,14 @@
 ---
 name: worker-benchmarks
 description: Run comprehensive worker-system benchmarks and performance analysis. Use when benchmarking worker throughput/latency, comparing worker configurations, or diagnosing worker performance.
-version: 1.0.0
-invocable: true
-author: agentic-flow
-capabilities:
-  - performance_testing
-  - metrics_collection
-  - optimization_recommendations
+metadata:
+  version: "1.0.0"
+  author: agentic-flow
+  capabilities:
+    - performance_testing
+    - metrics_collection
+    - optimization_recommendations
+  invocable: true
 ---
 
 # Worker Benchmarks Skill

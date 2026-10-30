@@ -1,9 +1,10 @@
 ---
 name: todo-discipline
 description: "Use when starting any complex task (3+ steps) or before declaring work complete. Enforces todo/task state to match reality — merge updates + read verification. Prevents false completion."
-version: 1.0.0
-author: Frank Riemer / GenCreator
 license: MIT
+metadata:
+  version: "1.0.0"
+  author: Frank Riemer / GenCreator
 ---
 
 # Todo Discipline
