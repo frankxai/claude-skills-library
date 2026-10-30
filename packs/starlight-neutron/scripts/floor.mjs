@@ -64,8 +64,10 @@ export async function floorMain(flags, { run = spawnSync } = {}) {
   const unknown = names.filter(n => !VARIANTS[n]);
   if (unknown.length) { console.error(`unknown variant: ${unknown.join(', ')}; known: ${Object.keys(VARIANTS).join(', ')}`); return 2; }
   const { findOnPath } = await import('./neutron.mjs');
-  const claude = findOnPath('claude');
+  const claude = process.env.CLAUDE_BIN || findOnPath('claude');
   if (!claude) { console.error('claude not found on PATH'); return 1; }
+  // A .cmd/.bat shim cannot be spawned without a shell, and a shell would split the prompt. Point at the binary.
+  if (/\.(cmd|bat)$/i.test(claude)) { console.error(`${claude} is a batch shim; set CLAUDE_BIN to the claude executable`); return 1; }
 
   const rows = [];
   for (const cwd of cwds) {

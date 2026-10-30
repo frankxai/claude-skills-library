@@ -30,12 +30,21 @@ export function percentile(values, p) {
 // Reads one transcript. A streamed reply is written as several lines sharing one message id with the same usage,
 // so usage is counted once per id; counting lines would multiply every total. Each call keeps its own timestamp:
 // a session that runs past midnight bills the next day, so usage is bucketed per call, Turn-0 per session start.
-const count = (v) => (Number.isFinite(v) && v >= 0 ? v : 0);
+// A counter may be absent (0); a present counter that is not a non-negative number makes the whole record invalid,
+// so a corrupt line can neither set a false Turn-0 nor claim the message id before the real record arrives.
+const counter = (v) => (v === undefined || v === null ? 0 : Number.isFinite(v) && v >= 0 ? v : null);
 const validTs = (v) => typeof v === 'string' && !Number.isNaN(Date.parse(v));
+// Date keys are UTC whatever offset the timestamp carries: 00:30+02:00 belongs to the previous UTC day.
+export const utcDay = (ts) => new Date(ts).toISOString().slice(0, 10);
 // Measurement probes (neutron floor) are not work sessions. 'Reply' alone is the shell-split form of the probe
 // from the first floor runs on 2026-10-30, which also inherited the desktop entrypoint from their parent.
 export const PROBE_PROMPTS = new Set(['Reply with the single word ok.', 'Reply']);
-const userText = (m) => typeof m?.content === 'string' ? m.content : Array.isArray(m?.content) ? m.content.find(c => c?.type === 'text')?.text ?? null : null;
+// A probe makes exactly one call; a real session that happens to open with one of these words keeps working.
+const isProbe = (s) => s.calls.length === 1 && PROBE_PROMPTS.has(s.firstPrompt?.trim());
+const userText = (m) => {
+  const t = typeof m?.content === 'string' ? m.content : Array.isArray(m?.content) ? m.content.find(c => c?.type === 'text')?.text : null;
+  return typeof t === 'string' ? t : null;
+};
 
 export async function readSession(file) {
   const rl = createInterface({ input: createReadStream(file), crlfDelay: Infinity });
@@ -50,10 +59,11 @@ export async function readSession(file) {
     if (s.firstPrompt === undefined && j.type === 'user' && !j.isMeta) s.firstPrompt = userText(j.message);
     const u = j.message?.usage;
     if (j.type !== 'assistant' || !u || typeof u !== 'object' || !validTs(j.timestamp)) continue;
+    const call = { ts: j.timestamp, uncached: counter(u.input_tokens), cacheWrite: counter(u.cache_creation_input_tokens), cacheRead: counter(u.cache_read_input_tokens), output: counter(u.output_tokens) };
+    if (Object.values(call).includes(null)) continue;
     const id = j.message.id ?? j.uuid;
     if (seen.has(id)) continue;
     seen.add(id);
-    const call = { ts: j.timestamp, uncached: count(u.input_tokens), cacheWrite: count(u.cache_creation_input_tokens), cacheRead: count(u.cache_read_input_tokens), output: count(u.output_tokens) };
     if (s.turn0 === null) {
       s.turn0 = call.uncached + call.cacheWrite + call.cacheRead;
       s.start = call.ts;
@@ -77,7 +87,7 @@ export async function collectSessions(projectsDir, sinceMs) {
       const file = join(dir, f);
       if (statSync(file).mtimeMs < sinceMs) continue;
       const s = await readSession(file);
-      if (s.turn0 === null || s.sidechain || PROBE_PROMPTS.has(s.firstPrompt?.trim()) || !s.calls.some(c => Date.parse(c.ts) >= sinceMs)) continue;
+      if (s.turn0 === null || s.sidechain || isProbe(s) || !s.calls.some(c => Date.parse(c.ts) >= sinceMs)) continue;
       sessions.push(s);
     }
   }
@@ -93,10 +103,10 @@ export function aggregate(sessions, sinceMs = 0) {
     return days.get(d);
   };
   for (const s of sessions) {
-    if (Date.parse(s.start) >= sinceMs) day(s.start.slice(0, 10)).starts.push(s);
+    if (Date.parse(s.start) >= sinceMs) day(utcDay(s.start)).starts.push(s);
     for (const c of s.calls) {
       if (Date.parse(c.ts) < sinceMs) continue;
-      const d = day(c.ts.slice(0, 10));
+      const d = day(utcDay(c.ts));
       d.uncachedInput += c.uncached; d.cacheWrite += c.cacheWrite; d.cacheRead += c.cacheRead; d.output += c.output;
     }
   }

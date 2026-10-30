@@ -37,16 +37,24 @@ test('usage repeated across streamed lines of one message counts once', async ()
   assert.equal(row.cacheRead, 280000);
 });
 
-test('malformed records (null, numbers, bad timestamps, negative usage) are skipped, not fatal', async () => {
+test('malformed records (null, numbers, bad timestamps, invalid usage, non-string text) are skipped, not fatal', async () => {
   const root = tmp('malformed');
   transcript(join(root, 'p1'), 's.jsonl', [
     'null', '42', '"text"', '{not json',
+    JSON.stringify({ type: 'user', timestamp: '2026-10-29T09:59:00Z', message: { content: [{ type: 'text', text: 7 }] } }),
     assistant('bad-ts', 1730000000, usage(1, 1, 1, 1)),
-    assistant('m1', '2026-10-29T10:00:00Z', usage(-5, 100, Number.NaN, 2)),
+    assistant('m1', '2026-10-29T10:00:00Z', usage(-5, 100, 0, 2)),
+    assistant('m1', '2026-10-29T10:00:00Z', usage(3, 100, 200, 2)),
   ]);
   const [s] = await collectSessions(root, Date.parse('2026-10-28'));
+  assert.equal(s.firstPrompt, null);
   assert.equal(s.calls.length, 1);
-  assert.equal(s.turn0, 100);
+  assert.equal(s.turn0, 303);
+});
+
+test('date keys are UTC whatever offset a timestamp carries', () => {
+  const s = { entrypoint: 'cli', start: '2026-10-30T00:30:00+02:00', turn0: 1, calls: [call('2026-10-30T00:30:00+02:00', 5)] };
+  assert.deepEqual(aggregate([s]).map(r => [r.date, r.sessions, r.cacheRead]), [['2026-10-29', 1, 5]]);
 });
 
 test('neutron floor probe sessions are not counted as work sessions', async () => {
@@ -55,8 +63,9 @@ test('neutron floor probe sessions are not counted as work sessions', async () =
   transcript(join(root, 'p1'), 'probe.jsonl', [user('Reply with the single word ok.'), assistant('m1', '2026-10-29T10:00:01Z', usage(4, 46900, 47054, 3))]);
   transcript(join(root, 'p1'), 'split.jsonl', [user([{ type: 'text', text: 'Reply' }]), assistant('m2', '2026-10-29T10:00:01Z', usage(4, 46900, 47054, 3))]);
   transcript(join(root, 'p1'), 'work.jsonl', [user('Reply to the reviewer on PR 12'), assistant('m3', '2026-10-29T10:00:01Z', usage(4, 46900, 47054, 3))]);
+  transcript(join(root, 'p1'), 'long.jsonl', [user('Reply'), assistant('m4', '2026-10-29T10:00:01Z', usage(4, 46900, 47054, 3)), assistant('m5', '2026-10-29T10:05:00Z', usage(4, 100, 94000, 9))]);
   const sessions = await collectSessions(root, Date.parse('2026-10-28'));
-  assert.deepEqual(sessions.map(s => s.firstPrompt), ['Reply to the reviewer on PR 12']);
+  assert.deepEqual(sessions.map(s => s.firstPrompt).sort(), ['Reply', 'Reply to the reviewer on PR 12']);
 });
 
 test('sidechains, subagent folders and sessions with no call in the window are skipped', async () => {
