@@ -98,7 +98,7 @@ templates and is advisory.
 ## Packs: skills that enforce
 
 Installed into 19 repositories across the FrankX, Starlight, and Arcanea estate as of 2026-10-09.
-Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-infrastructure` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
+Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-infrastructure` set an installed skill that differs aside under `.claude/skills/.replaced/<name>.<timestamp>/` and never overwrite an earlier set-aside; `estate-guard` and `film-excellence` overwrite their skill in place, so commit a customised copy of those two before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
 
 | Pack | What it gates | Enforced by |
 |---|---|---|
@@ -129,7 +129,7 @@ whether it has moved upstream since. This library is built around those gaps.
 | | Most skills repos | This library |
 |---|---|---|
 | Skill format | `SKILL.md` | `SKILL.md`, validated in CI for frontmatter, name, description length, filename |
-| Provenance | Copied | Third-party skills in the packs are pinned to an upstream commit and re-syncable, with the upstream license beside ten of the eleven (`web-design-guidelines` is MIT per its `SOURCES.md` row but the file is not yet vendored). The Anthropic reference skills under `free-skills/anthropic/` carry their licenses but not yet pins; closing that is bet 3 in the strategy |
+| Provenance | Copied | Third-party skills in the packs are pinned to an upstream commit and re-syncable, with the upstream license beside each of the eleven (`web-design-guidelines` carries the upstream's README licence declaration and commit, since that repository ships no LICENSE file). The Anthropic reference skills under `free-skills/anthropic/` carry their licenses but not yet pins; closing that is bet 3 in the strategy |
 | Enforcement | Advisory | Hooks that block once without an audit, each with a test |
 | Counts | Hand-maintained | The README's skill total, pack total, and per-category counts are checked against the tree; a mismatch fails the build |
 | Inbound work | Paste it in | A four-gate absorption contract (license, provenance, distinctness, attestation) that refuses rather than warns |
@@ -369,7 +369,7 @@ fifty answers the eval harness is published open-source regardless.
 ## License
 
 MIT. See [LICENSE](LICENSE). Imported skills retain their upstream licenses, recorded in
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and, with one exception, in each vendored folder; `web-design-guidelines` carries its MIT record in the pack's `SOURCES.md` until the file is vendored.
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and in each vendored folder.
 
 ---
 
