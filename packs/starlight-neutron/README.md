@@ -128,6 +128,24 @@ headroom  uv tool install --python 3.13 "headroom-ai[all]"
 ccusage   npm install -g ccusage
 ```
 
+## Daily digest
+
+`scripts/turn0-digest.mjs` turns the measurement protocol into a daily number. It reads the Claude Code transcripts under `~/.claude/projects`, takes the first billed assistant call of each session as Turn-0 (what a fresh session costs before any work), skips sidechains and nested subagent transcripts, and splits sessions by the transcript's `entrypoint` field: `claude-desktop` and `cli` are interactive, `sdk-*` is headless. The split matters because headless runs start near 10k tokens and interactive ones near 230k; mixed, the median says nothing.
+
+```
+node packs/starlight-neutron/scripts/turn0-digest.mjs --starlight C:/Users/frank/starlight [--days 14] [--refresh-foundry] [--dry-run] [--json]
+```
+
+Each run upserts one row for the day in `<starlight>/logs/token-digest.jsonl`, rewrites `<starlight>/logs/digests/token-digest.md` between `<!-- token-digest:start -->` and `<!-- token-digest:end -->`, and writes `<starlight>/logs/heartbeats/heartbeat-token-digest.json` (status `fail` when zero sessions were found, so a moved transcript root cannot read as green). The row also carries the byte size of the always-loaded instruction files, `rtk gain` (bytes/4 estimate) and the skill-foundry eval count read from `~/.claude/skill-foundry/estate-skills.graph.json` (`--refresh-foundry` regenerates it, which rescans every transcript).
+
+`scripts/Register-StarlightTokenDigest.ps1` stages the daily Windows task. It registers the task disabled unless `-Enable` is passed; a human runs it.
+
+First digest, 2026-10-30, 21-day window, one machine: 247 interactive sessions, Turn-0 median 228,510; 358 headless, median 11,465. Interactive Turn-0 per day was 224k to 235k on 2026-10-19 to 10-22 (before the Nucleus core replaced `~/.claude/CLAUDE.md`) and 237k to 246k on 10-27 to 10-30 (after). The core cut that file by 10.7 KB (about 2.7k tokens); memory files, MCP tool schemas and agent listings each cost more than that, so Turn-0 did not move. Always-loaded instruction files that day: 152,011 bytes, about 38k tokens at bytes/4.
+
+## Measured: Nucleus recall (N1)
+
+`experiments/2026-10-27-n1-nucleus-recall.json`, a cloud routine run on 2026-10-27, collected 2026-10-30. The Nucleus Claude core (22,738 bytes) and the full doctrine text (49,927 bytes) were each read by three Sonnet subagents and quizzed on 12 binding rules. Both arms scored 12 of 12 on every rep. Whole-run tokens per quiz subagent: 105,497 mean for the full doctrine, 94,384 for the core. Three reps, one quiz, one model, Claude grading Claude: a sanity check that the compiled core kept the rules, not a study.
+
 ## Boundaries
 
 - **Do not compress what is persisted.** Code, commits, docs, memory files and messages to other people stay in plain prose.

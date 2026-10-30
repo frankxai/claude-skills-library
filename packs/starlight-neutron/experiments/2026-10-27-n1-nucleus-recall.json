@@ -1,0 +1,34 @@
+{
+  "experiment": "N1 Nucleus rule-recall quiz",
+  "source": "claude.ai routine run cse_015JZDKkyCrPw81FQu46SpdD (trigger trig_014ghr8FMqh676eXwgxL4UPs), collected 2026-10-30 from the run log; the JSON below is the runner's final report verbatim, nothing re-graded by hand",
+  "runner_model": "claude-sonnet-5-5",
+  "quiz_model": "sonnet",
+  "env": { "date": "2026-10-27", "repo_commit": "181ce57d512c640bcf1733ed35f05446c8efb419" },
+  "arms": {
+    "A": { "label": "full doctrine (rules.units.json text)", "bytes": 49927, "lines": 462, "est_tokens": 12482 },
+    "B": { "label": "Nucleus claude core (compile.mjs output)", "bytes": 22738, "lines": 201, "est_tokens": 5684 },
+    "C": { "bytes": null, "est_tokens": null, "skipped_reason": "project_nucleus.py has no print or --out mode, and its dry run refuses: it needs C:/Users/frank/starlight/AGENTS.md and the cc-plugin-agents-md setting, neither present on this machine. It would equal ARM B anyway." }
+  },
+  "fact_present": { "A": [1,2,3,4,5,6,7,8,9,10,11,12], "B": [1,2,3,4,5,6,7,8,9,10,11,12], "C": [] },
+  "calls": [
+    { "arm": "A", "rep": 1, "reported_total_tokens": 105559, "correct": 12, "correct_where_fact_present": 12, "misses": [] },
+    { "arm": "A", "rep": 2, "reported_total_tokens": 105408, "correct": 12, "correct_where_fact_present": 12, "misses": [] },
+    { "arm": "A", "rep": 3, "reported_total_tokens": 105525, "correct": 12, "correct_where_fact_present": 12, "misses": [] },
+    { "arm": "B", "rep": 1, "reported_total_tokens": 94389, "correct": 12, "correct_where_fact_present": 12, "misses": [] },
+    { "arm": "B", "rep": 2, "reported_total_tokens": 94309, "correct": 12, "correct_where_fact_present": 12, "misses": [] },
+    { "arm": "B", "rep": 3, "reported_total_tokens": 94454, "correct": 12, "correct_where_fact_present": 12, "misses": [] }
+  ],
+  "summary": [
+    { "arm": "A", "mean_tokens": 105497, "mean_correct": 12 },
+    { "arm": "B", "mean_tokens": 94384, "mean_correct": 12 }
+  ],
+  "errors": [
+    "ARM C skipped (see above).",
+    "Q4 was hedged with 'NOT IN DOCUMENT as a general permission' in A rep1, B rep1, B rep3 and part of B rep2; each still stated the key content (Frank approves, staged scripts), so graded correct."
+  ],
+  "caveats": [
+    "n=3 reps per arm, one quiz of 12 questions, one model: a sanity check, not a study.",
+    "reported_total_tokens is each quiz subagent's whole-run total (file read plus answers), so the 10.5% gap is the cost of reading 27 KB less, not a Turn-0 measurement.",
+    "The grader was the same provider as the quiz takers (Claude); maker = checker."
+  ]
+}
