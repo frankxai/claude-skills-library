@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: ai-architect-review--outcome-a
+description: "Should trigger ai-architect-review; outcome graded."
+tags: [ai-architect-review, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Review my agent design before I build it. Next.js on Vercel serverless. An agent loop calls the OpenAI SDK directly from 6 different route files. The loop stops \"when the agent decides it is done\". It fetches web pages and feeds them straight into the model, and it can send email. Give me your review."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ai-architect-review\""
+  - name: rx-0
+    type: regex
+    pattern: "MADE|DEFERRED|UNMADE|ABSENT"
+    flags: i
+  - name: judged-1
+    type: llm
+    criteria: "PASS only if the review (1) names the four hard-to-reverse decisions (model call seam, loop shape and exit condition, trust boundary, where a long run lives), (2) marks the provider calls spread over 6 files as a deferred or unmade seam, (3) flags the stop-in-the-prompt exit as unbounded, (4) flags fetched web text reaching the model as an untrusted-input and side-effect-gating problem, and (5) gives no numeric score."

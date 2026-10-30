@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: mcp-architecture--outcome-b
+description: "Should trigger mcp-architecture; outcome graded."
+tags: [mcp-architecture, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I am exposing a billing API to agents as an MCP endpoint. What auth and security practices should I follow?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?mcp-architecture\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it gives concrete MCP-specific security guidance (scoped tokens or OAuth, least privilege per tool, input validation, confirmation for write actions, audit logging) and not just generic web API advice."
