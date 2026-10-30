@@ -1,5 +1,4 @@
 ---
-version: 0.3.0
 name: higgsfield-soul-id
 description: |
   Train a Soul Character — a personalized model on a person's face that
@@ -14,6 +13,8 @@ description: |
   named-character / non-photo avatars (use higgsfield-generate with prompt).
 argument-hint: "[name] [photo paths...]"
 allowed-tools: Bash
+metadata:
+  version: "0.3.0"
 ---
 
 # Higgsfield Soul Character
