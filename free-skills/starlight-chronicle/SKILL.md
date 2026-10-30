@@ -1,7 +1,8 @@
 ---
 name: starlight-chronicle
 description: The reflective layer of the FrankX OS. A four-cadence practice — weekly Palace Review, monthly Survey, quarterly Constellation Census, annual Legacy Audit — that witnesses what's been built, blesses what is whole, and orients the next move from a sovereign vantage. Couples to /changelog as its factual underlayer. Use when invoking /palace, /chronicle, /bless, or when a Sunday reflection is requested.
-inheritance: frankx-meta ← creator-meta
+metadata:
+  inheritance: frankx-meta ← creator-meta
 ---
 
 # Starlight Chronicle

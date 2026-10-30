@@ -1,7 +1,8 @@
 ---
 name: oracle-confidentiality
 description: Enforce confidentiality across Oracle deliverables — pre-delivery audits, codename enforcement, and content sanitization. Use before any Oracle client handoff, when sanitizing documents, or when checking deliverables for confidential leaks.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Oracle Confidentiality Guardian

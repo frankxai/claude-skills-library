@@ -1,7 +1,8 @@
 ---
 name: social-media-strategy
 description: Platform-specific tactics, content optimization, audience growth, and analytics-driven social media strategy. Use when planning a social strategy, optimizing posts for a specific platform, or growing and measuring an audience.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Social Media Strategy Expert
