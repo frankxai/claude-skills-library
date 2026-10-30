@@ -4,15 +4,21 @@ A portable pack that makes website and web-design work go through the same
 sequence in every repo, whether the session is running on a laptop or in a cloud
 container.
 
-It is three things:
+It is four things:
 
 1. **Eleven vendored skills** from the best public sources (Vercel, Emil Kowalski,
    nextlevelbuilder, arvindrk, Leonxlnx) — pinned to commits, re-syncable, MIT.
    See [SOURCES.md](SOURCES.md) for provenance and the assessment of each.
-2. **Three native skills** that fill what none of them do: sequencing
-   (`web-release-gate`), measurement (`core-web-vitals`), and evidence
-   (`visual-proof`).
+2. **Five native skills** that fill what none of them do: sequencing
+   (`web-release-gate`), measurement (`core-web-vitals`), evidence
+   (`visual-proof`), one governed shader or 3D surface per page
+   (`gpu-surface`), and dependency upkeep with a peer check (`web-steward`).
 3. **Three hooks** that make the sequence the default instead of a suggestion.
+4. **Three agents** that hold the roles: `worker-web-builder` (the maker),
+   `worker-visual-qa` (the judge, on a different model), and
+   `worker-web-steward` (dependency and skill upkeep). They are compiled and
+   evaluated in agentic-creator-os and carried here pinned to a commit, so they
+   reach every repo the skills reach. See [SOURCES.md](SOURCES.md).
 
 ## Install
 
@@ -26,7 +32,10 @@ git clone --depth 1 https://github.com/frankxai/claude-skills-library /tmp/csl \
 ```
 
 Idempotent — re-run to upgrade. `--dry-run` shows the diff first. `--no-db`
-skips `ui-ux-pro-max` (~1.8 MB of CSV) if repo size matters.
+skips `ui-ux-pro-max` (~1.8 MB of CSV) if repo size matters. `--no-agents`
+skips the three agents. A local agent file that differs from the pack's is set
+aside to `.claude/agents.replaced/` (outside `.claude/agents/`, so the harness
+never loads two agents with one name) and named in the output.
 
 Then add one line to the repo's `CLAUDE.md`:
 
@@ -108,12 +117,27 @@ gating), so the installer reports the difference instead.
 
 ```bash
 python3 packs/web-excellence/tests/test_hooks.py
+node --test packs/web-excellence/tests/peer-check.test.mjs packs/web-excellence/tests/install-agents.test.mjs
 ```
 
 22 checks, no dependencies: gate path matching, fire-once-per-session, stop
 blocks-then-never-again, no chaining, opt-out, case-insensitive contract
 detection, `0600` state file, path-traversal-safe session ids, and the linter's
 ratchet semantics both ways.
+
+`peer-check.test.mjs` runs offline, and CI picks it up through the
+`packs/*/tests/*.test.mjs` glob. It covers the semver range parser against the
+peer ranges npm packages actually declare, the drift classes (a `0.x` minor
+counts as breaking), and the pnpm importer reader.
+
+`install-agents.test.mjs` installs into throwaway git repos and checks the
+agents arrive byte for byte, an identical re-run leaves them alone, a diverged
+local copy is set aside rather than deleted, and `--no-agents`,
+`--skills-only`, and `--dry-run` write none. It also checks each vendored agent
+is a compiled file whose name matches, with a model tier and no `Agent` tool,
+and that the installer names any skill or agent the repo's `.gitignore` would
+keep out of git. Repos that allowlist pack skills one by one otherwise lose
+each new skill silently.
 
 ## Cloud sessions
 
@@ -154,11 +178,13 @@ packs/web-excellence/
 ├── SOURCES.md             upstream pins + why each skill was adopted or skipped
 ├── install.sh             install into a repo (idempotent)
 ├── sync-upstream.sh       re-vendor from upstream, rewrite the pin table
+├── sync-agents.sh         re-vendor the agents from an agentic-creator-os checkout
 ├── settings.snippet.json  the hooks block install.sh merges
 ├── ci/                    the model-free linter + its workflow
 ├── hooks/                 the three hooks
-├── tests/                 test_hooks.py — run it after touching a hook
-└── skills/                14 skills — 11 vendored, 3 native
+├── tests/                 test_hooks.py, peer-check.test.mjs, install-agents.test.mjs
+├── agents/                3 agents — compiled in agentic-creator-os, never edited here
+└── skills/                16 skills — 11 vendored, 5 native
 ```
 
 Vendored skills are verbatim copies. Never hand-edit one — `sync-upstream.sh`

@@ -36,6 +36,8 @@ PACK_SKILLS = [
     "image-to-code",
     "extract-design-system",
     "brandkit",
+    "gpu-surface",
+    "web-steward",
 ]
 
 # Repo-level design contracts, in precedence order. These beat the pack.
