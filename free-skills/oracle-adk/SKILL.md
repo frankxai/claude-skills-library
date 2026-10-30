@@ -1,7 +1,8 @@
 ---
 name: oracle-adk
 description: Build production agentic applications on OCI with Oracle's Agent Development Kit — multi-agent orchestration, function tools, and enterprise patterns. Use when developing agents on OCI with the Oracle ADK or integrating Oracle enterprise services into an agent.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Oracle ADK Expert Skill

@@ -1,5 +1,4 @@
 ---
-version: 0.3.0
 name: higgsfield-product-photoshoot
 description: |
   Generate brand-quality product images through Higgsfield product-photoshoot
@@ -20,6 +19,8 @@ description: |
   higgsfield-soul-id).
 argument-hint: "[--mode <mode>] [--count N] [prompt]"
 allowed-tools: Bash
+metadata:
+  version: "0.3.0"
 ---
 
 # Product Photoshoot

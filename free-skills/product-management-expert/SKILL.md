@@ -1,7 +1,8 @@
 ---
 name: product-management-expert
 description: Product management expertise for strategy, discovery, prioritization, roadmaps, PRDs, metrics, and stakeholder communication. Use when defining what to build, why, and how to measure success.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Product Management Expert

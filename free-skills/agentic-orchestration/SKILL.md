@@ -1,7 +1,8 @@
 ---
 name: agentic-orchestration
 description: Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Best practices for building and managing agent systems. Use when designing how multiple agents coordinate — splitting up tasks, defining handoffs, or choosing an orchestration topology.
-version: 2.0.0
+metadata:
+  version: "2.0.0"
 ---
 
 # Agentic Orchestration Patterns

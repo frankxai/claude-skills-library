@@ -1,17 +1,11 @@
 ---
 name: model-routing
 description: Intelligent model selection — routes tasks to Haiku (fast/cheap), Sonnet (balanced), or Opus (complex/strategic) by analyzing task complexity. Use when deciding which model to run, optimizing cost vs quality, or building a tiered routing layer.
-triggers:
-  - model
-  - routing
-  - optimize
-  - cost
-  - haiku
-  - sonnet
-  - opus
-priority: high
-version: 1.1.0
-source: claude-flow
+metadata:
+  triggers: "model, routing, optimize, cost, haiku, sonnet, opus"
+  version: "1.1.0"
+  priority: "high"
+  source: "claude-flow"
 ---
 
 # Model Routing System

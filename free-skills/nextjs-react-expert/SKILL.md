@@ -1,7 +1,8 @@
 ---
 name: nextjs-react-expert
 description: Advanced Next.js (App Router) and React engineering for architecture, server/client boundaries, data fetching, caching, performance, and production operations. Use when building, reviewing, or debugging modern React/Next.js applications.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Next.js & React Expert

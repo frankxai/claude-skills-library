@@ -1,7 +1,8 @@
 ---
 name: oracle-agent-spec
 description: Design framework-agnostic AI agents with Oracle's Open Agent Specification for portable, interoperable agents defined in JSON/YAML. Use when authoring an Open Agent Spec definition or making an agent portable across frameworks.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Oracle Agent Spec Expert Skill
