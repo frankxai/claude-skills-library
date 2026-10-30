@@ -195,11 +195,15 @@ async function main(argv) {
     return 0;
   }
   if (command === 'ledger') return ledgerMain(flags);
+  if (command === 'daily') {
+    const { dailyMain } = await import('./daily.mjs');
+    return dailyMain(flags);
+  }
   if (command === 'doctor') {
     for (const row of doctor()) console.log(`${row.ok ? 'ok     ' : 'missing'}  ${row.name.padEnd(20)} ${row.detail}`);
     return 0;
   }
-  console.error('usage: neutron.mjs doctor | bench [--json | --md] | context [--config path] [--propose] | ledger <sub>');
+  console.error('usage: neutron.mjs doctor | bench [--json | --md] | context [--config path] [--propose] | ledger <sub> | daily [--days N] [--out dir] [--heartbeat path] [--json] [--dry-run]');
   return 2;
 }
 

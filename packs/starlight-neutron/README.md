@@ -66,6 +66,21 @@ In CLAUDE.md:
   - File has over 100 lines (150 lines total). Consider summarizing or extracting.
 ```
 
+## Daily
+
+`neutron.mjs daily` reads the local Claude Code transcripts (`~/.claude/projects/*/*.jsonl`) and writes one row per UTC day: sessions by entrypoint, Turn-0 median per entrypoint, total uncached input, cache write, cache read and output, and RTK's own saved-token figure for that day. Today's row also records a snapshot: the bytes and hash of `~/.claude/CLAUDE.md` and `NUCLEUS-ON-DEMAND.md`, the number of installed skills, and how many carry an `evals/` folder. A snapshot is never backfilled.
+
+Turn-0 is the billed input of a session's first API call, the prefix every session pays before any work. Desktop and CLI sessions load different prefixes, so they are reported apart and the trend line reads desktop. Headless `sdk-*` runs are counted, not mixed into the median. A streamed reply repeats its usage on several transcript lines; usage is counted once per message id.
+
+```
+node scripts/neutron.mjs daily --days 14              # writes ~/.starlight/neutron/daily.jsonl and DAILY.md
+node scripts/neutron.mjs daily --dry-run --json       # prints only
+node scripts/neutron.mjs daily --heartbeat <path>     # adds {ts, source, status}; status is no-sessions on an empty read
+pwsh -File scripts/Register-NeutronDaily.ps1          # prints the scheduled task it would create; -Apply registers it
+```
+
+Rows inside the window are recomputed each run; older rows stay as written. The figures are a usage trend, not a savings claim: a lower Turn-0 says the prefix shrank, not that work got done as well. Savings claims still go through the ledger below.
+
 ## Ledger
 
 `neutron.mjs ledger` turns billed usage into a savings figure only when quality was checked. Rows are JSONL: `date, harness, model, taskId, arm, uncachedInput, cacheWrite, cacheRead, output, check, notes`. `arm` is `baseline` or a candidate name. `check` is `pass`, `fail` or `not-checked`.
