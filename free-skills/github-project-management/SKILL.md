@@ -3,26 +3,14 @@ name: github-project-management
 description: GitHub project management with issue tracking, project-board automation, and sprint planning. Use when triaging or organizing issues, automating a project board, planning a sprint, or running release/roadmap coordination on GitHub.
 metadata:
   version: "2.1.0"
-  category: github
-  author: Claude Code
-  tags:
-    - github
-    - project-management
-    - issue-tracking
-    - project-boards
-    - sprint-planning
-    - agile
-    - swarm-coordination
-  title: GitHub Project Management
-  difficulty: intermediate
-  prerequisites:
-    - GitHub CLI (gh) installed and authenticated
-    - ruv-swarm or claude-flow MCP server configured
-    - Repository access permissions
-  related_skills:
-    - github-release-management
-    - github-multi-repo
-  estimated_time: 30-45 minutes
+  category: "github"
+  author: "Claude Code"
+  tags: "github, project-management, issue-tracking, project-boards, sprint-planning, agile, swarm-coordination"
+  title: "GitHub Project Management"
+  difficulty: "intermediate"
+  prerequisites: "GitHub CLI (gh) installed and authenticated, ruv-swarm or claude-flow MCP server configured, Repository access permissions"
+  related_skills: "github-release-management, github-multi-repo"
+  estimated_time: "30-45 minutes"
 ---
 
 # GitHub Project Management

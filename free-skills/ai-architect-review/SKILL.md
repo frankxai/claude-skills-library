@@ -3,7 +3,7 @@ name: ai-architect-review
 description: Review the architecture of a system that calls a language model. Use when adding an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system that worked in a demo is being prepared for production; or when asked to audit, review, or plan AI/agent architecture. Checks the four decisions that are expensive to reverse, then the seven planes and their boundaries.
 license: MIT
 metadata:
-  source: https://www.frankx.ai/ai-architect
+  source: "https://www.frankx.ai/ai-architect"
 ---
 
 # AI architecture review

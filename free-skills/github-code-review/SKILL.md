@@ -3,20 +3,11 @@ name: github-code-review
 description: Comprehensive GitHub pull-request code review with multi-agent coordination. Use when reviewing a PR or diff, auditing changes for correctness/security/style before merge, or generating actionable inline review comments.
 metadata:
   version: "1.0.0"
-  category: github
-  tags: [code-review, github, swarm, pr-management, automation]
-  author: Claude Code Flow
-  capabilities:
-    - Multi-agent code review
-    - Automated PR management
-    - Security and performance analysis
-    - Swarm-based review orchestration
-    - Intelligent comment generation
-    - Quality gate enforcement
-  requires:
-    - github-cli
-    - ruv-swarm
-    - claude-flow
+  category: "github"
+  tags: "code-review, github, swarm, pr-management, automation"
+  author: "Claude Code Flow"
+  capabilities: "Multi-agent code review, Automated PR management, Security and performance analysis, Swarm-based review orchestration, Intelligent comment generation, Quality gate enforcement"
+  requires: "github-cli, ruv-swarm, claude-flow"
 ---
 
 # GitHub Code Review Skill

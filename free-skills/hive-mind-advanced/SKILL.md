@@ -3,9 +3,9 @@ name: hive-mind-advanced
 description: Queen-led collective-intelligence coordination with consensus mechanisms and persistent shared memory. Use when orchestrating a large swarm of agents under a lead coordinator, building consensus across agents, or maintaining durable cross-agent memory.
 metadata:
   version: "1.0.0"
-  category: coordination
-  tags: [hive-mind, swarm, queen-worker, consensus, collective-intelligence, multi-agent, coordination]
-  author: Claude Flow Team
+  category: "coordination"
+  tags: "hive-mind, swarm, queen-worker, consensus, collective-intelligence, multi-agent, coordination"
+  author: "Claude Flow Team"
 ---
 
 # Hive Mind Advanced Skill

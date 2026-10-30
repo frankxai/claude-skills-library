@@ -3,23 +3,12 @@ name: github-release-management
 description: GitHub release orchestration — automated versioning, testing, deployment, and rollback. Use when cutting a release, tagging a version, drafting release notes, or coordinating a deploy/rollback workflow.
 metadata:
   version: "2.0.0"
-  category: github
-  tags: [release, deployment, versioning, automation, ci-cd, swarm, orchestration]
-  author: Claude Flow Team
-  requires:
-    - gh (GitHub CLI)
-    - claude-flow
-    - ruv-swarm (optional for enhanced coordination)
-    - mcp-github (optional for MCP integration)
-  dependencies:
-    - git
-    - npm or yarn
-    - node >= 20.0.0
-  related_skills:
-    - github-pr-management
-    - github-issue-tracking
-    - github-workflow-automation
-    - multi-repo-coordination
+  category: "github"
+  tags: "release, deployment, versioning, automation, ci-cd, swarm, orchestration"
+  author: "Claude Flow Team"
+  requires: "gh (GitHub CLI), claude-flow, ruv-swarm (optional for enhanced coordination), mcp-github (optional for MCP integration)"
+  dependencies: "git, npm or yarn, node >= 20.0.0"
+  related_skills: "github-pr-management, github-issue-tracking, github-workflow-automation, multi-repo-coordination"
 ---
 
 # GitHub Release Management Skill

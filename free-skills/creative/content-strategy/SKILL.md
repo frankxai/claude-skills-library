@@ -2,7 +2,7 @@
 name: content-strategy
 description: Strategic content planning with pillar mapping, editorial calendars, and SEO optimization. Use this skill when planning content, managing editorial calendars, auditing existing content, or developing content pillar strategies.
 metadata:
-  author: FrankX
+  author: "FrankX"
   version: "1.2.0"
 ---
 

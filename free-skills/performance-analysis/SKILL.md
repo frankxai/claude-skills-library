@@ -3,9 +3,9 @@ name: performance-analysis
 description: Performance analysis, bottleneck detection, and optimization recommendations. Use when profiling slow code or systems, hunting a performance regression, or producing an optimization plan with measurable targets.
 metadata:
   version: "1.0.0"
-  category: monitoring
-  tags: [performance, bottleneck, optimization, profiling, metrics, analysis]
-  author: Claude Flow Team
+  category: "monitoring"
+  tags: "performance, bottleneck, optimization, profiling, metrics, analysis"
+  author: "Claude Flow Team"
 ---
 
 # Performance Analysis Skill
