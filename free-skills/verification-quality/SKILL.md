@@ -1,9 +1,10 @@
 ---
 name: verification-quality
 description: Truth scoring, code-quality verification, and automatic rollback with a high accuracy threshold. Use when validating agent output before it ships, gating changes on quality, or adding a verify-and-rollback safety loop.
-version: "2.0.0"
-category: "quality-assurance"
-tags: ["verification", "truth-scoring", "quality", "rollback", "metrics", "ci-cd"]
+metadata:
+  version: "2.0.0"
+  category: "quality-assurance"
+  tags: "verification, truth-scoring, quality, rollback, metrics, ci-cd"
 ---
 
 # Verification & Quality Assurance Skill

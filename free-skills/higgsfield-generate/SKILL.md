@@ -1,5 +1,4 @@
 ---
-version: 0.3.0
 name: higgsfield-generate
 description: |
   Generate images/videos via Higgsfield AI. Default: GPT
@@ -24,6 +23,8 @@ description: |
   listing cards, text/chat/TTS tasks.
 argument-hint: "[prompt-or-analysis-request] [--model <name>] [--image|--video <path-or-id>]"
 allowed-tools: Bash
+metadata:
+  version: "0.3.0"
 ---
 
 # Higgsfield Generate

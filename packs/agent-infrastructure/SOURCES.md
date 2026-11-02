@@ -14,13 +14,13 @@ License: MIT, per this repository's LICENSE.
 | Skill | Canonical source | Content hash | Files | Synced |
 |---|---|---|---|---|
 | `swarm-orchestration` | [`free-skills/swarm-orchestration`](../../free-skills/swarm-orchestration) | `6d883eaa2a8c` | 1 | 2026-10-30 |
-| `swarm-advanced` | [`free-skills/swarm-advanced`](../../free-skills/swarm-advanced) | `89a2ab8e659d` | 2 | 2026-10-30 |
-| `hive-mind-advanced` | [`free-skills/hive-mind-advanced`](../../free-skills/hive-mind-advanced) | `998a9b18cdc7` | 3 | 2026-10-30 |
+| `swarm-advanced` | [`free-skills/swarm-advanced`](../../free-skills/swarm-advanced) | `dba15da8ad4a` | 2 | 2026-10-30 |
+| `hive-mind-advanced` | [`free-skills/hive-mind-advanced`](../../free-skills/hive-mind-advanced) | `d0cc164019fc` | 3 | 2026-10-30 |
 | `reasoningbank-intelligence` | [`free-skills/reasoningbank-intelligence`](../../free-skills/reasoningbank-intelligence) | `5280c6d692f7` | 1 | 2026-10-30 |
 | `reasoningbank-agentdb` | [`free-skills/reasoningbank-agentdb`](../../free-skills/reasoningbank-agentdb) | `cebf4ea17c80` | 1 | 2026-10-30 |
-| `hooks-automation` | [`free-skills/hooks-automation`](../../free-skills/hooks-automation) | `87125aecfe55` | 6 | 2026-10-30 |
-| `stream-chain` | [`free-skills/stream-chain`](../../free-skills/stream-chain) | `f91fcaae267d` | 2 | 2026-10-30 |
-| `verification-quality` | [`free-skills/verification-quality`](../../free-skills/verification-quality) | `9821c37dac6d` | 2 | 2026-10-30 |
+| `hooks-automation` | [`free-skills/hooks-automation`](../../free-skills/hooks-automation) | `49c9ebadf7a7` | 6 | 2026-10-30 |
+| `stream-chain` | [`free-skills/stream-chain`](../../free-skills/stream-chain) | `4e238b36f78b` | 2 | 2026-10-30 |
+| `verification-quality` | [`free-skills/verification-quality`](../../free-skills/verification-quality) | `227b4ccd514a` | 2 | 2026-10-30 |
 | `skill-builder` | [`free-skills/skill-builder`](../../free-skills/skill-builder) | `55da0e4e49e7` | 1 | 2026-10-30 |
 
 <!-- PINS:END -->

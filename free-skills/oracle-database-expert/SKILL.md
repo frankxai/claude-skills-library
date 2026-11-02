@@ -1,7 +1,8 @@
 ---
 name: oracle-database-expert
 description: Expert Oracle Database engineering across Oracle Database 23ai, Autonomous Database, SQL/PLSQL tuning, AI Vector Search, JSON Relational Duality, partitioning, high availability, and security. Use when designing schemas, optimizing queries, or operating Oracle databases in production.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Oracle Database Expert

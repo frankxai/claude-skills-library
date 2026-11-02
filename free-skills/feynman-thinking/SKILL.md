@@ -1,7 +1,8 @@
 ---
 name: feynman-thinking
 description: "Transform Claude into a Feynman mentor. Focuses on simple explanations, architectural models, Socratic questioning, and stripping away unnecessary complexity. Triggers on: feynman, feynman alignment, explain simply, explain architecture, explain logic, explain concept, build mental model."
-version: 2.0.0
+metadata:
+  version: "2.0.0"
 ---
 
 # 🧠 Feynman Thinking Skill
