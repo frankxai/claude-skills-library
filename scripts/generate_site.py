@@ -106,6 +106,7 @@ def main() -> int:
       <span class="pill"><b>{len(data)}</b> skills</span>
       <span class="pill"><b>{len(cats)}</b> categories</span>
       <span class="pill">MIT licensed</span>
+      <span class="pill"><a href="https://www.frankx.ai/skills">Web Hub ↗</a></span>
       <span class="pill"><a href="{REPO_URL}">GitHub ↗</a></span>
     </div>
     <div class="install">
@@ -123,6 +124,7 @@ def main() -> int:
 
   <footer>
     Built on Anthropic's open <a href="https://agentskills.io">Agent Skills</a> standard ·
+    <a href="https://www.frankx.ai/skills">FrankX Skills Hub</a> ·
     <a href="{REPO_URL}">Star the repo ⭐</a>
   </footer>
 </div>

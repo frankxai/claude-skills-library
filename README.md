@@ -18,9 +18,9 @@ hooks that block "done" until the evidence exists.
 [![Pack tests](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[**Install**](#install) · [**Packs**](#packs-skills-that-enforce) · [**Catalog**](docs/CATALOG.md) · [**Strategy**](docs/STRATEGY.md) · [**Contribute**](CONTRIBUTING.md) · [**FAQ**](#faq)
+[**Install**](#install) · [**Packs**](#packs-skills-that-enforce) · [**Catalog**](docs/CATALOG.md) · [**Web Hub**](https://www.frankx.ai/skills) · [**Strategy**](docs/STRATEGY.md) · [**Contribute**](CONTRIBUTING.md) · [**FAQ**](#faq)
 
-**[Subscribe to the Waitlist](https://frankx.ai/waitlist?utm_source=github&utm_medium=readme&utm_campaign=claude-skills-library)**
+**[Subscribe to the Waitlist](https://www.frankx.ai/waitlist?utm_source=github&utm_medium=readme&utm_campaign=claude-skills-library)**
 
 </div>
 
@@ -320,8 +320,10 @@ See [`SUPPORT.md`](SUPPORT.md) for routing and [`CODE_OF_CONDUCT.md`](CODE_OF_CO
 
 ---
 
-## Related repositories
+## Related repositories and web guides
 
+- **[FrankX Claude Code & Agent Skills Hub](https://www.frankx.ai/skills)**: interactive [Skill Builder](https://www.frankx.ai/skills/builder), searchable [web skill catalog](https://www.frankx.ai/resources/skills), and architectural comparisons across skills, plugins, subagents, and MCP servers.
+- **[Claude Code Skills: The 10 You Actually Need](https://www.frankx.ai/blog/claude-code-skills-2026-the-10-you-need)** and **[AI Architecture Blueprints](https://www.frankx.ai/ai-architecture)**: field notes and reference topologies from production deployments.
 - **[frankxai/skills](https://github.com/frankxai/skills)** and **[frankxai/creator-skills](https://github.com/frankxai/creator-skills)**: the curated, actively maintained lanes for AI architects and for creators. This library is the full catalog behind them.
 - **[frankxai/agentic-creator-os](https://github.com/frankxai/agentic-creator-os)**: the canonical, larger source for skills, agents, and commands. New skills are authored and battle-tested there first.
 - **[frankxai/Starlight-Intelligence-System](https://github.com/frankxai/Starlight-Intelligence-System)**: the substrate. Persistent context, memory, and the multi-agent layer the skills run on.
@@ -377,6 +379,6 @@ MIT. See [LICENSE](LICENSE). Imported skills retain their upstream licenses, rec
 
 <img src="assets/logo.svg" width="64" alt="Claude Skills Library mark"/>
 
-**[Join the eval-pack list](https://www.frankx.ai/waitlist?intent=claude-skills-library)** · **[Star the repo](https://github.com/frankxai/claude-skills-library)** · **[Catalog](docs/CATALOG.md)** · **[Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
+**[Join the eval-pack list](https://www.frankx.ai/waitlist?intent=claude-skills-library)** · **[Web Hub](https://www.frankx.ai/skills)** · **[Star the repo](https://github.com/frankxai/claude-skills-library)** · **[Catalog](docs/CATALOG.md)** · **[Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
 
 </div>
