@@ -117,6 +117,15 @@ loads these when installed: the `web-excellence` pack in this repo
 `impeccable`, `taste-skill`, `ui-ux-pro-max`, `frontend-design`, Emil Kowalski's
 skills, GreenSock's `gsap-skills`, and `humanizer`.
 
+## Reference libraries
+
+The studio ships no reference content. Connect your own Refero or Mobbin MCP
+(and 60fps for native app motion) and `skills/design-references` pulls real
+screens, flows and style systems at the moment each decision is made. Codrops,
+Awwwards and recent.design work without an account. The skill writes reference
+cards (a link plus what the reference does well, in our words) and refuses to
+mirror or bulk-download a library, which both libraries' terms forbid.
+
 ## Tests and evals
 
 ```bash

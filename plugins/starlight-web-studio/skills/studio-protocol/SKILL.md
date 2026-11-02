@@ -57,6 +57,8 @@ next role reads the file, not the summary.
 2. **Brief** (`audience-strategist`): `brief.md` naming the buyer, the job they
    came to do, what they use today, and **three named, current references** this
    must beat, each on one stated dimension. Opened this session, not remembered.
+   Pull them with `design-references`, which reads the user's own reference
+   libraries and leaves cards in `references.md`, never copies.
 3. **Directions** (`art-director`): `directions.md` with 2 or 3 directions that
    differ on at least two of composition, typography, material, interaction,
    motion. Palette alone does not count. Each has a static mock or a precise
