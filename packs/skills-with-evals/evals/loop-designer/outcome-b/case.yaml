@@ -5,7 +5,7 @@ tags: [loop-designer, should-trigger]
 runs: 2
 execution:
   model: claude-sonnet-5
-  prompt: "Make an agent keep working on getting our CI green, around the clock, without me watching. Give me the setup."
+  prompt: "Make an agent keep working on getting our CI green, around the clock, without me watching. This is a design exercise only: the sandbox has no real CI pipeline, so do not search for one. Give me the setup, writing the loop's durable artifacts as if a real failing CI existed."
   max_turns: 6
   allowed_tools: [Skill, Read, Write]
 graders:

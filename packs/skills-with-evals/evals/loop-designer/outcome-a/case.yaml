@@ -5,7 +5,7 @@ tags: [loop-designer, should-trigger]
 runs: 2
 execution:
   model: claude-sonnet-5
-  prompt: "I have a backlog of 40 pages that each need alt text fixed. Design something that works through it unattended overnight, one page at a time, and checks its own work."
+  prompt: "I have a backlog of 40 image files, each missing alt text. This is a design exercise only: the sandbox has no real pages, so do not search for them. Design a loop that would work through the 40 files unattended overnight, one file at a time, checking its own work, and write the loop artifacts themselves (for example LOOP.md and state.json) as if the 40 files existed at runtime."
   max_turns: 6
   allowed_tools: [Skill, Read, Write]
 graders:

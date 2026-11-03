@@ -5,7 +5,7 @@ tags: [feynman-thinking, should-trigger]
 runs: 2
 execution:
   model: claude-sonnet-5
-  prompt: "Explain simply how a request flows through our auth middleware to the suggestion engine. Build me a mental model, Feynman style."
+  prompt: "Here is how our system works, spelled out in full so you don't need to look anything up: a request first hits an auth middleware that checks a signed JWT and attaches the user id; the middleware then forwards the request to a suggestion engine, which embeds the user's recent activity, queries a vector index, and returns the top-ranked items. Explain this flow simply. Build me a mental model, Feynman style."
   max_turns: 6
   allowed_tools: [Skill, Read]
 graders:

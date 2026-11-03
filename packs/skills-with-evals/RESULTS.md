@@ -80,4 +80,18 @@ claude plugin eval . --ablation with-without --judge-model haiku --max-cost-usd 
 node scripts/summarize.mjs results/<date>
 ```
 
+## Follow-up, 2026-11-03 [Claude, no spend]
+
+Fixed the two invalid cases named in "Fix or drop proposals" above, without running them (this session had no fresh spend authorization; the prior run already spent 14.37 USD against this pack's cost ceiling).
+
+- `evals/feynman-thinking/outcome-a/case.yaml` and `outcome-b/case.yaml`: the prompts now spell out the system inline ("auth middleware", "caching layer") instead of assuming a real repo exists in the sandbox.
+- `evals/loop-designer/outcome-a/case.yaml` and `outcome-b/case.yaml`: the prompts now say explicitly that the sandbox has no real files or CI, so the model stops searching for them and writes the loop's own artifacts (`LOOP.md`, `state.json`) as the deliverable.
+
+Still open, not done this session:
+
+- Rerun feynman-thinking and loop-designer with the fixed prompts to get a real verdict.
+- `model-routing`, `todo-discipline`, `verification-quality` have never run (model-routing finished only its no-trigger case). Estimated 1.0-1.5 USD each per the table above, so roughly 5-8 USD for all three plus the two reruns.
+- Second-provider judge: this run and the fixed rerun both use Anthropic as judge (Haiku) and as the model under test. The product plan's maker-is-not-checker rule for evals (`cloud/CONTEXT.md`, issue #8: "skill-judge, then Codex") has not been satisfied. Running `claude plugin eval` with a non-Anthropic judge model, or a Codex read of this pack's cases and results, is still needed before any skill in this pack is called evaluated.
+- New spend needs Frank's authorization before any of the above runs (Doctrine 0: agents stage, humans execute on spend).
+
 

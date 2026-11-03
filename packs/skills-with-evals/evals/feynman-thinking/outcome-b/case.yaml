@@ -5,7 +5,7 @@ tags: [feynman-thinking, should-trigger]
 runs: 2
 execution:
   model: claude-sonnet-5
-  prompt: "I do not understand our caching layer. Explain the architecture so a junior developer could follow it, and ask me questions that expose what I am assuming."
+  prompt: "Here is our caching layer, described in full so you don't need to look anything up: a read-through cache sits in front of Postgres, each key has a 5-minute TTL, and every write runs a hook that invalidates the matching cache key. I do not understand this architecture. Explain it so a junior developer could follow it, and ask me questions that expose what I am assuming."
   max_turns: 6
   allowed_tools: [Skill, Read]
 graders:
