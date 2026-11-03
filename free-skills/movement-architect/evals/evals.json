@@ -1,0 +1,23 @@
+{
+  "skill_name": "movement-architect",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I run a small open-source library for Claude Code skills (about 40 stars, a few hundred visitors a week, mostly from Google). I want to turn it into something people join, not just a repo they star. Give me the movement, the free thing, what I'd charge for and how, and how I'd know it's working. Don't make up numbers.",
+      "expected_output": "A Movement Brief with all ten blocks: a sophistication-stage judgement with evidence, a competitor-language table, a leader/cause/label/new-opportunity core that names the old vehicle, a five-rung ladder where every gift is a slice of the real product, a lead magnet matched to an awareness stage with two-step capture and the three questions, packaging on GitHub plus a merchant of record, a scoreboard of measured counts, and open rulings. Unknown facts marked [OPEN]; no invented counts or seeded scarcity.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Our Notion template shop on Gumroad does about 30 sales a month at $19. Conversion on the sales page is around 1% and we have no email list. Someone told me to 'build a funnel'. What do we actually do first?",
+      "expected_output": "Diagnoses the awareness/sophistication mismatch before touching the funnel; proposes a lead magnet sliced from a real template with a one-outcome promise, delivered in under sixty seconds, two-step capture with the price-band question; lays a ladder (free slice → the $19 template → a bundle or membership) and names the Hook/Story/Offer diagnostic; cites benchmarks only with their caveats and tells them to beat their own baseline.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Write the manifesto for a brand whose idea is 'one founder running a fleet of AI agents'. Make it feel like something people want to be part of, not a product page.",
+      "expected_output": "A manifesto that leads with identity and a future-based cause, names the old vehicle (the single chat window, the solo grind) rather than attacking people or companies, offers an identity label members would put in a bio, keeps proof inside rather than in the headline, and avoids stock AI vocabulary ('unleash', 'seamless', '10x'). It should be consistent with the movement core blocks of the brief, and it should not include invented statistics.",
+      "files": []
+    }
+  ]
+}

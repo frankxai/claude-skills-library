@@ -9,8 +9,8 @@
   },
   "totals": {
     "pluginsWithListedSkills": 1,
-    "skills": 114,
-    "skillsWithEvals": 0,
+    "skills": 115,
+    "skillsWithEvals": 1,
     "pluginsFromOtherRepos": 3
   },
   "plugins": [
@@ -22,7 +22,7 @@
         "type": "local",
         "path": "./"
       },
-      "skillCount": 114,
+      "skillCount": 115,
       "skills": [
         {
           "name": "acos-meta",
@@ -407,6 +407,12 @@
           "description": "Intelligent model selection — routes tasks to Haiku (fast/cheap), Sonnet (balanced), or Opus (complex/strategic) by analyzing task complexity. Use when deciding which model to run, optimizing cost vs quality, or building a tiered routing layer.",
           "path": "free-skills/model-routing",
           "hasEvals": false
+        },
+        {
+          "name": "movement-architect",
+          "description": "Design a movement-led brand and the product ladder that funds it: the leader, the future-based cause and the new opportunity (Expert Secrets), market sophistication and awareness staging (Schwartz), positioning against real alternatives (Dunford), offer construction (value equation), a value ladder from lead magnet to continuity, and packaging into digitally distributable products (skills, playbooks, templates, boilerplates, ebooks, courses, memberships) for marketplaces. Use whenever someone wants to build a movement, manifesto, launch, funnel, lead magnet, offer, pricing ladder or product line, asks what digital product to build or how to position against competitors, or says things like 'make this a bigger idea', 'how do we sell this', 'what should the free thing be', 'write the manifesto', or 'turn this brand into a movement', even when they never say the word funnel.",
+          "path": "free-skills/movement-architect",
+          "hasEvals": true
         },
         {
           "name": "nextjs-agent-team",
