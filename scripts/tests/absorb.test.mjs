@@ -130,6 +130,7 @@ test('gate 3 refuses an artifact that is >=85% identical to an existing skill', 
     assert.equal(code, 1, out);
     assert.equal(verdict(out, 3), 'REFUSE', out);
     assert.match(out, /identical to free-skills\/already-here/);
+    assert.doesNotMatch(out, /free-skills\\/);
     assert.ok(!landed(repo), 'duplicate landed');
   });
 });
