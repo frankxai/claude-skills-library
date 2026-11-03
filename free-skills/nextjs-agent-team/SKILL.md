@@ -1,7 +1,8 @@
 ---
 name: nextjs-agent-team
 description: Multi-agent workflow for planning, building, testing, and shipping Next.js applications. Use when building a Next.js app end-to-end with a team of specialist agents, or coordinating plan→build→test→ship for a Next.js project.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Next.js Agent Team System

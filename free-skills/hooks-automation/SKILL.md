@@ -1,7 +1,8 @@
 ---
 name: hooks-automation
 description: Configure and automate Claude Code hooks in .claude/settings.json (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStop, SessionEnd). Use when setting up Claude Code hooks to auto-format files after edits, run pre-commit or safety checks before Bash commands, guard secrets or protected files, save session state on Stop or SessionEnd, or wire optional external CLI and MCP hook runners.
-version: 2.0.0
+metadata:
+  version: "2.0.0"
 ---
 
 # Claude Code Hooks Automation

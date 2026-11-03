@@ -1,7 +1,8 @@
 ---
 name: excellence-book-writing
 description: High-quality nonfiction writing patterns for structure, clarity, narrative flow, and editorial polish. Use when drafting or revising long-form nonfiction, tightening chapters, or raising prose from competent to excellent.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Excellence Book Writing
