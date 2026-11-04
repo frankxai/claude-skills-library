@@ -1,5 +1,4 @@
 ---
-version: 0.3.0
 name: higgsfield-marketplace-cards
 description: |
   Generate marketplace product image cards through Higgsfield: compliant
@@ -14,6 +13,8 @@ description: |
   higgsfield-generate), or Soul Character training (use higgsfield-soul-id).
 argument-hint: "[--scope main|product-images|aplus|full-set] [prompt]"
 allowed-tools: Bash
+metadata:
+  version: "0.3.0"
 ---
 
 # Marketplace Cards

@@ -151,15 +151,33 @@ def test_diverged_copy_is_preserved_and_reported() -> None:
         check("install exits 0 with a diverged copy present", p.returncode == 0, p.stderr)
         check("diverged copy is named in the output",
               "DIVERGED swarm-orchestration" in p.stdout, p.stdout)
-        kept = os.path.join(target, ".claude", "skills", ".replaced",
-                            "swarm-orchestration", "SKILL.md")
-        check("diverged copy preserved under .replaced/", os.path.isfile(kept))
+        aside_root = os.path.join(target, ".claude", "skills", ".replaced")
+        asides = sorted(d for d in (os.listdir(aside_root) if os.path.isdir(aside_root) else [])
+                        if d.startswith("swarm-orchestration."))
+        check("diverged copy preserved under .replaced/<name>.<timestamp>/", len(asides) == 1, str(asides))
+        kept = os.path.join(aside_root, asides[0], "SKILL.md") if asides else ""
+        check("diverged copy preserved under .replaced/", bool(kept) and os.path.isfile(kept))
         if os.path.isfile(kept):
             check("preserved copy is the fork, byte for byte",
                   open(kept, encoding="utf-8").read() == fork)
         canon = os.path.join(LIB, "free-skills", "swarm-orchestration")
         check("canonical version installed in its place",
               tree_hash(canon) == tree_hash(d))
+
+
+def test_second_divergence_does_not_overwrite_first_set_aside() -> None:
+    with tempfile.TemporaryDirectory() as target:
+        d = os.path.join(target, ".claude", "skills", "swarm-orchestration")
+        aside_root = os.path.join(target, ".claude", "skills", ".replaced")
+        for i in (1, 2):
+            os.makedirs(d, exist_ok=True)
+            open(os.path.join(d, "SKILL.md"), "w", encoding="utf-8").write(f"fork {i}\n")
+            p = run_install(target)
+            check(f"run {i} with a diverged copy exits 0", p.returncode == 0, p.stderr)
+        asides = sorted(x for x in os.listdir(aside_root) if x.startswith("swarm-orchestration."))
+        check("two diverged runs leave two set-aside copies", len(asides) == 2, str(asides))
+        bodies = sorted(open(os.path.join(aside_root, a, "SKILL.md"), encoding="utf-8").read() for a in asides)
+        check("both forks survive, byte for byte", bodies == ["fork 1\n", "fork 2\n"], str(bodies))
 
 
 def test_dry_run_writes_nothing() -> None:

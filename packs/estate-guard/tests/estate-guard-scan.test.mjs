@@ -5,9 +5,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { scanRepo, RULES } from '../ci/estate-guard-scan.mjs';
 
-const SCANNER = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../ci/estate-guard-scan.mjs');
+const SCANNER = fileURLToPath(new URL('../ci/estate-guard-scan.mjs', import.meta.url));
 
 function repo(files, { git = true } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'eg-'));
@@ -17,7 +18,8 @@ function repo(files, { git = true } = {}) {
   }
   if (git) {
     execFileSync('git', ['-C', root, 'init', '-q']);
-    execFileSync('git', ['-C', root, 'add', '-A']);
+    // Stage only declared synthetic fixtures, even when user-level ignores match them.
+    execFileSync('git', ['-C', root, 'add', '--force', '--', ...Object.keys(files)]);
     execFileSync('git', ['-C', root, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'init']);
   }
   return root;
@@ -233,4 +235,18 @@ test('isMain is true when argv[1] is the file\'s own path', () => {
     assert.equal(e.status, 2);
     assert.ok(e.stderr.includes('usage: --root <repo> | --estate <dir>'), 'scanner ran and printed usage');
   }
+});
+
+test('non-git fallback scans workflows and routes while ignoring build output', () => {
+  const root = repo({
+    '.github/workflows/probe.yml': "on: issue_comment\njobs:\n  probe:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo \"${{ github.event.comment.body }}\"\n",
+    'app/api/cron/probe/route.ts': "export async function GET(){ return new Response('ok') }\n",
+    'build/app/api/cron/ignored/route.ts': "export async function GET(){ return new Response('ok') }\n",
+  }, { git: false });
+  const r = scanRepo(root, { public: true });
+  assert.equal(r.stats.workflows, 1);
+  assert.equal(r.stats.routes, 1);
+  assert.ok(r.findings.some(f => f.rule === 'WF002' && f.file === '.github/workflows/probe.yml'));
+  assert.ok(r.findings.some(f => f.rule === 'WEB002' && f.file === 'app/api/cron/probe/route.ts'));
+  assert.ok(r.findings.every(f => !f.file.startsWith('build/')));
 });

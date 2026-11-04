@@ -1,7 +1,8 @@
 ---
 name: loop-designer
 description: Compile a goal into a durable, file-backed agent loop — a .loop/<name>/ charter any coding agent (Claude Code, Codex, Gemini, Grok) can execute unattended. Use when the user wants to "build a loop", "design a loop", "run X continuously/24-7", "make an agent keep working on Y", automate recurring work, or convert a big backlog into autonomous iteration. Produces LOOP.md + state.json + backlog.md, ready for loop-runner.
-version: 2.0.0
+metadata:
+  version: "2.0.0"
 ---
 
 # Loop Designer
