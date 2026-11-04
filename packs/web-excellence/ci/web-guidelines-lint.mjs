@@ -173,30 +173,88 @@ function stripComments(src, file) {
   const fileSass = /\.(scss|sass)$/.test(file);
   const fileCss = CSS_EXT.test(file) && !fileSass;
   const html = /\.(html|vue|svelte|astro)$/.test(file);
+  const markup = html || /\.[jt]sx$/.test(file);
   const blank = s => s.replace(/[^\n]/g, ' ');
   let sass = fileSass;
   let css = fileCss;
+  // Child text is not JavaScript: quotes and // or /* there are literal.
+  // Keep the surrounding context while entering tags and {…} expressions,
+  // including a JSX element nested inside an attribute expression.
+  let mode = html ? 'text' : 'code';
+  const contexts = [];
+  let astroFence = /\.astro$/.test(file) && /^---\r?\n/.test(src);
+  let astroOpened = false;
   let out = '';
   let q = null;
   for (let i = 0; i < src.length;) {
     const c = src[i];
-    if (html && !q && c === '<') {
-      const open = /^<style\b[^>]*>/i.exec(src.slice(i, i + 200));
-      if (open) {
-        sass = /\blang\s*=\s*["']?(?:scss|sass)\b/i.test(open[0]);
-        css = !sass;
-        out += open[0];
-        i += open[0].length;
-        continue;
-      }
-      if (/^<\/style\s*>/i.test(src.slice(i, i + 10))) { sass = fileSass; css = fileCss; }
-    }
     if (q) {
       out += c;
-      if (c === '\\' && i + 1 < src.length) { out += src[i + 1]; i += 2; continue; }
+      if (c === '\\' && mode === 'code' && i + 1 < src.length) { out += src[i + 1]; i += 2; continue; }
       if (c === q || (c === '\n' && q !== '`')) q = null;
       i++;
       continue;
+    }
+    if (astroFence && (i === 0 || src[i - 1] === '\n')) {
+      const fence = /^---(?:\r?\n|$)/.exec(src.slice(i));
+      if (fence) {
+        mode = astroOpened ? 'text' : 'code';
+        astroFence = !astroOpened;
+        astroOpened = true;
+        out += fence[0]; i += fence[0].length; continue;
+      }
+    }
+    if (html && src.startsWith('<!--', i)) {
+      const end = src.indexOf('-->', i + 4);
+      const stop = end === -1 ? src.length : end + 3;
+      out += blank(src.slice(i, stop)); i = stop; continue;
+    }
+    if (markup && c === '<' && mode !== 'tag') {
+      const tag = /^<(\/?)(?:([A-Za-z][\w:.-]*)(?=[\s/>])|(?=>))/.exec(src.slice(i));
+      // TSX generic arrows also begin with <T extends …>. Keep their body
+      // in code mode, so a later inline // comment is still a comment.
+      // Bound the lookahead like the element-scope scanner below.
+      const genericArrow = mode === 'code' && /\.tsx$/.test(file) &&
+        /^<[A-Za-z_$][\w$]*(?:\s+extends\b|,)[\s\S]*?>\s*\([^;]*?\)\s*(?::[^=;]+)?=>/.test(src.slice(i, i + 4000));
+      // A comparison such as i<n is not an opening element.
+      if (tag && !genericArrow && (mode === 'text' || tag[1] || !/[\w$)\]]/.test(src[i - 1] || ''))) {
+        contexts.push({ kind: 'tag', returnMode: mode, closing: !!tag[1], name: (tag[2] || '').toLowerCase(), start: i });
+        mode = 'tag'; out += tag[0]; i += tag[0].length; continue;
+      }
+    }
+    if (mode === 'text') {
+      if (c === '{') { contexts.push({ kind: 'expression', returnMode: mode, depth: 1 }); mode = 'code'; }
+      out += c; i++; continue;
+    }
+    if (mode === 'tag') {
+      if (c === '{') {
+        contexts.push({ kind: 'expression', returnMode: mode, depth: 1 });
+        mode = 'code'; out += c; i++; continue;
+      }
+      if (c === '>') {
+        const tag = contexts.pop();
+        if (tag.closing) {
+          const parent = contexts.at(-1);
+          mode = parent?.kind === 'element' ? contexts.pop().returnMode : tag.returnMode;
+          if (tag.name === 'style') { sass = fileSass; css = fileCss; }
+        } else if (src[i - 1] === '/' || (html && /^(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/.test(tag.name))) {
+          mode = tag.returnMode;
+        } else {
+          contexts.push({ kind: 'element', returnMode: tag.returnMode });
+          mode = html && /^(?:script|style)$/.test(tag.name) ? 'code' : 'text';
+          if (html && tag.name === 'style') {
+            sass = /\blang\s*=\s*["']?(?:scss|sass)\b/i.test(src.slice(tag.start, i));
+            css = !sass;
+          }
+        }
+        out += c; i++; continue;
+      }
+    } else {
+      const expr = contexts.at(-1);
+      if (expr?.kind === 'expression') {
+        if (c === '{') expr.depth++;
+        if (c === '}' && --expr.depth === 0) { mode = contexts.pop().returnMode; }
+      }
     }
     let end = -1;
     if (c === '/' && src[i + 1] === '*') {
@@ -206,9 +264,6 @@ function stripComments(src, file) {
                !(sass && /url\(\s*$/i.test(src.slice(Math.max(0, i - 8), i)))) {
       const e = src.indexOf('\n', i);
       end = e === -1 ? src.length : e;
-    } else if (html && src.startsWith('<!--', i)) {
-      const e = src.indexOf('-->', i + 4);
-      end = e === -1 ? src.length : e + 3;
     }
     if (end !== -1) { out += blank(src.slice(i, end)); i = end; continue; }
     if (c === '"' || c === "'" || c === '`') q = c;

@@ -651,6 +651,55 @@ def test_r3d_uppercase_vf_suffix_folds() -> None:
           rc == 0 and "Inter (next/font/local)" in out and "InterVF" not in out, out)
 
 
+def test_literal_markup_slashes_do_not_hide_following_tags() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        files = []
+        for ext in ("tsx", "jsx", "vue", "svelte", "astro"):
+            name = f"components/Literal.{ext}"
+            files.append(name)
+            body = ('<div><span>Read</span> // this is literal '
+                    '<img src="/a.png" alt="A" /></div>')
+            write(d, name, (f"export const A = () => {body};" if ext in ("tsx", "jsx") else body) + "\n")
+        write(d, "components/Block.tsx",
+              'export const A = () => <>Don\'t hide /* literal <img src="/b.png" alt="B" /> */ text</>;\n')
+        files.append("components/Block.tsx")
+        write(d, "components/Nested.tsx",
+              'export const A = () => <Box icon={<span>Literal // <img src="/a.png" alt="A" /></span>} />;\n')
+        files.append("components/Nested.tsx")
+        out, rc = lint(d, *files)
+        for name in files:
+            check(f"literal markup slashes preserve image checks in {name}",
+                  f"{name}:1 - [error] <img> without explicit width/height" in out, out)
+        check("literal markup violations fail the gate", rc == 1, out)
+
+
+def test_real_comments_remain_excluded_around_markup() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        config(d, {"bannedHex": ["#ab47c7"]})
+        write(d, "components/Comments.tsx",
+              'export const A = () => <div>{/* <img src="/a.png" /> #ab47c7 */}\n'
+              '  {(() => { // <img src="/b.png" /> #ab47c7\n'
+              '    return <span>Literal // text</span>;\n'
+              '  })()}<img src="/c.png" alt="C" width={1} height={1} />\n'
+              '</div>;\n'
+              '// <img src="/d.png" /> #ab47c7\n')
+        write(d, "components/Comments.vue",
+              '<template><div><!-- <img src="/a.png" /> #ab47c7 -->\n'
+              'Literal // text</div></template>\n'
+              '<script>\n// <img src="/b.png" /> #ab47c7\nexport default {};\n</script>\n'
+              '<style>\n/* #ab47c7 */\n.a { color: black; }\n</style>\n')
+        write(d, "components/Generic.tsx",
+              'export const identity = <T extends {}>(x: T) => x;\n'
+              'const x = 1; // <img src="/a.png" /> #ab47c7\n'
+              'export const A = () => <div />;\n')
+        write(d, "components/Front.astro",
+              '---\n// <img src="/a.png" /> #ab47c7\nconst x = 1;\n---\n'
+              '<div>Literal // text</div>\n')
+        out, rc = lint(d, "components/Comments.tsx", "components/Comments.vue",
+                       "components/Generic.tsx", "components/Front.astro")
+        check("real JSX, JavaScript, HTML and CSS comments stay excluded", rc == 0, out)
+
+
 if __name__ == "__main__":
     if not shutil.which("node"):
         print("skip: node not available")
