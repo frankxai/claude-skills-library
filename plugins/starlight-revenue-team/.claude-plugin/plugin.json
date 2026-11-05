@@ -1,0 +1,24 @@
+{
+  "name": "starlight-revenue-team",
+  "version": "0.1.0",
+  "description": "A proactive production team as seven Claude Code commands: a morning pulse, PR to merged, content pieces scored by a second provider, demand capture, skill packs, and licence-checked harvesting from other repos. It wires into the agents you already run and keeps every send, spend and merge behind a person.",
+  "author": {
+    "name": "FrankX",
+    "url": "https://github.com/frankxai"
+  },
+  "homepage": "https://github.com/frankxai/claude-skills-library/tree/main/plugins/starlight-revenue-team",
+  "repository": "https://github.com/frankxai/claude-skills-library",
+  "license": "MIT",
+  "keywords": [
+    "agent-team",
+    "multi-agent",
+    "content",
+    "marketing",
+    "demand-capture",
+    "waitlist",
+    "code-review",
+    "maker-checker",
+    "skill-packs",
+    "licensing"
+  ]
+}
