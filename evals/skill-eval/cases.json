@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "note": "One realistic task per skill. `must` patterns are case-insensitive regexes that all have to match; `rubric` items are graded 0 or 1 by a model from a different family than the one answering.",
+  "cases": [
+    {
+      "skill": "free-skills/ui-ux-design-expert",
+      "task": "Audit this signup form and give the five most important fixes, most severe first: a 3-step modal, placeholder-only labels, grey #9a9a9a text on white, a submit button that is disabled until every field validates, and errors shown only as a red border.",
+      "must": ["label", "contrast", "(error|validation) (message|text)", "(wcag|accessib)"],
+      "rubric": [
+        "Flags placeholder-only labels as an accessibility failure and asks for visible labels.",
+        "Identifies the grey text as failing WCAG contrast (about 2.8:1 against a 4.5:1 minimum for body text).",
+        "Objects to a disabled submit button that hides why it is disabled.",
+        "Asks for errors in text, not colour alone.",
+        "Orders fixes by severity rather than listing them flat."
+      ]
+    },
+    {
+      "skill": "free-skills/social-media-strategy",
+      "task": "A solo AI consultant has 800 LinkedIn followers and 3 hours a week. Give a 4-week LinkedIn plan with post formats, cadence and the two metrics to watch.",
+      "must": ["week", "linkedin", "(metric|measure|engagement|impression)"],
+      "rubric": [
+        "Fits the plan inside roughly 3 hours a week.",
+        "Names concrete LinkedIn-native formats (for example text posts, carousels/documents, comments on others' posts).",
+        "Gives a specific weekly cadence.",
+        "Chooses exactly two metrics and says why they matter for a consultant.",
+        "Avoids generic advice that would apply to any platform."
+      ]
+    },
+    {
+      "skill": "free-skills/mcp-architecture",
+      "task": "Design an MCP server that exposes a company's read-only Postgres analytics database to an AI assistant. List the tools and resources, and the security controls.",
+      "must": ["tool", "resource", "(read[- ]only|readonly)", "(auth|permission|scope)"],
+      "rubric": [
+        "Separates tools (actions with inputs) from resources (readable data).",
+        "Enforces read-only access at the database role, not only in prompt text.",
+        "Limits query cost or rows (timeouts, row caps or allow-listed queries).",
+        "Addresses authentication for remote use.",
+        "Mentions prompt-injection or untrusted data returned to the model."
+      ]
+    },
+    {
+      "skill": "free-skills/langgraph-patterns",
+      "task": "Sketch a LangGraph graph for a support agent that classifies a ticket, drafts a reply, and pauses for human approval before sending. Show the state and the edges.",
+      "must": ["state", "(edge|add_edge|conditional)", "(interrupt|human|approval)"],
+      "rubric": [
+        "Defines a typed state that carries the ticket, class and draft.",
+        "Uses a conditional edge after classification.",
+        "Uses a real human-in-the-loop mechanism (interrupt or a checkpointer) rather than a comment.",
+        "Needs a checkpointer or persistence to resume after approval.",
+        "Handles the rejected-draft path."
+      ]
+    },
+    {
+      "skill": "free-skills/nextjs-react-expert",
+      "task": "In a Next.js App Router app, a product page fetches price data that changes every minute and reviews that change daily. How should each be fetched and cached?",
+      "must": ["(server component|rsc)", "(revalidat|cache)"],
+      "rubric": [
+        "Fetches on the server rather than in a client effect.",
+        "Uses different freshness for price and reviews.",
+        "Names concrete caching controls (revalidate time, tags or on-demand revalidation).",
+        "Considers streaming or Suspense so slow reviews do not block the price.",
+        "Does not recommend making the whole page dynamic without reason."
+      ]
+    },
+    {
+      "skill": "free-skills/product-management-expert",
+      "task": "We have 40 feature requests and one engineer for a quarter. How do we decide the three to build? Give the method and the first step for Monday.",
+      "must": ["(priorit|rice|ice|impact)", "(customer|user|evidence)"],
+      "rubric": [
+        "Proposes a concrete prioritisation method with named inputs.",
+        "Grounds the decision in user or revenue evidence, not votes alone.",
+        "Accounts for the one-engineer constraint (effort or scope).",
+        "Gives a specific first action for Monday.",
+        "Says what to tell the requesters whose items were not chosen."
+      ]
+    },
+    {
+      "skill": "free-skills/claude-sdk",
+      "task": "Write the core loop of a Python agent that uses the Anthropic SDK with one tool, get_weather(city), and keeps calling the model until it stops asking for tools.",
+      "must": ["tool_use", "tool_result", "(stop_reason|end_turn)"],
+      "rubric": [
+        "Sends the tool definition with a JSON schema.",
+        "Detects tool_use blocks in the response content.",
+        "Returns tool_result blocks with the matching tool_use_id.",
+        "Loops until the model stops requesting tools.",
+        "Appends the assistant turn before the tool results so the conversation stays valid."
+      ]
+    },
+    {
+      "skill": "free-skills/suno-ai-mastery",
+      "task": "Write a Suno prompt for a 3-minute melancholic synthwave track with female vocals about leaving a city at night: the style tags and a structured lyric with section markers.",
+      "must": ["\\[(verse|chorus)", "synthwave"],
+      "rubric": [
+        "Separates the style description from the lyrics.",
+        "Uses bracketed section markers such as [Verse] and [Chorus].",
+        "Specifies vocal character and mood in the style field.",
+        "Keeps the structure plausible for about 3 minutes.",
+        "The lyric actually concerns leaving a city at night."
+      ]
+    },
+    {
+      "skill": "free-skills/video-production-workflow",
+      "task": "Plan a 60-second YouTube Short explaining what an AI agent is, from idea to publish. Include the hook, shot list and what to measure after posting.",
+      "must": ["hook", "(shot|b-roll|scene)", "(retention|view|watch)"],
+      "rubric": [
+        "Opens with a hook in the first 2 to 3 seconds.",
+        "Gives a shot or scene list that fits 60 seconds.",
+        "Addresses vertical 9:16 framing or captions.",
+        "Names post-publish metrics such as retention or viewed-versus-swiped.",
+        "Includes an iteration step based on those metrics."
+      ]
+    },
+    {
+      "skill": "free-skills/feynman-thinking",
+      "task": "Explain to a smart 12-year-old why a large language model can confidently state something false.",
+      "must": ["(predict|guess|next word|pattern)"],
+      "rubric": [
+        "Uses plain words and at least one concrete analogy.",
+        "Explains prediction of likely text rather than looking up facts.",
+        "Explains why confidence and correctness are different.",
+        "Avoids jargon, or defines it immediately.",
+        "Ends with a check-for-understanding question or a way to test the idea."
+      ]
+    }
+  ]
+}

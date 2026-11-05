@@ -1,0 +1,155 @@
+name: skill-eval
+
+# Cross-model skill evaluation. Runs on free public-repo minutes; MAX_USD is a
+# conservative local call-reservation limit, not a provider-enforced hard cap.
+# The monthly schedule is inert until the repository variable
+# SKILL_EVAL_SCHEDULE_ENABLED is set to "true" (estate rule: crons stay off until approved).
+#
+# The lift lane (scripts/eval-skill.mjs, with-skill vs no-skill baseline) runs only when
+# someone adds the run-lift-eval label to a PR. It spends the plan behind
+# CLAUDE_CODE_OAUTH_TOKEN, so it never fires on an ordinary push. The job runs the PR head's
+# own scripts/eval-skill.mjs with that token in its environment, so it also requires the
+# repository variable LIFT_APPROVED_SHA to equal the PR's head SHA: set it after reviewing that
+# exact revision, then add the label. Any later push changes the SHA and the job stays off.
+# Fork PRs are skipped.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+    paths:
+      - 'evals/**'
+      - 'free-skills/**/SKILL.md'
+      - 'scripts/eval-skill.mjs'
+      - 'scripts/tests/eval-skill.test.mjs'
+      - '.github/workflows/skill-eval.yml'
+  workflow_dispatch:
+    inputs:
+      max_usd:
+        description: 'Local metered-call allocation in USD (maximum 2; not a hard billing cap)'
+        default: '2'
+  schedule:
+    - cron: '0 6 1 * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  # A labeled run (the paid lift lane) gets its own group so a later push cannot cancel it.
+  group: skill-eval-${{ github.ref }}-${{ github.event.action == 'labeled' && github.event.label.name || 'ci' }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit tests (no network, no keys)
+        run: node --test evals/skill-eval/run.test.mjs scripts/tests/eval-skill.test.mjs
+
+  eval:
+    needs: test
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && vars.SKILL_EVAL_SCHEDULE_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      MAX_USD: ${{ github.event.inputs.max_usd || '2' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - name: Install
+        working-directory: evals/skill-eval
+        run: pnpm install --frozen-lockfile
+      - name: Install Claude Code (own-login lane)
+        if: env.CLAUDE_CODE_OAUTH_TOKEN != ''
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Run
+        working-directory: evals/skill-eval
+        run: node run.mjs | tee run.log
+      - name: Summary
+        if: always()
+        working-directory: evals/skill-eval
+        run: |
+          {
+            echo '## Skill eval'
+            echo '```'
+            cat run.log 2>/dev/null || echo 'no run log'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skill-eval-scorecard
+          path: evals/skill-eval/scorecards/
+          if-no-files-found: warn
+
+  lift:
+    needs: test
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'run-lift-eval' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      vars.LIFT_APPROVED_SHA == github.event.pull_request.head.sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      LIFT_SKILLS: ui-ux-design-expert book-publishing excellence-book-writing
+      APPROVED_SHA: ${{ vars.LIFT_APPROVED_SHA }}
+    steps:
+      # pull_request checks out the merge commit by default; run the approved head instead.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Confirm the checkout is the approved revision
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "$APPROVED_SHA" ]; then
+            echo "::error::checked out $actual but LIFT_APPROVED_SHA is $APPROVED_SHA"
+            exit 1
+          fi
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@2.1.303
+      - name: Lift runs
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        # One skill failing must not hide the others' results; each exit code is recorded,
+        # and the step fails afterwards if any skill did not produce a comparable result.
+        run: |
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "::error::CLAUDE_CODE_OAUTH_TOKEN is empty; the lift lane cannot authenticate."
+            exit 1
+          fi
+          for s in $LIFT_SKILLS; do
+            node scripts/eval-skill.mjs "$s" --runs 3 --max-cost-usd 5 --model claude-sonnet-5-5 --by "github-actions run ${{ github.run_id }}" && code=0 || code=$?
+            echo "$s exit $code" | tee -a lift-exits.txt
+          done
+          if grep -qv ' exit 0$' lift-exits.txt; then
+            echo "::error::at least one skill did not produce a comparable lift result (see lift-exits.txt)"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: lift-scorecards
+          path: |
+            lift-exits.txt
+            evals/*/SCORECARD.md
+            evals/*/results/
+          if-no-files-found: error

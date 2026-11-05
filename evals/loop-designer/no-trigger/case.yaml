@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: loop-designer--no-trigger
+description: "Should NOT trigger loop-designer."
+tags: [loop-designer, should-not-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Fix the typo in this README line: \"You can recieve notifications by email.\""
+  max_turns: 6
+  allowed_tools: [Skill, Read, Write]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?loop-designer\""
+    min: 0
+    max: 0
+    arm: both

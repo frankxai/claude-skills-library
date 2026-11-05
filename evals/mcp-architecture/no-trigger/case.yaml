@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: mcp-architecture--no-trigger
+description: "Should NOT trigger mcp-architecture."
+tags: [mcp-architecture, should-not-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write a SQL query that returns the top 5 customers by total revenue from tables customers(id,name) and orders(customer_id,amount)."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?mcp-architecture\""
+    min: 0
+    max: 0
+    arm: both

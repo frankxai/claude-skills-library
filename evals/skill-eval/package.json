@@ -1,0 +1,12 @@
+{
+  "name": "skill-eval",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test run.test.mjs",
+    "eval": "node run.mjs"
+  },
+  "dependencies": {
+    "ai": "^7.0.116"
+  }
+}

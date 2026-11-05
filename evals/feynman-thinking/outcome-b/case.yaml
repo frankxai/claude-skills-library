@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--outcome-b
+description: "Should trigger feynman-thinking; outcome graded."
+tags: [feynman-thinking, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I do not understand our caching layer. Explain the architecture so a junior developer could follow it, and ask me questions that expose what I am assuming."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it explains in plain terms with a simple model and also asks at least two Socratic questions that probe assumptions."
