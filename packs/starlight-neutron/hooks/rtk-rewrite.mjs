@@ -11,6 +11,11 @@
 // literal piece of a glob rule appears in the command text. Both over-match, which costs a skipped rewrite, and neither
 // can be fooled by quoting, wrappers, env prefixes, subshells, options between words or a `*` touching other text.
 //
+// Two more cases pass through unchanged because the rewrite breaks them (see breaksUnderRewrite):
+//  - git inside a worktree-isolated background job. Claude Code's isolation guard verifies that git stays in the job's
+//    worktree; it cannot verify `rtk git ...`, so it refuses every git command and the agent cannot commit.
+//  - grep with context flags (-A, -B, -C, --context). `rtk grep` rejects them and prints its usage instead of results.
+//
 // Limit: server-managed settings, MDM policy and the --settings flag cannot be read from a hook. Rules that live only
 // there are not seen. RTK also passes denied commands through, from the settings it can read.
 import { spawnSync } from 'node:child_process';
@@ -160,6 +165,30 @@ export function commandHitsRule(command, patterns) {
   return hitsOnce(expandedCommand, expandedPatterns);
 }
 
+const slashes = (p) => String(p ?? '').replace(/\\/g, '/').toLowerCase();
+
+// Background jobs set CLAUDE_JOB_DIR; EnterWorktree isolates them under <repo>/.claude/worktrees/.
+export function inIsolatedWorktree(cwd, env) {
+  return Boolean(env.CLAUDE_JOB_DIR) && slashes(cwd).includes('/.claude/worktrees/');
+}
+
+// `git` as a command word, not inside a longer word (`digital`, `.gitignore`).
+export function usesGit(command) {
+  return /(^|[\s;&|()])git(\s|$)/.test(command);
+}
+
+// A grep segment of the pipeline with -A/-B/-C (alone or bundled, with or without a number) or --context.
+export function grepWithContext(command) {
+  return String(command)
+    .split(/[|;&]+/)
+    .some((seg) => /(^|\s)grep\s/.test(seg) && /\s(-[A-Za-z]*[ABC](\d+)?(\s|$)|--(after-|before-)?context\b)/.test(seg));
+}
+
+// Commands the rewrite would break; they run exactly as written.
+export function breaksUnderRewrite(command, cwd, env) {
+  return (usesGit(command) && inIsolatedWorktree(cwd, env)) || grepWithContext(command);
+}
+
 // The shim rewrites commands. It never grants authorization and never lets RTK add fields. RTK adds
 // permissionDecision "allow" when its own reading of your allow rules matches, and a rewrite could carry other fields
 // (a sandbox override, a decision nested in updatedInput). So the output is rebuilt from scratch: Claude Code's original
@@ -197,6 +226,7 @@ export function run(stdin, env = process.env, { home = homedir(), cwd, managed =
   if (typeof command !== 'string') return pass;
   const workingDir = typeof input.cwd === 'string' && input.cwd ? input.cwd : cwd;
   if (!workingDir) return pass;
+  if (breaksUnderRewrite(command, workingDir, env)) return pass;
   const policy = loadGuardRules({ home, cwd: workingDir, env, managed, stopAt });
   if (policy.unreadable || commandHitsRule(command, policy.patterns)) return pass;
   const rtk = resolveRtk(env);

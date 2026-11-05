@@ -114,11 +114,13 @@ Without the plugin system:
 
 ```
 node packs/starlight-neutron/install.mjs --user            # dry run
-node packs/starlight-neutron/install.mjs --user --apply    # skills to ~/.claude/skills, scripts to ~/.claude/neutron
+node packs/starlight-neutron/install.mjs --user --apply    # skills to ~/.claude/skills, scripts and hook shim to ~/.claude/neutron
 node ~/.claude/neutron/scripts/neutron.mjs doctor           # see what is wired
 ```
 
-This path installs skills only, with no hook. Wire RTK's own with `rtk init -g`, which edits global hooks for every session on the machine, so run it deliberately.
+This path copies the hook shim but does not wire it: `install.mjs` never edits `settings.json`, and prints the one `hooks` entry to add (matcher `Bash|PowerShell`, command `node "<home>/.claude/neutron/hooks/rtk-rewrite.mjs"`).
+
+Do not wire RTK's raw hook with `rtk init -g`. The raw hook returns `permissionDecision: "allow"` whenever its own reading of your allow list matches (seen on `gh pr merge` on 2026-10-26), so a compressor decides permissions, and it rewrites commands your ask and deny rules cover. The shim strips the allow, skips ruled commands, and passes through two cases the rewrite breaks: git inside a worktree-isolated background job, and grep with context flags. If `rtk` warns "No hook installed" after you wire the shim, set `suppress_hook_warning = true` under `[hooks]` in its `config.toml`; do not run `rtk init -g` to silence it.
 
 Compressors (install the ones you want):
 
