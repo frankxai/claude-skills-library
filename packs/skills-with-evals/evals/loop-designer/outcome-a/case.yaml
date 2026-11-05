@@ -1,0 +1,26 @@
+schema_version: "1.1"
+name: loop-designer--outcome-a
+description: "Should trigger loop-designer; outcome graded."
+tags: [loop-designer, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I have a backlog of 40 image files, each missing alt text. This is a design exercise only: the sandbox has no real pages, so do not search for them. Design a loop that would work through the 40 files unattended overnight, one file at a time, checking its own work, and write the loop artifacts themselves (for example LOOP.md and state.json) as if the 40 files existed at runtime."
+  max_turns: 6
+  allowed_tools: [Skill, Read, Write]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?loop-designer\""
+  - name: rx-0
+    type: regex
+    pattern: "LOOP\\.md"
+    flags: i
+  - name: rx-1
+    type: regex
+    pattern: "state\\.json"
+    flags: i
+  - name: judged-2
+    type: llm
+    criteria: "PASS only if the response (or files it wrote) defines a mechanically checkable done-when, a never-do guardrail list, a per-iteration unit sized to one page, verification commands, and a budget or stall escalation. FAIL if it is only advice with no durable file-backed loop artifact."

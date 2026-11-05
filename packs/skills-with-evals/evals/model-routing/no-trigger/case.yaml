@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: model-routing--no-trigger
+description: "Should NOT trigger model-routing."
+tags: [model-routing, should-not-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What is the difference between a mutex and a semaphore? Two sentences."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""
+    min: 0
+    max: 0
+    arm: both

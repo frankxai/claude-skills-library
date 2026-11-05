@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: model-routing--outcome-b
+description: "Should trigger model-routing; outcome graded."
+tags: [model-routing, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "We run Opus for everything and the bill is too high. Set up tiered model routing: which tier for linting, normal feature work, and architecture decisions, and when to escalate?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it assigns a cheap tier to lint-like deterministic work, a mid tier to feature work, the top tier to architecture, and describes an escalation path when a cheaper tier fails."

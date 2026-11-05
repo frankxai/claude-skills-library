@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: langgraph-patterns--no-trigger
+description: "Should NOT trigger langgraph-patterns."
+tags: [langgraph-patterns, should-not-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What is the time complexity of quicksort in the average and worst case?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?langgraph-patterns\""
+    min: 0
+    max: 0
+    arm: both
