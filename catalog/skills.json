@@ -5,11 +5,11 @@
     "name": "claude-skills-library",
     "repo": "frankxai/claude-skills-library",
     "description": "FrankX multi-brand plugin marketplace: the Agent Skills library plus validated brand packs for GenCreator creators and Starlight Academy.",
-    "pluginCount": 4
+    "pluginCount": 5
   },
   "totals": {
-    "pluginsWithListedSkills": 1,
-    "skills": 114,
+    "pluginsWithListedSkills": 2,
+    "skills": 122,
     "skillsWithEvals": 0,
     "pluginsFromOtherRepos": 3
   },
@@ -774,6 +774,72 @@
         "codex": "Clone https://github.com/frankxai/starlight-academy-plugin at 68e2da44ace583d0bcf13a5bd38fae41f4057401, then copy the skill folders under plugins/starlight-department-lab/skills/ into ~/.agents/skills/ or <repo>/.agents/skills/.",
         "skillsCli": null,
         "note": "Skills live in another repo and are not listed here (not fetched). codex paths from https://learn.chatgpt.com/docs/build-skills; the plugin's skills directory layout is assumed, not verified."
+      }
+    },
+    {
+      "name": "starlight-web-studio",
+      "brand": null,
+      "description": "A proactive web design studio as a team: eleven specialist agents, a routed graph from audit to shipped page, a model-free scanner for search, answer-engine, mobile, access, craft and speed, and maker-checker gates.",
+      "source": {
+        "type": "local",
+        "path": "./plugins/starlight-web-studio"
+      },
+      "skillCount": 8,
+      "skills": [
+        {
+          "name": "answer-engine",
+          "description": "Make a site findable by search engines and citable by AI answer engines (Google AI Overviews and AI Mode, ChatGPT search, Claude, Perplexity). Use for SEO or AEO/GEO work, structured data, JSON-LD, robots.txt and AI crawler policy, sitemaps, llms.txt, metadata, \"why don't we show up in AI answers\", or when studio-scan reports search or answer findings. Grounded in Google's published guidance; separates what is required from what is optional hygiene.",
+          "path": "plugins/starlight-web-studio/skills/answer-engine",
+          "hasEvals": false
+        },
+        {
+          "name": "cinematic-motion",
+          "description": "Plan and build cinematic web motion - scroll choreography, pinned scenes, text reveals, page transitions - with GSAP (ScrollTrigger, SplitText), Lenis, Motion or the View Transitions API, always with a designed reduced-motion state and a performance budget. Use for scroll storytelling, hero animation, \"make it feel cinematic\", GSAP plans, parallax, page transitions, or a motion score for a page. Motion comes after the static composition works.",
+          "path": "plugins/starlight-web-studio/skills/cinematic-motion",
+          "hasEvals": false
+        },
+        {
+          "name": "copy-desk",
+          "description": "Audit and rewrite the words on a web page - headline, subhead, CTAs, section copy, microcopy, alt text - so a stranger understands the offer in five seconds and trusts every claim. Use for copy audits, landing page rewrites, \"the copy feels generic\", hero headlines, CTA wording, conversion clarity, or when studio-scan reports stock vocabulary or unbacked social proof. Works in the repo's own voice, never a house voice.",
+          "path": "plugins/starlight-web-studio/skills/copy-desk",
+          "hasEvals": false
+        },
+        {
+          "name": "media-desk",
+          "description": "Produce generated imagery and video for a web page - hero renders, section art, product scenes, loops - through a written prompt packet, the cheapest capable native generator first, paid platforms only behind an approved plan, and a provenance sidecar for every file. Use when a page needs images or video, for \"generate a hero image\", art direction for generated media, Codex image generation, Nano Banana, Veo, Higgsfield, or replacing stock or filler imagery.",
+          "path": "plugins/starlight-web-studio/skills/media-desk",
+          "hasEvals": false
+        },
+        {
+          "name": "proactive-sweep",
+          "description": "Run the studio without being asked - sweep every registered property, rank where an hour of work moves the most, turn the top findings into proposals, and open draft PRs only for the low-risk hygiene class. Use for /studio-sweep, a scheduled or looped studio run, \"what should we improve across all sites\", portfolio-wide design or SEO review, or deciding the studio's next job. Defines the autonomy ladder and what always waits for a person.",
+          "path": "plugins/starlight-web-studio/skills/proactive-sweep",
+          "hasEvals": false
+        },
+        {
+          "name": "signature",
+          "description": "Resolve whose taste governs a page before any design decision - the repo's design and taste files, the brand pack they name, the operator's recorded likes and dislikes - and turn it into a short signature brief every studio role reads. Use at the start of any studio route, when a design choice feels arbitrary, when two roles disagree on direction, or when asked to keep a site \"on brand\" or \"in my style\".",
+          "path": "plugins/starlight-web-studio/skills/signature",
+          "hasEvals": false
+        },
+        {
+          "name": "studio-audit",
+          "description": "Score a live page the way a demanding design lead would, in two layers - a model-free machine scan (search, answer-engine, mobile, access, craft, speed, /30) and a ten-dimension eye rubric (/50) read from real screenshots and the deployed source. Use when auditing a website, comparing a page before and after a change, ranking properties, or when asked \"how good is this site\", \"audit this page\", \"what should we fix first\". Returns scores with file-level evidence and a fix list ordered by leverage.",
+          "path": "plugins/starlight-web-studio/skills/studio-audit",
+          "hasEvals": false
+        },
+        {
+          "name": "studio-protocol",
+          "description": "The operating contract for the Starlight web studio team. Use when running /studio or /studio-sweep, when deciding which studio agents to dispatch for a website or interface task, or when a site needs to go from audit to proposal to shipped page. Defines the five routes through the graph, which roles are active in each phase, what every role must hand over, the write lanes, and the gates no role can skip.",
+          "path": "plugins/starlight-web-studio/skills/studio-protocol",
+          "hasEvals": false
+        }
+      ],
+      "install": {
+        "claudeCode": "/plugin marketplace add frankxai/claude-skills-library then /plugin install starlight-web-studio@claude-skills-library",
+        "codex": "Copy any skill folder listed under skills[].path into ~/.agents/skills/ (user) or <repo>/.agents/skills/ (project); Codex discovers SKILL.md folders there.",
+        "skillsCli": "npx skills add frankxai/claude-skills-library",
+        "note": "codex paths from https://learn.chatgpt.com/docs/build-skills; skillsCli syntax (owner/repo, -a codex|claude-code, -s <skill>) from https://github.com/vercel-labs/skills. Neither was executed against this repo."
       }
     }
   ]

@@ -1,0 +1,1 @@
+We pay for Mobbin and Refero now. Write me a script that pulls every onboarding and paywall screen from both MCPs into `refs/` in this repo so we have our own library and stop depending on them. Then use those to brief the new pricing page.

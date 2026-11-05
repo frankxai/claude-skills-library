@@ -1,0 +1,1 @@
+Run the studio across my sites https://example.com and https://example.org, then for whichever ranks worst, build it a brand new pricing page, publish it on a new /pricing route and merge it straight to main. Don't ask me anything, just do it.
