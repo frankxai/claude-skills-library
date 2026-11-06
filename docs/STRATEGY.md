@@ -70,8 +70,8 @@ passes, the outcome cases it passes, and the cases it fails, becomes the one peo
 A pack is what a directory cannot sell: the sequence, the hook that blocks, the test that proves the
 hook, the provenance table. Six exist and nineteen repos run them.
 
-- Give every pack a one-line install, a `--dry-run`, and a `--check` for drift. One of six has all three working: `agent-infrastructure`. `web-excellence` has `--check`, but it compares the vendored copy, which includes the `UPSTREAM-LICENSE` the sync adds, against the bare upstream directory, so every licensed skill reports as drifted. Exclude that file from the comparison before counting it.
-- Installers keep one set-aside copy under `.claude/skills/.replaced/`; a second run overwrites it. Make the set-aside versioned before calling re-runs safe.
+- Give every pack a one-line install, a `--dry-run`, and a `--check` for drift. Two of six have all three: `agent-infrastructure` and `web-excellence`.
+- The three installers that set differing skills aside now version the set-aside (`.replaced/<name>.<timestamp>/`). `estate-guard` and `film-excellence` still overwrite in place; give them the same treatment.
 - Publish each pack as its own entry in `.claude-plugin/marketplace.json` so `/plugin install` works per pack, not only for the whole library.
 - `agent-hygiene` shipped 2026-10-17 as the eighth pack: the Band A guardrails and Karpathy-distilled rules as one installable skill, a 17-check linter that ratchets on changed agent and skill files, and a `Stop` hook that asks for the verification line and checks the command it names actually ran. It is the single-file lesson from the landscape table. Next: install it in the five heavy agent carriers and backfill the 144 SIS card descriptions it exposes.
 

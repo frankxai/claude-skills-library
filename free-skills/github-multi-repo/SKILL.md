@@ -1,19 +1,13 @@
 ---
 name: github-multi-repo
-version: 1.0.0
 description: Multi-repository coordination, synchronization, and architecture management across many GitHub repos. Use when changes span several repositories, keeping repos in sync, or planning cross-repo architecture and dependency work.
-category: github-integration
-tags: [multi-repo, synchronization, architecture, coordination, github]
-author: Claude Flow Team
-requires:
-  - ruv-swarm@^1.0.11
-  - gh-cli@^2.0.0
-capabilities:
-  - cross-repository coordination
-  - package synchronization
-  - architecture optimization
-  - template management
-  - distributed workflows
+metadata:
+  version: "1.0.0"
+  category: "github-integration"
+  tags: "multi-repo, synchronization, architecture, coordination, github"
+  author: "Claude Flow Team"
+  capabilities: "cross-repository coordination, package synchronization, architecture optimization, template management, distributed workflows"
+  requires: "ruv-swarm@^1.0.11, gh-cli@^2.0.0"
 ---
 
 # GitHub Multi-Repository Coordination Skill

@@ -29,6 +29,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
 const SEVERITY = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -97,7 +98,7 @@ function listFiles(root) {
       for (const e of fs.readdirSync(d, { withFileTypes: true })) {
         const p = path.join(d, e.name);
         if (e.isDirectory()) { if (e.name !== 'node_modules' && e.name !== '.git') walk(p); }
-        else if (e.isFile()) acc.push(path.relative(root, p));
+        else if (e.isFile()) acc.push(path.relative(root, p).split(path.sep).join('/'));
       }
     };
     walk(root);
@@ -483,7 +484,7 @@ export function toMarkdown(reports) {
 }
 
 // -------------------------------------------------------------------- main
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const a = parseArgs(process.argv.slice(2));
   const reports = [];

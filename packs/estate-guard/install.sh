@@ -105,9 +105,13 @@ fi
 
 # --------------------------------------------------------------------- ci
 if [ $NO_CI -eq 0 ]; then
-  say "  ci     .github/workflows/estate-guard.yml"
-  run mkdir -p "$TARGET/.github/workflows"
-  run cp "$PACK_DIR/ci/estate-guard.yml" "$TARGET/.github/workflows/"
+  if [ -f "$TARGET/.github/workflows/estate-guard.yml" ]; then
+    say "  ci     .github/workflows/estate-guard.yml (exists, skipping to preserve customizations)"
+  else
+    say "  ci     .github/workflows/estate-guard.yml"
+    run mkdir -p "$TARGET/.github/workflows"
+    run cp "$PACK_DIR/ci/estate-guard.yml" "$TARGET/.github/workflows/"
+  fi
 fi
 
 # -------------------------------------------------------------- gitignore
