@@ -1,12 +1,11 @@
 ---
 name: suno-ai-mastery
 description: Expert prompt engineering and music generation with Suno AI v4.5+ for professional-quality songs across all genres. Use when writing Suno prompts, designing song structure/styles, or producing commercial-quality AI music.
-version: 2.0.0
-last_updated: 2025-12-19
-external_version: "Suno v4.5+ (July 2025)"
-changelog: |
-  - 2.0.0: Complete rewrite for v4.5+ features (Add Vocals, Add Instrumentals, Inspire, Persona, 8-min songs)
-  - 1.0.0: Initial v4/v4.5 skill
+metadata:
+  version: "2.0.0"
+  last_updated: "2025-12-19"
+  external_version: "Suno v4.5+ (July 2025)"
+  changelog: "2.0.0: Complete rewrite for v4.5+ features (Add Vocals, Add Instrumentals, Inspire, Persona, 8-min songs), 1.0.0: Initial v4/v4.5 skill"
 ---
 
 # Suno AI Mastery v4.5+

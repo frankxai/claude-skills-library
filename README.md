@@ -18,13 +18,22 @@ hooks that block "done" until the evidence exists.
 [![Pack tests](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/pack-tests.yml)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[**Install**](#install) · [**Packs**](#packs-skills-that-enforce) · [**Catalog**](docs/CATALOG.md) · [**Strategy**](docs/STRATEGY.md) · [**Contribute**](CONTRIBUTING.md) · [**FAQ**](#faq)
+[**Install**](#install) · [**Packs**](#packs-skills-that-enforce) · [**Catalog**](docs/CATALOG.md) · [**Web hub**](https://www.frankx.ai/skills) · [**Strategy**](docs/STRATEGY.md) · [**Contribute**](CONTRIBUTING.md) · [**FAQ**](#faq)
+
+**[Subscribe to the Waitlist](https://www.frankx.ai/waitlist?utm_source=github&utm_medium=readme&utm_campaign=claude-skills-library)**
 
 </div>
 
 ---
 
 ## Install
+
+> [!IMPORTANT]
+> **Skills that ship with their evals.** The first skill from this library is being packaged with its
+> full promptfoo eval suite and the run output that shows exactly where it fails. If you would pay
+> for skills that arrive proven, say which one should be first and what that is worth to you:
+> **[join the eval-pack list](https://www.frankx.ai/waitlist?intent=claude-skills-library)**. Two
+> steps, every question skippable. Founding members name the next skill to be evaluated.
 
 Three ways in. Pick one.
 
@@ -89,7 +98,7 @@ templates and is advisory.
 ## Packs: skills that enforce
 
 Installed into 19 repositories across the FrankX, Starlight, and Arcanea estate as of 2026-10-09.
-Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-infrastructure` move an installed skill that differs to `.claude/skills/.replaced/<name>`, keeping only the most recent set-aside copy; `estate-guard` and `film-excellence` overwrite their skill in place. In every case, commit or copy a customised skill before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
+Re-run an installer to upgrade. `web-excellence`, `routine-contract` and `agent-infrastructure` set an installed skill that differs aside under `.claude/skills/.replaced/<name>.<timestamp>/` and never overwrite an earlier set-aside; `estate-guard` and `film-excellence` overwrite their skill in place, so commit a customised copy of those two before re-running. All but `risk-classifier` accept `--dry-run` to show the diff first.
 
 | Pack | What it gates | Enforced by |
 |---|---|---|
@@ -120,7 +129,7 @@ whether it has moved upstream since. This library is built around those gaps.
 | | Most skills repos | This library |
 |---|---|---|
 | Skill format | `SKILL.md` | `SKILL.md`, validated in CI for frontmatter, name, description length, filename |
-| Provenance | Copied | Third-party skills in the packs are pinned to an upstream commit and re-syncable, with the upstream license beside ten of the eleven (`web-design-guidelines` is MIT per its `SOURCES.md` row but the file is not yet vendored). The Anthropic reference skills under `free-skills/anthropic/` carry their licenses but not yet pins; closing that is bet 3 in the strategy |
+| Provenance | Copied | Third-party skills in the packs are pinned to an upstream commit and re-syncable, with the upstream license beside each of the eleven (`web-design-guidelines` carries the upstream's README licence declaration and commit, since that repository ships no LICENSE file). The Anthropic reference skills under `free-skills/anthropic/` carry their licenses but not yet pins; closing that is bet 3 in the strategy |
 | Enforcement | Advisory | Hooks that block once without an audit, each with a test |
 | Counts | Hand-maintained | The README's skill total, pack total, and per-category counts are checked against the tree; a mismatch fails the build |
 | Inbound work | Paste it in | A four-gate absorption contract (license, provenance, distinctness, attestation) that refuses rather than warns |
@@ -258,6 +267,7 @@ python3 scripts/check_counts.py              # README counts match the tree
 python3 scripts/check_links.py               # no broken internal links
 node scripts/build-catalog.mjs --check       # catalog/skills.json matches the marketplace
 node --test scripts/tests/absorb.test.mjs    # the four absorption gates still refuse
+node --test scripts/tests/harness-e2e.test.mjs # harness end-to-end tests
 ```
 
 Inbound external work runs through [`ABSORPTION.md`](ABSORPTION.md): license, provenance,
@@ -310,8 +320,10 @@ See [`SUPPORT.md`](SUPPORT.md) for routing and [`CODE_OF_CONDUCT.md`](CODE_OF_CO
 
 ---
 
-## Related repositories
+## Related repositories and web guides
 
+- **[FrankX Skills Hub](https://www.frankx.ai/skills)**: interactive [Skill Builder](https://www.frankx.ai/skills/builder) for generating `SKILL.md` files and curated [domain skill overview](https://www.frankx.ai/resources/skills).
+- **[Claude Code Skills: The 10 You Actually Need](https://www.frankx.ai/blog/claude-code-skills-2026-the-10-you-need)** and **[AI Architecture Blueprints](https://www.frankx.ai/ai-architecture)**: field notes and reference topologies from production deployments.
 - **[frankxai/skills](https://github.com/frankxai/skills)** and **[frankxai/creator-skills](https://github.com/frankxai/creator-skills)**: the curated, actively maintained lanes for AI architects and for creators. This library is the full catalog behind them.
 - **[frankxai/agentic-creator-os](https://github.com/frankxai/agentic-creator-os)**: the canonical, larger source for skills, agents, and commands. New skills are authored and battle-tested there first.
 - **[frankxai/Starlight-Intelligence-System](https://github.com/frankxai/Starlight-Intelligence-System)**: the substrate. Persistent context, memory, and the multi-agent layer the skills run on.
@@ -359,7 +371,7 @@ fifty answers the eval harness is published open-source regardless.
 ## License
 
 MIT. See [LICENSE](LICENSE). Imported skills retain their upstream licenses, recorded in
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and, with one exception, in each vendored folder; `web-design-guidelines` carries its MIT record in the pack's `SOURCES.md` until the file is vendored.
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and in each vendored folder.
 
 ---
 
@@ -367,6 +379,6 @@ MIT. See [LICENSE](LICENSE). Imported skills retain their upstream licenses, rec
 
 <img src="assets/logo.svg" width="64" alt="Claude Skills Library mark"/>
 
-**[Star the repo](https://github.com/frankxai/claude-skills-library)** · **[Catalog](docs/CATALOG.md)** · **[Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
+**[Join the eval-pack list](https://www.frankx.ai/waitlist?intent=claude-skills-library)** · **[Web hub](https://www.frankx.ai/skills)** · **[Star the repo](https://github.com/frankxai/claude-skills-library)** · **[Catalog](docs/CATALOG.md)** · **[Issues](https://github.com/frankxai/claude-skills-library/issues)** · **[Discussions](https://github.com/frankxai/claude-skills-library/discussions)**
 
 </div>

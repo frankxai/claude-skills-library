@@ -64,12 +64,27 @@ for src in "$PACK_DIR"/skills/*/; do
     continue
   fi
   if [ -d "$DEST_SKILLS/$name" ]; then
+    # An installed copy identical to the pack's is already canonical: leave
+    # it and create no set-aside, or every re-run would mint one. Python's
+    # bytecode cache under ui-ux-pro-max is not a difference.
+    # A symlink is never canonical, whatever it points at, whether the skill
+    # directory itself or any file inside it: the install must be a
+    # self-contained copy, so it falls through to the set-aside below.
+    if [ ! -L "${DEST_SKILLS%/}/$name" ] \
+       && [ -z "$(find "$DEST_SKILLS/$name" -type l -print -quit)" ] \
+       && diff -rq -x __pycache__ "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
+      say "  ok     $name (already canonical)"
+      continue
+    fi
     # Never delete a skill that is already here — an existing copy may be an
     # older fork carrying local-only files. Set it aside instead.
-    say "  update $name (previous copy → .claude/skills/.replaced/$name)"
+    say "  update $name (previous copy → .claude/skills/.replaced/$name.<timestamp>)"
     run mkdir -p "$DEST_SKILLS/.replaced"
-    run rm -rf "$DEST_SKILLS/.replaced/$name"
-    run mv "$DEST_SKILLS/$name" "$DEST_SKILLS/.replaced/$name"
+    # Versioned set-aside: never overwrite an earlier set-aside copy, so a
+    # customised skill survives any number of re-runs.
+    aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ)"
+    n=0; while [ -e "$aside" ]; do n=$((n+1)); aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ).$n"; done
+    run mv "$DEST_SKILLS/$name" "$aside"
   else
     say "  add    $name"
   fi
@@ -88,14 +103,19 @@ if [ $NO_AGENTS -eq 0 ] && [ $SKILLS_ONLY -eq 0 ] && [ -d "$PACK_DIR/agents" ]; 
   for src in "$PACK_DIR"/agents/*.md; do
     name="$(basename "$src")"
     dest="$DEST_AGENTS/$name"
-    if [ -f "$dest" ] && cmp -s "$src" "$dest"; then
+    # As with skills, a symlink is never canonical, and it is moved aside
+    # rather than written through.
+    if [ ! -L "$dest" ] && [ -f "$dest" ] && cmp -s "$src" "$dest"; then
       say "  ok     agent ${name%.md}"
       continue
     fi
-    if [ -f "$dest" ]; then
-      say "  update agent ${name%.md} (previous copy → .claude/agents.replaced/$name)"
+    if [ -e "$dest" ] || [ -L "$dest" ]; then
+      say "  update agent ${name%.md} (previous copy → .claude/agents.replaced/${name%.md}.<timestamp>.md)"
       run mkdir -p "$TARGET/.claude/agents.replaced"
-      run mv "$dest" "$TARGET/.claude/agents.replaced/$name"
+      # Versioned like the skills set-aside, so a second re-run keeps the first copy.
+      aside="$TARGET/.claude/agents.replaced/${name%.md}.$(date -u +%Y%m%dT%H%M%SZ).md"
+      n=0; while [ -e "$aside" ] || [ -L "$aside" ]; do n=$((n+1)); aside="$TARGET/.claude/agents.replaced/${name%.md}.$(date -u +%Y%m%dT%H%M%SZ).$n.md"; done
+      run mv "$dest" "$aside"
     else
       say "  add    agent ${name%.md}"
     fi

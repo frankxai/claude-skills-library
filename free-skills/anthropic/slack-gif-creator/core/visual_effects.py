@@ -18,7 +18,7 @@ class Particle:
 
     def __init__(self, x: float, y: float, vx: float, vy: float,
                  lifetime: float, color: tuple[int, int, int],
-                 size: int = 3, shape: str = 'circle'):
+                 size: int = 3, shape: str = 'circle') -> None:
         """
         Initialize a particle.
 
@@ -42,7 +42,7 @@ class Particle:
         self.gravity = 0.5  # Pixels per frame squared
         self.drag = 0.98    # Velocity multiplier per frame
 
-    def update(self):
+    def update(self) -> None:
         """Update particle position and lifetime."""
         # Apply physics
         self.vy += self.gravity
@@ -64,7 +64,7 @@ class Particle:
         """Get particle opacity based on lifetime."""
         return max(0, min(1, self.lifetime / self.max_lifetime))
 
-    def render(self, frame: Image.Image):
+    def render(self, frame: Image.Image) -> None:
         """
         Render particle to frame.
 
@@ -106,14 +106,14 @@ class Particle:
 class ParticleSystem:
     """Manages a collection of particles."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize particle system."""
         self.particles: list[Particle] = []
 
     def emit(self, x: int, y: int, count: int = 10,
              spread: float = 2.0, speed: float = 5.0,
              color: tuple[int, int, int] = (255, 200, 0),
-             lifetime: float = 20.0, size: int = 3, shape: str = 'circle'):
+             lifetime: float = 20.0, size: int = 3, shape: str = 'circle') -> None:
         """
         Emit a burst of particles.
 
@@ -141,7 +141,7 @@ class ParticleSystem:
             self.particles.append(particle)
 
     def emit_confetti(self, x: int, y: int, count: int = 20,
-                      colors: Optional[list[tuple[int, int, int]]] = None):
+                      colors: Optional[list[tuple[int, int, int]]] = None) -> None:
         """
         Emit confetti particles (colorful, falling).
 
@@ -168,7 +168,7 @@ class ParticleSystem:
             particle.gravity = 0.3  # Lighter gravity for confetti
             self.particles.append(particle)
 
-    def emit_sparkles(self, x: int, y: int, count: int = 15):
+    def emit_sparkles(self, x: int, y: int, count: int = 15) -> None:
         """
         Emit sparkle particles (twinkling stars).
 
@@ -191,7 +191,7 @@ class ParticleSystem:
             particle.drag = 0.95
             self.particles.append(particle)
 
-    def update(self):
+    def update(self) -> None:
         """Update all particles."""
         # Update alive particles
         for particle in self.particles:
@@ -200,7 +200,7 @@ class ParticleSystem:
         # Remove dead particles
         self.particles = [p for p in self.particles if p.is_alive()]
 
-    def render(self, frame: Image.Image):
+    def render(self, frame: Image.Image) -> None:
         """Render all particles to frame."""
         for particle in self.particles:
             particle.render(frame)

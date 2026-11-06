@@ -31,11 +31,12 @@ git clone --depth 1 https://github.com/frankxai/claude-skills-library /tmp/csl \
   && /tmp/csl/packs/web-excellence/install.sh "$PWD"
 ```
 
-Idempotent — re-run to upgrade. `--dry-run` shows the diff first. `--no-db`
+Re-run to upgrade; an installed skill that differs is set aside under
+`.claude/skills/.replaced/<name>.<timestamp>/`, never overwritten. `--dry-run` shows the diff first. `--no-db`
 skips `ui-ux-pro-max` (~1.8 MB of CSV) if repo size matters. `--no-agents`
 skips the three agents. A local agent file that differs from the pack's is set
-aside to `.claude/agents.replaced/` (outside `.claude/agents/`, so the harness
-never loads two agents with one name) and named in the output.
+aside to `.claude/agents.replaced/<name>.<timestamp>.md` (outside `.claude/agents/`,
+so the harness never loads two agents with one name) and named in the output.
 
 Then add one line to the repo's `CLAUDE.md`:
 
@@ -176,7 +177,7 @@ Hooks cover the session. For drift between sessions, schedule the audit:
 packs/web-excellence/
 ├── README.md              this file
 ├── SOURCES.md             upstream pins + why each skill was adopted or skipped
-├── install.sh             install into a repo (idempotent)
+├── install.sh             install into a repo (re-runnable; sets differing skills aside)
 ├── sync-upstream.sh       re-vendor from upstream, rewrite the pin table
 ├── sync-agents.sh         re-vendor the agents from an agentic-creator-os checkout
 ├── settings.snippet.json  the hooks block install.sh merges

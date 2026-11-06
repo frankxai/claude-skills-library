@@ -1,7 +1,8 @@
 ---
 name: oracle-solution-design
 description: Orchestrate complete OCI solution designs with parallel agents and quality gates, producing Solution Design Documents, architectures, and bills of materials. Use when producing an OCI SDD, end-to-end solution architecture, or a bill of materials.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Oracle Solution Design Orchestrator

@@ -12,6 +12,15 @@
 #   ./sync-upstream.sh            # sync all
 #   ./sync-upstream.sh --check    # report drift, change nothing (CI-safe)
 #
+# Licensing is checked before anything under skills/ is touched: every entry's
+# declared licence must be on the ABSORPTION.md allowlist, and the upstream's
+# LICENSE file (or, failing that, the License section of its README) must read
+# as that licence. One refusal aborts the whole run with the tree unchanged.
+#
+# Test hooks (tests/test_sync_upstream.py): WEB_EXCELLENCE_UPSTREAM_BASE replaces
+# https://github.com as the clone prefix; WEB_EXCELLENCE_UPSTREAM_FILE replaces
+# the UPSTREAM list below with the lines of that file, same format.
+#
 set -euo pipefail
 
 PACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,6 +34,10 @@ SKILLS_DIR="$PACK_DIR/skills"
 # instead of reusing, and creates 0700, which also closes the window where a
 # second entry's copy could read a tree mutated after the first copy.
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/web-excellence-sync.XXXXXXXX")"
+# Registered before anything can exit, so a refused override or entry leaves
+# nothing behind in $TMPDIR.
+cleanup() { rm -rf "$WORK"; }
+trap cleanup EXIT
 CHECK_ONLY=0
 [ "${1:-}" = "--check" ] && CHECK_ONLY=1
 
@@ -45,30 +58,641 @@ UPSTREAM=(
   "Leonxlnx/taste-skill|MIT|skills/image-to-code-skill|image-to-code"
   "Leonxlnx/taste-skill|MIT|skills/brandkit|brandkit"
 )
+if [ -n "${WEB_EXCELLENCE_UPSTREAM_FILE:-}" ]; then
+  if [ ! -r "$WEB_EXCELLENCE_UPSTREAM_FILE" ]; then
+    echo "!! WEB_EXCELLENCE_UPSTREAM_FILE is not readable: $WEB_EXCELLENCE_UPSTREAM_FILE" >&2
+    exit 2
+  fi
+  mapfile -t UPSTREAM < <(grep -v '^[[:space:]]*\(#\|$\)' "$WEB_EXCELLENCE_UPSTREAM_FILE" || true)
+  if [ ${#UPSTREAM[@]} -eq 0 ]; then
+    echo "!! WEB_EXCELLENCE_UPSTREAM_FILE lists no entries: $WEB_EXCELLENCE_UPSTREAM_FILE" >&2
+    exit 2
+  fi
+fi
+UPSTREAM_BASE="${WEB_EXCELLENCE_UPSTREAM_BASE:-https://github.com}"
 
-cleanup() { rm -rf "$WORK"; }
-trap cleanup EXIT
+# Every entry is validated before a clone, let alone a removal. Pass 2 runs
+# rm -rf on "$SKILLS_DIR/$dest", so an empty or traversing dest would reach
+# far beyond one skill, a native dest would delete a skill authored here, and
+# a dest listed twice would have the second row silently replace the first
+# and leave a tree --check can never pass. A bad row is refused with exit 2.
+declare -A SEEN_DEST
+for entry in "${UPSTREAM[@]}"; do
+  IFS='|' read -r e_repo e_license e_src e_dest e_extra <<<"$entry"
+  if [ -n "${e_extra:-}" ] || [ -z "$e_repo" ] || [ -z "$e_license" ] || [ -z "$e_src" ] || [ -z "$e_dest" ]; then
+    echo "!! UPSTREAM entry needs exactly four non-empty fields repo|license|src|dest: '$entry'" >&2
+    exit 2
+  fi
+  if ! [[ "$e_repo" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]]; then
+    echo "!! UPSTREAM entry has a malformed repo '$e_repo': '$entry'" >&2
+    exit 2
+  fi
+  if ! [[ "$e_dest" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || [ "$e_dest" = "." ] || [ "$e_dest" = ".." ]; then
+    echo "!! UPSTREAM entry has an unsafe dest '$e_dest' (one plain directory name, no slashes): '$entry'" >&2
+    exit 2
+  fi
+  # Both dest checks fold case: on a case-insensitive checkout "Core-Web-Vitals"
+  # is the native skill's directory and two rows differing only in case are
+  # one directory, so each comparison is made on the lower-cased name.
+  lc_dest="${e_dest,,}"
+  case " ${NATIVE,,} " in
+    *" $lc_dest "*) echo "!! UPSTREAM entry targets '$e_dest', a skill native to this pack that a sync never overwrites: '$entry'" >&2; exit 2 ;;
+  esac
+  if [ -n "${SEEN_DEST[$lc_dest]+x}" ]; then
+    echo "!! UPSTREAM lists dest '$e_dest' twice (case folded); the second row would silently replace the first: '$entry'" >&2
+    exit 2
+  fi
+  SEEN_DEST["$lc_dest"]=1
+  # The .git component is matched case folded too: git refuses to track a
+  # path that is .git in any case, so .GIT/info can only be the metadata
+  # directory on a case-insensitive checkout.
+  case "/${e_src,,}/" in
+    *"/../"*|*"//"*|*"/./"*|*"/.git/"*) echo "!! UPSTREAM entry has an unsafe src '$e_src' (relative, below the repo root, no .., . or .git components, in any case): '$entry'" >&2; exit 2 ;;
+  esac
+done
+unset e_repo e_license e_src e_dest e_extra lc_dest SEEN_DEST
 
-declare -A SHAS
+# ABSORPTION.md gate 1. Key: the licence SOURCES.md may declare. Value: what the
+# upstream's LICENSE file, or its README declaration, must contain to count as
+# that licence. Word-bounded so "LIMITED" in a GPL text never reads as MIT.
+declare -A ALLOWED=(
+  [MIT]='(^|[^[:alnum:]])MIT([^[:alnum:]]|$)'
+  [Apache-2.0]='Version 2\.0, January 2004|Apache License,? Version 2\.0|Apache License 2\.0|Apache-2\.0'
+  [BSD-2-Clause]='BSD[- ]2|2-Clause|Simplified BSD|Redistributions of source code must retain'
+  [BSD-3-Clause]='BSD[- ]3|3-Clause|Neither the name of'
+  [ISC]='(^|[^[:alnum:]])ISC([^[:alnum:]]|$)|Permission to use, copy, modify, and/or distribute'
+  [CC0-1.0]='CC0|Creative Commons Zero'
+  [CC-BY-4.0]='CC-BY-4\.0|CC BY 4\.0|Attribution 4\.0 International'
+  [Unlicense]='(^|[^[:alnum:]])Unlicense([^[:alnum:]]|$)|This is free and unencumbered software'
+)
+# The BSD variants share their first two clauses, so each allowed one is also
+# refused when the text carries another's marker: the third clause names
+# BSD-3, and the advertising clause names BSD-4, which is not on the allowlist
+# and would otherwise pass as BSD-3 since it carries the same third clause.
+declare -A EXCLUDES=(
+  [BSD-2-Clause]='BSD[- ]3|3-Clause|Neither the name of|BSD[- ]4|4-Clause|advertising materials'
+  [BSD-3-Clause]='BSD[- ]2|2-Clause|Simplified BSD|BSD[- ]4|4-Clause|advertising materials'
+  [MIT]='MIT-0|No Attribution'
+  [Apache-2.0]='Version 1\.[01]|Apache-1\.|Apache License 1\.'
+  [ISC]='0BSD|Zero[- ]Clause|BSD Zero'
+)
+# What a full licence text (one with a grant clause) must also contain to be
+# the declared licence. ISC and 0BSD share their grant sentence; ISC alone
+# conditions it on keeping the copyright and permission notices.
+declare -A REQUIRED=(
+  [ISC]='provided that the above copyright notice'
+)
+# Refused whatever SOURCES.md says: copyleft reaches this library's MIT root
+# and -NC conflicts with commercial shipping. The -NC form is the SPDX suffix
+# only (CC-BY-NC-4.0), as in ABSORPTION.md; a bare "NC" is somebody's initials.
+REFUSED='GNU (General|Lesser|Affero) (General )?Public License|GPL|NonCommercial|-NC([^[:alnum:]]|$)'
+# "All rights reserved" is refused too, with one carve-out: the BSD and many
+# MIT LICENSE files open with it in the copyright line above the grant. So a
+# LICENSE file may carry it only alongside a grant clause; a README
+# declaration never may, since "MIT. All rights reserved." grants nothing.
+RESERVED='All rights reserved'
+# Use restrictions bolted onto a permissive text (the Hippocratic family, the
+# JSON licence's "shall be used for Good, not Evil", and their relatives) keep
+# the grant clause and add a prohibition or a mandated purpose after it. The
+# canonical permissive texts never phrase a restriction this way: BSD's "may
+# be used to endorse" is excluded on purpose. This is a heuristic for the known
+# riders, not exact licence matching; see SOURCES.md.
+RIDER='(shall|may|must|can) ?not be used|not be used (by|for)|(shall|must) be used (for|by|to)|only be used (for|by|to)|not Evil|Hippocratic|Human Rights|surveillance|unethical'
+# A bare declaration (a README section, or a LICENSE file that just says
+# "MIT") must say nothing but the licence. One that negates or qualifies it
+# ("not licensed under MIT", "MIT except assets", "contact us for commercial
+# terms") is no declaration and needs a human read.
+QUALIFIED='(^|[^[:alnum:]])(not|no|never|except|exceptions?|unless|proprietary|dual|commercial|contact|restricted)([^[:alnum:]]|$)'
+# A compound SPDX expression ("MIT AND Apache-2.0", "MIT OR GPL-3.0", "GPL-2.0
+# WITH Classpath-exception", "MIT/Apache-2.0") is not the single licence the
+# table declares: recording it as one would drop the other's obligations. The
+# operators are matched in upper case, as SPDX writes them, so prose "and" in a
+# declaration is left to the qualifier check; the slash form needs a licence
+# name on both sides, so a URL path is not one.
+LICNAME='(MIT|Apache[-0-9.]*|BSD[-0-9A-Za-z]*|ISC|GPL[-0-9.]*|LGPL[-0-9.]*|AGPL[-0-9.]*|CC[-0-9A-Za-z.]*|Unlicense|MPL[-0-9.]*|0BSD)'
+COMPOUND="(^|[^[:alnum:]])(AND|OR|WITH)([^[:alnum:]]|$)|$LICNAME ?/ ?$LICNAME"
+# A full licence text may carry a compound expression too: "MIT OR Apache-2.0"
+# above both texts, or a WITH exception. The bare operator cannot be the test
+# there, since every warranty clause is written in capitals ("EXPRESS OR
+# IMPLIED", "MERCHANTABILITY AND FITNESS"), so a full text is refused only
+# when the operator joins two licence names, or WITH names an exception.
+COMPOUND_FULL="(^|[^[:alnum:]])$LICNAME( (AND|OR) $LICNAME| WITH ($LICNAME|[A-Za-z0-9.-]*-exception[A-Za-z0-9.-]*)| ?/ ?$LICNAME)([^[:alnum:]]|$)"
+GRANT='Permission is hereby granted|Permission to use, copy, modify|Redistribution and use in source and binary forms|hereby grants? (to )?You|free and unencumbered|hereby overtly, fully, permanently'
+
+# check_license_text <repo> <license> <text> <where>
+# The text reaches grep as a here-string, never through a pipe: grep -q exits
+# on its first match, and under pipefail a producer killed by SIGPIPE would
+# turn a found marker into a failed pipeline, reading as "not found".
+check_license_text() {
+  local repo="$1" license="$2" text="$3" where="$4"
+  # Every run of whitespace, line breaks included, becomes one space before
+  # any pattern is tried: a LICENSE wrapped at 72 columns puts "provided that
+  # the above" and "copyright notice" on different lines, and a phrase
+  # pattern must still read it as one phrase. Nothing below depends on where
+  # a line ends.
+  text="$(tr -s '[:space:]' ' ' <<<"$text")"
+  if grep -qiE "$REFUSED" <<<"$text"; then
+    echo "!! $repo: $where reads as a refused licence (copyleft or -NC) — refusing (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  if grep -qiE "$RIDER" <<<"$text"; then
+    echo "!! $repo: $where carries a use restriction on top of its grant — refusing; a permissive text with a rider is not the permissive licence (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  # Two kinds of input. A recognised licence text carries a grant clause, and
+  # that clause is what the gate trusts. Anything without one is a bare
+  # declaration, whether it came from a README section or a one-line LICENSE
+  # file, and a declaration may say nothing but the licence.
+  if ! grep -qiE "$GRANT" <<<"$text"; then
+    if grep -qiE "$RESERVED" <<<"$text"; then
+      echo "!! $repo: $where says all rights reserved and grants nothing — refusing (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    if grep -qiE "$QUALIFIED" <<<"$text"; then
+      echo "!! $repo: $where qualifies or negates its declaration — refusing; this upstream needs a human read (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    if grep -qE "$COMPOUND" <<<"$text"; then
+      echo "!! $repo: $where declares a compound licence expression, not the single licence SOURCES.md names — refusing; this upstream needs a human read (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+  elif grep -qE "$COMPOUND_FULL" <<<"$text"; then
+    echo "!! $repo: $where carries a compound licence expression alongside its grant, not the single licence SOURCES.md names — refusing; this upstream needs a human read (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  if ! grep -qiE "${ALLOWED[$license]}" <<<"$text" \
+     || { [ -n "${EXCLUDES[$license]+x}" ] && grep -qiE "${EXCLUDES[$license]}" <<<"$text"; } \
+     || { [ -n "${REQUIRED[$license]+x}" ] && grep -qiE "$GRANT" <<<"$text" && ! grep -qiE "${REQUIRED[$license]}" <<<"$text"; }; then
+    echo "!! $repo: $where does not read as $license, the licence SOURCES.md declares — fix UPSTREAM[] or drop the entry (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+}
+
+# extract_license_sections <README path>
+# The body of every heading that reads exactly "License", "Licence" or
+# "Licensing" (any case, optional trailing colon), each running to the next
+# heading of the same or a higher level and terminated by a line reading
+# ----8<----. Both heading forms count: ATX ("## License") and Setext
+# ("License" underlined with === or ---). Sub-headings stay in: a
+# "### Exceptions" under "## License" is part of the declaration. A heading
+# that merely starts with the word, such as "License compatibility", is prose.
+# Lines inside fenced code blocks are never headings: an example README
+# template in a fence cannot license the upstream. A fence closes only on a
+# run of its own character at least as long as the opener, as Markdown has
+# it, so a three-backtick example inside a four-backtick fence stays inside.
+# No line inside an HTML block is a heading, in any of Markdown's forms: a
+# comment (<!-- to -->), processing instruction (<? to ?>), declaration (<!X
+# to >) or CDATA section, none of which is rendered and none of which joins a
+# declaration; a <script, <style, <pre or <textarea block, which runs to its
+# closing tag; and any other line opening with a tag (a tag name followed by
+# a space, ">" or the end of the line, so an autolink such as <https://x> is
+# not one), which runs to the next blank line. Lines of the last two kinds
+# stay part of a section already open,
+# since <pre> and <table> text is shown. A commented-out README template or a
+# heading inside a table licenses nothing. An ATX heading has one to six
+# hashes; seven is prose. An ATX
+# heading or a fence delimiter may be indented up to three spaces, as
+# Markdown allows; four is a code block, or content of the open fence. The
+# indentation is counted outside the patterns: mawk's regex engine rejects
+# an interval such as {0,3} ahead of a group and mishandles a chain of
+# optional spaces, so every pattern anchors on the line with its leading
+# spaces removed, under a count of at most three.
+# A trailing carriage return is stripped first, so a CRLF README reads the
+# same as an LF one, and a UTF-8 byte-order mark on the first line, so a
+# heading there is still a heading.
+extract_license_sections() {
+  awk '
+    function is_lic(t) { t = tolower(t); sub(/[ \t:]+$/, "", t); return (t == "license" || t == "licence" || t == "licensing") }
+    NR == 1 { sub(/^\357\273\277/, "") }
+    { sub(/\r$/, ""); L[NR] = $0 }
+    END {
+      fence = 0; hterm = ""; hshow = 0; hblank = 0; f = 0; lvl = 0
+      for (i = 1; i <= NR; i++) {
+        line = L[i]
+        ind = line; sub(/^ */, "", ind); nsp = length(line) - length(ind)
+        if (fence) {
+          if (nsp <= 3 && match(ind, /^(`+|~+)[ \t]*$/)) {
+            run = ind; gsub(/[ \t]/, "", run)
+            if (substr(run, 1, 1) == fch && length(run) >= flen) fence = 0
+          }
+          if (f) print line; continue
+        }
+        # A backtick fence may not carry a backtick in its info string, as
+        # Markdown has it: such a line is a paragraph of inline code, not an
+        # opener, and the headings after it stay headings. A tilde fence may.
+        if (nsp <= 3 && match(ind, /^(```+|~~~+)/) && !(substr(ind, 1, 1) == "`" && index(substr(ind, RLENGTH + 1), "`"))) {
+          run = substr(ind, RSTART, RLENGTH)
+          fch = substr(run, 1, 1); flen = length(run); fence = 1
+          if (f) print line; continue
+        }
+        if (hterm != "") {
+          if (index(tolower(line), hterm)) hterm = ""
+          if (hshow && f) print line; continue
+        }
+        if (hblank) {
+          if (ind != "") { if (f) print line; continue }
+          hblank = 0
+        }
+        if (nsp <= 3 && substr(ind, 1, 1) == "<") {
+          low = tolower(ind); hshow = 0; rest = ""
+          if (index(low, "<!--") == 1) { hterm = "-->"; rest = substr(low, 5) }
+          else if (index(low, "<?") == 1) { hterm = "?>"; rest = substr(low, 3) }
+          else if (index(low, "<![cdata[") == 1) { hterm = "]]>"; rest = substr(low, 10) }
+          else if (low ~ /^<![a-z]/) { hterm = ">"; rest = substr(low, 3) }
+          else if (match(low, /^<(script|style|pre|textarea)([ \t>]|$)/)) {
+            tag = low; sub(/^</, "", tag); sub(/[ \t>].*$/, "", tag)
+            hterm = "</" tag ">"; rest = substr(low, length(tag) + 2); hshow = 1
+          }
+          else if (low ~ /^<\/?[a-z][a-z0-9-]*([ \t>]|\/>|$)/) { hblank = 1; if (f) print line; continue }
+          if (hterm != "") {
+            if (index(rest, hterm)) hterm = ""
+            if (hshow && f) print line; continue
+          }
+        }
+        h = 0; skip = 0
+        if (nsp <= 3 && ind ~ /^#+[ \t]+/ && match(ind, /^#+/) && RLENGTH <= 6) {
+          text = ind
+          h = RLENGTH
+          sub(/^#+[ \t]+/, "", text); sub(/[ \t]+#+[ \t]*$/, "", text)
+        } else if (i < NR && nsp <= 3 && ind ~ /[^ \t]/ && ind !~ /^[-=*#>|]/) {
+          # Setext: the title and its underline may each be indented at most
+          # three spaces; a four-space-indented pair is a code block.
+          uind = L[i+1]; sub(/^ */, "", uind); unsp = length(L[i+1]) - length(uind)
+          if (unsp <= 3 && (uind ~ /^=+[ \t]*$/ || uind ~ /^-+[ \t]*$/)) {
+            h = (uind ~ /^=+/) ? 1 : 2
+            text = ind; sub(/[ \t]+$/, "", text); skip = 1
+          }
+        }
+        if (h) {
+          if (f && h <= lvl) { f = 0; print "----8<----" }
+          if (!f && is_lic(text)) { f = 1; lvl = h }
+          else if (f) print line
+          if (skip) i++
+          continue
+        }
+        if (f) print line
+      }
+      if (f) print "----8<----"
+    }' "$1" 2>/dev/null | sed '/^[[:space:]]*$/d'
+}
+
+# resolve_license <clone> <repo> <license> <src> <out> <notice_out>
+# Writes to <out> exactly what the skill's UPSTREAM-LICENSE must contain: the
+# licence file nearest the skill when one exists, else a record of the nearest
+# README declaration. Writes to <notice_out> every NOTICE file on the same
+# path when there is one: Apache-2.0 section 4(d) requires that attribution
+# to travel with a redistribution, the obligations add up rather than
+# compete, and it is carried for every licence. A single NOTICE is copied as
+# is; several are concatenated, each under a line naming its path. Exits 1
+# when anything is missing, mismatched or refused. Reads the clone only, so
+# it can run before anything under skills/ is touched.
+resolve_license() {
+  local clone="$1" repo="$2" license="$3" src="$4" out="$5" notice_out="$6"
+  local dir rel lic section nearest_file="" nearest_decl=""
+  local -a notice_files=()
+  if [ -z "${ALLOWED[$license]+x}" ]; then
+    echo "!! $repo: licence '$license' is not on the ABSORPTION.md allowlist — refusing (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  # The names this script writes at the skill root are reserved, in any case:
+  # an upstream that ships one, as a file, directory or symlink, would
+  # collide with the record on a case-insensitive filesystem or sit beside
+  # it unchecked on a case-sensitive one, so it is refused rather than
+  # overwritten.
+  local reserved
+  reserved="$(find "$clone/$src" -mindepth 1 -maxdepth 1 \( -iname 'UPSTREAM-LICENSE' -o -iname 'UPSTREAM-NOTICE' \) -print -quit 2>/dev/null)"
+  if [ -n "$reserved" ]; then
+    echo "!! $repo: $src ships its own ${reserved##*/}, a name this script reserves for the licence and notice records (in any case) — refusing (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  # Walk from the skill up to the repo root. Every licence file and every
+  # README declaration on the way is checked against the declared licence, so
+  # a root MIT cannot launder a skill-local GPL and two files at one level
+  # cannot disagree. The nearest licence file is the one recorded; failing
+  # that, the nearest README declaration. Then the whole skill subtree is
+  # scanned the same way, since cp -R publishes every nested file: a
+  # vendor/LICENSE-GPL three levels down is checked and refused too, but
+  # never recorded. A nested UPSTREAM-LICENSE is a licence input like any
+  # other there; only the skill-root name is reserved. Symlinks are refused
+  # everywhere: a file operator follows them, and a hostile upstream could
+  # point one at any readable local file.
+  check_candidate() {  # <path> <relative label> <may-record 0|1>
+    local path="$1" label="$2" record="$3" lic section cur
+    lic="$(basename "$path")"
+    if [ -L "$path" ]; then
+      echo "!! $repo: $label is a symlink; licence inputs must be regular files inside the clone — refusing (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    if [ -d "$path" ]; then
+      echo "!! $repo: $label is a directory of licences; a multi-licence tree needs a human read — refusing (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    [ -f "$path" ] || return 0
+    case "$lic" in
+      [Rr][Ee][Aa][Dd][Mm][Ee].[Mm][Dd])
+        cur=""
+        while IFS= read -r line; do
+          if [ "$line" = "----8<----" ]; then
+            if [ -n "$cur" ]; then
+              check_license_text "$repo" "$license" "$cur" "$label License section"
+              # Without the accumulated trailing newline: the record writer
+              # adds its own, and a whitespace-only line in the record would
+              # read as drift against a hand-checked one.
+              [ "$record" = 1 ] && [ -z "$nearest_decl" ] && nearest_decl="${cur%$'\n'}"
+            fi
+            cur=""
+          else
+            cur+="$line"$'\n'
+          fi
+        done < <(extract_license_sections "$path")
+        ;;
+      *)
+        check_license_text "$repo" "$license" "$(cat "$path")" "$label"
+        [ "$record" = 1 ] && [ -z "$nearest_file" ] && nearest_file="$path"
+        ;;
+    esac
+    return 0
+  }
+  dir="$clone/$src"
+  local -a candidates notices
+  while :; do
+    rel="${dir#"$clone"}"; rel="${rel#/}"
+    # Anything that looks like a licence file counts, whatever its suffix or
+    # case: LICENSE, LICENSE.md, LICENSE-MIT, LICENCE.txt, COPYING, UNLICENSE.
+    # The README is spelled with a bracket so it is a pattern too: nocaseglob
+    # only applies to a word that contains a glob character, and a literal
+    # README.md would miss README.MD on a case-sensitive checkout.
+    shopt -s nullglob nocaseglob
+    candidates=("$dir"/LICENSE* "$dir"/LICENCE* "$dir"/COPYING* "$dir"/UNLICENSE* "$dir"/README.[Mm][Dd])
+    shopt -u nullglob nocaseglob
+    for path in "${candidates[@]}"; do
+      check_candidate "$path" "${rel:+$rel/}$(basename "$path")" 1
+    done
+    # A NOTICE is attribution, not a licence text, so it is carried rather
+    # than checked; every one on the path to the root is kept, skill first.
+    shopt -s nullglob nocaseglob
+    notices=("$dir"/NOTICE*)
+    shopt -u nullglob nocaseglob
+    for path in "${notices[@]}"; do
+      if [ -L "$path" ] || [ -d "$path" ]; then
+        echo "!! $repo: ${rel:+$rel/}$(basename "$path") is a symlink or directory; a NOTICE must be a regular file inside the clone — refusing" >&2
+        exit 1
+      fi
+      notice_files+=("$path")
+    done
+    [ "$dir" = "$clone" ] && break
+    dir="$(dirname "$dir")"
+  done
+  while IFS= read -r -d '' path; do
+    check_candidate "$path" "${path#"$clone"/}" 0
+  done < <(find "$clone/$src" -mindepth 2 \( -iname 'LICENSE*' -o -iname 'LICENCE*' -o -iname 'COPYING*' -o -iname 'UNLICENSE*' -o -iname 'UPSTREAM-LICENSE' -o -iname 'README.md' \) -print0 2>/dev/null)
+  # Agent Skills frontmatter may carry a license field. A skill that says
+  # "license: GPL-3.0" under an MIT root is not MIT whatever the root file
+  # says, so the field is read as a bare declaration, in the selected skill
+  # and in every SKILL.md nested inside it, with the key bare or quoted as
+  # YAML allows. The delimiters are read as YAML parsers read them: a UTF-8
+  # byte-order mark ahead of the opening "---" and trailing blanks after
+  # either are not part of the line. A value that is not the plain
+  # licence name ("see LICENSE.txt") is refused the same way and needs a
+  # human read.
+  local decl
+  while IFS= read -r -d '' path; do
+    decl="$(awk 'NR == 1 { sub(/^\357\273\277/, "") }
+                 { sub(/\r$/, ""); sub(/[ \t]+$/, "") }
+                 NR == 1 { if ($0 != "---") exit; next }
+                 $0 == "---" { exit }
+                 /^[\042\047]?license[\042\047]?[ \t]*:/ { sub(/^[\042\047]?license[\042\047]?[ \t]*:[ \t]*/, ""); gsub(/^[\042\047]|[\042\047]$/, ""); print; exit }' "$path" 2>/dev/null)"
+    [ -n "$decl" ] && check_license_text "$repo" "$license" "$decl" "${path#"$clone"/} frontmatter license"
+  done < <(find "$clone/$src" -iname 'SKILL.md' -type f -print0 2>/dev/null)
+  # A package.json inside the skill declares a licence the same way, in its
+  # "license" field (a string, or the legacy {"type": ...} object) or the
+  # legacy "licenses" array. Each is a bare declaration and is checked as one;
+  # npm's own "UNLICENSED" and "SEE LICENSE IN <file>" values name no licence
+  # on the allowlist and are refused by the same check. A manifest that is
+  # not JSON cannot be read and is refused outright: its field could say
+  # anything. The root manifest of a monorepo is outside the skill and is
+  # not read, since "private" monorepo roots routinely say UNLICENSED above
+  # packages that are MIT.
+  while IFS= read -r -d '' path; do
+    if ! decl="$(python3 -I - "$path" <<'MANIFEST'
+import json, sys
+try:
+    with open(sys.argv[1], encoding="utf-8-sig") as fh:
+        doc = json.load(fh)
+except Exception as exc:
+    print(f"unparseable: {exc}", file=sys.stderr)
+    sys.exit(1)
+if not isinstance(doc, dict):
+    sys.exit(0)
+out = []
+lic = doc.get("license")
+if isinstance(lic, str):
+    out.append(lic)
+elif isinstance(lic, dict) and isinstance(lic.get("type"), str):
+    out.append(lic["type"])
+elif lic is not None:
+    print("license field is neither a string nor a {type} object", file=sys.stderr)
+    sys.exit(1)
+lics = doc.get("licenses")
+if isinstance(lics, list):
+    for item in lics:
+        if isinstance(item, dict) and isinstance(item.get("type"), str):
+            out.append(item["type"])
+        elif isinstance(item, str):
+            out.append(item)
+        else:
+            print("licenses entry is neither a string nor a {type} object", file=sys.stderr)
+            sys.exit(1)
+elif lics is not None:
+    print("licenses field is not a list", file=sys.stderr)
+    sys.exit(1)
+for value in out:
+    print(value)
+MANIFEST
+    )"; then
+      echo "!! $repo: ${path#"$clone"/} cannot be read as a manifest; its licence field needs a human read — refusing (ABSORPTION.md gate 1)" >&2
+      exit 1
+    fi
+    while IFS= read -r value; do
+      [ -n "$value" ] && check_license_text "$repo" "$license" "$value" "${path#"$clone"/} license field"
+    done <<<"$decl"
+  done < <(find "$clone/$src" -name 'package.json' -type f -print0 2>/dev/null)
+  if [ ${#notice_files[@]} -eq 1 ]; then
+    cp "${notice_files[0]}" "$notice_out"
+  elif [ ${#notice_files[@]} -gt 1 ]; then
+    : >"$notice_out"
+    for path in "${notice_files[@]}"; do
+      {
+        echo "---- ${path#"$clone"/} ----"
+        cat "$path"
+        echo
+      } >>"$notice_out"
+    done
+  fi
+  if [ -n "$nearest_file" ]; then
+    cp "$nearest_file" "$out"
+    return 0
+  fi
+  # Some upstreams ship no LICENSE file and declare the licence only in a
+  # README (vercel-labs/agent-skills does this). Record that declaration, with
+  # the commit it was read from, so the vendored copy still carries provenance.
+  if [ -z "$nearest_decl" ]; then
+    echo "!! $repo ships no LICENSE file and no README has a License section — refusing to vendor $src (ABSORPTION.md gate 1)" >&2
+    exit 1
+  fi
+  {
+    echo "$RECORD_HEADER"
+    echo
+    echo "Upstream: https://github.com/$repo"
+    echo "Commit:   ${SHAS[$repo]}"
+    echo "Path:     $src"
+    echo
+    echo "The upstream repository ships no LICENSE file at this commit. Its README.md"
+    echo "declares the licence under a 'License' heading. That declaration, verbatim:"
+    echo
+    printf '%s\n' "$nearest_decl" | sed 's/^/    /'
+    echo
+    echo "Declared licence as recorded in SOURCES.md: $license."
+    echo "Licence text: https://spdx.org/licenses/$license.html"
+  } >"$out"
+}
+
+# The first line of every record this script generates from a README
+# declaration. license_current tells a generated record from a raw upstream
+# LICENSE by this line, never by the presence of a Commit: line, which a raw
+# licence file is free to contain.
+RECORD_HEADER="UPSTREAM LICENCE RECORD — written by sync-upstream.sh, do not hand-edit"
+
+# license_current <expected> <actual>
+# The Commit line of a generated record moves with upstream HEAD even when the
+# skill tree does not, so which commit it names is not drift. Its absence, or a
+# value that is not a commit, is: such a record has lost its provenance.
+# Everything else, and every byte of a raw upstream LICENSE, must match.
+license_current() {
+  # A symlink is not a self-contained record, whatever it points at.
+  [ -L "$2" ] && return 1
+  [ -f "$2" ] || return 1
+  if [ "$(head -n 1 "$1")" = "$RECORD_HEADER" ]; then
+    [ "$(head -n 1 "$2")" = "$RECORD_HEADER" ] || return 1
+    # Exactly one Commit line, and it must name a commit: a bare or
+    # non-hexadecimal value has lost the provenance the line exists for.
+    [ "$(grep -c '^Commit:' "$2")" = 1 ] || return 1
+    grep -qE '^Commit:[[:space:]]+[0-9a-f]{7,40}[[:space:]]*$' "$2" || return 1
+    diff -q <(grep -v '^Commit:' "$1") <(grep -v '^Commit:' "$2") >/dev/null 2>&1
+  else
+    # A raw upstream LICENSE has no Commit field; nothing in it is ignorable.
+    cmp -s "$1" "$2"
+  fi
+}
+
+# notice_current <expected> <actual>
+# A carried NOTICE must match the upstream's byte for byte; when upstream has
+# none, nothing may sit under the reserved name.
+notice_current() {
+  if [ -f "$1" ]; then
+    [ -L "$2" ] && return 1
+    [ -f "$2" ] || return 1
+    cmp -s "$1" "$2"
+  else
+    [ ! -e "$2" ] && [ ! -L "$2" ]
+  fi
+}
+
+declare -A SHAS CLONES
+n_clones=0
 drift=0
+mkdir -p "$WORK/license" "$WORK/notice" "$WORK/clone"
 
+# ---- pass 1: clone and validate every entry before touching skills/ ----
+# A refusal here leaves the vendored tree exactly as it was; a half-synced pack
+# with one skill deleted and nothing in its place is worse than a stale one.
 for entry in "${UPSTREAM[@]}"; do
   IFS='|' read -r repo license src dest <<<"$entry"
-  slug="${repo//\//_}"
-  if [ ! -d "$WORK/$slug" ]; then
+  # One clone per repo, in a numbered directory, never a flattening of the
+  # repo name: a/b_c and a_b/c would flatten to the same name and the second
+  # would read the first's clone.
+  if [ -z "${CLONES[$repo]+x}" ]; then
+    CLONES["$repo"]="$WORK/clone/$n_clones"
+    n_clones=$((n_clones + 1))
     echo "→ cloning $repo"
-    git clone --depth 1 -q "https://github.com/$repo.git" "$WORK/$slug"
-    SHAS["$repo"]="$(git -C "$WORK/$slug" rev-parse HEAD)"
+    git clone --depth 1 -q "$UPSTREAM_BASE/$repo.git" "${CLONES[$repo]}"
+    SHAS["$repo"]="$(git -C "${CLONES[$repo]}" rev-parse HEAD)"
   fi
+  clone="${CLONES[$repo]}"
 
-  if [ ! -d "$WORK/$slug/$src" ]; then
+  # git recreates an upstream symlink as a symlink, -d follows it, and so
+  # would the cp -R of the directory itself: a src that is or crosses a
+  # link could vendor whatever the link points at on this machine.
+  p="$clone"
+  IFS=/ read -ra comps <<<"$src"
+  for comp in "${comps[@]}"; do
+    p="$p/$comp"
+    if [ -L "$p" ]; then
+      echo "!! $repo: '$src' is or crosses a symlink at '${p#"$clone"/}'; the source must be a real directory inside the clone — refusing" >&2
+      exit 1
+    fi
+  done
+  unset p comps comp
+  # A submodule is a gitlink, which a plain clone leaves as an empty
+  # directory: -d would pass and pass 2 would vendor nothing but the record.
+  if grep -q '^160000 ' < <(git -C "$clone" ls-files --stage -- "$src" 2>/dev/null); then
+    echo "!! $repo: '$src' is a submodule gitlink, not a directory of this repository; its content is not in the clone — refusing" >&2
+    exit 1
+  fi
+  if [ ! -d "$clone/$src" ]; then
     echo "!! $repo: upstream path '$src' no longer exists — upstream restructured, fix UPSTREAM[] above" >&2
     exit 1
   fi
+  # A skill is a directory with a SKILL.md at its root; nothing else is one.
+  # An upstream that moved or renamed the file would otherwise pass every
+  # check above and replace a working skill with a directory no harness
+  # loads. The file must be a regular, non-empty file: a symlink is refused
+  # with the other links below, and an empty file loads as nothing.
+  if [ -L "$clone/$src/SKILL.md" ] || [ ! -f "$clone/$src/SKILL.md" ] || [ ! -s "$clone/$src/SKILL.md" ]; then
+    echo "!! $repo: '$src' has no SKILL.md at its root (or it is empty or a symlink); not a skill — upstream restructured, fix UPSTREAM[] above" >&2
+    exit 1
+  fi
+
+  resolve_license "$clone" "$repo" "$license" "$src" "$WORK/license/$dest" "$WORK/notice/$dest"
+
+  # Symlinks anywhere inside the skill are refused too: cp -R copies them as
+  # links, so every install would carry a pointer off the tree, and the
+  # installers already treat such a copy as never canonical.
+  link="$(find "$clone/$src" -type l -print -quit 2>/dev/null)"
+  if [ -n "$link" ]; then
+    echo "!! $repo: '$src' contains a symlink at '${link#"$clone"/}'; a vendored tree must be self-contained — refusing" >&2
+    exit 1
+  fi
+  unset link
+done
+
+# ---- pass 2: report drift, or vendor ----
+for entry in "${UPSTREAM[@]}"; do
+  IFS='|' read -r repo license src dest <<<"$entry"
+  clone="${CLONES[$repo]}"
 
   if [ $CHECK_ONLY -eq 1 ]; then
-    if ! diff -rq "$WORK/$slug/$src" "$SKILLS_DIR/$dest" >/dev/null 2>&1; then
+    # diff follows symlinks, so a vendored tree that is a link, or carries
+    # one, could compare clean while not being self-contained. That is drift.
+    if [ -L "$SKILLS_DIR/$dest" ] || [ -n "$(find "$SKILLS_DIR/$dest" -type l -print -quit 2>/dev/null)" ]; then
+      echo "DRIFT  $dest  (vendored tree is or contains a symlink — upstream $repo @ ${SHAS[$repo]:0:8})"
+      drift=1
+      continue
+    fi
+    # The root UPSTREAM-LICENSE and UPSTREAM-NOTICE are written by this
+    # script, not by upstream, so those two paths are dropped from the tree
+    # comparison and checked on their own below. Only the root: a nested file
+    # of either name is upstream content and drifts like any other.
+    tree_drift="$(diff -rq "$clone/$src" "$SKILLS_DIR/$dest" 2>&1 \
+      | grep -vxF -e "Only in $SKILLS_DIR/$dest: UPSTREAM-LICENSE" -e "Only in $SKILLS_DIR/$dest: UPSTREAM-NOTICE" || true)"
+    if [ -n "$tree_drift" ]; then
       echo "DRIFT  $dest  (upstream $repo @ ${SHAS[$repo]:0:8})"
+      drift=1
+    elif ! license_current "$WORK/license/$dest" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"; then
+      echo "DRIFT  $dest  (UPSTREAM-LICENSE missing or stale — upstream $repo @ ${SHAS[$repo]:0:8})"
+      drift=1
+    elif ! notice_current "$WORK/notice/$dest" "$SKILLS_DIR/$dest/UPSTREAM-NOTICE"; then
+      echo "DRIFT  $dest  (UPSTREAM-NOTICE missing, stale or not upstream's — upstream $repo @ ${SHAS[$repo]:0:8})"
       drift=1
     else
       echo "ok     $dest"
@@ -79,11 +703,15 @@ for entry in "${UPSTREAM[@]}"; do
   echo "→ vendoring $dest from $repo/$src"
   rm -rf "${SKILLS_DIR:?}/$dest"
   mkdir -p "$SKILLS_DIR/$dest"
-  cp -R "$WORK/$slug/$src/." "$SKILLS_DIR/$dest/"
-  # upstream LICENSE travels with the skill so attribution survives a copy
-  for lic in LICENSE LICENSE.md LICENSE.txt; do
-    [ -f "$WORK/$slug/$lic" ] && cp "$WORK/$slug/$lic" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE" && break
-  done
+  cp -R "$clone/$src/." "$SKILLS_DIR/$dest/"
+  # The upstream licence, and its NOTICE when it has one, travel with the
+  # skill so attribution survives a copy. Pass 1 refused any upstream that
+  # ships these names itself, so nothing is here to be overwritten or written
+  # through.
+  cp "$WORK/license/$dest" "$SKILLS_DIR/$dest/UPSTREAM-LICENSE"
+  if [ -f "$WORK/notice/$dest" ]; then
+    cp "$WORK/notice/$dest" "$SKILLS_DIR/$dest/UPSTREAM-NOTICE"
+  fi
 done
 
 if [ $CHECK_ONLY -eq 1 ]; then

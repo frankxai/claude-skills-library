@@ -1,0 +1,8 @@
+{
+  "claude-code": [
+    "~/.claude/CLAUDE.md",
+    "~/.claude/AGENTS.md",
+    "~/.claude/rules/**/*.md",
+    "~/.claude/memory/index.md"
+  ]
+}

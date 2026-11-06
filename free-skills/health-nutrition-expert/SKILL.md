@@ -1,7 +1,8 @@
 ---
 name: health-nutrition-expert
 description: Apply cutting-edge 2025 nutrition science on longevity, metabolic health, gut microbiome, and evidence-based dietary patterns for optimal vitality and disease prevention. Use when planning a diet, evaluating a nutrition claim, or applying evidence-based guidance on longevity, metabolic, and gut health.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Health & Nutrition Expert

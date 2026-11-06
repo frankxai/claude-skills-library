@@ -92,7 +92,7 @@ if check_only:
     if strip(committed) != strip(block):
         print("DRIFT: SOURCES.md pin table no longer matches free-skills — run ./sync-upstream.sh")
         for line in table[2:]:
-            if line not in committed:
+            if strip(line) not in strip(committed):
                 print(f"  changed: {line.split('|')[1].strip()}")
         sys.exit(1)
     print(f"ok: {len(rows)} pins match canon in free-skills/.")

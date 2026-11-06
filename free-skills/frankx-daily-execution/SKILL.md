@@ -1,7 +1,8 @@
 ---
 name: frankx-daily-execution
 description: Executes Frank's daily workflow using the FrankX agent system, Starlight Intelligence, and productivity methods. Use when planning Frank's day, running a focused work sprint, or turning intentions into a concrete execution plan.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # FrankX Daily Execution System Skill

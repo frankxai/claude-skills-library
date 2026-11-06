@@ -69,7 +69,7 @@ Auto-activates when session involves: book writing, chapter drafting, book cover
 - **Theme**: Amber/Indigo on dark (#0F172A)
 - **Fonts**: Serif headings + sans body
 - **Voice**: Visionary and warm. Long-form narrative journalism meets personal essay. Data-backed optimism. Specific creator economy statistics woven with philosophical reflection. Hopeful without being naive.
-- **Research Sources**: Creator Economy reports (Goldman Sachs $250B valuation), SignalFire Creator Report, a16z Future of Creative Work, Li Jin (passion economy), Naval Ravikant (leverage), Kevin Kelly (1000 True Fans), historical creator movements (Renaissance patronage, printing press, radio, YouTube revolution)
+- **Research Sources**: Creator Economy reports (Goldman Sachs USD 250B valuation), SignalFire Creator Report, a16z Future of Creative Work, Li Jin (passion economy), Naval Ravikant (leverage), Kevin Kelly (1000 True Fans), historical creator movements (Renaissance patronage, printing press, radio, YouTube revolution)
 - **Visual Identity**: Warm amber glow, indigo depths, sunrise/dawn metaphors, constellation patterns, golden ratio spirals
 - **Cover**: `/images/golden-age/hero-golden-age.png`
 - **Content Dir**: `content/golden-age-book/`

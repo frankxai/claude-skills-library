@@ -1,13 +1,14 @@
 // node --test packs/web-excellence/tests/install-agents.test.mjs
 // install.sh carries the three web workers into a repo: added when missing,
-// left alone when identical, set aside (never deleted) when a local copy
-// differs, and skipped on --no-agents, --skills-only, and --dry-run. It also
+// left alone when identical, set aside under a timestamped name (never
+// deleted, never overwritten) when a local copy differs or is a symlink, and
+// skipped on --no-agents, --skills-only, and --dry-run. It also
 // names any skill or agent the repo's .gitignore would keep out of git, and so
 // out of cloud sessions.
 
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
@@ -70,6 +71,11 @@ test('a re-run leaves identical agents alone', () => {
   }
 });
 
+const setAside = (dir) => {
+  const d = join(dir, '.claude/agents.replaced');
+  return existsSync(d) ? readdirSync(d).filter((f) => f.startsWith('worker-web-builder.')).sort() : [];
+};
+
 test('a local copy that differs is set aside outside .claude/agents, then replaced', () => {
   const dir = freshRepo();
   try {
@@ -78,10 +84,59 @@ test('a local copy that differs is set aside outside .claude/agents, then replac
     writeFileSync(target, read(target) + '\nlocal edit\n');
     const out = install(dir);
     assert.match(out, /update agent worker-web-builder/);
-    assert.match(read(join(dir, '.claude/agents.replaced/worker-web-builder.md')), /local edit/);
+    const kept = setAside(dir);
+    assert.equal(kept.length, 1);
+    assert.match(kept[0], /^worker-web-builder\.\d{8}T\d{6}Z(\.\d+)?\.md$/);
+    assert.match(read(join(dir, '.claude/agents.replaced', kept[0])), /local edit/);
     assert.equal(read(target), read(join(PACK, 'agents/worker-web-builder.md')));
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a second divergence keeps the first set-aside copy', () => {
+  const dir = freshRepo();
+  try {
+    install(dir);
+    const target = join(dir, '.claude/agents/worker-web-builder.md');
+    writeFileSync(target, read(target) + '\nfirst edit\n');
+    install(dir);
+    writeFileSync(target, read(target) + '\nsecond edit\n');
+    install(dir);
+    const kept = setAside(dir).map((f) => read(join(dir, '.claude/agents.replaced', f)));
+    assert.equal(kept.length, 2);
+    assert.ok(kept.some((t) => /first edit/.test(t) && !/second edit/.test(t)), 'first copy survives');
+    assert.ok(kept.some((t) => /second edit/.test(t)), 'second copy kept');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a symlinked agent is moved aside, never written through', () => {
+  const dir = freshRepo();
+  const outside = mkdtempSync(join(tmpdir(), 'web-excellence-outside-'));
+  try {
+    // One live link and one dangling link: cp follows either, and a dangling
+    // one would create a file outside the repo.
+    const victim = join(outside, 'victim.md');
+    const planted = join(outside, 'created-by-installer.md');
+    writeFileSync(victim, 'do not clobber me\n');
+    execFileSync('mkdir', ['-p', join(dir, '.claude/agents')]);
+    symlinkSync(victim, join(dir, '.claude/agents/worker-web-builder.md'));
+    symlinkSync(planted, join(dir, '.claude/agents/worker-web-steward.md'));
+    install(dir);
+    assert.equal(read(victim), 'do not clobber me\n');
+    assert.ok(!existsSync(planted), 'nothing written through the dangling link');
+    for (const name of ['worker-web-builder.md', 'worker-web-steward.md']) {
+      const target = join(dir, '.claude/agents', name);
+      assert.ok(!lstatSync(target).isSymbolicLink(), `${name} is a regular file`);
+      assert.equal(read(target), read(join(PACK, 'agents', name)));
+    }
+    assert.equal(setAside(dir).length, 1);
+    assert.ok(readdirSync(join(dir, '.claude/agents.replaced')).some((f) => f.startsWith('worker-web-steward.')));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
   }
 });
 

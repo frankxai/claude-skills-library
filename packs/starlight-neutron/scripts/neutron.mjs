@@ -175,8 +175,12 @@ export function doctor(home = homedir(), probes = { rtk: () => resolveRtk(), shi
   ];
 }
 
-function main(argv) {
+async function main(argv) {
   const [command = 'doctor', ...flags] = argv;
+  if (command === 'context') {
+    const { contextMain } = await import('./context.mjs');
+    return contextMain(flags);
+  }
   if (command === 'bench') {
     const rtk = resolveRtk();
     if (!rtk) {
@@ -195,10 +199,10 @@ function main(argv) {
     for (const row of doctor()) console.log(`${row.ok ? 'ok     ' : 'missing'}  ${row.name.padEnd(20)} ${row.detail}`);
     return 0;
   }
-  console.error('usage: neutron.mjs doctor | bench [--json | --md] | ledger <sub>');
+  console.error('usage: neutron.mjs doctor | bench [--json | --md] | context [--config path] [--propose] | ledger <sub>');
   return 2;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(main(process.argv.slice(2)));
+  main(process.argv.slice(2)).then(code => process.exit(code));
 }

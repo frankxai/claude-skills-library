@@ -1,7 +1,8 @@
 ---
 name: ai-architecture
 description: Expert guidance on multi-cloud architecture, cost analysis, and technical decision-making for AI platforms across AWS, GCP, Azure, and OCI. Use when comparing clouds, estimating infra cost, or making build-vs-buy and architecture trade-off decisions for an AI product.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # AI Architecture Skill
