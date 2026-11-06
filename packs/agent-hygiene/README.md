@@ -102,12 +102,12 @@ The full contract with the four admissible file shapes:
 ## Tests
 
 ```bash
-python3 packs/agent-hygiene/tests/test_hooks.py        # 15 checks
-python3 packs/agent-hygiene/tests/test_agent_lint.py   # 36 checks
-python3 packs/agent-hygiene/tests/test_install.py      # 32 checks
+python3 packs/agent-hygiene/tests/test_hooks.py        # 16 checks
+python3 packs/agent-hygiene/tests/test_agent_lint.py   # 41 checks
+python3 packs/agent-hygiene/tests/test_install.py      # 33 checks
 ```
 
-83 checks, no dependencies, run by `.github/workflows/pack-tests.yml`. The load-bearing ones:
+90 checks, no dependencies, run by `.github/workflows/pack-tests.yml`. The load-bearing ones:
 `test_cited_command_must_have_run` (a receipt-shaped sentence is not a receipt),
 `test_skill_text_cannot_satisfy` (a command seen in a tool result does not count as run),
 `test_changed_mode_is_a_ratchet` (old debt never blocks a PR that did not touch it),

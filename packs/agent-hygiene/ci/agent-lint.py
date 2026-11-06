@@ -61,13 +61,24 @@ def kind_of(path: str) -> str | None:
     return None
 
 
-def walk(root: str) -> list[str]:
+def classify(path: str, root: str) -> str | None:
+    """kind_of() on the path relative to the repo root. A checkout that itself
+    sits under a directory named agents/ (or any parent that matches) must not
+    make every markdown file in it an agent definition, so the absolute path is
+    used only for a file outside the root."""
+    rel = os.path.relpath(os.path.abspath(path), os.path.abspath(root))
+    if rel.startswith(".."):
+        return kind_of(os.path.abspath(path))
+    return kind_of(rel)
+
+
+def walk(start: str, root: str) -> list[str]:
     found = []
-    for dirpath, dirs, files in os.walk(root):
+    for dirpath, dirs, files in os.walk(start):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for fn in files:
             p = os.path.join(dirpath, fn)
-            if kind_of(os.path.abspath(p)):
+            if classify(p, root):
                 found.append(p)
     return sorted(found)
 
@@ -189,7 +200,7 @@ def is_arcanea(path: str, name: str) -> bool:
 
 def lint_file(path: str, root: str) -> dict:
     rel = os.path.relpath(path, root).replace(os.sep, "/")
-    kind = kind_of(rel) or kind_of(path) or "agent"
+    kind = classify(path, root) or "agent"
     errors: list[str] = []
     warnings: list[str] = []
     try:
@@ -304,7 +315,7 @@ def main(argv: list[str]) -> int:
         for raw in positional:
             p = raw if os.path.isabs(raw) else os.path.join(os.getcwd(), raw)
             if os.path.isdir(p):
-                files += walk(p)
+                files += walk(p, root)
             elif os.path.isfile(p):
                 files.append(p)
             else:
@@ -316,7 +327,7 @@ def main(argv: list[str]) -> int:
         for sub in (".claude/agents", "agents", ".claude/skills", "skills", "free-skills", "packs"):
             p = os.path.join(root, sub)
             if os.path.isdir(p):
-                files += walk(p)
+                files += walk(p, root)
 
     seen, uniq = set(), []
     for f in files:

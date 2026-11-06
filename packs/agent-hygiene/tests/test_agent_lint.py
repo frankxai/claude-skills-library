@@ -30,9 +30,33 @@ failures: list[str] = []
 def check(name: str, condition: bool, detail: str = "") -> None:
     if condition:
         print(f"  ok   {name}")
-    else:
-        print(f"  FAIL {name}" + (f" — {detail}" if detail else ""))
-        failures.append(name)
+        return
+    print(f"  FAIL {name}" + (f" — {detail}" if detail else ""))
+    failures.append(name)
+    if "pytest" in sys.modules:
+        # Under pytest a printed FAIL is a green run; raise so the run is red.
+        raise AssertionError(f"{name}: {detail}" if detail else name)
+
+
+def test_check_raises_under_pytest() -> None:
+    """pytest collects these test_ functions but only sees an exception, so a
+    check() that printed FAIL and returned reported 'passed'. It must raise."""
+    import types
+    injected = "pytest" not in sys.modules
+    if injected:
+        sys.modules["pytest"] = types.ModuleType("pytest")
+    try:
+        try:
+            check("forced failure (expected, self-test)", False, "self-test")
+            raised = False
+        except AssertionError:
+            raised = True
+    finally:
+        if injected:
+            del sys.modules["pytest"]
+        if failures and failures[-1] == "forced failure (expected, self-test)":
+            failures.pop()
+    check("check() raises AssertionError under pytest", raised)
 
 
 def lint(cwd: str, *args: str):
@@ -133,6 +157,25 @@ def test_eval_inputs_are_skipped() -> None:
     code, out = lint(d, "--changed")
     check("eval files are not linted by the --changed ratchet", code == 0 and "1 files" in out, out)
     shutil.rmtree(d)
+
+
+def test_checkout_under_agents_dir_is_not_leaked() -> None:
+    """Discovery classifies by path relative to the repo root. A checkout that
+    lives at .../agents/<repo>/ would otherwise turn every markdown file in it
+    into an agent definition through the parent directory name."""
+    parent = tempfile.mkdtemp()
+    d = os.path.join(parent, "agents", "repo")
+    os.makedirs(d)
+    subprocess.run(["git", "-C", d, "init", "-q"], check=True)
+    for rel, body in {"docs/notes.md": "# Notes\n", "agents/ok.md": GOOD.replace("blue-team", "ok")}.items():
+        os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
+        with open(os.path.join(d, rel), "w", encoding="utf-8") as fh:
+            fh.write(body)
+    code, out = lint(d)
+    check("default roots in a checkout under agents/: only the real agent", code == 0 and "1 files" in out, out)
+    code, out = lint(d, "docs")
+    check("docs/ in a checkout under agents/: 0 files", code == 0 and "0 files" in out, out)
+    shutil.rmtree(parent)
 
 
 def test_sis_identity_card_shape() -> None:

@@ -46,7 +46,14 @@ jobs:
         # The hook's real tests live with the pack upstream. This is the floor:
         # the vendored file still parses and exits clean on an empty payload.
         run: |
-          [ -e .claude/hooks/agent-hygiene-stop.py ] && { echo '{}' | python3 .claude/hooks/agent-hygiene-stop.py >/dev/null && echo "ok hook"; } || echo "no hook installed"
+          # No && list here: under set -e a failing left-hand command is ignored,
+          # which is how a hook with a syntax error once passed this step.
+          if [ -e .claude/hooks/agent-hygiene-stop.py ]; then
+            echo '{}' | python3 .claude/hooks/agent-hygiene-stop.py >/dev/null
+            echo "ok hook"
+          else
+            echo "no hook installed"
+          fi
           python3 -m py_compile .claude/ci/agent-lint.py && echo "ok linter parses"
 
       - name: Lint changed agent and skill files

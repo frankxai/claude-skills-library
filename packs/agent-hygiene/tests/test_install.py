@@ -29,9 +29,33 @@ failures: list[str] = []
 def check(name: str, condition: bool, detail: str = "") -> None:
     if condition:
         print(f"  ok   {name}")
-    else:
-        print(f"  FAIL {name}" + (f" — {detail}" if detail else ""))
-        failures.append(name)
+        return
+    print(f"  FAIL {name}" + (f" — {detail}" if detail else ""))
+    failures.append(name)
+    if "pytest" in sys.modules:
+        # Under pytest a printed FAIL is a green run; raise so the run is red.
+        raise AssertionError(f"{name}: {detail}" if detail else name)
+
+
+def test_check_raises_under_pytest() -> None:
+    """pytest collects these test_ functions but only sees an exception, so a
+    check() that printed FAIL and returned reported 'passed'. It must raise."""
+    import types
+    injected = "pytest" not in sys.modules
+    if injected:
+        sys.modules["pytest"] = types.ModuleType("pytest")
+    try:
+        try:
+            check("forced failure (expected, self-test)", False, "self-test")
+            raised = False
+        except AssertionError:
+            raised = True
+    finally:
+        if injected:
+            del sys.modules["pytest"]
+        if failures and failures[-1] == "forced failure (expected, self-test)":
+            failures.pop()
+    check("check() raises AssertionError under pytest", raised)
 
 
 def tree_hash(root: str) -> str:
