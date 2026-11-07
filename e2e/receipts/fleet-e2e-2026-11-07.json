@@ -1,0 +1,270 @@
+{
+  "schema": "starlight.fleet-e2e/v1",
+  "generatedAt": "2026-11-07T14:42:06.029Z",
+  "estateRoot": "C:\\Users\\frank\\starlight",
+  "suiteDir": "C:\\Users\\frank\\starlight\\worktrees\\claude-skills-library-eval-pack-20261107",
+  "verdict": "FLEET E2E PASS",
+  "productionReadiness": "HOLD",
+  "readinessReason": "3 P0 gaps remain; the hard checks cover the deployed Workers, not the whole estate",
+  "hardChecks": {
+    "total": 29,
+    "passed": 29,
+    "failed": 0
+  },
+  "knownGaps": [
+    {
+      "id": "door:bespoke-waitlist",
+      "label": "the only live capture door is bespoke",
+      "detail": "frankx.ai/waitlist has no productId, consent control or price question; it does not write a DemandSignal (TRUTH.md 5c.3)",
+      "owner": "product repo lane: install the standard two-step capture",
+      "severity": "P1"
+    },
+    {
+      "id": "door:si-signal",
+      "label": "https://starlightintelligence.ai/signal",
+      "detail": "GET returns 404",
+      "owner": "product repo lane: point at the working waitlist",
+      "severity": "P0"
+    },
+    {
+      "id": "door:si-api",
+      "label": "https://starlightintelligence.ai/api/waitlist",
+      "detail": "GET returns 404",
+      "owner": "product repo lane: point at the working waitlist",
+      "severity": "P0"
+    },
+    {
+      "id": "door:ra-waitlist",
+      "label": "https://realityarchitect.ai/waitlist",
+      "detail": "GET returns 308",
+      "owner": "product repo lane: point at the working waitlist",
+      "severity": "P0"
+    },
+    {
+      "id": "config:migrations",
+      "label": "wrangler 4.158.0 rejects new_sqlite_databases",
+      "detail": "5 configs still carry [[migrations]]: arcanea-intelligence, frankx-content, publishing-house, starlight-core, starlight-memory",
+      "owner": "control-plane lane: remove the field",
+      "severity": "P1"
+    },
+    {
+      "id": "contract:sentinel",
+      "label": "family-contract still reports 1 failure",
+      "detail": "sentinel/ has no package.json; it is also absent from directory.json and BUNDLE_ACCESS",
+      "owner": "control-plane lane: manifest + registration",
+      "severity": "P1"
+    },
+    {
+      "id": "data:signal-overwrite",
+      "label": "a repeat waitlist submission overwrites earlier answers",
+      "detail": "packages/demand-capture/src/store.ts saveSignal does hset keyed by email; step-2 answers (urgency, pain, priceBand) are lost on re-submit. Found by e2e/demand-capture.e2e.test.mjs; a proven fix is in e2e/fix-signal-merge.mjs",
+      "owner": "control-plane lane: apply the merge fix",
+      "severity": "P1"
+    }
+  ],
+  "checks": [
+    {
+      "id": "health:gateway",
+      "label": "GET /health gateway",
+      "ok": true,
+      "detail": "200 service=starlight-universal-mcp-gateway version=3.0.0 tools=42",
+      "ms": 226
+    },
+    {
+      "id": "health:sentinel",
+      "label": "GET /health sentinel",
+      "ok": true,
+      "detail": "200 service=starlight-sentinel version=0.1.0 tools=3",
+      "ms": 142
+    },
+    {
+      "id": "health:starlight-core",
+      "label": "GET /health starlight-core",
+      "ok": true,
+      "detail": "200 service=starlight-mcp version=0.1.0 tools=3",
+      "ms": 117
+    },
+    {
+      "id": "health:mcp-doctor",
+      "label": "GET /health mcp-doctor",
+      "ok": true,
+      "detail": "200 service=mcp-doctor-mcp version=0.1.0 tools=3",
+      "ms": 119
+    },
+    {
+      "id": "health:starlight-kernel",
+      "label": "GET /health starlight-kernel",
+      "ok": true,
+      "detail": "200 service=starlight-kernel-mcp version=0.1.0 tools=3",
+      "ms": 118
+    },
+    {
+      "id": "initialize:gateway",
+      "label": "initialize gateway",
+      "ok": true,
+      "detail": "200 starlight-universal-mcp-gateway 2025-06-18",
+      "ms": 64
+    },
+    {
+      "id": "tools-list:gateway",
+      "label": "tools/list gateway",
+      "ok": true,
+      "detail": "200 tools=42",
+      "ms": 71
+    },
+    {
+      "id": "tools-call:gateway",
+      "label": "tools/call gateway",
+      "ok": true,
+      "detail": "200 starlight_skill_lookup realResult=true rpcError=-",
+      "ms": 92
+    },
+    {
+      "id": "initialize:sentinel",
+      "label": "initialize sentinel",
+      "ok": true,
+      "detail": "200 starlight-sentinel 2025-06-18",
+      "ms": 61
+    },
+    {
+      "id": "tools-list:sentinel",
+      "label": "tools/list sentinel",
+      "ok": true,
+      "detail": "200 tools=3",
+      "ms": 87
+    },
+    {
+      "id": "tools-call:sentinel",
+      "label": "tools/call sentinel",
+      "ok": true,
+      "detail": "200 sentinel_status realResult=true rpcError=-",
+      "ms": 435
+    },
+    {
+      "id": "initialize:starlight-core",
+      "label": "initialize starlight-core",
+      "ok": true,
+      "detail": "200 starlight-mcp 2025-06-18",
+      "ms": 53
+    },
+    {
+      "id": "tools-list:starlight-core",
+      "label": "tools/list starlight-core",
+      "ok": true,
+      "detail": "200 tools=3",
+      "ms": 54
+    },
+    {
+      "id": "tools-call:starlight-core",
+      "label": "tools/call starlight-core",
+      "ok": true,
+      "detail": "200 starlight_skill_lookup realResult=true rpcError=-",
+      "ms": 105
+    },
+    {
+      "id": "initialize:mcp-doctor",
+      "label": "initialize mcp-doctor",
+      "ok": true,
+      "detail": "200 mcp-doctor-mcp 2025-06-18",
+      "ms": 285
+    },
+    {
+      "id": "tools-list:mcp-doctor",
+      "label": "tools/list mcp-doctor",
+      "ok": true,
+      "detail": "200 tools=3",
+      "ms": 162
+    },
+    {
+      "id": "tools-call:mcp-doctor",
+      "label": "tools/call mcp-doctor",
+      "ok": true,
+      "detail": "200 doctor_server_score realResult=true rpcError=-",
+      "ms": 63
+    },
+    {
+      "id": "initialize:starlight-kernel",
+      "label": "initialize starlight-kernel",
+      "ok": true,
+      "detail": "200 starlight-kernel-mcp 2025-06-18",
+      "ms": 61
+    },
+    {
+      "id": "tools-list:starlight-kernel",
+      "label": "tools/list starlight-kernel",
+      "ok": true,
+      "detail": "200 tools=3",
+      "ms": 76
+    },
+    {
+      "id": "tools-call:starlight-kernel",
+      "label": "tools/call starlight-kernel",
+      "ok": true,
+      "detail": "200 kernel_gate_verify realResult=true rpcError=-",
+      "ms": 142
+    },
+    {
+      "id": "gw:metrics",
+      "label": "gateway /health metrics are internally consistent",
+      "ok": true,
+      "detail": "200 plugins=14 tools=42 listed=42 free=9 gated=33 sumOK=true contract=100",
+      "ms": 108
+    },
+    {
+      "id": "gw:free-tool",
+      "label": "gateway free tool returns real data with no key",
+      "ok": true,
+      "detail": "200 bytes=1518",
+      "ms": 65
+    },
+    {
+      "id": "gw:licence-gate",
+      "label": "gateway paid tool refuses without a licence key",
+      "ok": true,
+      "detail": "401 code=-32001",
+      "ms": 63
+    },
+    {
+      "id": "gw:notification",
+      "label": "gateway answers notifications 202 with an empty body",
+      "ok": true,
+      "detail": "202 bodyBytes=0",
+      "ms": 107
+    },
+    {
+      "id": "gw:unknown-method",
+      "label": "gateway unknown method with an id is 404 -32601",
+      "ok": true,
+      "detail": "404 code=-32601",
+      "ms": 72
+    },
+    {
+      "id": "gw:malformed",
+      "label": "gateway malformed JSON is 400 -32700",
+      "ok": true,
+      "detail": "400 code=-32700",
+      "ms": 29
+    },
+    {
+      "id": "portal:html",
+      "label": "portal serves its HTML to a browser Accept header",
+      "ok": true,
+      "detail": "200 bytes=28704 title=\"Starlight - Cloudflare MCP portal\"",
+      "ms": 214
+    },
+    {
+      "id": "portal:oauth",
+      "label": "portal /mcp keeps its OAuth gate",
+      "ok": true,
+      "detail": "401 (interactive OAuth required)",
+      "ms": 117
+    },
+    {
+      "id": "waitlist:form",
+      "label": "frankx.ai/waitlist renders its named capture form",
+      "ok": true,
+      "detail": "200 bytes=188662 namedForm=true",
+      "ms": 419
+    }
+  ]
+}
