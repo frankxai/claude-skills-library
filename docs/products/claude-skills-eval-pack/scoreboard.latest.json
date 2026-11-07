@@ -1,0 +1,174 @@
+{
+  "schema": "eval-pack-scoreboard.v4",
+  "generatedAt": "2026-11-07T05:18:21.985Z",
+  "estateRoot": "C:\\Users\\frank\\starlight",
+  "productId": "claude-skills-eval-pack",
+  "sources": {
+    "skillsGraph": "graph/skills.graph.json",
+    "verdicts": "ops/skill-eval-verdicts.json",
+    "productsGraph": "graph/products.graph.json",
+    "traffic": "gh api .../traffic/views",
+    "trafficPaths": "gh api .../traffic/popular/paths",
+    "openPrs": "gh search prs",
+    "harnesses": "runtimes/harnesses.json"
+  },
+  "measured": {
+    "names": 606,
+    "withEval": 30,
+    "conflicts": 0,
+    "passed": 30,
+    "faults": "90/90",
+    "faultsOk": true,
+    "staleCount": 6,
+    "staleNames": [
+      "agentic-orchestration",
+      "book-publishing",
+      "feynman-thinking",
+      "hooks-automation",
+      "loop-designer"
+    ],
+    "views": 1347,
+    "uniques": 721,
+    "trafficDays": 14,
+    "prCount": 17,
+    "topTen": [
+      "ui-ux-design-expert",
+      "gym-training-expert",
+      "suno-ai-mastery",
+      "oracle-database-expert"
+    ],
+    "topTenComplete": false,
+    "topTenWithVerdict": 2,
+    "suitePresent": 19,
+    "suiteFiles": 19,
+    "craftExit": 0,
+    "critiqueOk": true,
+    "demandExit": 1,
+    "harnessCount": 14,
+    "measuredHarnesses": 12,
+    "harnessTestExit": 0,
+    "verifiedHarnesses": 7,
+    "documentedHarnesses": 5,
+    "openHarnesses": 2,
+    "listType": "skills",
+    "enumOk": false,
+    "gateReceipts": [],
+    "gatesComplete": false,
+    "gatePass": false
+  },
+  "goals": [
+    {
+      "id": "G1",
+      "name": "Proof on every listing",
+      "current": "[OPEN] coverage or traffic ranking incomplete",
+      "target": ">=10% and all top-10 traffic skills",
+      "status": "FAIL",
+      "command": "node scripts/eval-pack-scoreboard.mjs",
+      "note": "traffic slugs found: 4 (ui-ux-design-expert, gym-training-expert, suno-ai-mastery, oracle-database-expert)"
+    },
+    {
+      "id": "G2",
+      "name": "Namespace is unambiguous",
+      "current": "0 unresolved conflicts",
+      "target": "0 (hard gate)",
+      "status": "PASS",
+      "command": "node tools/gen-skills-graph.mjs",
+      "note": "15 names resolved by catalog-over-internal-pack (RULED 2026-10-24)"
+    },
+    {
+      "id": "G3",
+      "name": "The grader refuses rubber stamps",
+      "current": "90/90 faults; 6 stale verdict(s)",
+      "target": "100% of planted faults caught, no stale verdict",
+      "status": "FAIL",
+      "command": "Get-Content ops/skill-eval-verdicts.json + graph/skills.graph.json",
+      "note": "verdicts updated 2026-10-25; stale: agentic-orchestration, book-publishing, feynman-thinking, hooks-automation, loop-designer"
+    },
+    {
+      "id": "G4",
+      "name": "Real demand evidence",
+      "current": "report.mjs exit 1 (KV credentials missing)",
+      "target": ">=1 DemandSignal with priceBand",
+      "status": "BLOCKED",
+      "command": "node packages/demand-capture/report.mjs",
+      "note": "Frank holds KV + Resend; no bespoke fallback is permitted"
+    },
+    {
+      "id": "G5",
+      "name": "Audience on the measured channel",
+      "current": "1347 views / 721 uniques (14-day window)",
+      "target": "1,000 uniques in the API window",
+      "status": "BEHIND",
+      "command": "gh api repos/frankxai/claude-skills-library/traffic/views",
+      "note": "GitHub traffic/views returns a rolling window; snapshots from different dates overlap and are not a trend"
+    },
+    {
+      "id": "G6",
+      "name": "One installable, versioned pack",
+      "current": "[OPEN] no pack published",
+      "target": "installable on three harnesses, version equals repo",
+      "status": "FAIL",
+      "command": "npm view <pkg> version",
+      "note": "Phase 4, Frank gate"
+    },
+    {
+      "id": "G7",
+      "name": "Gate receipts before money",
+      "current": "UNGATED - no PRODUCT-RELEASE-GATE run. Waitlist only; no checkout exists and none is planned until G5 has price evidence.; dated receipts covering G0-G5: none",
+      "target": "dated PASS with G5 price evidence AND receipt files",
+      "status": "FAIL",
+      "command": "Get-Content graph/products.graph.json + ls queen/reports/product-gates/",
+      "note": "listType skills DRIFT: not in the section 12 enum; a string match alone never sets this PASS"
+    },
+    {
+      "id": "G8",
+      "name": "Queue stays admissible",
+      "current": "17 / 10 budget",
+      "target": "<=10 at every PR",
+      "status": "FAIL",
+      "command": "gh search prs --repo frankxai/claude-skills-library --state open --limit 100 --json number",
+      "note": "quote this number in every PR body"
+    },
+    {
+      "id": "G9",
+      "name": "Craft bar is evidenced",
+      "current": "suite 19/19 files; craft-receipt exit 0; critique content closed",
+      "target": "4/4 blocks PASS, critique names reviewer/findings/fixes at a revision",
+      "status": "PASS",
+      "command": "node tools/craft-receipt.mjs --product claude-skills-eval-pack --receipt <path>",
+      "note": "header presence alone is not a critique"
+    },
+    {
+      "id": "G10",
+      "name": "Mobile-native public surface",
+      "current": "[OPEN] no page built in this slice",
+      "target": "10/10 section 11.3 predicates + real-device Playwright",
+      "status": "BLOCKED",
+      "command": ".claude/ci/web-guidelines-lint.mjs --changed",
+      "note": "visual reference lock is deferred until Phase 2"
+    },
+    {
+      "id": "G11",
+      "name": "Every harness has a sourced install surface",
+      "current": "14 adapter docs / 12 sourced (7 verified, 5 documented, 2 open)",
+      "target": "14/14 sourced, --verify exit 0",
+      "status": "FAIL",
+      "command": "node scripts/install-any-agent.mjs --all --verify",
+      "note": "2 surfaces remain [OPEN] with failed probes recorded; a documented path is not a working install"
+    },
+    {
+      "id": "G12",
+      "name": "Planted-fault regression suite passes",
+      "current": "node --test harness-surface.test.mjs exit 0",
+      "target": "9/9 pass, 0 fail",
+      "status": "PASS",
+      "command": "node --test scripts/tests/harness-surface.test.mjs",
+      "note": "path states, exit codes 2/3/4/5, JSON-mode faults, manifest fail-closed, docs guard, idempotency, fake HOME"
+    }
+  ],
+  "northStar": {
+    "metric": "shipped artifacts / provider-% burned",
+    "status": "[OPEN]",
+    "reason": "cost collector output not pulled in this run"
+  }
+}
