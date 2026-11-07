@@ -11,19 +11,21 @@ verdict-store ──> eval-runner ──> catalog ──> capture ──> public
                        └──────────────┴───────────┴────────────┘  scoreboard reads all
 ```
 
-`verdict-store` and the deterministic half of `eval-runner` already exist. `catalog`, `capture`
-and `publication` do not. The scoreboard is a read-only observer of all five.
+`verdict-store` and the deterministic half of `eval-runner` already exist. `harness-surface` was
+built on 2026-11-07 (manifest, generator, CLI, eight stubs). `catalog`, `capture` and
+`publication` do not. The scoreboard is a read-only observer of all six.
 
 ## Implementation order
 
 1. `verdict-store` hardening (staleness check, receipt resolution, planted-fault test).
 2. `eval-runner` agent layer (Promptfoo configs, three-layer cases, revision in receipt).
 3. `catalog` generated columns and honest `UNEVALUATED` state.
-4. `capture` two-step door and packaged gift.
-5. `publication` versioning and gate receipts.
+4. `harness-surface` (DONE 2026-11-07): one manifest, generated stubs, any-agent CLI.
+5. `capture` two-step door and packaged gift.
+6. `publication` versioning and gate receipts.
 
-Steps 3 and 4 can be built in parallel only after step 2's verdict contract is frozen; they share
-the catalog CTA path. Steps 1 and 2 are sequential. Step 5 waits on Frank.
+Steps 3, 4 and 5 can be built in parallel only after step 2's verdict contract is frozen; steps 3
+and 5 share the catalog CTA path. Steps 1 and 2 are sequential. Step 6 waits on Frank.
 
 ## Risks and mitigation
 
@@ -44,7 +46,7 @@ the catalog CTA path. Steps 1 and 2 are sequential. Step 5 waits on Frank.
   `check_links.py` all exit 0.
 - After step 4: `packages/demand-capture/report.mjs` exits 0 and returns a `priceBand`.
 - After step 5: `PRODUCT-RELEASE-GATE.md` G0–G5 receipts dated; `npm view <pkg> version` matches.
-- At every boundary: `node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight`.
+- At every boundary: `node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root>`.
 
 ## Out of scope
 

@@ -21,7 +21,7 @@ surface; `https://frankx.ai/waitlist` is a live form today but is recorded as be
 ```text
 node starlight/packages/demand-capture/report.mjs       # exit 1 today: KV credentials missing
 gh api repos/frankxai/claude-skills-library/traffic/views
-node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight
+node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root>
 ```
 
 Provisioning `KV_REST_API_URL/TOKEN` and Resend keys is Frank's. The code path fails closed until

@@ -96,4 +96,30 @@ with URL and read date), Bar (`mustBeat[]` with per-item verdict), Refinement (t
 diff stat), Critique (a different provider, prompted as a buyer who declined to pay, with findings
 and fixes). Validator: `node tools/craft-receipt.mjs --product <id> --receipt <path>`.
 Same-provider critique is recorded as missing, not as done. [CRAFT-RECEIPT.md](CRAFT-RECEIPT.md)
-is this suite's receipt; its critique block is filled only after an independent review runs.
+is this suite's receipt; its Critique block records the independent review and its fixes.
+
+## Any-agent install surfaces
+
+A public surface here is last-generation if only a human can use it (§11.4). Built on 2026-11-07:
+
+- `runtimes/harnesses.json` is the machine-readable truth for 14 harness surfaces. Each row carries
+  a discovery path, an install plan, a canonical repo or a measured gap, and its evidence.
+- `scripts/install-any-agent.mjs --harness <id> --json` emits an install plan with stable exit
+  codes. `--all --verify` fails closed on a missing adapter, a missing generated marker, or an
+  operator-specific path.
+- `scripts/gen-harness-adapters.mjs --check` proves the generated index and stubs are
+  byte-idempotent and creates nothing.
+- Adapters are stubs that point at the pack root `free-skills/<skill>/`. Full skill bodies are
+  never copied into a stub, and no operator-specific path ships in a distributed artifact.
+- No new repository was created. The estate has 337 local repo directories and 300 frankxai GitHub
+  repos; the five harnesses without a config repo are recorded as gaps, not invented repos.
+- A future site surface still needs `/.well-known/starlight.json`, an MCP endpoint and install
+  manifests per harness. `mcp-doctor score` at 100% is the bar for that endpoint; it is not claimed
+  here. No live install, junction, home stub or global config edit was performed.
+
+## Repo-local design gates
+
+Before any frontend work in this repo, read the five files named in this repo's `AGENTS.md` Design
+Taste Kernel: `DESIGN_TASTE.md`, `WEB_EXPERIENCE_STANDARD.md`, `MOTION_TASTE_RUBRIC.md`,
+`MULTI_AGENT_DESIGN_COUNCIL.md` and `VISUAL_QA_GATE.md` under `starlight/repos/`. This slice builds
+no UI, so those gates were not run. They are named here so a later page lane does not skip them.

@@ -1,6 +1,6 @@
 # Capability Map - claude-skills-eval-pack
 
-Spec-driven development Phase 0. This request bundles five independently testable capabilities:
+Spec-driven development Phase 0. This request bundles six independently testable capabilities:
 each has its own consumer and data, can be cut without rewriting the others, and carries its own
 acceptance. Module ids are stable for the whole initiative. Specs, plans and tasks select work by
 these ids, never by filename guessing.
@@ -12,8 +12,9 @@ these ids, never by filename guessing.
 | `catalog` | public per-skill proof surface built from graph + verdicts | human buyer, buyer's agent | `verdict-store`, `eval-runner` |
 | `capture` | standard `DemandSignal` waitlist with price band and the gift | human buyer | `catalog` (CTA target) |
 | `publication` | versioned installable pack and release receipts | installer (three harnesses) | `catalog`, `capture`, G5 |
+| `harness-surface` | one manifest, generated adapter stubs and an any-agent install plan | every agent harness in the estate | none (the pack root already exists in this repo) |
 
-Build order: `verdict-store` → `eval-runner` → `catalog` → `capture` → `publication`.
+Build order: `verdict-store` → `eval-runner` → `catalog` + `harness-surface` (independent, parallel) → `capture` → `publication`.
 
 Dependency direction is one-way. `verdict-store` and `eval-runner` already exist in the estate
 control plane (measured 2026-11-07); the first two steps are therefore hardening, not greenfield.

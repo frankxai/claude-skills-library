@@ -1,4 +1,4 @@
-# Craft receipt — claude-skills-eval-pack — 2026-11-07
+# Craft receipt - claude-skills-eval-pack - 2026-11-07
 
 Product id `claude-skills-eval-pack`. Validator:
 `node tools/craft-receipt.mjs --product claude-skills-eval-pack --receipt <path>`.
@@ -10,16 +10,28 @@ It does not claim a product, a page or a package was shipped.
 
 Three or more sources with URL and read date, all opened live on 2026-11-07:
 
-1. Promptfoo, "Test Agent Skills" — https://www.promptfoo.dev/docs/guides/test-agent-skills/ .
+1. Promptfoo, "Test Agent Skills" - https://www.promptfoo.dev/docs/guides/test-agent-skills/ .
    `skill-used`, near-miss `not-skill-used`, deterministic assertions first, `--repeat 3`,
    `--no-cache`, `-o results.json`. Read 2026-11-07.
-2. Anthropic, `anthropics/skills` README —
+2. Anthropic, `anthropics/skills` README -
    https://raw.githubusercontent.com/anthropics/skills/main/README.md . Skill format, spec,
    licenses, and the disclaimer asking buyers to test skills themselves. Read 2026-11-07.
-3. skills.sh, the agent skills directory — https://www.skills.sh/ . Cross-agent discovery ranked
+3. skills.sh, the agent skills directory - https://www.skills.sh/ . Cross-agent discovery ranked
    by installs. Read 2026-11-07.
-4. Linear changelog, 5 November 2026 — https://linear.app/changelog . Narrow-width wrapping,
+4. Linear changelog, 5 November 2026 - https://linear.app/changelog . Narrow-width wrapping,
    plain agent status labels, mobile diff review, AI credit usage explorer. Read 2026-11-07.
+5. `multi-agent-skill-surface-ops` skill (local, `~/.config/opencode/skills/`). Pack integrity,
+   stubs discover while the pack path is the source of truth, Windows junction guard, exact-match
+   `external_dirs`, and a dated receipt for every live install. Read 2026-11-07.
+6. `agent-workspace-bootstrap` skill (local). Extend existing repos, never invent a new top-level
+   folder, prefer an existing local clone or GitHub repo, and do a four-fact Git check before any
+   write. Read 2026-11-07.
+7. `~/.agents/skills-index.json` and `~/.agents/README.md` (local). A stub projection that points
+   at the canonical pack path. Read 2026-11-07.
+
+Estate inventory measured 2026-11-07: `Get-ChildItem starlight/repos -Directory` = 337 local repo
+directories; `gh repo list frankxai --limit 300 --json name` = 300 GitHub repos;
+`Get-ChildItem runtimes -File` = 6 adapter docs before this slice.
 
 Buyer named in [PRD.md](PRD.md): a developer installing skills into Claude Code, Cursor, Codex or
 OpenCode who has been burned by a skill that read well and behaved badly. What they use today:
@@ -104,3 +116,32 @@ verified by re-running the scoreboard and the craft-receipt validator at this re
 
 Remaining gap: a different provider did not complete a review. Codex was attempted and failed on
 startup, so the critique is an independent context rather than a proven second provider.
+
+## Second critique: any-agent harness extension
+
+Independent reviewer: a second `oracle` subagent, read-only, at the harness-extension revision
+(base `7c7c5f4` plus the new files). Prompted as a skeptical platform engineer supporting 14
+harnesses from one repo. Verdict: **REWORK**. Six findings, all fixed:
+
+1. **P1** `--all --verify` reported 14 surfaces green while five had `[OPEN]` discovery paths.
+   Fix: the CLI now counts and prints `measuredSurfaces` and `unmeasuredSurfaces`; the coverage
+   table and G11 say 14 adapter docs / 9 measured surfaces, and G11 is FAIL.
+2. **P1** the absolute-path guard missed bare POSIX home paths. Fix: both scripts now match POSIX
+   home forms as well as Windows drive, Git Bash and Linux home forms.
+3. **P1** an operator path had shipped in `HARNESS-COVERAGE.md` and the guard scanned only stubs.
+   Fix: nine docs scrubbed to portable `<starlight-root>` / `~/.starlight` paths, and `--verify`
+   now scans every `.md` under `docs/products/`.
+4. **P2** CRLF or a BOM would break byte-idempotency on Windows. Fix: the generator normalizes
+   `\r\n` to `\n` and strips a BOM before comparing; the repo's existing `.gitattributes`
+   (`* text=auto eol=lf`) already keeps checked-out Markdown at LF.
+5. **P2** `runtimes/README.md` bypassed the overwrite guard. Fix: the generated README now carries
+   the marker and the guard protects it too; only our own earlier marker-less README is migrated.
+6. **P2** exit codes could flip with manifest order and the two scripts' codes were undocumented
+   side by side. Fix: deterministic highest-code-wins accumulation, a `faults` list, and a
+   two-script exit-code table in `SPEC-harness-surface.md`.
+
+Fixes verified by re-running `--check` twice, `--all --verify` (exit 0), the scoreboard and the
+craft-receipt validator. Planted faults were run in a temp copy of the repo: removing a generated
+marker exits 3, injecting a POSIX home path exits 4, and an unknown harness exits 2. The repo's own
+health command, `python3 scripts/validate_skills.py`, passed with 122 skill files spec-compliant.
+The different-provider gap from the first critique still stands.

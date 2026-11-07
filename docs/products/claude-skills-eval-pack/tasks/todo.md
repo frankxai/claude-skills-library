@@ -66,3 +66,31 @@ has an acceptance condition plus a command that verifies it. Nothing here is mar
   - Verify: `npm view <pkg> version`, `gh api .../marketplace.json`, `node tools/pr-gate.mjs verify`
   - Files: `.claude-plugin/marketplace.json`, `package.json`, `docs/CATALOG.md`
   - Gate: first-time publication, repo visibility, price and checkout are Frank's (§5e).
+
+- [ ] T11 - Add planted-fault tests for the harness generator and CLI
+  - Acceptance: removing a generated marker makes `--verify` exit 3; adding an operator-specific
+    path makes it exit 4; an unknown harness exits 2; a second `--write` writes 0 files.
+  - Verify: `node scripts/install-any-agent.mjs --all --verify`; `node scripts/gen-harness-adapters.mjs --check` twice
+  - Files: new `scripts/tests/harness-surface.test.mjs`, the two scripts
+
+- [ ] T12 - Resolve the five `[OPEN]` discovery paths (read-only research)
+  - Acceptance: Kilo, OpenClaw/Claws, Copilot, Factory Droid and Starlight Claws get a measured
+    discovery path with a source and read date, or stay `[OPEN]` with the failed probe recorded.
+  - Verify: `node scripts/install-any-agent.mjs --harness <id> --json`
+  - Files: `runtimes/harnesses.json`, the five generated stubs, `HARNESS-COVERAGE.md`
+
+- [ ] T13 - Live installs with dated receipts (Frank's gate)
+  - Acceptance: each authorized install projects the whole pack root, preserves full skill bodies,
+    guards Windows reparse points, and writes `queen/reports/harness-install-<date>.md`.
+  - Verify: `node scripts/install-any-agent.mjs --all --verify` plus the receipt files
+  - Files: home/config surfaces outside this repo, receipt files
+  - Gate: global config writes and any home-directory stub need Frank. No live install happened in
+    this slice.
+
+- [ ] T14 - Route the five config-repo gaps (Frank's gate, do not invent repos)
+  - Acceptance: each of the five harnesses without a config repo has a named routing check against
+    `starlight/repos` and the frankxai GitHub list, then a HumanGate decision with a
+    recommendation. No repository is created by an agent.
+  - Verify: `python ~/.starlight/workspace-bootstrap/route_work.py find <harness>`
+  - Files: `HARNESS-COVERAGE.md`, the estate objective ledger
+  - Gate: repository creation and first-time publication are Frank's.

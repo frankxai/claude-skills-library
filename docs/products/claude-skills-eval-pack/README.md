@@ -18,12 +18,14 @@ names the command that produced it and the date it ran. `[OPEN]` means unmeasure
 | File | Job |
 |---|---|
 | [PRD.md](PRD.md) | the buyer, the job, evidence, goals/non-goals/anti-goals, requirements, gates |
-| [CAPABILITY-MAP.md](CAPABILITY-MAP.md) | spec-driven-development Phase 0: five modules and their build order |
+| [CAPABILITY-MAP.md](CAPABILITY-MAP.md) | spec-driven-development Phase 0: six modules and their build order |
 | [SPEC-verdict-store.md](SPEC-verdict-store.md) | module: the machine-readable verdict registry |
 | [SPEC-eval-runner.md](SPEC-eval-runner.md) | module: the eval runner and its receipts |
 | [SPEC-catalog.md](SPEC-catalog.md) | module: the public proof surface |
 | [SPEC-capture.md](SPEC-capture.md) | module: standard `DemandSignal` capture |
 | [SPEC-publication.md](SPEC-publication.md) | module: packaging and release, gated by Frank |
+| [SPEC-harness-surface.md](SPEC-harness-surface.md) | module: one manifest, generated stubs, any-agent install plans |
+| [HARNESS-COVERAGE.md](HARNESS-COVERAGE.md) | measured harness and repo inventory, including the five config-repo gaps |
 | [GOALS.md](GOALS.md) | ranked goals, success metrics, stop conditions, provenance of each metric |
 | [PHASES.md](PHASES.md) | phases with done-conditions, verification commands and gates |
 | [DESIGN-EXPECTATIONS.md](DESIGN-EXPECTATIONS.md) | research log, reference lock status, craft/accessibility/intelligence bar |
@@ -35,13 +37,16 @@ names the command that produced it and the date it ran. `[OPEN]` means unmeasure
 ## Run the tracker
 
 ```text
-node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight
-node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight --strict
+node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root>
+node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root> --strict
+node scripts/install-any-agent.mjs --all --verify
+node scripts/gen-harness-adapters.mjs --check
 ```
 
 The first prints the goal table and writes `scoreboard.latest.json`. The second exits 1 on any
 FAIL so CI can gate a phase. Both are read-only against the estate control plane and write only
-inside this product's docs directory.
+inside this product's docs directory. `<starlight-root>` is the directory containing
+`graph/skills.graph.json`; omit the flag and the tool walks up from `scripts/` to find it.
 
 ## Authoritative sources
 

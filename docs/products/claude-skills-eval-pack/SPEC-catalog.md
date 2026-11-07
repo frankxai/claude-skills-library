@@ -24,7 +24,7 @@ python3 scripts/generate_catalog.py --check
 python3 scripts/generate_site.py --check
 node scripts/check_counts.py
 node scripts/check_links.py
-node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight
+node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root>
 ```
 
 ## Project structure

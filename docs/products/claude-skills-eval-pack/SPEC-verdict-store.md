@@ -19,7 +19,7 @@ Node 20+, JSON on disk, no database. Schema owned by this spec, consumed by
 ```text
 node starlight/tools/eval-skills-suite.mjs              # regenerate verdicts + receipts
 node starlight/tools/gen-skills-graph.mjs               # exit 0; counts.withEval must match
-node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight
+node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root>
 Get-Content starlight/ops/skill-eval-verdicts.json
 ```
 

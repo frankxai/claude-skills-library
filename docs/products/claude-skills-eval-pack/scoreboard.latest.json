@@ -1,6 +1,6 @@
 {
-  "schema": "eval-pack-scoreboard.v2",
-  "generatedAt": "2026-11-07T02:54:48.199Z",
+  "schema": "eval-pack-scoreboard.v3",
+  "generatedAt": "2026-11-07T03:59:16.423Z",
   "estateRoot": "C:\\Users\\frank\\starlight",
   "productId": "claude-skills-eval-pack",
   "sources": {
@@ -9,7 +9,8 @@
     "productsGraph": "graph/products.graph.json",
     "traffic": "gh api .../traffic/views",
     "trafficPaths": "gh api .../traffic/popular/paths",
-    "openPrs": "gh search prs"
+    "openPrs": "gh search prs",
+    "harnesses": "runtimes/harnesses.json"
   },
   "measured": {
     "names": 606,
@@ -38,11 +39,13 @@
     ],
     "topTenComplete": false,
     "topTenWithVerdict": 2,
-    "suitePresent": 15,
-    "suiteFiles": 15,
+    "suitePresent": 18,
+    "suiteFiles": 18,
     "craftExit": 0,
     "critiqueOk": true,
     "demandExit": 1,
+    "harnessCount": 14,
+    "measuredHarnesses": 9,
     "listType": "skills",
     "enumOk": false,
     "gateReceipts": [],
@@ -125,7 +128,7 @@
     {
       "id": "G9",
       "name": "Craft bar is evidenced",
-      "current": "suite 15/15 files; craft-receipt exit 0; critique content closed",
+      "current": "suite 18/18 files; craft-receipt exit 0; critique content closed",
       "target": "4/4 blocks PASS, critique names reviewer/findings/fixes at a revision",
       "status": "PASS",
       "command": "node tools/craft-receipt.mjs --product claude-skills-eval-pack --receipt <path>",
@@ -139,6 +142,15 @@
       "status": "BLOCKED",
       "command": ".claude/ci/web-guidelines-lint.mjs --changed",
       "note": "visual reference lock is deferred until Phase 2"
+    },
+    {
+      "id": "G11",
+      "name": "Every harness has a measured install surface",
+      "current": "14 adapter docs / 9 measured surfaces",
+      "target": "14/14 measured, --verify exit 0",
+      "status": "FAIL",
+      "command": "node scripts/install-any-agent.mjs --all --verify",
+      "note": "5 surfaces have [OPEN] discovery paths; an adapter doc is not a working install (T12)"
     }
   ],
   "northStar": {

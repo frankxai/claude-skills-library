@@ -12,7 +12,7 @@ provider-% half needs the cost collector's current output. Until it runs, no cla
 
 | # | Goal | Metric | Current | Target | Generator command | Status |
 |---|---|---|---|---|---|---|
-| G1 | Proof on every listing | skills with an eval verdict ÷ unique names | 30 ÷ 606 = 4.95% | ≥10% and all top-10 traffic skills | `node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight` | FAIL |
+| G1 | Proof on every listing | skills with an eval verdict ÷ unique names | 30 ÷ 606 = 4.95% | ≥10% and all top-10 traffic skills | `node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root>` | FAIL |
 | G2 | Namespace is unambiguous | unresolved conflicts | 0 | 0 (hard gate) | `node tools/gen-skills-graph.mjs` | PASS |
 | G3 | The grader refuses rubber stamps | planted faults caught | 90/90 | 100% of planted faults caught | `Get-Content ops/skill-eval-verdicts.json` | PASS (measured 2026-10-25) |
 | G4 | Real demand evidence | `DemandSignal` rows with `priceBand` for this product | `[OPEN]` - `report.mjs` exit 1 | ≥1 real row; ≥50 with a band before the founding milestone is honoured | `node packages/demand-capture/report.mjs` | BLOCKED (KV credentials) |
@@ -22,6 +22,7 @@ provider-% half needs the cost collector's current output. Until it runs, no cla
 | G8 | The queue stays admissible | open PRs in this repo / budget | 16 / 10 | <=10 at every PR | `gh search prs --repo frankxai/claude-skills-library --state open --limit 100 --json number` | FAIL |
 | G9 | Craft bar is evidenced | four craft-receipt blocks; cross-provider critique closed | `[OPEN]` until this suite is reviewed | 4/4 blocks PASS, findings closed | `node tools/craft-receipt.mjs --product claude-skills-eval-pack --receipt <path>` | PENDING |
 | G10 | Mobile-native public surface | §11.3 predicates passing on the catalog | `[OPEN]` - no new page built | 10/10, plus a real-device and reduced-motion Playwright project | `.claude/ci/web-guidelines-lint.mjs --changed` | BLOCKED (no UI in this slice) |
+| G11 | Every harness has a measured install surface | adapter docs / measured surfaces | 14 adapter docs / 9 measured | 14/14 measured, `--verify` exit 0 | `node scripts/install-any-agent.mjs --all --verify` | FAIL |
 
 ## Registry drift found, not fixed here
 

@@ -11,7 +11,7 @@ plan, task list and a runnable scoreboard exist in the owning repo on a dedicate
 
 **Verify:**
 ```text
-node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight
+node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root>
 node starlight/tools/craft-receipt.mjs --product claude-skills-eval-pack --receipt docs/products/claude-skills-eval-pack/CRAFT-RECEIPT.md
 ```
 
@@ -27,7 +27,7 @@ add agent-exercising suites to `eval-runner`, and rank the first ten skills from
 every PASS has a resolvable receipt; a planted missing-receipt fault fails; the top-10 traffic
 skills are named with their verdict state.
 
-**Verify:** `node scripts/eval-pack-scoreboard.mjs --estate-root C:/Users/frank/starlight --strict`
+**Verify:** `node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root> --strict`
 (G1 may still be FAIL; G2 and G3 must be PASS).
 
 **Stop condition:** any unresolved namespace conflict, or a verdict older than the `SKILL.md` it
@@ -49,6 +49,28 @@ with at least one signal carrying a `priceBand`.
 catalog half can still land. Do not substitute a bespoke form to make the phase look finished.
 
 **Stop condition:** a listing renders a green state without a resolvable receipt.
+
+## Phase 2b - Any-agent install surfaces (built 2026-11-07)
+
+One manifest, a deterministic generator, an any-agent CLI and one stub adapter per harness. Built
+because the library shipped six adapters while the estate runs more harnesses than that.
+
+**Done-condition:** 14 entries in `runtimes/harnesses.json`, 14 adapter docs on disk, the six
+pre-existing docs byte-unchanged, and `HARNESS-COVERAGE.md` names a canonical repo or a measured
+gap for each.
+
+**Verify:**
+```text
+node scripts/gen-harness-adapters.mjs --check
+node scripts/install-any-agent.mjs --all --verify
+```
+
+**Gate:** no live install, no junction, no home-directory stub, no global config edit and no new
+repository. A live install is a separate authorized action with a dated receipt under
+`queen/reports/`. New repositories and repo visibility are Frank's.
+
+**Stop condition:** `--verify` exits non-zero, or a distributed artifact carries an
+operator-specific path.
 
 ## Phase 3 - Evidence and gate receipts (gated)
 
