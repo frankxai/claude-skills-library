@@ -54,4 +54,6 @@ no receipt claiming an install happened. Those are separate authorized actions.
 
 ops/skill-authority.json binding skip list; gh repo list frankxai 2026-11-07
 
+Probe (2026-11-07): Checked ~/.openclaw, ~/.config/openclaw (absent); Get-Command openclaw and claw (absent); read the .openclaw and openclaw skip-list entries in ops/skill-authority.json. No discovery path resolved.
+
 Repo gap: Product and template repos exist; no config repo measured.

@@ -67,17 +67,23 @@ has an acceptance condition plus a command that verifies it. Nothing here is mar
   - Files: `.claude-plugin/marketplace.json`, `package.json`, `docs/CATALOG.md`
   - Gate: first-time publication, repo visibility, price and checkout are Frank's (§5e).
 
-- [ ] T11 - Add planted-fault tests for the harness generator and CLI
+- [x] T11 - Add planted-fault tests for the harness generator and CLI (DONE 2026-11-07)
   - Acceptance: removing a generated marker makes `--verify` exit 3; adding an operator-specific
     path makes it exit 4; an unknown harness exits 2; a second `--write` writes 0 files.
-  - Verify: `node scripts/install-any-agent.mjs --all --verify`; `node scripts/gen-harness-adapters.mjs --check` twice
-  - Files: new `scripts/tests/harness-surface.test.mjs`, the two scripts
+  - Verify: `node --test scripts/tests/harness-surface.test.mjs` (9/9 pass); `node scripts/gen-harness-adapters.mjs --check` twice
+  - Files: `scripts/tests/harness-surface.test.mjs`, the two scripts
+  - Evidence: written RED first for the path-state behavior, then GREEN; all nine tests pass in
+    isolated temp fixtures with a fake HOME. RED output preserved in `evidence/red-green-2026-11-07.md`.
 
-- [ ] T12 - Resolve the five `[OPEN]` discovery paths (read-only research)
+- [x] T12 - Resolve the five `[OPEN]` discovery paths (DONE 2026-11-07, read-only research)
   - Acceptance: Kilo, OpenClaw/Claws, Copilot, Factory Droid and Starlight Claws get a measured
     discovery path with a source and read date, or stay `[OPEN]` with the failed probe recorded.
-  - Verify: `node scripts/install-any-agent.mjs --harness <id> --json`
+  - Verify: `node scripts/install-any-agent.mjs --all --verify` reports 12/14 sourced paths,
+    7 verified, 5 documented, 2 open.
   - Files: `runtimes/harnesses.json`, the five generated stubs, `HARNESS-COVERAGE.md`
+  - Evidence: `~/.copilot/skills` and `~/.factory/skills` verified on disk; Kilo documented from
+    the home guide with the `kilo.ps1` launcher present; OpenClaw and Starlight Claws remain
+    `[OPEN]` with their failed probes recorded in the manifest.
 
 - [ ] T13 - Live installs with dated receipts (Frank's gate)
   - Acceptance: each authorized install projects the whole pack root, preserves full skill bodies,

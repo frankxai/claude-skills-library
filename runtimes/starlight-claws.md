@@ -54,4 +54,6 @@ no receipt claiming an install happened. Those are separate authorized actions.
 
 safety-permission-gate and safety-mutation-approval skills name Claws; starlight/repos/starlight-agent-config
 
+Probe (2026-11-07): Searched starlight/AGENTS.md and TRUTH.md for Claw (no matches); listed ops/agent-factory/REGISTRY.json agent ids (no claw id); checked starlight/repos/starlight-agent-config/core/claws (absent). No discovery path resolved.
+
 Repo gap: No canonical config repo measured.

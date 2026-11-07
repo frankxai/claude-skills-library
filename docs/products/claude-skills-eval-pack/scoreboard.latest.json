@@ -1,6 +1,6 @@
 {
-  "schema": "eval-pack-scoreboard.v3",
-  "generatedAt": "2026-11-07T03:59:16.423Z",
+  "schema": "eval-pack-scoreboard.v4",
+  "generatedAt": "2026-11-07T05:18:21.985Z",
   "estateRoot": "C:\\Users\\frank\\starlight",
   "productId": "claude-skills-eval-pack",
   "sources": {
@@ -30,7 +30,7 @@
     "views": 1347,
     "uniques": 721,
     "trafficDays": 14,
-    "prCount": 16,
+    "prCount": 17,
     "topTen": [
       "ui-ux-design-expert",
       "gym-training-expert",
@@ -39,13 +39,17 @@
     ],
     "topTenComplete": false,
     "topTenWithVerdict": 2,
-    "suitePresent": 18,
-    "suiteFiles": 18,
+    "suitePresent": 19,
+    "suiteFiles": 19,
     "craftExit": 0,
     "critiqueOk": true,
     "demandExit": 1,
     "harnessCount": 14,
-    "measuredHarnesses": 9,
+    "measuredHarnesses": 12,
+    "harnessTestExit": 0,
+    "verifiedHarnesses": 7,
+    "documentedHarnesses": 5,
+    "openHarnesses": 2,
     "listType": "skills",
     "enumOk": false,
     "gateReceipts": [],
@@ -119,7 +123,7 @@
     {
       "id": "G8",
       "name": "Queue stays admissible",
-      "current": "16 / 10 budget",
+      "current": "17 / 10 budget",
       "target": "<=10 at every PR",
       "status": "FAIL",
       "command": "gh search prs --repo frankxai/claude-skills-library --state open --limit 100 --json number",
@@ -128,7 +132,7 @@
     {
       "id": "G9",
       "name": "Craft bar is evidenced",
-      "current": "suite 18/18 files; craft-receipt exit 0; critique content closed",
+      "current": "suite 19/19 files; craft-receipt exit 0; critique content closed",
       "target": "4/4 blocks PASS, critique names reviewer/findings/fixes at a revision",
       "status": "PASS",
       "command": "node tools/craft-receipt.mjs --product claude-skills-eval-pack --receipt <path>",
@@ -145,12 +149,21 @@
     },
     {
       "id": "G11",
-      "name": "Every harness has a measured install surface",
-      "current": "14 adapter docs / 9 measured surfaces",
-      "target": "14/14 measured, --verify exit 0",
+      "name": "Every harness has a sourced install surface",
+      "current": "14 adapter docs / 12 sourced (7 verified, 5 documented, 2 open)",
+      "target": "14/14 sourced, --verify exit 0",
       "status": "FAIL",
       "command": "node scripts/install-any-agent.mjs --all --verify",
-      "note": "5 surfaces have [OPEN] discovery paths; an adapter doc is not a working install (T12)"
+      "note": "2 surfaces remain [OPEN] with failed probes recorded; a documented path is not a working install"
+    },
+    {
+      "id": "G12",
+      "name": "Planted-fault regression suite passes",
+      "current": "node --test harness-surface.test.mjs exit 0",
+      "target": "9/9 pass, 0 fail",
+      "status": "PASS",
+      "command": "node --test scripts/tests/harness-surface.test.mjs",
+      "note": "path states, exit codes 2/3/4/5, JSON-mode faults, manifest fail-closed, docs guard, idempotency, fake HOME"
     }
   ],
   "northStar": {

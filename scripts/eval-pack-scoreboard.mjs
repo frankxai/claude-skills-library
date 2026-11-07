@@ -84,6 +84,8 @@ const products = readJson(join(ROOT, 'graph', 'products.graph.json'))
 const harnesses = readJson(join(HERE, '..', 'runtimes', 'harnesses.json'))
 const harnessCount = Array.isArray(harnesses?.harnesses) ? harnesses.harnesses.length : null
 const measuredHarnesses = harnessCount === null ? null : harnesses.harnesses.filter((h) => !String(h.discovery).startsWith('[OPEN]') && !String(h.install).startsWith('[OPEN]')).length
+const stateCount = (state) => harnessCount === null ? null : harnesses.harnesses.filter((h) => (h.pathState || (String(h.discovery).startsWith('[OPEN]') ? 'open' : 'verified')) === state).length
+const harnessTestExit = nodeExit(['--test', join(HERE, '..', 'scripts', 'tests', 'harness-surface.test.mjs')])
 const row = products?.products?.find((p) => p.id === 'claude-skills-eval-pack') ?? null
 const traffic = ghJson(['api', 'repos/frankxai/claude-skills-library/traffic/views'])
 const paths = ghJson(['api', 'repos/frankxai/claude-skills-library/traffic/popular/paths'])
@@ -135,6 +137,7 @@ const suiteFiles = [
   'README.md', 'PRD.md', 'CAPABILITY-MAP.md', 'GOALS.md', 'PHASES.md', 'DESIGN-EXPECTATIONS.md',
   'SPEC-verdict-store.md', 'SPEC-eval-runner.md', 'SPEC-catalog.md', 'SPEC-capture.md',
   'SPEC-publication.md', 'SPEC-harness-surface.md', 'HARNESS-COVERAGE.md',
+  'evidence/red-green-2026-11-07.md',
   'tasks/plan.md', 'tasks/todo.md', 'adr/README.md', 'adr/0005-one-manifest-many-harnesses.md',
   'CRAFT-RECEIPT.md',
 ]
@@ -258,17 +261,25 @@ const goals = [
     note: 'visual reference lock is deferred until Phase 2',
   },
   {
-    id: 'G11', name: 'Every harness has a measured install surface',
-    current: harnessCount === null ? '[OPEN] manifest unreadable' : `${harnessCount} adapter docs / ${measuredHarnesses} measured surfaces`,
-    target: `${harnessCount ?? 14}/${harnessCount ?? 14} measured, --verify exit 0`,
+    id: 'G11', name: 'Every harness has a sourced install surface',
+    current: harnessCount === null ? '[OPEN] manifest unreadable' : `${harnessCount} adapter docs / ${measuredHarnesses} sourced (${stateCount('verified')} verified, ${stateCount('documented')} documented, ${stateCount('open')} open)`,
+    target: `${harnessCount ?? 14}/${harnessCount ?? 14} sourced, --verify exit 0`,
     status: harnessCount !== null && measuredHarnesses === harnessCount ? 'PASS' : 'FAIL',
     command: 'node scripts/install-any-agent.mjs --all --verify',
-    note: '5 surfaces have [OPEN] discovery paths; an adapter doc is not a working install (T12)',
+    note: '2 surfaces remain [OPEN] with failed probes recorded; a documented path is not a working install',
+  },
+  {
+    id: 'G12', name: 'Planted-fault regression suite passes',
+    current: `node --test harness-surface.test.mjs exit ${harnessTestExit}`,
+    target: '9/9 pass, 0 fail',
+    status: harnessTestExit === 0 ? 'PASS' : 'FAIL',
+    command: 'node --test scripts/tests/harness-surface.test.mjs',
+    note: 'path states, exit codes 2/3/4/5, JSON-mode faults, manifest fail-closed, docs guard, idempotency, fake HOME',
   },
 ]
 
 const doc = {
-  schema: 'eval-pack-scoreboard.v3',
+  schema: 'eval-pack-scoreboard.v4',
   generatedAt: NOW,
   estateRoot: ROOT,
   productId: 'claude-skills-eval-pack',
@@ -285,7 +296,8 @@ const doc = {
     names, withEval, conflicts, passed, faults, faultsOk, staleCount, staleNames,
     views, uniques, trafficDays, prCount, topTen, topTenComplete, topTenWithVerdict,
     suitePresent, suiteFiles: suiteFiles.length, craftExit, critiqueOk, demandExit,
-    harnessCount, measuredHarnesses,
+    harnessCount, measuredHarnesses, harnessTestExit,
+    verifiedHarnesses: stateCount('verified'), documentedHarnesses: stateCount('documented'), openHarnesses: stateCount('open'),
     listType: row?.listType ?? null, enumOk, gateReceipts, gatesComplete, gatePass,
   },
   goals,

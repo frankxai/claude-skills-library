@@ -13,6 +13,11 @@
     "exactMatchExternalDirs": true,
     "receipt": "queen/reports/harness-install-<date>.md for any live install. This suite performs no live install and writes no global configuration."
   },
+  "pathStates": {
+    "verified": "A concrete discovery path was measured on disk on 2026-11-07.",
+    "documented": "A concrete discovery path comes from a named source (adapter doc, skill, or guide); the directory was not verified on this machine.",
+    "open": "No discovery path could be sourced or measured. Recorded as [OPEN]."
+  },
   "inventory": {
     "localRepoDirs": 337,
     "githubReposListed": 300,
@@ -30,9 +35,17 @@
       "skillFormat": "SKILL.md",
       "install": "cp -r free-skills/<skill> ~/.claude/skills/<skill>",
       "configRepo": "frankxai/claude-code-config",
-      "observedRepos": ["claude-code-config", "claude-code-hooks", "claude-code-mcp", "claude-infrastructure"],
+      "observedRepos": [
+        "claude-code-config",
+        "claude-code-hooks",
+        "claude-code-mcp",
+        "claude-infrastructure"
+      ],
       "evidence": "runtimes/claude-code.md; starlight/repos/claude-code-config; gh repo list frankxai 2026-11-07",
-      "status": "adapter-exists"
+      "pathState": "verified",
+      "status": "adapter-exists",
+      "probe": "Test-Path ~/.claude/skills = True 2026-11-07; starlight/repos/claude-code-config exists; runtimes/claude-code.md read",
+      "probeDate": "2026-11-07"
     },
     {
       "id": "opencode",
@@ -43,9 +56,16 @@
       "skillFormat": "SKILL.md",
       "install": "cp -r free-skills/<skill> <project>/.opencode/skills/<skill>",
       "configRepo": "frankxai/opencode",
-      "observedRepos": ["opencode", "opencode-free-model-smoke", "arcanea-opencode"],
+      "observedRepos": [
+        "opencode",
+        "opencode-free-model-smoke",
+        "arcanea-opencode"
+      ],
       "evidence": "runtimes/opencode.md; starlight/repos/opencode; ~/.agents/README.md; gh repo list frankxai 2026-11-07",
-      "status": "adapter-exists"
+      "pathState": "verified",
+      "status": "adapter-exists",
+      "probe": "Test-Path ~/.config/opencode = True 2026-11-07; starlight/repos/opencode exists; runtimes/opencode.md read",
+      "probeDate": "2026-11-07"
     },
     {
       "id": "codex",
@@ -56,9 +76,15 @@
       "skillFormat": "AGENTS.md or MCP",
       "install": "Wrap one skill as an MCP tool, or paste its SKILL.md into a named AGENTS.md section",
       "configRepo": "frankxai/claude-codex-gemini-opencode-settings",
-      "observedRepos": ["claude-codex-gemini-opencode-settings", "codex-sites-founder-playbook"],
+      "observedRepos": [
+        "claude-codex-gemini-opencode-settings",
+        "codex-sites-founder-playbook"
+      ],
       "evidence": "runtimes/codex.md; ~/.codex exists; gh repo list frankxai 2026-11-07",
-      "status": "adapter-exists"
+      "pathState": "verified",
+      "status": "adapter-exists",
+      "probe": "Test-Path ~/.codex = True 2026-11-07; runtimes/codex.md read; gh repo list frankxai 2026-11-07",
+      "probeDate": "2026-11-07"
     },
     {
       "id": "gemini-cli",
@@ -69,9 +95,13 @@
       "skillFormat": "system prompt",
       "install": "gemini --system \"$(cat free-skills/<skill>/SKILL.md)\"",
       "configRepo": null,
-      "observedRepos": ["gemini-arcanea", "AntigravityCompanion"],
+      "observedRepos": [
+        "gemini-arcanea",
+        "AntigravityCompanion"
+      ],
       "repoGap": "No config repo measured. The adapter doc is the only existing surface.",
       "evidence": "runtimes/gemini-cli.md; gh repo list frankxai 2026-11-07",
+      "pathState": "documented",
       "status": "adapter-exists"
     },
     {
@@ -83,9 +113,13 @@
       "skillFormat": "mdc rule",
       "install": "Convert SKILL.md frontmatter to a .mdc rule that points at the pack root",
       "configRepo": null,
-      "observedRepos": [".cursor", "claude-codex-gemini-opencode-settings"],
+      "observedRepos": [
+        ".cursor",
+        "claude-codex-gemini-opencode-settings"
+      ],
       "repoGap": "No dedicated config repo measured.",
       "evidence": "runtimes/cursor.md; starlight/repos/.cursor; gh repo list frankxai 2026-11-07",
+      "pathState": "documented",
       "status": "adapter-exists"
     },
     {
@@ -97,8 +131,11 @@
       "skillFormat": "project instructions",
       "install": "Point the agent at a project whose instructions reference the pack root",
       "configRepo": "frankxai/AntigravityCompanion",
-      "observedRepos": ["AntigravityCompanion"],
+      "observedRepos": [
+        "AntigravityCompanion"
+      ],
       "evidence": "runtimes/antigravity.md; starlight/repos/AntigravityCompanion; gh repo list frankxai 2026-11-07",
+      "pathState": "documented",
       "status": "adapter-exists"
     },
     {
@@ -110,8 +147,14 @@
       "skillFormat": "SKILL.md via external_dirs",
       "install": "Add the pack root as an exact YAML list item under skills.external_dirs; never bulk-copy a mega-tree",
       "configRepo": "frankxai/hermes",
-      "observedRepos": ["hermes", "hermes-cockpit", "awesome-hermes-agent-skills", "awesome-hermes-agents"],
+      "observedRepos": [
+        "hermes",
+        "hermes-cockpit",
+        "awesome-hermes-agent-skills",
+        "awesome-hermes-agents"
+      ],
       "evidence": "multi-agent-skill-surface-ops skill (external_dirs exact match); starlight/repos/hermes; AppData/Local/hermes exists; gh repo list frankxai 2026-11-07",
+      "pathState": "documented",
       "status": "adapter-generated"
     },
     {
@@ -123,22 +166,32 @@
       "skillFormat": "SKILL.md",
       "install": "cp -r free-skills/<skill> ~/.grok/skills/<skill>",
       "configRepo": "frankxai/grok-operator",
-      "observedRepos": ["grok-operator", "grok-powertools", "grok-imagine-favorites-manager"],
+      "observedRepos": [
+        "grok-operator",
+        "grok-powertools",
+        "grok-imagine-favorites-manager"
+      ],
       "evidence": "~/.grok/skills listed 2026-11-07; starlight/AGENTS.md names Grok; gh repo list frankxai 2026-11-07",
-      "status": "adapter-generated"
+      "pathState": "verified",
+      "status": "adapter-generated",
+      "probe": "Get-ChildItem ~/.grok/skills listed 2026-11-07 (populated with skill folders); starlight/AGENTS.md names Grok",
+      "probeDate": "2026-11-07"
     },
     {
       "id": "kilo",
       "label": "Kilo",
       "kind": "harness",
       "existingAdapter": false,
-      "discovery": "[OPEN] ~/.kilo/AGENTS.md named in the home guide; no ~/.kilo directory measured 2026-11-07",
-      "skillFormat": "[OPEN]",
-      "install": "[OPEN] no measured install surface",
+      "discovery": "~/.kilo/AGENTS.md (documented in the home guide; the directory is absent on this machine)",
+      "skillFormat": "AGENTS.md",
+      "install": "Create ~/.kilo/AGENTS.md and reference the pack root from it",
       "configRepo": null,
       "observedRepos": [],
       "repoGap": "No canonical config repo found in the local estate or the frankxai GitHub list.",
-      "evidence": "home AGENTS.md Kilo clause; Test-Path ~/.kilo = False 2026-11-07",
+      "evidence": "home AGENTS.md Kilo clause read 2026-11-07; kilo CLI present at AppData/Roaming/npm/kilo.ps1; Test-Path ~/.kilo = False",
+      "pathState": "documented",
+      "probe": "Checked ~/.kilo, ~/.kilo/AGENTS.md and ~/.config/kilo (all absent); found kilo.ps1 launcher; read the home guide's Kilo clause. Path is documented, not verified on disk.",
+      "probeDate": "2026-11-07",
       "status": "adapter-generated"
     },
     {
@@ -150,9 +203,15 @@
       "skillFormat": "[OPEN]",
       "install": "[OPEN] no measured install surface",
       "configRepo": null,
-      "observedRepos": ["arcanea-openclaw", "openclaw-acos-skills-railway-template"],
+      "observedRepos": [
+        "arcanea-openclaw",
+        "openclaw-acos-skills-railway-template"
+      ],
       "repoGap": "Product and template repos exist; no config repo measured.",
       "evidence": "ops/skill-authority.json binding skip list; gh repo list frankxai 2026-11-07",
+      "pathState": "open",
+      "probe": "Checked ~/.openclaw, ~/.config/openclaw (absent); Get-Command openclaw and claw (absent); read the .openclaw and openclaw skip-list entries in ops/skill-authority.json. No discovery path resolved.",
+      "probeDate": "2026-11-07",
       "status": "adapter-generated"
     },
     {
@@ -160,13 +219,16 @@
       "label": "GitHub Copilot CLI",
       "kind": "harness",
       "existingAdapter": false,
-      "discovery": "[OPEN] .github/copilot-instructions.md",
-      "skillFormat": "[OPEN]",
-      "install": "[OPEN] no measured install surface",
+      "discovery": "~/.copilot/skills/<skill>/SKILL.md (directory measured present 2026-11-07)",
+      "skillFormat": "SKILL.md",
+      "install": "cp -r free-skills/<skill> ~/.copilot/skills/<skill>",
       "configRepo": null,
       "observedRepos": [],
-      "repoGap": "No canonical config repo measured.",
-      "evidence": "railway mcp install --agent list in multi-agent-skill-surface-ops (copilot target)",
+      "repoGap": "No canonical config repo measured. The local ~/.copilot config directory is the surface.",
+      "evidence": "Get-ChildItem ~/.copilot listed 2026-11-07 (skills, agents, settings.json, mcp-config.json present); railway mcp install --agent list names copilot",
+      "pathState": "verified",
+      "probe": "Listed ~/.copilot: skills/, agents/ (browser-qa.agent.md, next-devtools.agent.md, railway-operator.agent.md), settings.json, mcp-config.json. Discovery path resolved on disk.",
+      "probeDate": "2026-11-07",
       "status": "adapter-generated"
     },
     {
@@ -174,13 +236,16 @@
       "label": "Factory Droid",
       "kind": "harness",
       "existingAdapter": false,
-      "discovery": "[OPEN]",
-      "skillFormat": "[OPEN]",
-      "install": "[OPEN] no measured install surface",
+      "discovery": "~/.factory/skills/<skill>/SKILL.md (directory measured populated 2026-11-07)",
+      "skillFormat": "SKILL.md",
+      "install": "cp -r free-skills/<skill> ~/.factory/skills/<skill>",
       "configRepo": null,
       "observedRepos": [],
-      "repoGap": "No canonical config repo measured.",
-      "evidence": "railway mcp install --agent list in multi-agent-skill-surface-ops (factory-droid target)",
+      "repoGap": "No canonical config repo measured. The local ~/.factory config directory is the surface.",
+      "evidence": "Get-ChildItem ~/.factory/skills listed 2026-11-07 (adaptive, agentic-orchestration, agents-sdk, basin, ce-brainstorm and more); ~/.factory/mcp.json read",
+      "pathState": "verified",
+      "probe": "Listed ~/.factory: skills/ with populated skill folders, logs/, mcp.json. Discovery path resolved on disk.",
+      "probeDate": "2026-11-07",
       "status": "adapter-generated"
     },
     {
@@ -192,9 +257,14 @@
       "skillFormat": "[OPEN]",
       "install": "[OPEN] no measured install surface",
       "configRepo": null,
-      "observedRepos": ["starlight-agent-config"],
+      "observedRepos": [
+        "starlight-agent-config"
+      ],
       "repoGap": "No canonical config repo measured.",
       "evidence": "safety-permission-gate and safety-mutation-approval skills name Claws; starlight/repos/starlight-agent-config",
+      "pathState": "open",
+      "probe": "Searched starlight/AGENTS.md and TRUTH.md for Claw (no matches); listed ops/agent-factory/REGISTRY.json agent ids (no claw id); checked starlight/repos/starlight-agent-config/core/claws (absent). No discovery path resolved.",
+      "probeDate": "2026-11-07",
       "status": "adapter-generated"
     },
     {
@@ -206,9 +276,16 @@
       "skillFormat": "short stub",
       "install": "Write short stubs only. Full skills stay in the pack root; never copy a full skill body into a stub.",
       "configRepo": "frankxai/starlight-agent-config",
-      "observedRepos": ["starlight-agent-config", "skills", "creator-skills"],
+      "observedRepos": [
+        "starlight-agent-config",
+        "skills",
+        "creator-skills"
+      ],
       "evidence": "~/.agents/skills-index.json and ~/.agents/README.md read 2026-11-07; multi-agent-skill-surface-ops stub rule",
-      "status": "projection"
+      "pathState": "verified",
+      "status": "projection",
+      "probe": "Read ~/.agents/skills-index.json and ~/.agents/README.md 2026-11-07; stub projection points at the pack root",
+      "probeDate": "2026-11-07"
     }
   ]
 }

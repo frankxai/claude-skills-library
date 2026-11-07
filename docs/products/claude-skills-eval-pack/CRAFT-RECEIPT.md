@@ -145,3 +145,49 @@ craft-receipt validator. Planted faults were run in a temp copy of the repo: rem
 marker exits 3, injecting a POSIX home path exits 4, and an unknown harness exits 2. The repo's own
 health command, `python3 scripts/validate_skills.py`, passed with 122 skill files spec-compliant.
 The different-provider gap from the first critique still stands.
+
+## Third slice: TDD regression suite and path probes
+
+Tests were written before the code they cover. The first test asserted that `--verify` reports
+verified / documented / open path states. It failed on the committed `e02a605` revision with
+`AssertionError: The input did not match /verified:\s*\d+/` (RED). The manifest and CLI were then
+changed so `--verify` reports all three states, and the test passed (GREEN). Five further
+regression tests were added for exit codes 2/3/4, generator byte-idempotency and dry-run purity.
+`node --test scripts/tests/harness-surface.test.mjs` passes 9/9 in isolated temp fixtures. The RED
+runner output is preserved in [evidence/red-green-2026-11-07.md](evidence/red-green-2026-11-07.md).
+
+T12 resolved three of five `[OPEN]` discovery paths by bounded read-only probes:
+`~/.copilot/skills` and `~/.factory/skills` are populated on disk (verified); Kilo has a
+documented `~/.kilo/AGENTS.md` path from the home guide with a `kilo.ps1` launcher present
+(documented); OpenClaw and Starlight Claws have no measurable path and keep `[OPEN]` with the
+failed probes recorded in the manifest. The CLI now reports 12/14 sourced paths, 7 verified,
+5 documented, 2 open. G11 stays FAIL because two surfaces remain open. No live install was
+performed. Scoreboard G12 covers the regression suite.
+
+## Third independent review: TDD and probe slice
+
+Independent reviewer: a third `oracle` subagent, read-only, prompted as a skeptical platform
+engineer. Verdict: **REWORK**. Six findings, all fixed:
+
+1. **P1** the dry-run purity test only snapshotted the fixture, so a write to a real home would
+   pass. Fix: tests now spawn with `HOME` and `USERPROFILE` pointed at a fake home inside the
+   fixture and assert that home is also unchanged.
+2. **P1** fault exit codes were swallowed in JSON and plan modes (`verify ? exit : 0`). Fix:
+   `output.verification` always carries `checks`, `faults` and `exitCode`, and the process exits
+   with the accumulated code in every mode. A regression test covers a JSON-mode fault.
+3. **P1** a manifest row with no `pathState` defaulted to `verified`, letting an unprobed row
+   inflate the verified count. Fix: missing state defaults to `open`, and any `verified` row
+   without `probe` plus `probeDate` is refused with exit 5. Probe evidence was added to all seven
+   verified rows; a regression test removes one and asserts exit 5.
+4. **P1** the green state was uncommitted, so the RED claim was unrecoverable from the branch.
+   Fix: this slice is committed on the branch, and the RED runner output is preserved in
+   `evidence/red-green-2026-11-07.md` with the exact revision, command and assertion failure.
+5. **P2** "measured surfaces" lumped five documented paths with seven verified ones. Fix: the CLI
+   now reports `sourcedSurfaces` and `openSurfaces`, and prints `sourced surfaces: 12/14`.
+   `HARNESS-COVERAGE.md` uses the same wording.
+6. **P2** the docs absolute-path guard had no regression test. Fix: a test plants an
+   operator-specific path in a fixture docs file and asserts exit 4.
+
+After the fixes: `node --test scripts/tests/harness-surface.test.mjs` passes 9/9,
+`--all --verify` exits 0 reporting 12/14 sourced (7 verified, 5 documented, 2 open), and
+`--check` exits 0 twice. The different-provider gap from the first critique still stands.

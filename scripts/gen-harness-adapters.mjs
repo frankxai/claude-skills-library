@@ -90,6 +90,7 @@ function stubFor(h) {
     '## Evidence',
     '',
     h.evidence,
+    ...(h.probe ? ['', `Probe (${h.probeDate || manifest.asOf}): ${h.probe}`] : []),
     ...(h.repoGap ? ['', `Repo gap: ${h.repoGap}`] : []),
     '',
   ]

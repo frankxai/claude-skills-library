@@ -38,7 +38,7 @@ highest active code wins, and every fault is listed):
 | 2 | unknown harness | bad arguments |
 | 3 | missing adapter or marker | refusing to overwrite a non-generated doc |
 | 4 | operator-specific path in a plan, stub or doc | operator-specific path in generated output |
-| 5 | invalid manifest | invalid manifest |
+| 5 | invalid manifest, including a verified row with no probe evidence | invalid manifest |
 | 6 | pack root missing | not used |
 | 7 | bad arguments | not used |
 
@@ -50,6 +50,7 @@ runtimes/README.md               # generated index
 runtimes/<id>.md                 # 6 pre-existing docs (preserved) + 8 generated stubs
 scripts/gen-harness-adapters.mjs # deterministic generator, --check / --write
 scripts/install-any-agent.mjs    # plan CLI, --json / --verify / --list
+scripts/tests/harness-surface.test.mjs  # six regression tests, node --test
 docs/products/claude-skills-eval-pack/HARNESS-COVERAGE.md  # measured inventory
 ```
 
@@ -71,11 +72,16 @@ One record per harness, no absolute machine paths, pack-relative references only
 
 ## Testing strategy
 
-- Deterministic: `gen-harness-adapters.mjs --check` twice after `--write`; both must report
-  byte-identical output and 0 writes.
+- Deterministic: `node --test scripts/tests/harness-surface.test.mjs` runs nine tests in isolated
+  temp fixtures with a fake HOME. It covers path-state reporting, exit codes 2/3/4/5, JSON-mode
+  faults, the docs absolute-path guard, generator byte-idempotency and dry-run purity. Nothing
+  writes into the real repo, a real home directory or a global config.
 - Structural: `install-any-agent.mjs --all --verify` checks the manifest, the pack root, that all
   14 adapter docs exist, that generated stubs carry the marker, and that no distributed artifact
   contains an operator-specific path.
+- Path states: `verified` (measured on disk), `documented` (named source, directory not verified),
+  `open` (`[OPEN]`, with the failed probe recorded). `--verify` reports all three counts. A
+  documented path is not a working install.
 - Planted fault: remove a generated marker, run `--verify`, assert exit 3; add a machine-specific
   absolute path to a stub, assert exit 4; ask for an unknown harness, assert exit 2.
 - Integrity: confirm the six pre-existing adapter docs are byte-unchanged after generation, and

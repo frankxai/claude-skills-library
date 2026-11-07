@@ -13,12 +13,12 @@ not when a single `SKILL.md` is copied out of it.
 
 ## Discovery
 
-[OPEN] .github/copilot-instructions.md
+~/.copilot/skills/<skill>/SKILL.md (directory measured present 2026-11-07)
 
 ## Install plan (dry run only)
 
 ```text
-[OPEN] no measured install surface
+cp -r free-skills/<skill> ~/.copilot/skills/<skill>
 ```
 
 The canonical plan for this harness is emitted by:
@@ -52,6 +52,8 @@ no receipt claiming an install happened. Those are separate authorized actions.
 
 ## Evidence
 
-railway mcp install --agent list in multi-agent-skill-surface-ops (copilot target)
+Get-ChildItem ~/.copilot listed 2026-11-07 (skills, agents, settings.json, mcp-config.json present); railway mcp install --agent list names copilot
 
-Repo gap: No canonical config repo measured.
+Probe (2026-11-07): Listed ~/.copilot: skills/, agents/ (browser-qa.agent.md, next-devtools.agent.md, railway-operator.agent.md), settings.json, mcp-config.json. Discovery path resolved on disk.
+
+Repo gap: No canonical config repo measured. The local ~/.copilot config directory is the surface.

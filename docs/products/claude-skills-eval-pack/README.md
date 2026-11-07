@@ -41,6 +41,7 @@ node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root>
 node scripts/eval-pack-scoreboard.mjs --estate-root <starlight-root> --strict
 node scripts/install-any-agent.mjs --all --verify
 node scripts/gen-harness-adapters.mjs --check
+node --test scripts/tests/harness-surface.test.mjs
 ```
 
 The first prints the goal table and writes `scoreboard.latest.json`. The second exits 1 on any

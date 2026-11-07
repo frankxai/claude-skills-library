@@ -13,12 +13,12 @@ not when a single `SKILL.md` is copied out of it.
 
 ## Discovery
 
-[OPEN] ~/.kilo/AGENTS.md named in the home guide; no ~/.kilo directory measured 2026-11-07
+~/.kilo/AGENTS.md (documented in the home guide; the directory is absent on this machine)
 
 ## Install plan (dry run only)
 
 ```text
-[OPEN] no measured install surface
+Create ~/.kilo/AGENTS.md and reference the pack root from it
 ```
 
 The canonical plan for this harness is emitted by:
@@ -52,6 +52,8 @@ no receipt claiming an install happened. Those are separate authorized actions.
 
 ## Evidence
 
-home AGENTS.md Kilo clause; Test-Path ~/.kilo = False 2026-11-07
+home AGENTS.md Kilo clause read 2026-11-07; kilo CLI present at AppData/Roaming/npm/kilo.ps1; Test-Path ~/.kilo = False
+
+Probe (2026-11-07): Checked ~/.kilo, ~/.kilo/AGENTS.md and ~/.config/kilo (all absent); found kilo.ps1 launcher; read the home guide's Kilo clause. Path is documented, not verified on disk.
 
 Repo gap: No canonical config repo found in the local estate or the frankxai GitHub list.

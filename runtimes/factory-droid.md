@@ -13,12 +13,12 @@ not when a single `SKILL.md` is copied out of it.
 
 ## Discovery
 
-[OPEN]
+~/.factory/skills/<skill>/SKILL.md (directory measured populated 2026-11-07)
 
 ## Install plan (dry run only)
 
 ```text
-[OPEN] no measured install surface
+cp -r free-skills/<skill> ~/.factory/skills/<skill>
 ```
 
 The canonical plan for this harness is emitted by:
@@ -52,6 +52,8 @@ no receipt claiming an install happened. Those are separate authorized actions.
 
 ## Evidence
 
-railway mcp install --agent list in multi-agent-skill-surface-ops (factory-droid target)
+Get-ChildItem ~/.factory/skills listed 2026-11-07 (adaptive, agentic-orchestration, agents-sdk, basin, ce-brainstorm and more); ~/.factory/mcp.json read
 
-Repo gap: No canonical config repo measured.
+Probe (2026-11-07): Listed ~/.factory: skills/ with populated skill folders, logs/, mcp.json. Discovery path resolved on disk.
+
+Repo gap: No canonical config repo measured. The local ~/.factory config directory is the surface.

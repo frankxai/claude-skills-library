@@ -56,13 +56,15 @@ One manifest, a deterministic generator, an any-agent CLI and one stub adapter p
 because the library shipped six adapters while the estate runs more harnesses than that.
 
 **Done-condition:** 14 entries in `runtimes/harnesses.json`, 14 adapter docs on disk, the six
-pre-existing docs byte-unchanged, and `HARNESS-COVERAGE.md` names a canonical repo or a measured
-gap for each.
+pre-existing docs byte-unchanged, 12 sourced discovery paths (7 verified, 5 documented, 2 open),
+`HARNESS-COVERAGE.md` names a canonical repo or a measured gap for each, and the planted-fault
+regression suite passes 9/9.
 
 **Verify:**
 ```text
 node scripts/gen-harness-adapters.mjs --check
 node scripts/install-any-agent.mjs --all --verify
+node --test scripts/tests/harness-surface.test.mjs
 ```
 
 **Gate:** no live install, no junction, no home-directory stub, no global config edit and no new

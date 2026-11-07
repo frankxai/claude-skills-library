@@ -22,7 +22,8 @@ provider-% half needs the cost collector's current output. Until it runs, no cla
 | G8 | The queue stays admissible | open PRs in this repo / budget | 16 / 10 | <=10 at every PR | `gh search prs --repo frankxai/claude-skills-library --state open --limit 100 --json number` | FAIL |
 | G9 | Craft bar is evidenced | four craft-receipt blocks; cross-provider critique closed | `[OPEN]` until this suite is reviewed | 4/4 blocks PASS, findings closed | `node tools/craft-receipt.mjs --product claude-skills-eval-pack --receipt <path>` | PENDING |
 | G10 | Mobile-native public surface | §11.3 predicates passing on the catalog | `[OPEN]` - no new page built | 10/10, plus a real-device and reduced-motion Playwright project | `.claude/ci/web-guidelines-lint.mjs --changed` | BLOCKED (no UI in this slice) |
-| G11 | Every harness has a measured install surface | adapter docs / measured surfaces | 14 adapter docs / 9 measured | 14/14 measured, `--verify` exit 0 | `node scripts/install-any-agent.mjs --all --verify` | FAIL |
+| G11 | Every harness has a sourced install surface | adapter docs / sourced paths | 14 adapter docs / 12 sourced (7 verified, 5 documented, 2 open) | 14/14 sourced, `--verify` exit 0 | `node scripts/install-any-agent.mjs --all --verify` | FAIL |
+| G12 | Planted-fault regression suite passes | `node --test` result | 9/9 pass | 9/9 pass, 0 fail | `node --test scripts/tests/harness-surface.test.mjs` | PASS |
 
 ## Registry drift found, not fixed here
 

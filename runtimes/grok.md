@@ -53,3 +53,5 @@ no receipt claiming an install happened. Those are separate authorized actions.
 ## Evidence
 
 ~/.grok/skills listed 2026-11-07; starlight/AGENTS.md names Grok; gh repo list frankxai 2026-11-07
+
+Probe (2026-11-07): Get-ChildItem ~/.grok/skills listed 2026-11-07 (populated with skill folders); starlight/AGENTS.md names Grok

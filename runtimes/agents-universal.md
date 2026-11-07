@@ -53,3 +53,5 @@ no receipt claiming an install happened. Those are separate authorized actions.
 ## Evidence
 
 ~/.agents/skills-index.json and ~/.agents/README.md read 2026-11-07; multi-agent-skill-surface-ops stub rule
+
+Probe (2026-11-07): Read ~/.agents/skills-index.json and ~/.agents/README.md 2026-11-07; stub projection points at the pack root
