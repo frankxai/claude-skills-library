@@ -189,6 +189,49 @@ def test_bad_flag_and_missing_target() -> None:
     shutil.rmtree(d)
 
 
+def smoke_step_script(workflow_text: str) -> str:
+    """The `run: |` body of the 'Smoke-test the hook' step, dedented."""
+    lines = workflow_text.splitlines()
+    i = next(n for n, l in enumerate(lines) if l.strip() == "- name: Smoke-test the hook")
+    j = next(n for n in range(i + 1, len(lines)) if lines[n].strip() == "run: |")
+    indent = len(lines[j]) - len(lines[j].lstrip())
+    body = []
+    for l in lines[j + 1:]:
+        if l.strip() and len(l) - len(l.lstrip()) <= indent:
+            break
+        body.append(l)
+    pad = min(len(l) - len(l.lstrip()) for l in body if l.strip())
+    return "\n".join(l[pad:] for l in body) + "\n"
+
+
+def test_ci_smoke_step_fails_on_broken_hook() -> None:
+    """The CI smoke step once used `[ -e hook ] && { ...; } || echo "no hook"`,
+    so a hook that raised fell through to the || branch and the step passed.
+    Run the step as GitHub runs it: absent hook ok, good hook ok, broken hook red."""
+    script = smoke_step_script(open(os.path.join(PACK, "ci", "agent-hygiene.yml")).read())
+    for shell in (["bash", "-e"], ["bash", "--noprofile", "--norc", "-eo", "pipefail"]):
+        label = " ".join(shell[1:])
+        d = tempfile.mkdtemp()
+        os.makedirs(os.path.join(d, ".claude/ci"))
+        shutil.copy(os.path.join(PACK, "ci", "agent-lint.py"), os.path.join(d, ".claude/ci/agent-lint.py"))
+        def run():
+            return subprocess.run([*shell, "-c", script], cwd=d, capture_output=True, text=True)
+        r = run()
+        check(f"[{label}] smoke step: hook absent passes", r.returncode == 0 and "no hook installed" in r.stdout, r.stdout + r.stderr)
+        os.makedirs(os.path.join(d, ".claude/hooks"))
+        hook = os.path.join(d, ".claude/hooks/agent-hygiene-stop.py")
+        shutil.copy(os.path.join(PACK, "hooks", "agent-hygiene-stop.py"), hook)
+        r = run()
+        check(f"[{label}] smoke step: working hook passes", r.returncode == 0 and "ok hook" in r.stdout, r.stdout + r.stderr)
+        open(hook, "w").write("raise RuntimeError('boom')\n")
+        r = run()
+        check(f"[{label}] smoke step: erroring hook fails", r.returncode != 0 and "ok hook" not in r.stdout, r.stdout + r.stderr)
+        open(hook, "w").write("def broken(:\n")
+        r = run()
+        check(f"[{label}] smoke step: hook with syntax error fails", r.returncode != 0 and "no hook installed" not in r.stdout, r.stdout + r.stderr)
+        shutil.rmtree(d)
+
+
 if __name__ == "__main__":
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         print(fn.__name__)
