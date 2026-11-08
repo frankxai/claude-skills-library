@@ -14,10 +14,10 @@ metadata:
 ## Platform baseline (Next.js 16 + Vercel, May 2026)
 
 - **Next.js:** 16.x (Turbopack is the default build/dev engine; webpack is opt-in only)
-- **React:** 18.3 stable on FrankX; React 19 RSC patterns supported
+- **React:** 18.3 stable in production; React 19 RSC patterns supported
 - **Node:** 24 LTS by default on Vercel
 - **Functions:** Vercel **Fluid Compute** (concurrency-aware Node functions) — *not* legacy Edge/Serverless. Default `maxDuration` = 300s for Hobby/Pro.
-- **Config files:** `next.config.ts` (or `.mjs`) for framework. **Platform config: `vercel.ts` is the recommended way** (typed `VercelConfig`, env-aware logic, programmatic functions per `vercel:knowledge-update` 2026-02-27). `vercel.json` still works for simple cases. FrankX currently uses `vercel.json` + `next.config.mjs` — migrate to `vercel.ts` when you need typed config, dynamic logic, or env-var access at config time.
+- **Config files:** `next.config.ts` (or `.mjs`) for framework. **Platform config: `vercel.ts` is the recommended way** (typed `VercelConfig`, env-aware logic, programmatic functions per `vercel:knowledge-update` 2026-02-27). `vercel.json` still works for simple cases. Move to `vercel.ts` when you need typed config, dynamic logic, or env-var access at config time.
 - **Caching:** "Cache Components" (formerly PPR) is the forward-looking primitive — `cacheComponents: true` at top level of `next.config`, NOT under `experimental`.
 
 ## Next.js 16 gotchas (production-critical)
@@ -448,7 +448,7 @@ const nextConfig: NextConfig = {
 export default nextConfig
 ```
 
-**Vercel platform config (modern):** Prefer `vercel.ts` for typed platform config. `vercel.json` still works for simple cases (FrankX uses this — `vercel.json` with `framework`, `cleanUrls`, `ignoreCommand`, headers). When you need types, env-aware logic, or programmatic functions config, migrate to `vercel.ts`.
+**Vercel platform config (modern):** Prefer `vercel.ts` for typed platform config. `vercel.json` still works for simple cases (`framework`, `cleanUrls`, `ignoreCommand`, headers). When you need types, env-aware logic, or programmatic functions config, migrate to `vercel.ts`.
 
 **Using Environment Variables:**
 ```typescript
