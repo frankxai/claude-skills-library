@@ -9,7 +9,7 @@
   },
   "totals": {
     "pluginsWithListedSkills": 2,
-    "skills": 122,
+    "skills": 123,
     "skillsWithEvals": 0,
     "pluginsFromOtherRepos": 3
   },
@@ -784,7 +784,7 @@
         "type": "local",
         "path": "./plugins/starlight-web-studio"
       },
-      "skillCount": 8,
+      "skillCount": 9,
       "skills": [
         {
           "name": "answer-engine",
@@ -802,6 +802,12 @@
           "name": "copy-desk",
           "description": "Audit and rewrite the words on a web page - headline, subhead, CTAs, section copy, microcopy, alt text - so a stranger understands the offer in five seconds and trusts every claim. Use for copy audits, landing page rewrites, \"the copy feels generic\", hero headlines, CTA wording, conversion clarity, or when studio-scan reports stock vocabulary or unbacked social proof. Works in the repo's own voice, never a house voice.",
           "path": "plugins/starlight-web-studio/skills/copy-desk",
+          "hasEvals": false
+        },
+        {
+          "name": "design-references",
+          "description": "Pull real, current design references into a brief, a direction, a style system or a motion score, using the reference libraries the user already pays for (Refero, Mobbin, 60fps) and the free ones (Codrops, Awwwards, recent.design), without copying their libraries. Use when a brief needs its three named references, when an art director needs a style system to start from, when a funnel, onboarding, paywall or checkout flow needs real examples, when the motion director needs a reference for a beat, or when someone asks to \"use Refero\", \"use Mobbin\", \"find inspiration\", \"what do the best sites do here\". Also use when someone asks to download, save or mirror a reference library.",
+          "path": "plugins/starlight-web-studio/skills/design-references",
           "hasEvals": false
         },
         {
