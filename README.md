@@ -26,6 +26,13 @@ hooks that block "done" until the evidence exists.
 
 ---
 
+> [!TIP]
+> **Free before you pay.** Six free assets sit beside the paid packs and none is a teaser: a worked
+> revenue loop with its arithmetic and a 30-day kill criterion, a real claims audit against a live
+> page with file and line numbers, three prompt patterns that survive regeneration, one complete
+> business pack, and the MIT open-core plugin kernel.
+> **[Start with one](https://www.agenticincome.ai/offers).**
+
 ## Install
 
 > [!IMPORTANT]
