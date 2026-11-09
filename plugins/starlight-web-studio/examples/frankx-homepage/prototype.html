@@ -1,0 +1,239 @@
+<title>FrankX Studio Window</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&family=Playfair+Display:ital@1&family=Poppins:wght@600;800&display=swap">
+<style>
+/* Layout: one pinned studio scene (image, headline, glass panel holding a real recorded run), then three places to start. Dark only, per the FrankX system. */
+:root {
+  --void: #0a0a0b;
+  --space: #111113;
+  --text: rgba(255, 255, 255, 0.95);
+  --text-2: rgba(255, 255, 255, 0.78);
+  --text-3: rgba(255, 255, 255, 0.66);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --tech: #10b981;
+  --tech-light: #34d399;
+  --tech-pale: #6ee7b7;
+  --cyan: #06b6d4;
+  --display: "Poppins", system-ui, sans-serif;
+  --body: "Inter", system-ui, sans-serif;
+  --serif: "Playfair Display", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--void); color: var(--text); font: 16px/1.6 var(--body); }
+a { color: var(--tech-light); }
+a:hover { color: var(--tech-pale); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--tech-light); outline-offset: 3px; }
+
+.skip { position: absolute; left: 16px; top: -48px; z-index: 10; padding: 10px 16px; border-radius: 9999px; background: var(--tech); color: var(--void); text-decoration: none; }
+.skip:focus { top: calc(8px + env(safe-area-inset-top, 0px)); }
+
+.studio { position: relative; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
+.room { position: absolute; inset: 0; background: url("media/hero-390.webp") center top / cover no-repeat; }
+.room::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(10,10,11,0.25) 0%, rgba(10,10,11,0.65) 42%, rgba(10,10,11,0.97) 72%);
+}
+.dim { position: absolute; inset: 0; background: var(--void); opacity: 0; pointer-events: none; }
+.bar {
+  position: relative; z-index: 2; height: 64px; display: flex; align-items: center; justify-content: space-between;
+  margin-top: env(safe-area-inset-top, 0px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.brand { font: 600 19px var(--display); color: var(--text); text-decoration: none; }
+.nav { display: none; gap: 32px; font-size: 14px; }
+.nav a { color: var(--text-2); text-decoration: none; }
+.scene {
+  position: relative; z-index: 2; margin-top: auto; display: grid; gap: 20px;
+  padding: 24px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px));
+}
+.copy { display: grid; gap: 18px; max-width: 560px; }
+h1 { margin: 0; font: 800 clamp(2.4rem, 7vw, 4.6rem)/1.03 var(--display); letter-spacing: -0.02em; text-wrap: balance; }
+h1 em { font: italic 400 1em var(--serif); color: var(--tech-light); }
+.deck { margin: 0; font-size: clamp(1rem, 1.6vw, 1.2rem); line-height: 1.65; color: var(--text-2); max-width: 46ch; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.cta {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px;
+  border-radius: 9999px; background: var(--tech); color: var(--void); font-weight: 500; text-decoration: none;
+  transition: background 200ms var(--ease);
+}
+.cta:hover { background: var(--tech-light); color: var(--void); }
+
+/* Liquid glass: a dark enough base that text passes contrast even where blur is unsupported. */
+.glass {
+  position: relative; border-radius: 28px; padding: 20px 22px; display: grid; gap: 14px;
+  background: rgba(10, 10, 11, 0.62);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35); backdrop-filter: blur(24px) saturate(1.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(255,255,255,0.04), 0 20px 60px rgba(8,15,33,0.45);
+  overflow: hidden;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background: rgba(17, 17, 19, 0.94); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass { background: var(--space); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+.glass::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 350ms var(--ease);
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), rgba(255,255,255,0.12), transparent 60%);
+}
+.glass.lit::before { opacity: 1; }
+.glass-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; font-size: 13px; color: var(--text-2); }
+.pill { font-size: 12px; padding: 4px 10px; border-radius: 9999px; background: rgba(16,185,129,0.15); color: var(--tech-pale); white-space: nowrap; }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font: 13px/1.5 var(--mono); }
+.step { display: flex; gap: 12px; color: var(--text-2); border-radius: 10px; padding: 4px 8px; margin: 0 -8px; transition: background 200ms var(--ease), color 200ms var(--ease); }
+.step a { color: inherit; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.3); text-underline-offset: 3px; }
+.step .mark { color: var(--tech-light); width: 1ch; flex: none; }
+.note { font-size: 13px; color: var(--text-3); border-top: 1px solid var(--hairline); padding-top: 12px; margin: 0; }
+
+/* The active step is marked by a background and the marker, never by fading the others below contrast. */
+.is-scrubbing .step.on { background: rgba(16,185,129,0.12); color: var(--text); }
+.is-scrubbing .step.on .mark { color: var(--cyan); }
+
+.after {
+  max-width: 1120px; margin: 0 auto; padding-block: 96px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px;
+}
+.after h2 { margin: 0; font: 600 clamp(1.6rem, 3vw, 2.2rem)/1.2 var(--display); }
+.list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--hairline); }
+.list li { border-bottom: 1px solid var(--hairline); }
+.list a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 20px 0; text-decoration: none; color: var(--text); }
+.list .what { display: grid; gap: 4px; min-width: 0; }
+.list .name { font: 600 1.15rem var(--display); }
+.list .line { color: var(--text-2); font-size: 15px; }
+.list .go { color: var(--tech-light); align-self: center; font-size: 15px; }
+.foot {
+  max-width: 1120px; margin: 0 auto; padding-block: 24px 48px; font-size: 12px; color: var(--text-3);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+@media (min-width: 900px) {
+  .room { background-image: url("media/hero-1440.webp"); background-position: center; }
+  .room::after { background: linear-gradient(90deg, rgba(10,10,11,0.94) 0%, rgba(10,10,11,0.78) 34%, rgba(10,10,11,0.12) 62%, rgba(10,10,11,0) 100%); }
+  .bar { padding-inline: 80px; height: 72px; }
+  .nav { display: flex; }
+  .scene {
+    margin-top: 0; flex-grow: 1; align-content: center; padding: 0 80px 64px;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 1fr) minmax(0, 4fr); align-items: center;
+  }
+  .copy { grid-column: 1; }
+  .glass { grid-column: 3; align-self: start; margin-top: 4vh; border-radius: 40px; padding: 30px 32px; }
+  .steps { font-size: 14px; gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass::before, .step, .cta { transition: none; }
+}
+</style>
+
+<a class="skip" href="#start">Skip to the three places to start</a>
+<section class="studio" aria-label="FrankX">
+  <div class="room" role="img" aria-label="A quiet home studio at night: a desk with a closed laptop, an open notebook and a lamp, in front of a window over a city."></div>
+  <div class="dim" aria-hidden="true"></div>
+  <header class="bar">
+    <a class="brand" href="https://www.frankx.ai/">FrankX</a>
+    <nav class="nav" aria-label="Main">
+      <a href="https://www.frankx.ai/ai-architecture">Blueprints</a>
+      <a href="https://www.frankx.ai/blog">Field notes</a>
+      <a href="https://www.frankx.ai/library">Library</a>
+    </nav>
+  </header>
+  <div class="scene">
+    <div class="copy">
+      <h1>AI systems you <em>own</em>, built in the open.</h1>
+      <p class="deck">Blueprints I use in my own work, published so you can run them with your own keys. Below is a snapshot of one being built this week, linked to its public record.</p>
+      <div class="actions">
+        <a class="cta" href="#start">See where to start</a>
+        <a href="https://www.frankx.ai/blog">Read the field notes</a>
+      </div>
+    </div>
+    <section class="glass" aria-label="Development snapshot of the web studio">
+      <div class="glass-head"><span>Development snapshot · web studio, 20 Oct 2026</span><span class="pill" aria-hidden="true">Step <span class="n">4</span> of 4</span></div>
+      <ol class="steps">
+        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>brief: <a href="https://github.com/frankxai/claude-skills-library/issues/76">audit 25 live sites, fix the worst</a></span></li>
+        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>build: <a href="https://github.com/frankxai/claude-skills-library/pull/77">11 specialist roles, 52 tests, one draft PR</a></span></li>
+        <li class="step"><span class="mark" aria-hidden="true">✓</span><span>review: <a href="https://github.com/frankxai/claude-skills-library/pull/77#issuecomment-6292699352">six rounds by a second model, reported on the PR</a></span></li>
+        <li class="step"><span class="mark" aria-hidden="true">●</span><span>ship: waiting for a person to approve</span></li>
+      </ol>
+      <p class="note">Each linked step is public on GitHub. The final approval has not happened yet.</p>
+    </section>
+  </div>
+</section>
+
+<section class="after" id="start" tabindex="-1">
+  <h2>Three places to start</h2>
+  <ul class="list">
+    <li><a href="https://www.frankx.ai/ai-architecture"><span class="what"><span class="name">AI architecture</span><span class="line">Patterns for agent workflows, orchestration and review, written up from real builds.</span></span><span class="go">Read</span></a></li>
+    <li><a href="https://www.frankx.ai/acos"><span class="what"><span class="name">Agentic Creator OS</span><span class="line">An open set of skills, commands and checks for the work a creator repeats.</span></span><span class="go">Open</span></a></li>
+    <li><a href="https://www.frankx.ai/library"><span class="what"><span class="name">Library</span><span class="line">Books and notes, and the open reading system behind them.</span></span><span class="go">Browse</span></a></li>
+  </ul>
+</section>
+<p class="foot">Independent project. Not affiliated with, endorsed by or sponsored by Oracle. Prototype by the Starlight Web Studio; not the live site.</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha512-onMTRKJBKz8M1TnqqDuGBlowlH0ohFzMXYRNebz+yOcc5TQr/zAKsthzhuv0hiyUKEiQEQXEynnXCvNTOk50dg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+(() => {
+  const root = document.documentElement;
+  const steps = [...document.querySelectorAll('.step')];
+  const marks = steps.map((s) => s.querySelector('.mark'));
+  const finalMarks = marks.map((m) => m.textContent);
+  const count = document.querySelector('.pill .n');
+  const glass = document.querySelector('.glass');
+
+  // Without GSAP the page is already complete: the recorded run in its final state.
+  if (window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+    const mm = gsap.matchMedia();
+    mm.add('(min-width: 900px) and (prefers-reduced-motion: no-preference)', () => {
+      root.classList.add('is-scrubbing');
+      let current = -1;
+      const show = (active) => {
+        if (active === current) return;
+        current = active;
+        steps.forEach((s, i) => {
+          s.classList.toggle('on', i === active);
+          marks[i].textContent = i < active ? '✓' : i === active ? '●' : '○';
+        });
+        count.textContent = String(active + 1);
+      };
+      // The row and the veil both follow the smoothed timeline, so they never drift apart.
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: '.studio', start: 'top top', end: '+=150%', pin: true, scrub: 0.6 },
+        onUpdate() { show(Math.min(steps.length - 1, Math.floor(this.progress() * steps.length))); },
+      });
+      tl.to('.dim', { opacity: 0.45, ease: 'none', duration: 1 }, 0);
+      show(0);
+      return () => {
+        root.classList.remove('is-scrubbing');
+        steps.forEach((s, i) => { s.classList.remove('on'); marks[i].textContent = finalMarks[i]; });
+        count.textContent = String(steps.length);
+      };
+    });
+  }
+
+  // Light on glass: fine pointers only, one update per frame, cleared on leave and on preference change.
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let frame = 0;
+  const clear = () => { if (frame) cancelAnimationFrame(frame); frame = 0; glass.classList.remove('lit'); };
+  glass.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') { clear(); return; }
+    if (!fine.matches || still.matches || frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      const r = glass.getBoundingClientRect();
+      glass.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      glass.style.setProperty('--my', `${e.clientY - r.top}px`);
+      glass.classList.add('lit');
+    });
+  });
+  glass.addEventListener('pointerleave', clear);
+  glass.addEventListener('pointercancel', clear);
+  still.addEventListener('change', clear);
+  fine.addEventListener('change', clear);
+})();
+</script>
