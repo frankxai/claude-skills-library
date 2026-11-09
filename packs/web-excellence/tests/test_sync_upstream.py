@@ -956,8 +956,13 @@ def main() -> int:
         real = read(os.path.join(PACK, "skills", "web-design-guidelines", "UPSTREAM-LICENSE"))
         check("real web-design-guidelines record has the generated shape",
               real.startswith("UPSTREAM LICENCE RECORD") and "Declared licence as recorded in SOURCES.md: MIT." in real)
+        # Native skills are written here and carry no upstream record; the
+        # script's own NATIVE list is the one source for which they are.
+        native_line = next(ln for ln in read(os.path.join(PACK, "sync-upstream.sh")).splitlines()
+                           if ln.startswith("NATIVE="))
+        native = native_line.split("=", 1)[1].strip().strip('"').split()
         for d in sorted(os.listdir(os.path.join(PACK, "skills"))):
-            if d in ("web-release-gate", "core-web-vitals", "visual-proof"):
+            if d in native:
                 continue
             check(f"real {d} carries UPSTREAM-LICENSE", os.path.isfile(os.path.join(PACK, "skills", d, "UPSTREAM-LICENSE")))
 

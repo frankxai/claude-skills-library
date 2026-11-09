@@ -757,6 +757,25 @@ def test_session_hook_finds_uppercase_contracts() -> None:
               "DESIGN.md" in ctx and "TASTE.md" in ctx)
 
 
+def test_session_hook_names_every_pack_skill() -> None:
+    """The "Installed:" line must name every skill the pack ships.
+
+    The list is hand-kept in the hook; gpu-surface and web-steward shipped
+    without being added, so sessions were never told they existed.
+    """
+    shipped = sorted(n for n in os.listdir(os.path.join(PACK, "skills"))
+                     if os.path.isdir(os.path.join(PACK, "skills", n)))
+    with tempfile.TemporaryDirectory() as d:
+        for name in shipped:
+            os.makedirs(os.path.join(d, ".claude", "skills", name))
+        out, _ = run_hook(SESSION, {"cwd": d})
+        ctx = (out or {}).get("hookSpecificOutput", {}).get("additionalContext", "")
+        line = next((l for l in ctx.splitlines() if l.startswith("Installed: ")), "")
+        listed = sorted(n.strip() for n in line[len("Installed: "):].rstrip(".").split(","))
+        check("session hook names every skill the pack ships", listed == shipped,
+              f"missing {sorted(set(shipped) - set(listed))}")
+
+
 def test_state_file_is_private() -> None:
     if sys.platform == "win32":
         print("  skip permission test (Windows NTFS does not use POSIX 0600 mode bits)")
