@@ -1,0 +1,6 @@
+# manifest.txt — the skills this pack installs, one per line.
+#
+# Each entry is a path relative to the repository root. The canonical copy
+# lives THERE (free-skills/ is the single source of truth); the pack carries no
+# second copy, so there is nothing in packs/ to drift against it.
+free-skills/agent-hygiene
