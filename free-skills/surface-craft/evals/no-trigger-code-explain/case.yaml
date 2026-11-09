@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: surface-craft--no-trigger-code-explain
+description: "Should NOT trigger surface-craft: a code explanation is not copy."
+tags: [surface-craft, should-not-trigger]
+runs: 2
+execution:
+  prompt: "Explain in three sentences what this JavaScript does: const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?surface-craft\""
+    min: 0
+    max: 0
+    arm: both

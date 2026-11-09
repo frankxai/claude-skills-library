@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: surface-craft--visual-direction
+description: "Should trigger surface-craft for a visual direction / aesthetics ask."
+tags: [surface-craft, should-trigger]
+runs: 2
+execution:
+  prompt: "Give me the visual direction and vibe for the public launch page of Ledgerline, a bookkeeping tool for freelance translators. Fonts, colours, layout, the hero. Our designer's first idea is a purple-to-blue gradient hero with Inter and centred text, which feels generic to me."
+  max_turns: 12
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?surface-craft\""
+  - name: direction-card-avoids-slop
+    type: llm
+    criteria: "PASS only if the final answer gives a concrete visual direction (named typefaces each with a stated role, one accent colour, neutral colours, a layout for the hero) and does not recommend a purple-to-blue gradient hero, Inter chosen only as a default, or centring everything. FAIL if it endorses the designer's first idea unchanged."

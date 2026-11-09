@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: surface-craft--no-trigger-commit-message
+description: "Should NOT trigger surface-craft: a commit message is not a public surface."
+tags: [surface-craft, should-not-trigger]
+runs: 2
+execution:
+  prompt: "Write a conventional commit message for a change that renames the function buildRota to generateRota and updates its two call sites."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?surface-craft\""
+    min: 0
+    max: 0
+    arm: both
