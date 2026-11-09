@@ -1,0 +1,26 @@
+schema_version: "1.1"
+name: langgraph-patterns--outcome-a
+description: "Should trigger langgraph-patterns; outcome graded."
+tags: [langgraph-patterns, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Build a LangGraph agent with a human approval step before it sends any email, and checkpointing so it can pause and resume."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?langgraph-patterns\""
+  - name: rx-0
+    type: regex
+    pattern: "StateGraph"
+    flags: i
+  - name: rx-1
+    type: regex
+    pattern: "interrupt|checkpointer|MemorySaver|checkpoint"
+    flags: i
+  - name: judged-2
+    type: llm
+    criteria: "PASS only if the code or design uses a StateGraph with a checkpointer and a human-in-the-loop pause (interrupt or equivalent) before the send step."
