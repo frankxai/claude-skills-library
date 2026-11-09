@@ -143,9 +143,9 @@ including cloud sessions that clone one site repo and nothing else. Never edit
 
 | Agent | Spec version | Compiled at agentic-creator-os | Synced |
 |---|---|---|---|
-| `worker-web-builder` | 1.0.0 | `86204a3aa9af` (ccr-cb0551ef-mlbwjk) | 2026-10-21 |
-| `worker-web-steward` | 1.0.0 | `86204a3aa9af` (ccr-cb0551ef-mlbwjk) | 2026-10-21 |
-| `worker-visual-qa` | 1.1.0 | `86204a3aa9af` (ccr-cb0551ef-mlbwjk) | 2026-10-21 |
+| `worker-web-builder` | 1.0.0 | `7fec5405900f` (main) | 2026-11-09 |
+| `worker-web-steward` | 1.0.0 | `7fec5405900f` (main) | 2026-11-09 |
+| `worker-visual-qa` | 1.1.0 | `7fec5405900f` (main) | 2026-11-09 |
 
 <!-- AGENT-PINS:END -->
 
