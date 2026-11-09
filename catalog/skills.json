@@ -5,11 +5,11 @@
     "name": "claude-skills-library",
     "repo": "frankxai/claude-skills-library",
     "description": "FrankX multi-brand plugin marketplace: the Agent Skills library plus validated brand packs for GenCreator creators and Starlight Academy.",
-    "pluginCount": 4
+    "pluginCount": 5
   },
   "totals": {
-    "pluginsWithListedSkills": 1,
-    "skills": 114,
+    "pluginsWithListedSkills": 2,
+    "skills": 115,
     "skillsWithEvals": 0,
     "pluginsFromOtherRepos": 3
   },
@@ -774,6 +774,30 @@
         "codex": "Clone https://github.com/frankxai/starlight-academy-plugin at 68e2da44ace583d0bcf13a5bd38fae41f4057401, then copy the skill folders under plugins/starlight-department-lab/skills/ into ~/.agents/skills/ or <repo>/.agents/skills/.",
         "skillsCli": null,
         "note": "Skills live in another repo and are not listed here (not fetched). codex paths from https://learn.chatgpt.com/docs/build-skills; the plugin's skills directory layout is assumed, not verified."
+      }
+    },
+    {
+      "name": "starlight-revenue-team",
+      "brand": null,
+      "description": "Seven commands that turn finished work into shipped, measured work: morning pulse, PR to merged, content scored by a second provider, demand capture, skill packs and licence-checked harvesting. Every send, spend and merge stays with a person.",
+      "source": {
+        "type": "local",
+        "path": "./plugins/starlight-revenue-team"
+      },
+      "skillCount": 1,
+      "skills": [
+        {
+          "name": "revenue-protocol",
+          "description": "Operating rules for the starlight-revenue-team commands - the 30-point rubric, the maker-checker rule, the human gates, and the order work is chosen in. Use when running /today, /ship, /piece, /critic, /demand, /pack or /harvest, or when deciding whether a piece, page or pull request is good enough to ship.",
+          "path": "plugins/starlight-revenue-team/skills/revenue-protocol",
+          "hasEvals": false
+        }
+      ],
+      "install": {
+        "claudeCode": "/plugin marketplace add frankxai/claude-skills-library then /plugin install starlight-revenue-team@claude-skills-library",
+        "codex": "Copy any skill folder listed under skills[].path into ~/.agents/skills/ (user) or <repo>/.agents/skills/ (project); Codex discovers SKILL.md folders there.",
+        "skillsCli": "npx skills add frankxai/claude-skills-library",
+        "note": "codex paths from https://learn.chatgpt.com/docs/build-skills; skillsCli syntax (owner/repo, -a codex|claude-code, -s <skill>) from https://github.com/vercel-labs/skills. Neither was executed against this repo."
       }
     }
   ]
