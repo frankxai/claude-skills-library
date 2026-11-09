@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="964" height="1201" viewBox="0 0 964 1201" font-family="Liberation Mono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13">
+<rect width="964" height="1201" fill="#0d1117"/><rect width="964" height="57" fill="#161b22"/>
+<circle cx="20" cy="20" r="5.5" fill="#ff5f56"/>
+<circle cx="38" cy="20" r="5.5" fill="#ffbd2e"/>
+<circle cx="56" cy="20" r="5.5" fill="#27c93f"/>
+<text x="78" y="24" fill="#e6edf3" font-weight="bold" xml:space="preserve">07 public remote command exactly as in CARD.md Install (Claude HOME, then a separate Codex HOME)  |  2026-10-24T</text>
+<text x="78" y="42" fill="#e6edf3" font-weight="bold" xml:space="preserve">01:02:06Z</text>
+<text x="14" y="82" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-4YBb  # new empty HOME</text>
+<text x="14" y="100" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="118" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="764.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 claude plugin marketplace add frankxai/claude-skills-library</text>
+<text x="14" y="136" fill="#e6edf3" xml:space="preserve" textLength="865.8" lengthAdjust="spacingAndGlyphs">Adding marketplace…SSH not configured, cloning via HTTPS: https://github.com/frankxai/claude-skills-library.git</text>
+<text x="14" y="154" fill="#e6edf3" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs">Refreshing marketplace cache (timeout: 120s)…</text>
+<text x="14" y="172" fill="#e6edf3" xml:space="preserve" textLength="694.2" lengthAdjust="spacingAndGlyphs">Cloning repository (timeout: 120s): https://github.com/frankxai/claude-skills-library.git</text>
+<text x="14" y="190" fill="#e6edf3" xml:space="preserve" textLength="304.2" lengthAdjust="spacingAndGlyphs">Clone complete, validating marketplace…</text>
+<text x="14" y="208" fill="#e6edf3" xml:space="preserve" textLength="265.2" lengthAdjust="spacingAndGlyphs">Cleaning up old marketplace cache…</text>
+<text x="14" y="226" fill="#e6edf3" xml:space="preserve" textLength="647.4" lengthAdjust="spacingAndGlyphs">✔ Successfully added marketplace: claude-skills-library (declared in user settings)</text>
+<text x="14" y="244" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:02:06Z)</text>
+<text x="14" y="280" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="772.2" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 claude plugin install skills-with-evals@claude-skills-library</text>
+<text x="14" y="298" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">Installing plugin &quot;skills-with-evals@claude-skills-library&quot;...✘ Failed to install plugin &quot;skills-with-evals@claude-skill</text>
+<text x="14" y="316" fill="#e6edf3" xml:space="preserve" textLength="678.6" lengthAdjust="spacingAndGlyphs">s-library&quot;: Plugin &quot;skills-with-evals&quot; not found in marketplace &quot;claude-skills-library&quot;</text>
+<text x="14" y="334" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 1  (started 2026-10-24T01:02:07Z)</text>
+<text x="14" y="370" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ cd $HOME/.claude/plugins/marketplaces/claude-skills-library &amp;&amp; git rev-parse HEAD &amp;&amp; git branc</text>
+<text x="14" y="388" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">h --show-current &amp;&amp; python3 -c &quot;import json;print(&#x27;plugins on main:&#x27;, [p[&#x27;name&#x27;] for p in json.load(open(&#x27;.claude-plugin</text>
+<text x="14" y="406" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="265.2" lengthAdjust="spacingAndGlyphs">/marketplace.json&#x27;))[&#x27;plugins&#x27;]])&quot;</text>
+<text x="14" y="424" fill="#e6edf3" xml:space="preserve" textLength="312.0" lengthAdjust="spacingAndGlyphs">8f323a8b59a9bf706edbf940d040b5a2a6798efc</text>
+<text x="14" y="442" fill="#e6edf3" xml:space="preserve" textLength="31.2" lengthAdjust="spacingAndGlyphs">main</text>
+<text x="14" y="460" fill="#e6edf3" xml:space="preserve" textLength="858.0" lengthAdjust="spacingAndGlyphs">plugins on main: [&#x27;claude-skills-library&#x27;, &#x27;creator-os-core&#x27;, &#x27;starlight-academy&#x27;, &#x27;starlight-department-lab&#x27;]</text>
+<text x="14" y="478" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:02:12Z)</text>
+<text x="14" y="514" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="912.6" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 120 claude plugin validate $HOME/.claude/plugins/marketplaces/claude-skills-library</text>
+<text x="14" y="532" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">Validating marketplace manifest: /agent/workspace/g2-home-4YBb/.claude/plugins/marketplaces/claude-skills-library/.claud</text>
+<text x="14" y="550" fill="#e6edf3" xml:space="preserve" textLength="195.0" lengthAdjust="spacingAndGlyphs">e-plugin/marketplace.json</text>
+<text x="14" y="586" fill="#e6edf3" xml:space="preserve" textLength="124.8" lengthAdjust="spacingAndGlyphs">✘ Found 1 error:</text>
+<text x="14" y="622" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">  ❯ plugins[0].name: Plugin name &quot;claude-skills-library&quot; is reserved: it passes as one of Anthropic&#x27;s own. A third party</text>
+<text x="14" y="640" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">&#x27;s plugin name cannot start with &quot;claude-&quot;, &quot;anthropic-&quot;, &quot;anthropics-&quot;, or &quot;cc-plugin-&quot;, be &quot;claude&quot;, &quot;anthropic&quot;, &quot;ant</text>
+<text x="14" y="658" fill="#e6edf3" xml:space="preserve" textLength="920.4" lengthAdjust="spacingAndGlyphs">hropics&quot;, &quot;claude-code&quot;, or &quot;claude-mods&quot;, or put &quot;official&quot; beside &quot;claude&quot; or &quot;anthropic&quot;. Name it for what it does.</text>
+<text x="14" y="694" fill="#e6edf3" xml:space="preserve" textLength="148.2" lengthAdjust="spacingAndGlyphs">✘ Validation failed</text>
+<text x="14" y="712" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 1  (started 2026-10-24T01:04:26Z)</text>
+<text x="14" y="748" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-m5Oc  # new empty HOME</text>
+<text x="14" y="766" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="784" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="756.6" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 codex plugin marketplace add frankxai/claude-skills-library</text>
+<text x="14" y="802" fill="#e6edf3" xml:space="preserve" textLength="787.8" lengthAdjust="spacingAndGlyphs">Added marketplace `claude-skills-library` from https://github.com/frankxai/claude-skills-library.git.</text>
+<text x="14" y="820" fill="#e6edf3" xml:space="preserve" textLength="811.2" lengthAdjust="spacingAndGlyphs">Installed marketplace root: /agent/workspace/g2-home-m5Oc/.codex/.tmp/marketplaces/claude-skills-library</text>
+<text x="14" y="838" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:02:16Z)</text>
+<text x="14" y="874" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="733.2" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 codex plugin add skills-with-evals@claude-skills-library</text>
+<text x="14" y="892" fill="#e6edf3" xml:space="preserve" textLength="670.8" lengthAdjust="spacingAndGlyphs">Error: plugin `skills-with-evals` was not found in marketplace `claude-skills-library`</text>
+<text x="14" y="910" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 1  (started 2026-10-24T01:02:17Z)</text>
+<text x="14" y="946" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="421.2" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 60 codex plugin list</text>
+<text x="14" y="964" fill="#e6edf3" xml:space="preserve" textLength="273.0" lengthAdjust="spacingAndGlyphs">Marketplace `claude-skills-library`</text>
+<text x="14" y="982" fill="#e6edf3" xml:space="preserve" textLength="842.4" lengthAdjust="spacingAndGlyphs">/agent/workspace/g2-home-m5Oc/.codex/.tmp/marketplaces/claude-skills-library/.claude-plugin/marketplace.json</text>
+<text x="14" y="1018" fill="#e6edf3" xml:space="preserve" textLength="608.4" lengthAdjust="spacingAndGlyphs">PLUGIN                                          STATUS         VERSION  SOURCE</text>
+<text x="14" y="1036" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">claude-skills-library@claude-skills-library     not installed           /agent/workspace/g2-home-m5Oc/.codex/.tmp/market</text>
+<text x="14" y="1054" fill="#e6edf3" xml:space="preserve" textLength="218.4" lengthAdjust="spacingAndGlyphs">places/claude-skills-library</text>
+<text x="14" y="1072" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">creator-os-core@claude-skills-library           not installed           https://github.com/frankxai/agentic-creator-os.g</text>
+<text x="14" y="1090" fill="#e6edf3" xml:space="preserve" textLength="733.2" lengthAdjust="spacingAndGlyphs">it, path `plugins/creator-os-core`, ref `main`, sha `e919db95667d9d59c4fc32d971fe4872538a2734`</text>
+<text x="14" y="1108" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">starlight-academy@claude-skills-library         not installed           https://github.com/frankxai/starlight-academy-pl</text>
+<text x="14" y="1126" fill="#e6edf3" xml:space="preserve" textLength="795.6" lengthAdjust="spacingAndGlyphs">ugin.git, path `plugins/starlight-academy`, ref `main`, sha `68e2da44ace583d0bcf13a5bd38fae41f4057401`</text>
+<text x="14" y="1144" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">starlight-department-lab@claude-skills-library  not installed           https://github.com/frankxai/starlight-academy-pl</text>
+<text x="14" y="1162" fill="#e6edf3" xml:space="preserve" textLength="850.2" lengthAdjust="spacingAndGlyphs">ugin.git, path `plugins/starlight-department-lab`, ref `main`, sha `68e2da44ace583d0bcf13a5bd38fae41f4057401`</text>
+<text x="14" y="1180" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:02:21Z)</text>
+</svg>

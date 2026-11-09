@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: nextjs-expert--no-trigger
+description: "Should NOT trigger nextjs-expert: an adjacent but different task."
+tags: [nextjs-expert, should-not-trigger]
+runs: 3
+execution:
+  prompt: "Write an Express.js middleware that logs each request's method, path and duration in milliseconds."
+  max_turns: 4
+  allowed_tools: [Skill, Read]

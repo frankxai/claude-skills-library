@@ -1,0 +1,78 @@
+{
+  "repo": "/agent/workspace/skills-lane/lib",
+  "plugin": "skills-with-evals@claude-skills-library",
+  "startedAt": "2026-10-24T02:43:06.215Z",
+  "home": "(throwaway, deleted)",
+  "runtimes": {
+    "claude-code-cost": "~698 tok",
+    "claude-code": {
+      "ok": true,
+      "steps": [
+        {
+          "cmd": "claude plugin marketplace add /agent/workspace/skills-lane/lib",
+          "code": 0
+        },
+        {
+          "cmd": "claude plugin install skills-with-evals@claude-skills-library",
+          "code": 0
+        },
+        {
+          "cmd": "claude plugin details skills-with-evals@claude-skills-library",
+          "code": 0
+        }
+      ],
+      "skillsSeen": [
+        "ai-architect-review",
+        "book-publishing",
+        "excellence-book-writing",
+        "github-code-review",
+        "langgraph-patterns",
+        "mcp-architecture",
+        "nextjs-expert",
+        "product-management-expert",
+        "skill-builder",
+        "ui-ux-design-expert"
+      ],
+      "missing": [],
+      "extra": []
+    },
+    "codex": {
+      "ok": true,
+      "steps": [
+        {
+          "cmd": "codex plugin marketplace add /agent/workspace/skills-lane/lib",
+          "code": 0
+        },
+        {
+          "cmd": "codex plugin add skills-with-evals@claude-skills-library",
+          "code": 0
+        },
+        {
+          "cmd": "codex debug prompt-input hello",
+          "code": 0
+        }
+      ],
+      "skillsSeen": [
+        "ai-architect-review",
+        "book-publishing",
+        "excellence-book-writing",
+        "github-code-review",
+        "langgraph-patterns",
+        "mcp-architecture",
+        "nextjs-expert",
+        "product-management-expert",
+        "skill-builder",
+        "ui-ux-design-expert"
+      ],
+      "missing": [],
+      "extra": []
+    }
+  },
+  "pass": true,
+  "versions": {
+    "claude": "2.1.310 (Claude Code)",
+    "codex": "codex-cli 0.164.0"
+  },
+  "finishedAt": "2026-10-24T02:43:07.194Z",
+  "note": "Re-run on the code at af15ec6 (G3 P1-6). The original install-test.json beside this file is the G2 stranger's output at 1222849, before the warning filter existed, and is kept unedited as evidence."
+}

@@ -1,0 +1,118 @@
+# Install test matrix for the skills-with-evals pack.
+#
+# Destination: .github/workflows/install-matrix.yml. Frank's local agent places it; the Hyperagent connector cannot
+# write .github/workflows (GitHub answers 403: the app has no `workflows` permission).
+#
+# On a clean runner per OS (a fresh clone of the PR head), it installs Claude Code and the Codex CLI, then checks:
+#   1. `claude plugin validate .`             the marketplace manifest passes Claude Code's own validator
+#   2. scripts/install-test.mjs (local clone)  Claude Code installs the plugin and lists all 10 skills; Codex adds
+#                                              it and shows all 10 in the model-visible skill list (throwaway HOME)
+#   3. scripts/install-test.mjs (GitHub)       the same, with the marketplace added from GitHub pinned to this PR's
+#                                              branch, which is the command a buyer types (same-repo PRs only)
+# No model is called and no secret is used. Claude Code runs at the tested version and at `latest`, so a CLI
+# change that breaks installation shows up here first.
+
+name: install-matrix
+
+on:
+  pull_request:
+    paths:
+      - '.claude-plugin/**'
+      - 'free-skills/**'
+      - 'products/skills-with-evals/**'
+      - 'scripts/install-test.mjs'
+      - '.github/workflows/install-matrix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: install-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    name: install (${{ matrix.os }}, Claude Code ${{ matrix.claude }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        claude: ['2.1.310', 'latest']
+    env:
+      CODEX_VERSION: '0.164.0'
+      CLAUDE_TARGET: ${{ matrix.claude }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Fresh clone of the PR head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash -s "$CLAUDE_TARGET"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install Claude Code (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & ([scriptblock]::Create((Invoke-RestMethod https://claude.ai/install.ps1))) $env:CLAUDE_TARGET
+          "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+      - name: Install Codex CLI (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL "https://github.com/openai/codex/releases/download/rust-v${CODEX_VERSION}/codex-x86_64-unknown-linux-musl.tar.gz" \
+            | tar xz -C "$RUNNER_TEMP"
+          install -m 755 "$RUNNER_TEMP/codex-x86_64-unknown-linux-musl" "$HOME/.local/bin/codex"
+
+      - name: Install Codex CLI (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dir = "$env:USERPROFILE\.local\bin"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/openai/codex/releases/download/rust-v$env:CODEX_VERSION/codex-x86_64-pc-windows-msvc.exe" -OutFile "$dir\codex.exe"
+
+      - name: Versions
+        run: |
+          claude --version
+          codex --version
+
+      - name: claude plugin validate
+        run: claude plugin validate .
+
+      - name: Install test from the fresh clone (Claude Code plugin + Codex skill loading)
+        run: node scripts/install-test.mjs --json "install-local-${{ runner.os }}-${{ matrix.claude }}.json"
+
+      - name: Install test from GitHub, pinned to this PR's branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          node scripts/install-test.mjs \
+            --claude-source "${REPO}#${BRANCH}" \
+            --codex-source "${REPO}@${BRANCH}" \
+            --json "install-remote-${{ runner.os }}-${{ matrix.claude }}.json"
+
+      - name: Keep the receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-${{ runner.os }}-${{ matrix.claude }}
+          path: install-*.json
+          if-no-files-found: warn

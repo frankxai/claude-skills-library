@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="964" height="1309" viewBox="0 0 964 1309" font-family="Liberation Mono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13">
+<rect width="964" height="1309" fill="#0d1117"/><rect width="964" height="57" fill="#161b22"/>
+<circle cx="20" cy="20" r="5.5" fill="#ff5f56"/>
+<circle cx="38" cy="20" r="5.5" fill="#ffbd2e"/>
+<circle cx="56" cy="20" r="5.5" fill="#27c93f"/>
+<text x="78" y="24" fill="#e6edf3" font-weight="bold" xml:space="preserve">04 Codex: marketplace add + plugin add + model-visible skills (prompt-input FILTERED with: sed &#x27;s/\\n/\n/g&#x27; | gr</text>
+<text x="78" y="42" fill="#e6edf3" font-weight="bold" xml:space="preserve">ep -E &#x27;^(### Available skills|- skills-with-evals:)&#x27;)  |  2026-10-24T01:01:04Z</text>
+<text x="14" y="82" fill="#8b949e" xml:space="preserve" textLength="920.4" lengthAdjust="spacingAndGlyphs"># codex debug prompt-input prints ~68 KB of JSON; the full unfiltered output is transcripts/04c-codex-prompt-input.out</text>
+<text x="14" y="100" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-uEVl  # new empty HOME</text>
+<text x="14" y="118" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="136" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="717.6" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 120 codex plugin marketplace add /agent/workspace/g2-clone</text>
+<text x="14" y="154" fill="#e6edf3" xml:space="preserve" textLength="569.4" lengthAdjust="spacingAndGlyphs">Added marketplace `claude-skills-library` from /agent/workspace/g2-clone.</text>
+<text x="14" y="172" fill="#e6edf3" xml:space="preserve" textLength="413.4" lengthAdjust="spacingAndGlyphs">Installed marketplace root: /agent/workspace/g2-clone</text>
+<text x="14" y="190" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:01:04Z)</text>
+<text x="14" y="226" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="733.2" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 codex plugin add skills-with-evals@claude-skills-library</text>
+<text x="14" y="244" fill="#e6edf3" xml:space="preserve" textLength="577.2" lengthAdjust="spacingAndGlyphs">Added plugin `skills-with-evals` from marketplace `claude-skills-library`.</text>
+<text x="14" y="262" fill="#e6edf3" xml:space="preserve" textLength="928.2" lengthAdjust="spacingAndGlyphs">Installed plugin root: /agent/workspace/g2-home-uEVl/.codex/plugins/cache/claude-skills-library/skills-with-evals/local</text>
+<text x="14" y="280" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:01:04Z)</text>
+<text x="14" y="316" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ set -o pipefail; timeout 180 codex debug prompt-input &quot;Review this pull request diff for bugs </text>
+<text x="14" y="334" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="733.2" lengthAdjust="spacingAndGlyphs">before I merge it&quot; | sed &#x27;s/\\n/\n/g&#x27; | grep -E &#x27;^(### Available skills|- skills-with-evals:)&#x27;</text>
+<text x="14" y="352" fill="#e6edf3" xml:space="preserve" textLength="156.0" lengthAdjust="spacingAndGlyphs">### Available skills</text>
+<text x="14" y="370" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:ai-architect-review: Review the architecture of a system that calls a language model. Use when addin</text>
+<text x="14" y="388" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">g an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system that worked in a demo i</text>
+<text x="14" y="406" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">s being prepared for production; or when asked to audit, review, or plan AI/agent architecture. Checks the four decision</text>
+<text x="14" y="424" fill="#e6edf3" xml:space="preserve" textLength="748.8" lengthAdjust="spacingAndGlyphs">s that are expensive to reverse, then the seven planes and their boundaries. (file: r1/SKILL.md)</text>
+<text x="14" y="442" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:book-publishing: Multi-book content, voice, and production workflows for nonfiction authoring. Use w</text>
+<text x="14" y="460" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">hen planning a book, maintaining consistent voice across chapters, structuring a manuscript, or running an end-to-end pu</text>
+<text x="14" y="478" fill="#e6edf3" xml:space="preserve" textLength="296.4" lengthAdjust="spacingAndGlyphs">blishing pipeline. (file: r2/SKILL.md)</text>
+<text x="14" y="496" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:excellence-book-writing: High-quality nonfiction writing patterns for structure, clarity, narrative </text>
+<text x="14" y="514" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">flow, and editorial polish. Use when drafting or revising long-form nonfiction, tightening chapters, or raising prose fr</text>
+<text x="14" y="532" fill="#e6edf3" xml:space="preserve" textLength="358.8" lengthAdjust="spacingAndGlyphs">om competent to excellent. (file: r3/SKILL.md)</text>
+<text x="14" y="550" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:github-code-review: Comprehensive GitHub pull-request code review with multi-agent coordination. Use</text>
+<text x="14" y="568" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs"> when reviewing a PR or diff, auditing changes for correctness/security/style before merge, or generating actionable inl</text>
+<text x="14" y="586" fill="#e6edf3" xml:space="preserve" textLength="312.0" lengthAdjust="spacingAndGlyphs">ine review comments. (file: r4/SKILL.md)</text>
+<text x="14" y="604" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:langgraph-patterns: Production-grade agentic workflows with LangGraph — graph orchestration, state m</text>
+<text x="14" y="622" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">achines, human-in-the-loop, and advanced control flow. Use when building or debugging a LangGraph app, modeling agent st</text>
+<text x="14" y="640" fill="#e6edf3" xml:space="preserve" textLength="561.6" lengthAdjust="spacingAndGlyphs">ate, or adding checkpoints and human approval steps. (file: r5/SKILL.md)</text>
+<text x="14" y="658" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:mcp-architecture: Design and implement Model Context Protocol servers with resources, tools, prompts</text>
+<text x="14" y="676" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">, and security best practices. Use when architecting an MCP server, modeling its resources/tools/prompts, or integrating</text>
+<text x="14" y="694" fill="#e6edf3" xml:space="preserve" textLength="390.0" lengthAdjust="spacingAndGlyphs"> a service as an MCP endpoint. (file: r6/SKILL.md)</text>
+<text x="14" y="712" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:nextjs-expert: Comprehensive Next.js expertise across App Router, server/client boundaries, data and</text>
+<text x="14" y="730" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs"> caching patterns, and production operations. Use when building, debugging, or optimizing a Next.js app, deciding server</text>
+<text x="14" y="748" fill="#e6edf3" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs"> vs client components, or resolving App Router gotchas. (file: r7/SKILL.md)</text>
+<text x="14" y="766" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:product-management-expert: Product management expertise for strategy, discovery, prioritization, roa</text>
+<text x="14" y="784" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">dmaps, PRDs, metrics, and stakeholder communication. Use when defining what to build, why, and how to measure success. (</text>
+<text x="14" y="802" fill="#e6edf3" xml:space="preserve" textLength="140.4" lengthAdjust="spacingAndGlyphs">file: r8/SKILL.md)</text>
+<text x="14" y="820" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:skill-builder: Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure st</text>
+<text x="14" y="838" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">ructure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate </text>
+<text x="14" y="856" fill="#e6edf3" xml:space="preserve" textLength="647.4" lengthAdjust="spacingAndGlyphs">skill templates, or understand the Claude Skills specification. (file: r9/SKILL.md)</text>
+<text x="14" y="874" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">- skills-with-evals:ui-ux-design-expert: Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user</text>
+<text x="14" y="892" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs"> research, and creating inclusive, user-centered interfaces with 2025 best practices. Use when designing or auditing an </text>
+<text x="14" y="910" fill="#e6edf3" xml:space="preserve" textLength="787.8" lengthAdjust="spacingAndGlyphs">interface, building a design system, or checking accessibility against WCAG 2.2. (file: r10/SKILL.md)</text>
+<text x="14" y="928" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:01:32Z)</text>
+<text x="14" y="964" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ set -o pipefail; timeout 180 codex debug prompt-input &quot;Review this pull request diff for bugs </text>
+<text x="14" y="982" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="624.0" lengthAdjust="spacingAndGlyphs">before I merge it&quot; | grep -o &#x27;\- skills-with-evals:[a-z0-9-]*&#x27; | sort -u | wc -l</text>
+<text x="14" y="1000" fill="#e6edf3" xml:space="preserve" textLength="15.6" lengthAdjust="spacingAndGlyphs">10</text>
+<text x="14" y="1018" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:01:37Z)</text>
+<text x="14" y="1054" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="725.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 60 codex plugin list 2&gt;&amp;1 || timeout 60 codex plugin --help</text>
+<text x="14" y="1072" fill="#e6edf3" xml:space="preserve" textLength="273.0" lengthAdjust="spacingAndGlyphs">Marketplace `claude-skills-library`</text>
+<text x="14" y="1090" fill="#e6edf3" xml:space="preserve" textLength="444.6" lengthAdjust="spacingAndGlyphs">/agent/workspace/g2-clone/.claude-plugin/marketplace.json</text>
+<text x="14" y="1126" fill="#e6edf3" xml:space="preserve" textLength="647.4" lengthAdjust="spacingAndGlyphs">PLUGIN                                          STATUS              VERSION  SOURCE</text>
+<text x="14" y="1144" fill="#e6edf3" xml:space="preserve" textLength="795.6" lengthAdjust="spacingAndGlyphs">claude-skills-library@claude-skills-library     not installed                /agent/workspace/g2-clone</text>
+<text x="14" y="1162" fill="#e6edf3" xml:space="preserve" textLength="795.6" lengthAdjust="spacingAndGlyphs">skills-with-evals@claude-skills-library         installed, enabled  local    /agent/workspace/g2-clone</text>
+<text x="14" y="1180" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">creator-os-core@claude-skills-library           not installed                https://github.com/frankxai/agentic-creator</text>
+<text x="14" y="1198" fill="#e6edf3" xml:space="preserve" textLength="772.2" lengthAdjust="spacingAndGlyphs">-os.git, path `plugins/creator-os-core`, ref `main`, sha `e919db95667d9d59c4fc32d971fe4872538a2734`</text>
+<text x="14" y="1216" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">starlight-academy@claude-skills-library         not installed                https://github.com/frankxai/starlight-acade</text>
+<text x="14" y="1234" fill="#e6edf3" xml:space="preserve" textLength="834.6" lengthAdjust="spacingAndGlyphs">my-plugin.git, path `plugins/starlight-academy`, ref `main`, sha `68e2da44ace583d0bcf13a5bd38fae41f4057401`</text>
+<text x="14" y="1252" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">starlight-department-lab@claude-skills-library  not installed                https://github.com/frankxai/starlight-acade</text>
+<text x="14" y="1270" fill="#e6edf3" xml:space="preserve" textLength="889.2" lengthAdjust="spacingAndGlyphs">my-plugin.git, path `plugins/starlight-department-lab`, ref `main`, sha `68e2da44ace583d0bcf13a5bd38fae41f4057401`</text>
+<text x="14" y="1288" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:01:37Z)</text>
+</svg>

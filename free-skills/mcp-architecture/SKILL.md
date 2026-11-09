@@ -9,6 +9,13 @@ version: 1.0.0
 ## Purpose
 Master the Model Context Protocol (MCP) to build standardized, reusable integrations between AI systems and data sources, eliminating the N×M integration problem.
 
+## When not to use
+
+- SQL, data modelling or analytics questions, even when an MCP server will later expose the data.
+- An ordinary REST or GraphQL API that is not an MCP server.
+- Reviewing the whole LLM application around the server (agent loop, evals, cost, durability): use `ai-architect-review`.
+- Verifying which protocol revision a client supports. Check the specification for the revision you build against; revisions are dated and move.
+
 ## What is MCP?
 
 ### Model Context Protocol

@@ -1,0 +1,52 @@
+diff --git a/.github/workflows/skill-eval.yml b/.github/workflows/skill-eval.yml
+index 69bf73b..fe69fd8 100644
+--- a/.github/workflows/skill-eval.yml
++++ b/.github/workflows/skill-eval.yml
+@@ -19,8 +19,10 @@ on:
+     paths:
+       - 'evals/**'
+       - 'free-skills/**/SKILL.md'
+-      - 'scripts/eval-skill.mjs'
+-      - 'scripts/tests/eval-skill.test.mjs'
++      - 'scripts/**'
++      - '.claude-plugin/**'
++      - 'catalog/**'
++      - 'products/skills-with-evals/**'
+       - '.github/workflows/skill-eval.yml'
+   workflow_dispatch:
+     inputs:
+@@ -48,7 +50,14 @@ jobs:
+         with:
+           node-version: '22'
+       - name: Unit tests (no network, no keys)
+-        run: node --test evals/skill-eval/run.test.mjs scripts/tests/eval-skill.test.mjs
++        run: node --test evals/skill-eval/run.test.mjs scripts/tests/eval-skill.test.mjs scripts/tests/eval-pack.test.mjs
++      - name: Trigger lint for the skills-with-evals pack (0 errors required)
++        run: node scripts/trigger-lint.mjs --pack products/skills-with-evals/pack.json
++      - name: Every CARD.md is generated from current files
++        run: node scripts/eval-card.mjs --check
++      # catalog-check.yml only runs on PRs to main; this keeps the catalog honest on stacked PRs too.
++      - name: catalog/skills.json matches marketplace.json and SKILL.md frontmatter
++        run: node scripts/build-catalog.mjs --check
+ 
+   eval:
+     needs: test
+@@ -106,7 +115,8 @@ jobs:
+     runs-on: ubuntu-latest
+     timeout-minutes: 90
+     env:
+-      LIFT_SKILLS: ui-ux-design-expert book-publishing excellence-book-writing
++      # Every skill in the pack manifest, read at run time so the list cannot drift (G3 P1-4).
++      LIFT_PACK: products/skills-with-evals/pack.json
+       APPROVED_SHA: ${{ vars.LIFT_APPROVED_SHA }}
+     steps:
+       # pull_request checks out the merge commit by default; run the approved head instead.
+@@ -136,6 +146,8 @@ jobs:
+             echo "::error::CLAUDE_CODE_OAUTH_TOKEN is empty; the lift lane cannot authenticate."
+             exit 1
+           fi
++          LIFT_SKILLS=$(node -p "require('./$LIFT_PACK').skills.join(' ')")
++          echo "lift skills: $LIFT_SKILLS"
+           for s in $LIFT_SKILLS; do
+             node scripts/eval-skill.mjs "$s" --runs 3 --max-cost-usd 5 --model claude-sonnet-5-5 --by "github-actions run ${{ github.run_id }}" && code=0 || code=$?
+             echo "$s exit $code" | tee -a lift-exits.txt

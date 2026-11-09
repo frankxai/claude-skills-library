@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="964" height="751" viewBox="0 0 964 751" font-family="Liberation Mono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13">
+<rect width="964" height="751" fill="#0d1117"/><rect width="964" height="57" fill="#161b22"/>
+<circle cx="20" cy="20" r="5.5" fill="#ff5f56"/>
+<circle cx="38" cy="20" r="5.5" fill="#ffbd2e"/>
+<circle cx="56" cy="20" r="5.5" fill="#27c93f"/>
+<text x="78" y="24" fill="#e6edf3" font-weight="bold" xml:space="preserve">08 EXTRA probe, NOT in the public instructions: same remote install pinned to the PR branch (new HOME each)  |  </text>
+<text x="78" y="42" fill="#e6edf3" font-weight="bold" xml:space="preserve">2026-10-24T01:02:38Z</text>
+<text x="14" y="82" fill="#8b949e" xml:space="preserve" textLength="811.2" lengthAdjust="spacingAndGlyphs"># Purpose: show the remote failure in 07 is only because main lacks the entry. Not a public instruction.</text>
+<text x="14" y="100" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-BMCj  # new empty HOME</text>
+<text x="14" y="118" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="136" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 claude plugin marketplace add &#x27;https://github.com/frankxai/claude-skills-library.g</text>
+<text x="14" y="154" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="265.2" lengthAdjust="spacingAndGlyphs">it#agent/hyperagent/eval-pack-rc1&#x27;</text>
+<text x="14" y="172" fill="#e6edf3" xml:space="preserve" textLength="499.2" lengthAdjust="spacingAndGlyphs">Adding marketplace…Refreshing marketplace cache (timeout: 120s)…</text>
+<text x="14" y="190" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">Cloning repository (timeout: 120s): https://github.com/frankxai/claude-skills-library.git (ref: agent/hyperagent/eval-pa</text>
+<text x="14" y="208" fill="#e6edf3" xml:space="preserve" textLength="54.6" lengthAdjust="spacingAndGlyphs">ck-rc1)</text>
+<text x="14" y="226" fill="#e6edf3" xml:space="preserve" textLength="304.2" lengthAdjust="spacingAndGlyphs">Clone complete, validating marketplace…</text>
+<text x="14" y="244" fill="#e6edf3" xml:space="preserve" textLength="265.2" lengthAdjust="spacingAndGlyphs">Cleaning up old marketplace cache…</text>
+<text x="14" y="262" fill="#e6edf3" xml:space="preserve" textLength="647.4" lengthAdjust="spacingAndGlyphs">✔ Successfully added marketplace: claude-skills-library (declared in user settings)</text>
+<text x="14" y="280" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:02:38Z)</text>
+<text x="14" y="316" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 claude plugin install skills-with-evals@claude-skills-library &amp;&amp; timeout 60 claude</text>
+<text x="14" y="334" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="569.4" lengthAdjust="spacingAndGlyphs"> plugin details skills-with-evals@claude-skills-library | grep &#x27;Skills (&#x27;</text>
+<text x="14" y="352" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">Installing plugin &quot;skills-with-evals@claude-skills-library&quot;...✔ Successfully installed plugin: skills-with-evals@claude-</text>
+<text x="14" y="370" fill="#e6edf3" xml:space="preserve" textLength="218.4" lengthAdjust="spacingAndGlyphs">skills-library (scope: user)</text>
+<text x="14" y="388" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">  Skills (10)  ai-architect-review, book-publishing, excellence-book-writing, github-code-review, langgraph-patterns, mc</text>
+<text x="14" y="406" fill="#e6edf3" xml:space="preserve" textLength="717.6" lengthAdjust="spacingAndGlyphs">p-architecture, nextjs-expert, product-management-expert, skill-builder, ui-ux-design-expert</text>
+<text x="14" y="424" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:02:39Z)</text>
+<text x="14" y="460" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="881.4" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export PATH=~/.local/bin:$PATH STRANGER=/agent/workspace/g2-home-lvm7  # new empty HOME</text>
+<text x="14" y="478" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="585.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ export HOME=$STRANGER CODEX_HOME=$STRANGER/.codex</text>
+<text x="14" y="496" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ timeout 180 codex plugin marketplace add frankxai/claude-skills-library --ref agent/hyperagent</text>
+<text x="14" y="514" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="109.2" lengthAdjust="spacingAndGlyphs">/eval-pack-rc1</text>
+<text x="14" y="532" fill="#e6edf3" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">Added marketplace `claude-skills-library` from https://github.com/frankxai/claude-skills-library.git#agent/hyperagent/ev</text>
+<text x="14" y="550" fill="#e6edf3" xml:space="preserve" textLength="93.6" lengthAdjust="spacingAndGlyphs">al-pack-rc1.</text>
+<text x="14" y="568" fill="#e6edf3" xml:space="preserve" textLength="811.2" lengthAdjust="spacingAndGlyphs">Installed marketplace root: /agent/workspace/g2-home-lvm7/.codex/.tmp/marketplaces/claude-skills-library</text>
+<text x="14" y="586" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:02:39Z)</text>
+<text x="14" y="622" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">stranger@fresh-machine:~$ set -o pipefail; timeout 180 codex plugin add skills-with-evals@claude-skills-library &amp;&amp; timeo</text>
+<text x="14" y="640" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="936.0" lengthAdjust="spacingAndGlyphs">ut 180 codex debug prompt-input &#x27;Review this pull request diff for bugs before I merge it&#x27; | grep -o &#x27;\- skills-with-eva</text>
+<text x="14" y="658" fill="#3fb950" font-weight="bold" xml:space="preserve" textLength="249.6" lengthAdjust="spacingAndGlyphs">ls:[a-z0-9-]*&#x27; | sort -u | wc -l</text>
+<text x="14" y="676" fill="#e6edf3" xml:space="preserve" textLength="577.2" lengthAdjust="spacingAndGlyphs">Added plugin `skills-with-evals` from marketplace `claude-skills-library`.</text>
+<text x="14" y="694" fill="#e6edf3" xml:space="preserve" textLength="928.2" lengthAdjust="spacingAndGlyphs">Installed plugin root: /agent/workspace/g2-home-lvm7/.codex/plugins/cache/claude-skills-library/skills-with-evals/local</text>
+<text x="14" y="712" fill="#e6edf3" xml:space="preserve" textLength="15.6" lengthAdjust="spacingAndGlyphs">10</text>
+<text x="14" y="730" fill="#8b949e" xml:space="preserve" textLength="351.0" lengthAdjust="spacingAndGlyphs"># exit code 0  (started 2026-10-24T01:02:40Z)</text>
+</svg>
