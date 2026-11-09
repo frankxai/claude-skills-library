@@ -1,6 +1,6 @@
 ---
 name: web-release-gate
-description: The sequencing contract for any website or web-design work — new page, landing page, hero, redesign, component, layout, styling, motion, or visual polish on a web surface. Use whenever a task will change what a site looks like, feels like, moves like, or how it is interacted with, including any edit to .tsx/.jsx/.vue/.svelte/.css/.scss under app/, components/, pages/, src/, or styles/. Routes to the right specialist skill for each phase (ui-ux-pro-max, emil-design-eng, apple-design, review-animations, web-design-guidelines, core-web-vitals, visual-proof, image-to-code, extract-design-system, brandkit) and defines what "done" requires. Read this before writing UI code, not after.
+description: The sequencing contract for any website or web-design work — new page, landing page, hero, redesign, component, layout, styling, motion, or visual polish on a web surface. Use whenever a task will change what a site looks like, feels like, moves like, or how it is interacted with, including any edit to .tsx/.jsx/.vue/.svelte/.css/.scss under app/, components/, pages/, src/, or styles/. Routes to the right specialist skill for each phase (ui-ux-pro-max, emil-design-eng, apple-design, review-animations, web-design-guidelines, core-web-vitals, visual-proof, image-to-code, extract-design-system, brandkit, gpu-surface, web-steward) and defines what "done" requires. Read this before writing UI code, not after.
 ---
 
 # Web Release Gate
@@ -21,6 +21,11 @@ Two failure modes it exists to prevent:
 ## The five phases
 
 Run them in order. Skip a phase only by saying which one and why.
+
+When the pack's agents are installed, `worker-web-builder` runs these phases
+as the maker and `worker-visual-qa` judges the result. The caller dispatches the
+judge, so the maker never reviews its own work. Without them, run the phases
+yourself and treat phase 5 as your own review.
 
 ### 1. Capture — what exists now
 
@@ -73,6 +78,9 @@ Write the code. During this phase:
 - **From another site's tokens** — `extract-design-system`, for competitive and
   reference work only. Never re-import your own site's scraped tokens over the
   tokens of record.
+- **A shader, canvas, or 3D element** — `gpu-surface`. It decides whether the
+  page earns one at all, caps it at one per page, and defines the wrapper, the
+  reduced-motion still, and the extra proof lines.
 - **New sub-brand or product identity** — `brandkit`. Not for a property whose
   identity is already locked; that is a fight with the existing brand system,
   and the brand system wins.
@@ -135,6 +143,9 @@ the cost:
   under `prefers-reduced-motion: reduce`.
 
 ## When this does not apply
+
+Dependency upgrades go through `web-steward` instead: it owns peer checks,
+version drift, and the before/after proof for routes an upgrade touches.
 
 Backend logic, API routes, database work, config, CI, scripts, docs — unless the
 change alters what something looks like, feels like, moves like, or how it is

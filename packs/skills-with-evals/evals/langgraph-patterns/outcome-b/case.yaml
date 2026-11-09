@@ -1,0 +1,19 @@
+schema_version: "1.1"
+name: langgraph-patterns--outcome-b
+description: "Should trigger langgraph-patterns; outcome graded."
+tags: [langgraph-patterns, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I have legacy LangChain AgentExecutor code. How should I migrate it?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?langgraph-patterns\""
+  - name: rx-0
+    type: regex
+    pattern: "LangGraph|create_react_agent|StateGraph"
+    flags: i

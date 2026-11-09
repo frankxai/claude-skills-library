@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: todo-discipline--no-trigger
+description: "Should NOT trigger todo-discipline."
+tags: [todo-discipline, should-not-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Translate \"good morning\" into Dutch."
+  max_turns: 6
+  allowed_tools: [Skill, Read, TodoWrite]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?todo-discipline\""
+    min: 0
+    max: 0
+    arm: both

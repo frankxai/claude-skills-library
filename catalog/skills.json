@@ -9,7 +9,7 @@
   },
   "totals": {
     "pluginsWithListedSkills": 1,
-    "skills": 115,
+    "skills": 116,
     "skillsWithEvals": 0,
     "pluginsFromOtherRepos": 3
   },
@@ -22,7 +22,7 @@
         "type": "local",
         "path": "./"
       },
-      "skillCount": 115,
+      "skillCount": 116,
       "skills": [
         {
           "name": "acos-meta",
@@ -37,6 +37,12 @@
           "hasEvals": false
         },
         {
+          "name": "agent-hygiene",
+          "description": "The quality bar for any agent working on agent definitions, skills, commands, hooks, AGENTS.md or CLAUDE.md, in any repo and any harness. Use at session start, before editing a file under .claude/agents, agents/, .claude/commands or any SKILL.md, before handing work back, and whenever choosing which model tier (Haiku, Sonnet, Opus, Fable) or effort level a task deserves. Carries the estate guardrails, the agent-file contract the linter enforces, the verification line every hand-back ends with, and the routing rule for spending the top tier.",
+          "path": "free-skills/agent-hygiene",
+          "hasEvals": false
+        },
+        {
           "name": "agentic-jujutsu",
           "description": "Quantum-resistant, self-learning version control for AI agents, with ReasoningBank intelligence and multi-agent coordination. Use when designing agent memory/versioning, coordinating multiple agents over shared state, or building experience-replay and learning loops into an agentic system.",
           "path": "free-skills/agentic-jujutsu",
@@ -44,7 +50,7 @@
         },
         {
           "name": "agentic-orchestration",
-          "description": "Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Use when designing or debugging agent systems, splitting a large task across sub-agents, defining handoff contracts, or choosing an orchestration topology.",
+          "description": "Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Best practices for building and managing agent systems. Use when designing how multiple agents coordinate — splitting up tasks, defining handoffs, or choosing an orchestration topology.",
           "path": "free-skills/agentic-orchestration",
           "hasEvals": false
         },
@@ -338,7 +344,7 @@
         },
         {
           "name": "hooks-automation",
-          "description": "Automated coordination, formatting, and learning from Claude Code operations using intelligent hooks with MCP integration. Includes pre/post task hooks, session management, Git integration, memory coordination, and neural pattern training for enhanced development workflows. Use when configuring Claude Code hooks, automating pre/post-task coordination, or wiring Git and memory hooks.",
+          "description": "Configure and automate Claude Code hooks in .claude/settings.json (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStop, SessionEnd). Use when setting up Claude Code hooks to auto-format files after edits, run pre-commit or safety checks before Bash commands, guard secrets or protected files, save session state on Stop or SessionEnd, or wire optional external CLI and MCP hook runners.",
           "path": "free-skills/hooks-automation",
           "hasEvals": false
         },

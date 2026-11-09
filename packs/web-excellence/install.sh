@@ -4,6 +4,7 @@
 #   ./install.sh /path/to/repo              # skills + hooks + settings merge
 #   ./install.sh /path/to/repo --dry-run    # show what would change
 #   ./install.sh /path/to/repo --skills-only
+#   ./install.sh /path/to/repo --no-agents   # skip the three web workers
 #   ./install.sh /path/to/repo --no-db      # skip ui-ux-pro-max (~1.8 MB of CSV)
 #
 # From anywhere, without cloning first:
@@ -17,25 +18,38 @@ set -euo pipefail
 PACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${1:-}"
 shift || true
-DRY=0; SKILLS_ONLY=0; NO_DB=0; NO_CI=0
+DRY=0; SKILLS_ONLY=0; NO_DB=0; NO_CI=0; NO_AGENTS=0
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
     --skills-only) SKILLS_ONLY=1 ;;
     --no-db) NO_DB=1 ;;
     --no-ci) NO_CI=1 ;;
+    --no-agents) NO_AGENTS=1 ;;
     *) echo "unknown flag: $a" >&2; exit 2 ;;
   esac
 done
 
 if [ -z "$TARGET" ] || [ ! -d "$TARGET" ]; then
-  echo "usage: install.sh <path-to-repo> [--dry-run] [--skills-only] [--no-db] [--no-ci]" >&2
+  echo "usage: install.sh <path-to-repo> [--dry-run] [--skills-only] [--no-db] [--no-ci] [--no-agents]" >&2
   exit 2
 fi
 TARGET="$(cd "$TARGET" && pwd)"
 
 say() { printf '%s\n' "$*"; }
 run() { if [ $DRY -eq 1 ]; then say "  would: $*"; else "$@"; fi; }
+
+# A file the repo's .gitignore hides is installed locally but never committed,
+# so it never reaches a cloud session. Repos that allowlist pack skills one by
+# one (`.claude/skills/*/` then `!.claude/skills/<name>/`) hit this on every new
+# skill; say so instead of letting it go missing.
+warn_ignored() {
+  [ $DRY -eq 1 ] && return 0
+  git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+  if git -C "$TARGET" check-ignore -q "$1"; then
+    say "  !! $1 is gitignored here, so it will not reach cloud sessions; allow it with: !$2"
+  fi
+}
 
 say "web-excellence → $TARGET"
 [ $DRY -eq 1 ] && say "(dry run — nothing will be written)"
@@ -50,17 +64,65 @@ for src in "$PACK_DIR"/skills/*/; do
     continue
   fi
   if [ -d "$DEST_SKILLS/$name" ]; then
+    # An installed copy identical to the pack's is already canonical: leave
+    # it and create no set-aside, or every re-run would mint one. Python's
+    # bytecode cache under ui-ux-pro-max is not a difference.
+    # A symlink is never canonical, whatever it points at, whether the skill
+    # directory itself or any file inside it: the install must be a
+    # self-contained copy, so it falls through to the set-aside below.
+    if [ ! -L "${DEST_SKILLS%/}/$name" ] \
+       && [ -z "$(find "$DEST_SKILLS/$name" -type l -print -quit)" ] \
+       && diff -rq -x __pycache__ "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
+      say "  ok     $name (already canonical)"
+      continue
+    fi
     # Never delete a skill that is already here — an existing copy may be an
     # older fork carrying local-only files. Set it aside instead.
-    say "  update $name (previous copy → .claude/skills/.replaced/$name)"
+    say "  update $name (previous copy → .claude/skills/.replaced/$name.<timestamp>)"
     run mkdir -p "$DEST_SKILLS/.replaced"
-    run rm -rf "$DEST_SKILLS/.replaced/$name"
-    run mv "$DEST_SKILLS/$name" "$DEST_SKILLS/.replaced/$name"
+    # Versioned set-aside: never overwrite an earlier set-aside copy, so a
+    # customised skill survives any number of re-runs.
+    aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ)"
+    n=0; while [ -e "$aside" ]; do n=$((n+1)); aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ).$n"; done
+    run mv "$DEST_SKILLS/$name" "$aside"
   else
     say "  add    $name"
   fi
   run cp -R "$src" "$DEST_SKILLS/$name"
+  warn_ignored ".claude/skills/$name/SKILL.md" ".claude/skills/$name/"
 done
+
+# ---------------------------------------------------------------- agents
+# Compiled in agentic-creator-os and vendored here (see SOURCES.md). A local
+# copy that differs is set aside outside .claude/agents/, because the harness
+# loads agent files from subdirectories there too and would see two agents
+# with one name.
+if [ $NO_AGENTS -eq 0 ] && [ $SKILLS_ONLY -eq 0 ] && [ -d "$PACK_DIR/agents" ]; then
+  DEST_AGENTS="$TARGET/.claude/agents"
+  run mkdir -p "$DEST_AGENTS"
+  for src in "$PACK_DIR"/agents/*.md; do
+    name="$(basename "$src")"
+    dest="$DEST_AGENTS/$name"
+    # As with skills, a symlink is never canonical, and it is moved aside
+    # rather than written through.
+    if [ ! -L "$dest" ] && [ -f "$dest" ] && cmp -s "$src" "$dest"; then
+      say "  ok     agent ${name%.md}"
+      continue
+    fi
+    if [ -e "$dest" ] || [ -L "$dest" ]; then
+      say "  update agent ${name%.md} (previous copy → .claude/agents.replaced/${name%.md}.<timestamp>.md)"
+      run mkdir -p "$TARGET/.claude/agents.replaced"
+      # Versioned like the skills set-aside, so a second re-run keeps the first copy.
+      aside="$TARGET/.claude/agents.replaced/${name%.md}.$(date -u +%Y%m%dT%H%M%SZ).md"
+      n=0; while [ -e "$aside" ] || [ -L "$aside" ]; do n=$((n+1)); aside="$TARGET/.claude/agents.replaced/${name%.md}.$(date -u +%Y%m%dT%H%M%SZ).$n.md"; done
+      run mv "$dest" "$aside"
+    else
+      say "  add    agent ${name%.md}"
+    fi
+    run cp "$src" "$dest"
+    warn_ignored ".claude/agents/$name" ".claude/agents/$name"
+  done
+fi
 
 if [ $SKILLS_ONLY -eq 1 ]; then
   say "done (skills only — hooks not installed, so nothing enforces the gate)"
@@ -169,7 +231,7 @@ fi
 # ---------------------------------------------------------------- gitignore
 # Line by line, so a repo installed by an older version picks up new entries.
 GI="$TARGET/.gitignore"
-IGNORES=(.visual-proof/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/')
+IGNORES=(.visual-proof/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/' .claude/agents.replaced/)
 if [ $DRY -eq 1 ]; then
   say "  would: ensure ${IGNORES[*]} are gitignored"
 else

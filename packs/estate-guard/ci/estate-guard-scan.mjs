@@ -98,7 +98,7 @@ function listFiles(root) {
       for (const e of fs.readdirSync(d, { withFileTypes: true })) {
         const p = path.join(d, e.name);
         if (e.isDirectory()) { if (e.name !== 'node_modules' && e.name !== '.git') walk(p); }
-        else if (e.isFile()) acc.push(path.relative(root, p));
+        else if (e.isFile()) acc.push(path.relative(root, p).split(path.sep).join('/'));
       }
     };
     walk(root);

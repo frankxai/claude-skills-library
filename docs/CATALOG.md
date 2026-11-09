@@ -4,12 +4,13 @@ The complete index of all **115 skills** in this library. Every skill ships as a
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
 ## AI Agents & Orchestration
-_16 skills_
+_17 skills_
 
 | Skill | Description |
 |---|---|
+| [`agent-hygiene`](../free-skills/agent-hygiene/SKILL.md) | The quality bar for any agent working on agent definitions, skills, commands, hooks, AGENTS.md or CLAUDE.md, in any repo and any harness. Use at session start, before editing a... |
 | [`agentic-jujutsu`](../free-skills/agentic-jujutsu/SKILL.md) | Quantum-resistant, self-learning version control for AI agents, with ReasoningBank intelligence and multi-agent coordination. Use when designing agent memory/versioning, coordin... |
-| [`agentic-orchestration`](../free-skills/agentic-orchestration/SKILL.md) | Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Use when designing or debugging agent systems, splitting a large task across sub... |
+| [`agentic-orchestration`](../free-skills/agentic-orchestration/SKILL.md) | Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Best practices for building and managing agent systems. Use when designing how m... |
 | [`ai-architect-review`](../free-skills/ai-architect-review/SKILL.md) | Review the architecture of a system that calls a language model. Use when adding an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system t... |
 | [`hive-mind-advanced`](../free-skills/hive-mind-advanced/SKILL.md) | Queen-led collective-intelligence coordination with consensus mechanisms and persistent shared memory. Use when orchestrating a large swarm of agents under a lead coordinator, b... |
 | [`memory-prune`](../free-skills/memory-prune/SKILL.md) | Manual reviewable prune of stale memory entries. Lists project_* entries older than 30 days with content preview; Frank decides per-entry [keep \| archive \| pin]. Keeps MEMORY.... |
@@ -87,7 +88,7 @@ _10 skills_
 | [`github-multi-repo`](../free-skills/github-multi-repo/SKILL.md) | Multi-repository coordination, synchronization, and architecture management across many GitHub repos. Use when changes span several repositories, keeping repos in sync, or plann... |
 | [`github-project-management`](../free-skills/github-project-management/SKILL.md) | GitHub project management with issue tracking, project-board automation, and sprint planning. Use when triaging or organizing issues, automating a project board, planning a spri... |
 | [`github-release-management`](../free-skills/github-release-management/SKILL.md) | GitHub release orchestration — automated versioning, testing, deployment, and rollback. Use when cutting a release, tagging a version, drafting release notes, or coordinating a... |
-| [`hooks-automation`](../free-skills/hooks-automation/SKILL.md) | Automated coordination, formatting, and learning from Claude Code operations using intelligent hooks with MCP integration. Includes pre/post task hooks, session management, Git... |
+| [`hooks-automation`](../free-skills/hooks-automation/SKILL.md) | Configure and automate Claude Code hooks in .claude/settings.json (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStop, SessionEnd). Use when setting up Claude Code ho... |
 | [`performance-analysis`](../free-skills/performance-analysis/SKILL.md) | Performance analysis, bottleneck detection, and optimization recommendations. Use when profiling slow code or systems, hunting a performance regression, or producing an optimiza... |
 | [`skill-builder`](../free-skills/skill-builder/SKILL.md) | Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for s... |
 | [`verification-quality`](../free-skills/verification-quality/SKILL.md) | Truth scoring, code-quality verification, and automatic rollback with a high accuracy threshold. Use when validating agent output before it ships, gating changes on quality, or... |

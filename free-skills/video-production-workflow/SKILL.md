@@ -1,7 +1,8 @@
 ---
 name: video-production-workflow
 description: End-to-end video production workflow covering ideation, scripting, storyboarding, shooting/recording, editing, sound design, publishing, and data-driven iteration for YouTube, shorts, and brand content. Use when planning or producing video at a professional standard.
-version: 1.0.0
+metadata:
+  version: "1.0.0"
 ---
 
 # Video Production Workflow

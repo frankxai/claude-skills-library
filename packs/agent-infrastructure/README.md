@@ -56,7 +56,8 @@ doubles as a per-repo drift report: `ok` means already canonical, `DIVERGED`
 means the local copy differs from canon.
 
 **Diverged copies are never overwritten silently.** An existing skill that
-differs from canon is set aside to `.claude/skills/.replaced/<name>/` and named
+differs from canon is set aside to `.claude/skills/.replaced/<name>.<timestamp>/` (never
+overwriting an earlier set-aside) and named
 loudly in the output. That matters because at least one divergence is a
 deliberate fork: `FrankX` and `frankx.ai-vercel-website` carry a SIP-flavored
 rewrite under the name `swarm-orchestration` — see

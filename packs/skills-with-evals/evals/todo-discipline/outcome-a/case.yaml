@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: todo-discipline--outcome-a
+description: "Should trigger todo-discipline; outcome graded."
+tags: [todo-discipline, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Complex task, 5 steps: 1 rename a column, 2 backfill data, 3 update the API, 4 update tests, 5 write a deploy checklist. Track it with a todo list. Do not run any commands, just track the work as if you finished steps 1 to 4 and tell me where things stand."
+  max_turns: 6
+  allowed_tools: [Skill, Read, TodoWrite]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?todo-discipline\""
+  - name: used-TodoWrite
+    type: tool_used
+    tool: TodoWrite
+    arm: both
+  - name: judged-1
+    type: llm
+    criteria: "PASS only if the final status matches the tracked state: steps 1 to 4 completed, step 5 not claimed done, at most one item in progress, and it does not claim the whole task is complete."
