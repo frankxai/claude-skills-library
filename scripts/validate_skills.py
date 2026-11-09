@@ -5,7 +5,10 @@ Hard checks (a failure makes the script exit non-zero — wire it into CI):
   * the file is valid UTF-8 and not empty
   * YAML frontmatter is present and well-formed
   * `name` exists, is <= 64 chars, and matches ^[a-z0-9][a-z0-9-]*$
+  * `name` does not end with a hyphen or contain consecutive hyphens
+  * `name` matches the skill's parent directory name
   * `description` exists, is non-empty, and is <= 1024 chars
+  * `compatibility`, when present, is <= 500 chars
   * the skill file is named exactly `SKILL.md` (Claude Code requires the
     uppercase name for discovery)
 
@@ -22,6 +25,12 @@ Soft checks (reported as warnings, never fail the build):
   * body longer than 500 lines (Anthropic recommends keeping SKILL.md lean
     and pushing depth into references/)
   * `name` containing a reserved word (`anthropic`, `claude`)
+  * a top-level key that is neither in the Agent Skills spec nor a known
+    Claude Code extension (other clients ignore it; portable data belongs
+    under `metadata`)
+
+The rules follow https://agentskills.io/specification, so a skill that
+passes here also passes `skills-ref validate` on the other clients.
 """
 from __future__ import annotations
 
@@ -39,6 +48,11 @@ STAGING = "_staging"
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 RESERVED = ("anthropic", "claude")
 MAX_BODY_LINES = 500
+MAX_COMPATIBILITY = 500
+SPEC_KEYS = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
+# Claude Code reads these; other Agent Skills clients ignore them.
+CLAUDE_CODE_KEYS = {"argument-hint", "model", "disable-model-invocation", "user-invocable",
+                    "context", "agent", "hooks"}
 
 
 def skill_files(targets: list[str]) -> list[str]:
@@ -104,14 +118,30 @@ def main(argv: list[str]) -> int:
             errors.append(f"{rel}: 'name' must match ^[a-z0-9][a-z0-9-]*$ (got {name!r})")
         elif len(name) > 64:
             errors.append(f"{rel}: 'name' exceeds 64 characters")
+        elif name.endswith("-"):
+            errors.append(f"{rel}: 'name' must not end with a hyphen (got {name!r})")
+        elif "--" in name:
+            errors.append(f"{rel}: 'name' must not contain consecutive hyphens (got {name!r})")
         elif name in RESERVED:
             warnings.append(f"{rel}: 'name' is a reserved word ({name!r})")
+        parent = os.path.basename(os.path.dirname(full))
+        if name and name != parent:
+            errors.append(f"{rel}: 'name' must match its directory ({name!r} vs {parent!r})")
 
         desc = fm.get("description", "")
         if not desc:
             errors.append(f"{rel}: missing 'description'")
         elif len(desc) > 1024:
             errors.append(f"{rel}: 'description' exceeds 1024 characters ({len(desc)})")
+
+        compat = fm.get("compatibility", "")
+        if len(compat) > MAX_COMPATIBILITY:
+            errors.append(f"{rel}: 'compatibility' exceeds {MAX_COMPATIBILITY} characters ({len(compat)})")
+
+        unknown = sorted(set(fm) - SPEC_KEYS - CLAUDE_CODE_KEYS)
+        if unknown:
+            warnings.append(f"{rel}: key(s) {', '.join(unknown)} not in the Agent Skills spec; "
+                            "other clients ignore them, so move portable data under 'metadata'")
 
         fmm = FM_RE.match(text)
         body_lines = len(text[fmm.end():].splitlines()) if fmm else len(text.splitlines())

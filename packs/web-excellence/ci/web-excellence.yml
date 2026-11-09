@@ -28,8 +28,15 @@ on:
       - '**/*.css'
       - '**/*.scss'
       - '**/*.sass'
+      # font-family-budget also counts fonts loaded from scripts and HTML.
+      - '**/*.ts'
+      - '**/*.js'
+      - '**/*.mjs'
+      - '**/*.cjs'
+      - '**/*.html'
       - '.github/workflows/web-excellence.yml'
       - '.claude/ci/web-guidelines-lint.mjs'
+      - '.claude/ci/brand-lint.json'
 
 permissions:
   contents: read
