@@ -9,8 +9,8 @@
   },
   "totals": {
     "pluginsWithListedSkills": 1,
-    "skills": 114,
-    "skillsWithEvals": 0,
+    "skills": 115,
+    "skillsWithEvals": 1,
     "pluginsFromOtherRepos": 3
   },
   "plugins": [
@@ -22,7 +22,7 @@
         "type": "local",
         "path": "./"
       },
-      "skillCount": 114,
+      "skillCount": 115,
       "skills": [
         {
           "name": "acos-meta",
@@ -617,6 +617,12 @@
           "description": "Expert Suno AI prompt engineering for professional music creation. Use this skill when creating Suno prompts for any AI-generated music that needs commercial quality.",
           "path": "free-skills/suno-prompt-architect",
           "hasEvals": false
+        },
+        {
+          "name": "surface-craft",
+          "description": "Runs one ordered pass over any public surface a stranger will read (headline, hero, landing page, product page, waitlist page, pricing block, email subject line, deck title, or visual direction) covering the claim ledger, headline scoring, page copy, visual direction against an anti-slop list, the humanizer pass, and a declined-buyer critique. Use when asked to write, rewrite, punch up, review or design copy or look-and-feel for a page, launch, waitlist, product, email, deck or brand surface; when someone says \"make this sound less AI\", \"write me headlines\", \"landing page copy\", \"hero section\", \"vibes\", \"aesthetic\", \"art direction\" or \"does this page convert\". Not for internal notes, commit messages, code comments, standups or private docs.",
+          "path": "free-skills/surface-craft",
+          "hasEvals": true
         },
         {
           "name": "swarm-advanced",
