@@ -9,7 +9,7 @@
   },
   "totals": {
     "pluginsWithListedSkills": 1,
-    "skills": 114,
+    "skills": 115,
     "skillsWithEvals": 0,
     "pluginsFromOtherRepos": 3
   },
@@ -22,7 +22,7 @@
         "type": "local",
         "path": "./"
       },
-      "skillCount": 114,
+      "skillCount": 115,
       "skills": [
         {
           "name": "acos-meta",
@@ -226,6 +226,12 @@
           "name": "defuddle",
           "description": "Extract clean markdown content from web pages using Defuddle CLI, removing clutter and navigation to save tokens. Use instead of WebFetch when the user provides a URL to read or analyze, for online documentation, articles, blog posts, or any standard web page. Do NOT use for URLs ending in .md — those are already markdown, use WebFetch directly.",
           "path": "free-skills/defuddle",
+          "hasEvals": false
+        },
+        {
+          "name": "design-asset-intake",
+          "description": "Triage an external GitHub design/UI/motion/shader library before wiring it into any site's design system. Use when someone shares a \"free design asset library\" repo/link (social media, a README, a tweet), when deciding whether to npm-install, vendor-copy, or just study a repo, or when logging a new entry in registries/design-assets.json.",
+          "path": "free-skills/design-asset-intake",
           "hasEvals": false
         },
         {

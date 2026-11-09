@@ -4,14 +4,14 @@
 
 # Claude Skills Library
 
-### 114 Agent Skills for every skills-aware runtime, and 7 enforcement packs for Claude Code
+### 115 Agent Skills for every skills-aware runtime, and 7 enforcement packs for Claude Code
 
 Skills teach an agent a domain. Packs make the agent go through the gate. This is the only public
 library that ships both, with provenance pinned to commits, counts that check themselves in CI, and
 hooks that block "done" until the evidence exists.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-10b981.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-114-blue.svg)](docs/CATALOG.md)
+[![Skills](https://img.shields.io/badge/skills-115-blue.svg)](docs/CATALOG.md)
 [![Packs](https://img.shields.io/badge/packs-7-06b6d4.svg)](#packs-skills-that-enforce)
 [![Runtimes](https://img.shields.io/badge/runtimes-6-blueviolet.svg)](#works-with-six-runtimes)
 [![Validate](https://github.com/frankxai/claude-skills-library/actions/workflows/validate.yml/badge.svg)](https://github.com/frankxai/claude-skills-library/actions/workflows/validate.yml)
@@ -69,7 +69,7 @@ Two layers. The first is what every skills repo has. The second is what none of 
 
 | Layer | What it is | Where |
 |---|---|---|
-| **Skills** | 114 self-contained `SKILL.md` folders. Spec-validated frontmatter, trigger-rich descriptions, deep guidance in `references/` loaded only on use. | [`free-skills/`](free-skills) · [catalog](docs/CATALOG.md) |
+| **Skills** | 115 self-contained `SKILL.md` folders. Spec-validated frontmatter, trigger-rich descriptions, deep guidance in `references/` loaded only on use. | [`free-skills/`](free-skills) · [catalog](docs/CATALOG.md) |
 | **Packs** | 7 installable contracts. Each bundles the skills for one kind of work with whatever enforcement it has: hooks, CI scripts, drift checks, or templates. The packs table below says which. | [`packs/`](packs) |
 
 A skill is loaded when the task matches its description. That makes it *available*, not *mandatory*.
@@ -126,7 +126,7 @@ whether it has moved upstream since. This library is built around those gaps.
 | Inbound work | Paste it in | A four-gate absorption contract (license, provenance, distinctness, attestation) that refuses rather than warns |
 | Scheduled agents | "Report your findings" | A digest primitive that fails the run if nothing durable was written |
 
-The honest gap on our side: **evals**. All 114 in this library read well. None yet ships evidence
+The honest gap on our side: **evals**. All 115 in this library read well. None yet ships evidence
 that it still behaves under pressure. That is the next moat and the first bet in
 [`docs/STRATEGY.md`](docs/STRATEGY.md).
 
@@ -135,7 +135,7 @@ that it still behaves under pressure. That is the next moat and the first bet in
 ## Skill categories
 
 Counts are the groupings in [`docs/CATALOG.md`](docs/CATALOG.md), regenerated from the tree by
-[`scripts/generate_catalog.py`](scripts/generate_catalog.py). **114 skills** across 11 categories.
+[`scripts/generate_catalog.py`](scripts/generate_catalog.py). **115 skills** across 11 categories.
 
 | Category | Count | Examples |
 |---|---:|---|
@@ -149,7 +149,7 @@ Counts are the groupings in [`docs/CATALOG.md`](docs/CATALOG.md), regenerated fr
 | **Mind, body and philosophy** | 5 | `greek-philosopher`, `spartan-warrior`, `gym-training-expert`, `health-nutrition-expert` |
 | **Documents and productivity** | 6 | `pdf`, `docx`, `pptx`, `xlsx`, `product-management-expert`, `webapp-testing` |
 | **Meta and library** | 1 | `contribute-catalog` |
-| **Other** | 5 | `feynman-thinking`, `loop-designer`, `loop-orchestrator`, `loop-runner` |
+| **Other** | 6 | `feynman-thinking`, `loop-designer`, `loop-orchestrator`, `loop-runner` |
 
 Browse the **[full catalog](docs/CATALOG.md)**, or the generated site at [`docs/index.html`](docs/index.html).
 
@@ -176,7 +176,7 @@ Browse the **[full catalog](docs/CATALOG.md)**, or the generated site at [`docs/
 ```mermaid
 flowchart LR
     SIS["Starlight Intelligence System<br/>substrate: memory, agents, SIP"] --> ACOS["Agentic Creator OS<br/>canonical skill source"]
-    ACOS -->|"mirror the strongest"| LIB["claude-skills-library<br/>114 skills · 7 packs"]
+    ACOS -->|"mirror the strongest"| LIB["claude-skills-library<br/>115 skills · 7 packs"]
     UP["Upstreams<br/>Vercel · Emil Kowalski · Anthropic · ..."] -->|"pinned, licensed, drift-checked"| LIB
     LIB -->|"/plugin · npx skills add · cp"| CC["Claude Code"]
     LIB -->|"runtimes/"| RT["Cursor · Codex · Gemini CLI<br/>OpenCode · Antigravity"]
@@ -321,9 +321,9 @@ See [`SUPPORT.md`](SUPPORT.md) for routing and [`CODE_OF_CONDUCT.md`](CODE_OF_CO
 
 ## FAQ
 
-**Does loading 114 skills bloat my context?**
+**Does loading 115 skills bloat my context?**
 No. Only each skill's `name` and `description` is preloaded for routing. The body loads when a skill
-triggers, and `references/` load only when read. A library of 114 costs almost nothing until a skill fires.
+triggers, and `references/` load only when read. A library of 115 costs almost nothing until a skill fires.
 
 **How does the right skill get picked from a library this large?**
 By the `description`. Every skill states what it does and when to use it with explicit trigger

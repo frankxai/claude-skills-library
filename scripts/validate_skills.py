@@ -119,6 +119,14 @@ def main(argv: list[str]) -> int:
             warnings.append(f"{rel}: body is {body_lines} lines (>{MAX_BODY_LINES}); "
                             "consider splitting into references/")
 
+    # Also validate design-assets.json if it exists
+    registry_path = os.path.join(REPO, "registries", "design-assets.json")
+    if os.path.exists(registry_path):
+        import validate_design_assets
+        registry_errors = validate_design_assets.validate_registry(registry_path)
+        if registry_errors:
+            errors.extend([f"registries/design-assets.json: {e}" for e in registry_errors])
+
     if warnings:
         print(f"{len(warnings)} warning(s):")
         for w in warnings:
@@ -126,11 +134,11 @@ def main(argv: list[str]) -> int:
         print()
 
     if errors:
-        print(f"FAIL: {len(errors)} error(s) across {count} skill file(s):\n")
+        print(f"FAIL: {len(errors)} error(s) across {count} skill file(s) and registries:\n")
         for e in errors:
             print(f"  - {e}")
         return 1
-    print(f"OK: {count} skill file(s) are spec-compliant.")
+    print(f"OK: {count} skill file(s) and registries are spec-compliant.")
     return 0
 
 
