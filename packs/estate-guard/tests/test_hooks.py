@@ -73,7 +73,7 @@ for cmd in ["rm -rf /tmp/claude-0/acos", "rm -rf /var/tmp/x /tmp/y", 'rm -rf "$T
     check(f"scratch pass: {cmd}", d is None and rc == 0, f"got {d}")
 for cmd in ["rm -rf acos", "cd /tmp && rm -rf acos", "cd /tmp/claude-0 && rm -rf acos", "rm -rf /tmp/../home/user", "rm -rf /tmp/*",
             "rm -rf /tmp", "rm -rf /tmp/", "rm -rf /var/tmp", "rm -rf /tmp/a ./b", "rm -rf /tmp/$(whoami)", "rm -rf /tmp/`whoami`",
-            "rm -rf /tmp/a && git reset --hard", "rm -rf /tmp/a; rm -rf b", "rm -rf /tmp/$X", "rm -rf /tmp/{a,}",
+            "rm -rf /tmp/a && git reset --hard", "rm -rf /tmp/a; rm -rf b", "rm -rf /tmp/a\nrm -rf b", "rm -rf /tmp/a\n  rm -rf b", "rm -rf /tmp/a && xargs rm -rf < list", "rm -rf /tmp/$X", "rm -rf /tmp/{a,}",
             "rm -rf /tmp/.*", "rm -rf /tmp/a ~/b", "rm -rf $TMPDIR", "rm -rf /tmpfoo/x", "rm -rf",
             "ln -s ~ /tmp/l && rm -rf /tmp/l/x", "rm -rf /tmp/a && vercel --prod", "rm -rf /tmp/a && gh secret set T",
             "rm -rf /tmp/a ~"]:  # home as a later target: the unchanged DENY only checks the first target, so this asks

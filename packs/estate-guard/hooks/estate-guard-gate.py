@@ -77,7 +77,10 @@ ASK = [
 
 
 RECURSIVE_DELETE = "recursive delete"
-RM_AT = re.compile(CMD + r"rm(?=\s|$)", re.I)
+# Every standalone `rm` word counts as an invocation, wherever it sits (new
+# lines, after xargs/env/\\, inside quotes). Over-matching only removes the
+# exception; under-matching would let a second, non-scratch rm through.
+RM_AT = re.compile(r"(?<![\w./-])rm(?=\s|$)", re.I)
 # Where one rm invocation's arguments end. Cutting early only makes shlex fail
 # or adds a non-scratch token, both of which fall back to ASK.
 RM_END = re.compile(r"[;&|\n)`]")
