@@ -11,7 +11,12 @@ Two tiers, matched against the command string:
           clean -fd, any rm -rf, unpinned remote execution (npx -y, @latest),
           production deploys, db pushes, DELETE API calls, secret writes.
 
-Recursive deletes always require human approval, including paths under scratch\nroots. This intentionally avoids interpreting shell globs, symlinks, variable\nexpansion, wrappers, or compound commands as safe scratch-only operations.\nThe root/home DENY runs first and remains unchanged.\n\nAnything else passes untouched. Malformed input passes (fail-open): this is a
+Recursive deletes always require human approval, including paths under scratch
+roots. This intentionally avoids interpreting shell globs, symlinks, variable
+expansion, wrappers, or compound commands as safe scratch-only operations.
+The root/home DENY runs first and remains unchanged.
+
+Anything else passes untouched. Malformed input passes (fail-open): this is a
 deny-list gate, not an allow-list, and a hook that blocks every Bash call on a
 parse error is worse than no hook.
 
