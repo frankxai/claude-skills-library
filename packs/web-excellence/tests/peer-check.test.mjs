@@ -3,8 +3,11 @@
 // drift classes, and the pnpm importer reader. No network, no dependencies.
 
 import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
-import { classifyDrift, readPnpmImporter, satisfies } from '../skills/web-steward/peer-check.mjs';
+import { check, classifyDrift, exitCode, readPnpmImporter, satisfies } from '../skills/web-steward/peer-check.mjs';
 
 test('ranges npm peers actually use', () => {
   const cases = [
@@ -29,6 +32,12 @@ test('ranges npm peers actually use', () => {
     ['20.0.0', '>19', true],
     ['19.9.9', '>19', false],
     ['19.0.0-rc.1', '>=18', false], // a prerelease never satisfies a plain range
+    ['19.0.0-rc.0', '>=19.0.0-rc.1', false], // prerelease identifiers are ordered, not equal
+    ['19.0.0-rc.0', '19.0.0-rc.1', false],
+    ['19.0.0-rc.2', '>=19.0.0-rc.1', true],
+    ['19.0.0-rc.10', '>=19.0.0-rc.9', true], // numeric identifiers compare as numbers
+    ['19.0.0-beta.1', '>=19.0.0-rc.0', false], // alphanumeric identifiers compare as strings
+    ['19.0.0-rc', '>=19.0.0-rc.0', false], // a shorter identifier set sorts first
   ];
   for (const [v, r, want] of cases) assert.equal(satisfies(v, r), want, `${v} vs "${r}"`);
 });
@@ -46,6 +55,74 @@ test('drift classes treat 0.x minors as breaking', () => {
   assert.equal(classifyDrift('1.3.26', '1.3.27'), 'patch');
   assert.equal(classifyDrift('2.0.0', '2.0.0'), 'current');
   assert.equal(classifyDrift('2.1.0', '2.0.0'), 'ahead');
+  assert.equal(classifyDrift('19.0.0-rc.0', '19.0.0-rc.1'), 'prerelease');
+  assert.equal(classifyDrift('19.0.0-rc.1', '19.0.0-rc.1'), 'current');
+});
+
+// A fake registry: `peers` per name@version, `latest` per name; anything else is a 404.
+function fakeRegistry({ peers = {}, latest = {} }) {
+  return async (url) => {
+    const [, name, tag] = decodeURIComponent(new URL(url).pathname).match(/^\/(.+)\/([^/]+)$/);
+    const body = tag === 'latest'
+      ? latest[name] && { version: latest[name] }
+      : peers[`${name}@${tag}`] && { version: tag, peerDependencies: peers[`${name}@${tag}`] };
+    return body
+      ? { status: 200, ok: true, json: async () => body }
+      : { status: 404, ok: false, json: async () => ({}) };
+  };
+}
+
+async function withRepo(deps, installed, registry, fn) {
+  const dir = mkdtempSync(join(tmpdir(), 'peer-check-'));
+  const realFetch = globalThis.fetch;
+  try {
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: deps }));
+    for (const [name, version] of Object.entries(installed)) {
+      mkdirSync(join(dir, 'node_modules', name), { recursive: true });
+      writeFileSync(join(dir, 'node_modules', name, 'package.json'), JSON.stringify({ name, version }));
+    }
+    globalThis.fetch = fakeRegistry(registry);
+    return await fn(dir);
+  } finally {
+    globalThis.fetch = realFetch;
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+const reactPair = { 'react-dom': '^19.3.1', react: '^18.3.1' };
+const registry = { peers: { 'react-dom@19.3.1': { react: '^19.3.1' } }, latest: { 'react-dom': '19.3.1', react: '19.3.1' } };
+
+test('a watched package with no resolved version is not checked, and does not pass', async () => {
+  await withRepo(reactPair, {}, registry, async (dir) => {
+    const { rows } = await check(dir, ['react-dom', 'react']);
+    assert.ok(rows.every((r) => r.unchecked && r.peers.length === 0));
+    assert.equal(exitCode(rows), 4);
+  });
+});
+
+test('a resolved version the registry has no manifest for is not checked', async () => {
+  await withRepo(reactPair, { 'react-dom': '19.3.0', react: '18.3.1' }, registry, async (dir) => {
+    const { rows } = await check(dir, ['react-dom']);
+    assert.match(rows[0].unchecked, /no manifest for react-dom@19\.3\.0/);
+    assert.equal(exitCode(rows), 4);
+  });
+});
+
+test('an unmet peer outranks an unchecked package', async () => {
+  await withRepo({ ...reactPair, three: '^0.186.0' }, { 'react-dom': '19.3.1', react: '18.3.1' }, registry, async (dir) => {
+    const { rows } = await check(dir, ['react-dom', 'three']);
+    assert.equal(rows.find((r) => r.name === 'react-dom').peers[0].ok, false);
+    assert.ok(rows.find((r) => r.name === 'three').unchecked);
+    assert.equal(exitCode(rows), 1);
+  });
+});
+
+test('fully checked and satisfied exits 0', async () => {
+  await withRepo(reactPair, { 'react-dom': '19.3.1', react: '19.3.1' }, registry, async (dir) => {
+    const { rows } = await check(dir, ['react-dom']);
+    assert.equal(rows[0].unchecked, null);
+    assert.equal(exitCode(rows), 0);
+  });
 });
 
 test('pnpm importer reader takes the right importer and strips peer suffixes', () => {

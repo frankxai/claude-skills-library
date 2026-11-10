@@ -15,7 +15,10 @@
 // and for its latest version.
 //
 // Exit 0 = no unmet peers, 1 = unmet peers found, 2 = usage or read error,
-// 3 = registry unreachable (nothing was checked; report that, never a pass).
+// 3 = registry unreachable (nothing was checked; report that, never a pass),
+// 4 = no unmet peers found, but a watched package could not be checked: its
+//     version did not resolve from the lockfile or node_modules, or the
+//     registry has no manifest for that version. Report it, never a pass.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -37,11 +40,32 @@ export function parseVersion(v) {
   return m ? { t: [+m[1], +m[2], +m[3]], pre: m[4] || null } : null;
 }
 
+// semver §11: numeric identifiers compare numerically and sort below
+// alphanumeric ones; otherwise compare as strings; a shorter set sorts first.
+function cmpPre(a, b) {
+  const x = a.split('.');
+  const y = b.split('.');
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if (x[i] === undefined) return -1;
+    if (y[i] === undefined) return 1;
+    const nx = /^\d+$/.test(x[i]);
+    const ny = /^\d+$/.test(y[i]);
+    if (nx && ny) {
+      if (+x[i] !== +y[i]) return +x[i] - +y[i];
+    } else if (nx !== ny) {
+      return nx ? -1 : 1;
+    } else if (x[i] !== y[i]) {
+      return x[i] < y[i] ? -1 : 1;
+    }
+  }
+  return 0;
+}
+
 function cmp(a, b) {
   for (let i = 0; i < 3; i++) if (a.t[i] !== b.t[i]) return a.t[i] - b.t[i];
   if (a.pre && !b.pre) return -1;
   if (!a.pre && b.pre) return 1;
-  return 0;
+  return a.pre ? cmpPre(a.pre, b.pre) : 0;
 }
 
 const isWild = (p) => p === undefined || p === 'x' || p === 'X' || p === '*';
@@ -123,6 +147,7 @@ export function classifyDrift(resolved, latest) {
   const c = cmp(a, b);
   if (c === 0) return 'current';
   if (c > 0) return 'ahead';
+  if (a.t.join('.') === b.t.join('.')) return 'prerelease';
   if (a.t[0] !== b.t[0]) return 'major';
   if (a.t[0] === 0 && a.t[1] !== b.t[1]) return '0.x minor (breaking)';
   if (a.t[0] === 0 && a.t[1] === 0) return '0.0.x (breaking)';
@@ -263,6 +288,10 @@ export async function check(root, watch) {
       resolved: version,
       latest: latest?.version || null,
       drift: version && latest?.version ? classifyDrift(version, latest.version) : 'unknown',
+      // Without a resolved version and its manifest there were no peers to read.
+      unchecked: !version ? 'version not resolved from the lockfile or node_modules'
+        : !at ? `the registry has no manifest for ${name}@${version}`
+        : null,
       peers,
     };
   });
@@ -278,6 +307,12 @@ function arg(name, fallback = null) {
   return next && !next.startsWith('--') ? next : true;
 }
 
+// 1 when a peer is unmet, else 4 when a watched package went unchecked, else 0.
+export function exitCode(rows) {
+  if (rows.some((r) => r.peers.some((p) => p.ok === false))) return 1;
+  return rows.some((r) => r.unchecked) ? 4 : 0;
+}
+
 function render({ root, source, rows }) {
   const unmet = rows.flatMap((r) => r.peers.filter((p) => p.ok === false).map((p) => ({ ...p, of: `${r.name}@${r.resolved}` })));
   const unknown = rows.flatMap((r) => r.peers.filter((p) => p.ok === null).map((p) => ({ ...p, of: `${r.name}@${r.resolved}` })));
@@ -285,9 +320,14 @@ function render({ root, source, rows }) {
   out.push(`Unmet peers: ${unmet.length}`);
   for (const p of unmet) out.push(`  ✗ ${p.of} needs ${p.peer} ${p.range} — has ${p.have}`);
   for (const p of unknown) out.push(`  ? ${p.of} peer ${p.peer} ${p.range} — ${p.have ? `has ${p.have}, range not parsed` : p.note}`);
+  const unchecked = rows.filter((r) => r.unchecked);
+  if (unchecked.length) {
+    out.push('', `Not checked: ${unchecked.length} (no peers were read for these, so this is not a pass)`);
+    for (const r of unchecked) out.push(`  ! ${r.name} ${r.declared} — ${r.unchecked}`);
+  }
   out.push('', '| Package | Declared | Resolved | Latest | Drift |', '|---|---|---|---|---|');
   for (const r of rows) out.push(`| \`${r.name}\` | ${r.declared} | ${r.resolved ?? 'not resolved'} | ${r.latest ?? '?'} | ${r.drift} |`);
-  return { text: out.join('\n'), unmet: unmet.length };
+  return out.join('\n');
 }
 
 async function main() {
@@ -305,13 +345,8 @@ async function main() {
       : `Cannot check: ${err.message}`);
     process.exit(network ? 3 : 2);
   }
-  if (arg('json')) {
-    console.log(JSON.stringify(result, null, 2));
-    process.exit(result.rows.some((r) => r.peers.some((p) => p.ok === false)) ? 1 : 0);
-  }
-  const { text, unmet } = render(result);
-  console.log(text);
-  process.exit(unmet ? 1 : 0);
+  console.log(arg('json') ? JSON.stringify(result, null, 2) : render(result));
+  process.exit(exitCode(result.rows));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main();

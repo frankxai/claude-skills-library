@@ -20,9 +20,13 @@ node .claude/skills/web-steward/peer-check.mjs --root . --all      # every direc
 
 It reads `package.json` plus `pnpm-lock.yaml`, `package-lock.json`, or
 `node_modules`, and asks the npm registry for each package's peers at the
-resolved version. No install is needed. Exit `1` means an unmet peer, and exit
-`3` means the registry was unreachable, so nothing was checked. Report a `3` as
-"not checked", never as clean.
+resolved version. No install is needed when the lockfile is current. Exit `1`
+means an unmet peer. Exit `3` means the registry was unreachable, so nothing was
+checked. Exit `4` means no unmet peer was found but at least one watched package
+was not checked: its version did not resolve (declared but not yet locked or
+installed), or the registry has no manifest for that version. The output lists
+those packages under "Not checked". Report a `3` or a `4` as "not checked",
+never as clean.
 
 Then check the pack itself:
 
