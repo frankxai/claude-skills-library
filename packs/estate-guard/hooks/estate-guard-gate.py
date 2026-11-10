@@ -11,22 +11,7 @@ Two tiers, matched against the command string:
           clean -fd, any rm -rf, unpinned remote execution (npx -y, @latest),
           production deploys, db pushes, DELETE API calls, secret writes.
 
-Scratch-delete exception (recursive delete only): the 'recursive delete' ASK is
-skipped when EVERY rm invocation in the command deletes only scratch targets,
-so an unattended agent cleaning its own sandbox is not paused for hours. A
-scratch target is an absolute path under /tmp/, /var/tmp/, /private/tmp/,
-$TMPDIR/ or ${TMPDIR}/ with at least one real segment after that prefix, made
-only of plain path characters (no '..', no '$(' or backtick, no other $
-expansion, no braces, quotes-inside-path, ~ or spaces), whose first segment is
-not a bare glob (so /tmp, /tmp/ and /tmp/* still ask), and whose literal path
-does not resolve through a symlink to outside the scratch roots. A command that
-also runs `ln`/`mount` gets no exception. Relative paths (`cd /tmp && rm -rf x`),
-~, $HOME, anything else, or a single non-scratch target in any rm still ASK.
-The root/home DENY runs first and is unchanged; every other ASK rule still fires
-even when the command also contains a scratch rm. Agents: delete scratch with an
-absolute /tmp path. This is an accident gate, not an adversarial sandbox.
-
-Anything else passes untouched. Malformed input passes (fail-open): this is a
+Recursive deletes always require human approval, including paths under scratch\nroots. This intentionally avoids interpreting shell globs, symlinks, variable\nexpansion, wrappers, or compound commands as safe scratch-only operations.\nThe root/home DENY runs first and remains unchanged.\n\nAnything else passes untouched. Malformed input passes (fail-open): this is a
 deny-list gate, not an allow-list, and a hook that blocks every Bash call on a
 parse error is worse than no hook.
 
@@ -39,7 +24,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import shlex
 import sys
 
 # A command position: start of line, after a separator, or inside a substitution.
@@ -76,80 +60,6 @@ ASK = [
 ]
 
 
-RECURSIVE_DELETE = "recursive delete"
-# Every standalone `rm` word counts as an invocation, wherever it sits (new
-# lines, after xargs/env/\\, inside quotes). Over-matching only removes the
-# exception; under-matching would let a second, non-scratch rm through.
-RM_AT = re.compile(r"(?<![\w./-])rm(?=\s|$)", re.I)
-# Where one rm invocation's arguments end. Cutting early only makes shlex fail
-# or adds a non-scratch token, both of which fall back to ASK.
-RM_END = re.compile(r"[;&|\n)`]")
-LITERAL_SCRATCH_ROOTS = ("/tmp/", "/var/tmp/", "/private/tmp/")
-ENV_SCRATCH_ROOTS = ("$TMPDIR/", "${TMPDIR}/")
-SAFE_REST = re.compile(r"[A-Za-z0-9._@%+=:,/*?-]+")
-GLOB_ONLY = re.compile(r"[.*?]+")
-LINKERS = re.compile(r"(?:^|[^\w-])(?:ln|mount|bindfs)\s", re.I)
-
-
-def _under_scratch(path: str) -> bool:
-    """The literal part of the path (before any glob) must resolve inside a scratch root."""
-    parts = path.split("/")
-    for i, part in enumerate(parts):
-        if any(c in part for c in "*?"):
-            parts = parts[:i]
-            break
-    resolved = os.path.realpath("/".join(parts) or "/")
-    for root in LITERAL_SCRATCH_ROOTS:
-        real_root = os.path.realpath(root.rstrip("/"))
-        if resolved.startswith(real_root + "/"):
-            return True
-    return False
-
-
-def is_scratch_target(target: str) -> bool:
-    if "$(" in target or "`" in target or ".." in target:
-        return False
-    literal = target.startswith(LITERAL_SCRATCH_ROOTS)
-    roots = LITERAL_SCRATCH_ROOTS if literal else ENV_SCRATCH_ROOTS
-    root = next((r for r in roots if target.startswith(r)), None)
-    if root is None:
-        return False
-    rest = target[len(root):]
-    if not SAFE_REST.fullmatch(rest):
-        return False
-    segments = [seg for seg in rest.split("/") if seg]
-    if not segments or GLOB_ONLY.fullmatch(segments[0]):
-        return False
-    return _under_scratch(target) if literal else True
-
-
-def rm_only_scratch(cmd: str) -> bool:
-    """True only if every rm invocation in cmd deletes nothing but scratch targets."""
-    if "`" in cmd or "$(" in cmd or LINKERS.search(cmd):
-        return False
-    found = False
-    for m in RM_AT.finditer(cmd):
-        found = True
-        rest = cmd[m.end():]
-        end = RM_END.search(rest)
-        raw = rest[: end.start()] if end else rest
-        try:
-            tokens = shlex.split(raw)
-        except ValueError:
-            return False
-        targets, options_done = [], False
-        for tok in tokens:
-            if not options_done and tok == "--":
-                options_done = True
-            elif not options_done and tok.startswith("-"):
-                continue
-            else:
-                targets.append(tok)
-        if not targets or not all(is_scratch_target(t) for t in targets):
-            return False
-    return found
-
-
 def decision(cmd: str):
     allow_force = bool(os.environ.get("ESTATE_GUARD_ALLOW_FORCE"))
     for pat, why in DENY:
@@ -159,8 +69,6 @@ def decision(cmd: str):
             return "deny", why
     for pat, why in ASK:
         if re.search(pat, cmd, re.I):
-            if why == RECURSIVE_DELETE and rm_only_scratch(cmd):
-                continue
             return "ask", why
     return None, None
 
