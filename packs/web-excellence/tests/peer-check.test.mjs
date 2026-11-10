@@ -117,6 +117,22 @@ test('an unmet peer outranks an unchecked package', async () => {
   });
 });
 
+test('a required peer that cannot be verified does not pass', async () => {
+  const peers = {
+    'react-dom@19.3.1': { react: '^19.3.1', scheduler: '^0.27.0' }, // scheduler is not a direct dependency
+    'three@0.186.1': { react: 'latest' }, // a range the parser does not read
+  };
+  await withRepo({ 'react-dom': '^19.3.1', react: '^19.3.1', three: '^0.186.0' },
+    { 'react-dom': '19.3.1', react: '19.3.1', three: '0.186.1' }, { peers, latest: {} }, async (dir) => {
+      const { rows } = await check(dir, ['react-dom']);
+      assert.deepEqual(rows[0].peers.map((p) => [p.peer, p.ok]), [['react', true], ['scheduler', null]]);
+      assert.equal(exitCode(rows), 4);
+      const three = await check(dir, ['three']);
+      assert.equal(three.rows[0].peers[0].ok, null);
+      assert.equal(exitCode(three.rows), 4);
+    });
+});
+
 test('fully checked and satisfied exits 0', async () => {
   await withRepo(reactPair, { 'react-dom': '19.3.1', react: '19.3.1' }, registry, async (dir) => {
     const { rows } = await check(dir, ['react-dom']);

@@ -16,9 +16,11 @@
 //
 // Exit 0 = no unmet peers, 1 = unmet peers found, 2 = usage or read error,
 // 3 = registry unreachable (nothing was checked; report that, never a pass),
-// 4 = no unmet peers found, but a watched package could not be checked: its
-//     version did not resolve from the lockfile or node_modules, or the
-//     registry has no manifest for that version. Report it, never a pass.
+// 4 = no unmet peers found, but the check is incomplete: a watched package's
+//     version did not resolve from the lockfile or node_modules, the registry
+//     has no manifest for that version, or a required peer could not be
+//     verified (not a direct dependency, or a range this parser does not read).
+//     Report it, never a pass.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -307,10 +309,10 @@ function arg(name, fallback = null) {
   return next && !next.startsWith('--') ? next : true;
 }
 
-// 1 when a peer is unmet, else 4 when a watched package went unchecked, else 0.
+// 1 when a peer is unmet, else 4 when anything went unverified, else 0.
 export function exitCode(rows) {
   if (rows.some((r) => r.peers.some((p) => p.ok === false))) return 1;
-  return rows.some((r) => r.unchecked) ? 4 : 0;
+  return rows.some((r) => r.unchecked || r.peers.some((p) => p.ok === null)) ? 4 : 0;
 }
 
 function render({ root, source, rows }) {
