@@ -65,8 +65,13 @@ if [ $NO_HOOKS -eq 0 ]; then
     say "  would: merge hooks into .claude/settings.json (existing hooks preserved)"
   else
     python3 - "$SETTINGS" "$PACK_DIR/settings.snippet.json" <<'PY'
-import json, os, sys
+import json, os, re, sys
 settings_path, snippet_path = sys.argv[1], sys.argv[2]
+# Hooks are matched by the script they run, not the exact command string, so an entry
+# written by an older pack (a relative `.claude/hooks/...` path) is upgraded in place.
+def script_key(cmd):
+    m = re.search(r"estate-guard-[a-z]+\.py", cmd or "")
+    return m.group(0) if m else cmd
 snippet = json.load(open(snippet_path, encoding="utf-8"))["hooks"]
 if os.path.exists(settings_path):
     try:
@@ -77,19 +82,19 @@ else:
     settings = {}
 hooks = settings.setdefault("hooks", {})
 added = updated = 0
-ours = {h["command"]: h for entries in snippet.values() for e in entries for h in e["hooks"]}
+ours = {script_key(h["command"]): h for entries in snippet.values() for e in entries for h in e["hooks"]}
 for event, entries in snippet.items():
     existing = hooks.setdefault(event, [])
     seen = set()
     for e in existing:
         for i, h in enumerate(e.get("hooks", [])):
-            cmd = h.get("command")
-            if cmd in ours:
-                seen.add(cmd)
-                if h != ours[cmd]:
-                    e["hooks"][i] = dict(ours[cmd]); updated += 1
+            key = script_key(h.get("command"))
+            if key in ours:
+                seen.add(key)
+                if h != ours[key]:
+                    e["hooks"][i] = dict(ours[key]); updated += 1
     for entry in entries:
-        new = [h for h in entry["hooks"] if h.get("command") not in seen]
+        new = [h for h in entry["hooks"] if script_key(h.get("command")) not in seen]
         if not new: continue
         merged = dict(entry); merged["hooks"] = new
         existing.append(merged); added += len(new)
