@@ -5,7 +5,7 @@
       {
         "matcher": ".*",
         "hooks": [
-          { "type": "command", "command": "python3 .claude/hooks/estate-guard-session.py", "timeout": 10 }
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/estate-guard-session.py", "timeout": 10 }
         ]
       }
     ],
@@ -13,7 +13,7 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "python3 .claude/hooks/estate-guard-gate.py", "timeout": 10 }
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/estate-guard-gate.py", "timeout": 10 }
         ]
       }
     ],
@@ -21,7 +21,7 @@
       {
         "matcher": "WebFetch|WebSearch|Bash|mcp__.*",
         "hooks": [
-          { "type": "command", "command": "python3 .claude/hooks/estate-guard-taint.py", "timeout": 15 }
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/estate-guard-taint.py", "timeout": 15 }
         ]
       }
     ]
