@@ -66,6 +66,27 @@ for cmd in ["git status", "git push -u origin agent/claude/scope", "pnpm run typ
             "echo 'never run rm -rf /'", "git push --dry-run origin main"]:
     d, rc = gate(cmd)
     check(f"pass: {cmd}", d is None and rc == 0, f"got {d}")
+# Scratch-delete exception: absolute scratch targets pass; everything else still asks/denies.
+for cmd in ["rm -rf /tmp/claude-0/acos", "rm -rf /var/tmp/x /tmp/y", 'rm -rf "$TMPDIR/build"', "rm -rf ${TMPDIR}/build",
+            "rm -rf /tmp/claude-0/acos && git status", "rm -rf -- /tmp/a/b"]:
+    d, rc = gate(cmd)
+    check(f"scratch pass: {cmd}", d is None and rc == 0, f"got {d}")
+for cmd in ["rm -rf acos", "cd /tmp && rm -rf acos", "cd /tmp/claude-0 && rm -rf acos", "rm -rf /tmp/../home/user", "rm -rf /tmp/*",
+            "rm -rf /tmp", "rm -rf /tmp/", "rm -rf /var/tmp", "rm -rf /tmp/a ./b", "rm -rf /tmp/$(whoami)", "rm -rf /tmp/`whoami`",
+            "rm -rf /tmp/a && git reset --hard", "rm -rf /tmp/a; rm -rf b", "rm -rf /tmp/a\nrm -rf b", "rm -rf /tmp/a\n  rm -rf b", "rm -rf /tmp/a && xargs rm -rf < list", "rm -rf /tmp/$X", "rm -rf /tmp/{a,}",
+            "rm -rf /tmp/.*", "rm -rf /tmp/a ~/b", "rm -rf $TMPDIR", "rm -rf /tmpfoo/x", "rm -rf",
+            "ln -s ~ /tmp/l && rm -rf /tmp/l/x", "rm -rf /tmp/a && vercel --prod", "rm -rf /tmp/a && gh secret set T",
+            "rm -rf /tmp/a ~"]:  # home as a later target: the unchanged DENY only checks the first target, so this asks
+    d, rc = gate(cmd)
+    check(f"scratch still ask: {cmd}", d == "ask" and rc == 0, f"got {d}")
+with tempfile.TemporaryDirectory(dir="/tmp") as d0:
+    link = os.path.join(d0, "home-link")
+    os.symlink(os.path.expanduser("~"), link)
+    d, _ = gate(f"rm -rf {link}/x")
+    check("scratch symlink escaping /tmp still asks", d == "ask", f"got {d}")
+for cmd in ["rm -rf ~", "rm -rf /", "rm -rf $HOME", "rm -rf / /tmp/a"]:
+    d, rc = gate(cmd)
+    check(f"scratch still deny: {cmd}", d == "deny" and rc == 0, f"got {d}")
 d, _ = gate("git push --force origin main", {"ESTATE_GUARD_ALLOW_FORCE": "1"})
 check("ALLOW_FORCE downgrades force-push to ask", d == "ask")
 d, _ = gate("git push --force origin main", {"ESTATE_GUARD_OFF": "1"})

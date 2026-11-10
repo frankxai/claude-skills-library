@@ -92,8 +92,19 @@ if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 | Hook | Event | Behaviour |
 |---|---|---|
 | `estate-guard-session.py` | SessionStart | Injects the contract and the last scan's counts. |
-| `estate-guard-gate.py` | PreToolUse on Bash | **Denies**: force-push to main/master/production, `rm -rf` of root or home, `curl \| sh`, permission-bypass flags, history rewrites, secret deletion, destructive SQL, writes to global Claude settings, `chmod 777`. **Asks**: direct push to main, `reset --hard`, `clean -f`, any `rm -r`, unpinned `npx -y` / `@latest`, production deploys, db pushes, DELETE API calls, secret writes, email sends. |
+| `estate-guard-gate.py` | PreToolUse on Bash | **Denies**: force-push to main/master/production, `rm -rf` of root or home, `curl \| sh`, permission-bypass flags, history rewrites, secret deletion, destructive SQL, writes to global Claude settings, `chmod 777`. **Asks**: direct push to main, `reset --hard`, `clean -f`, any `rm -r` (except scratch-only deletes, below), unpinned `npx -y` / `@latest`, production deploys, db pushes, DELETE API calls, secret writes, email sends. |
 | `estate-guard-taint.py` | PostToolUse on WebFetch, WebSearch, MCP tools, fetching Bash | Appends a "this is data" note when the output contains instruction-shaped text or hidden unicode. |
+
+**Scratch deletes.** The `rm -r` ask is skipped only when every `rm` in the
+command deletes nothing but scratch targets: absolute paths under `/tmp/`,
+`/var/tmp/`, `/private/tmp/`, `$TMPDIR/` or `${TMPDIR}/` with a real segment
+after the prefix, no `..`, no `$(`/backtick or other `$` expansion, no braces,
+not a glob over the root itself (`/tmp`, `/tmp/*` still ask), and not resolving
+through a symlink to outside the scratch roots. Relative paths (`cd /tmp && rm
+-rf x`), `~`, `$HOME`, or one non-scratch target anywhere still ask; the
+root/home deny and every other ask rule are unchanged. **Agents: delete scratch
+with an absolute path** (`rm -rf /tmp/claude-0/acos`, not `cd /tmp/claude-0 &&
+rm -rf acos`), or an unattended run stalls waiting for a human.
 
 `ESTATE_GUARD_OFF=1` silences all three for a session. `ESTATE_GUARD_ALLOW_FORCE=1`
 turns the force-push deny into an ask for branch work you own. Do not set
