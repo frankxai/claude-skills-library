@@ -14,20 +14,23 @@ task.
 
 ## Current models
 
-Checked 2026-11-11 against the claude-api skill's model table (cached 2026-11-03). Prices are
-first-party API rates in USD per million tokens. Before writing these into code, re-check them with
+Prices checked 2026-11-11 against the model pricing table at
+https://platform.claude.com/docs/en/about-claude/pricing; model IDs against the claude-api skill's
+model table (cached 2026-11-03). Prices are first-party API rates in USD per million tokens. Before writing these into code, re-check them with
 `GET /v1/models` (or `client.models.list()`) and the models overview at
 https://platform.claude.com/docs/en/about-claude/models/overview. Model IDs are complete as written: never
 append a date suffix.
 
 | Tier | Model ID | Input USD/1M | Output USD/1M | Context |
 |---|---|---|---|---|
-| Haiku | `claude-haiku-5-5` | 0.10 (0.50 above 100K prompt tokens) | 0.50 (2.50 above 100K) | 1M |
+| Haiku | `claude-haiku-5-5` | 0.10 (0.50 when the prompt is over 100,000 tokens) | 0.50 (2.50 when the prompt is over 100,000 tokens) | 1M |
 | Sonnet | `claude-sonnet-5-5` | 2.00 | 10.00 | 1M |
 | Opus (default) | `claude-opus-5-5` | 4.00 | 20.00 | 1M |
 | Fable (escalation only) | `claude-fable-5-2` | 8.00 | 40.00 | 1M |
 
-`routing-rules.json` in this folder carries the same IDs and prices in machine-readable form. Its
+Haiku's prompt length counts every input token, cache reads and writes included, and each request
+is priced on its own. `routing-rules.json` in this folder carries the same IDs and prices in
+machine-readable form, including the Haiku over-100K rates. Its
 `command_routing` and `agent_routing` blocks name FrankX estate commands and agents that do not ship
 with this pack; ignore them outside that estate.
 

@@ -1,6 +1,6 @@
 ---
 name: hooks-automation
-description: Configure and automate Claude Code hooks in .claude/settings.json (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStop, SessionEnd). Use when setting up Claude Code hooks to auto-format files after edits, run pre-commit or safety checks before Bash commands, guard secrets or protected files, save session state on Stop or SessionEnd, or wire optional external CLI and MCP hook runners.
+description: Configure and automate Claude Code hooks in .claude/settings.json (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStop, SessionEnd), including claude-flow pre/post-task, memory-coordination and session hooks. Use when setting up Claude Code hooks to auto-format files after edits, run pre-commit or safety checks before Bash commands, guard secrets or protected files, save session state on Stop or SessionEnd, or wire claude-flow and MCP hook runners for swarm coordination. Not for React hooks (useState, useEffect), plain .git/hooks scripts, or HTTP webhooks.
 metadata:
   version: "2.0.0"
 ---
@@ -86,7 +86,7 @@ Place this configuration in `.claude/settings.json` to:
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path // empty' | xargs -r npx prettier --write"
+            "command": "f=\"$(jq -r '.tool_input.file_path // empty')\"; if [ -n \"$f\" ]; then npx prettier --write -- \"$f\"; fi"
           }
         ]
       }
@@ -100,10 +100,15 @@ Place this configuration in `.claude/settings.json` to:
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
+# Fail closed: any unexpected error (bad JSON, missing jq) blocks with exit 2.
+trap 'echo "pre-commit-check: hook error, blocking until fixed" >&2; exit 2' ERR
 PAYLOAD="$(cat)"
 CMD="$(printf '%s' "$PAYLOAD" | jq -r '.tool_input.command // empty')"
+# Matches `git commit`, `git -C repo commit`, `git -c k=v commit`, and chained forms.
+# Over-matches some read-only commands (e.g. `git log --grep commit`): that only runs the checks.
+COMMIT_RE='(^|[;&|(`[:space:]])git([[:space:]]+[^;&|]*)?[[:space:]]commit([[:space:]]|$)'
 
-if [[ "$CMD" =~ git[[:space:]]+commit ]]; then
+if [[ "$CMD" =~ $COMMIT_RE ]]; then
   if ! npm run lint --silent || ! npm test --silent; then
     echo "Pre-commit check failed: fix lint/test errors before committing." >&2
     exit 2
@@ -117,6 +122,8 @@ exit 0
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
+# Fail closed: a jq parse error or any other failure blocks with exit 2.
+trap 'echo "file-and-secret-guard: hook error, blocking until fixed" >&2; exit 2' ERR
 PAYLOAD="$(cat)"
 FILE_PATH="$(printf '%s' "$PAYLOAD" | jq -r '.tool_input.file_path // empty')"
 CONTENT="$(printf '%s' "$PAYLOAD" | jq -r '(.tool_input.content // .tool_input.new_string // empty)')"
@@ -126,8 +133,14 @@ if [[ "$FILE_PATH" =~ (^|/)(\.env|CANON_LOCKED\.md)$ ]]; then
   exit 2
 fi
 
-if printf '%s' "$CONTENT" | grep -Eq '(sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})'; then
+# grep exits 0 on a match, 1 on no match, 2 on error; treat an error as a block.
+rc=0
+printf '%s' "$CONTENT" | grep -Eq '(sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})' || rc=$?
+if [[ $rc -eq 0 ]]; then
   echo "Blocked write: detected hardcoded secret token in $FILE_PATH" >&2
+  exit 2
+elif [[ $rc -ne 1 ]]; then
+  echo "file-and-secret-guard: secret scan failed (grep exit $rc), blocking" >&2
   exit 2
 fi
 
@@ -181,9 +194,18 @@ exit 0
 
 ---
 
-## Optional Integration: External CLI & Swarm Hook Runners
+## Swarm Coordination, Memory & Learning Hooks (claude-flow)
 
-When running multi-agent swarms or external memory coordination alongside native `.claude/settings.json` hooks, you can wire optional CLI runners such as `claude-flow` inside the `command` field of a native hook:
+For multi-agent swarms, cross-session memory, and pattern training, run the `claude-flow` hook runner from native hook `command` fields. It needs Node and the CLI (`npm install -g claude-flow@alpha`); it is not required for the native recipes above.
+
+Initialize it once per project:
+
+```bash
+npx claude-flow init --hooks        # writes hook entries into .claude/settings.json and docs into .claude/commands/hooks/
+npx claude-flow hook validate-config
+```
+
+Check the generated `.claude/settings.json` with `jq empty .claude/settings.json` and read the added `"hooks"` entries before committing them. Then call the runner from a hook command or script:
 
 ```bash
 # Optional: pre-task and post-edit swarm memory hooks invoked from a command script
