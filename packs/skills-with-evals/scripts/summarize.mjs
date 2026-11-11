@@ -21,7 +21,7 @@ for (const c of agg.cases) {
 const rows = [];
 for (const [skill, s] of Object.entries(skills)) {
   const outcome = s.cases.filter((x) => x.kind.startsWith('outcome'));
-  const neg = s.cases.find((x) => x.kind === 'no-trigger');
+  const negs = s.cases.filter((x) => x.kind.startsWith('no-trigger'));
   const usable = (r) => !r.skippedPaidGraders;
   const skipped = outcome.flatMap((x) => [...x.c.arms.with, ...x.c.arms.without]).filter((r) => !usable(r)).length;
   const withRuns = outcome.flatMap((x) => x.c.arms.with).filter(usable);
@@ -29,10 +29,11 @@ for (const [skill, s] of Object.entries(skills)) {
   const fired = outcome.flatMap((x) =>
     x.c.arms.with.map((r) => r.graders.find((g) => g.name === 'skill-fired')?.passed === true),
   );
-  const falsePos = neg ? neg.c.arms.with.map((r) => r.graders[0].passed === false) : [];
+  const falsePos = negs.flatMap((x) => x.c.arms.with.map((r) => r.graders[0].passed === false));
   const errors = [...withRuns, ...woRuns].filter((r) => r.error).length;
   const complete =
-    s.cases.length === 3 && s.cases.every((x) => x.c.arms.with.length === 2 && x.c.arms.without.length === 2);
+    outcome.length >= 2 && negs.length >= 1 && outcome.length + negs.length === s.cases.length &&
+    s.cases.every((x) => x.c.arms.with.length === 2 && x.c.arms.without.length === 2);
   const w = mean(withRuns.map((r) => r.score));
   const b = mean(woRuns.map((r) => r.score));
   const delta = w !== null && b !== null ? w - b : null;
