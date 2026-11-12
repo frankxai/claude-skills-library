@@ -1,0 +1,1737 @@
+{
+  "schema": "claude-skills-library/ownership@1",
+  "$comment": "Estate-published truth. One entry per skill this library ships, carrying the canonical owning repo and path, the canonical version and the eval verdict, all resolved by the estate skill resolver (node tools/gen-skills-graph.mjs in the starlight-command estate root) under ops/skill-authority.json. The library never edits this file by hand. Regenerate: run the resolver in the estate root, then re-run the publisher that produced it and open a pull request against this repo.",
+  "provenance": {
+    "source": "starlight-command/graph/skills.graph.json",
+    "generator": "starlight/tools/gen-skills-graph.mjs",
+    "authority": "starlight/ops/skill-authority.json",
+    "resolverSchema": "starlight.skills.graph/v1",
+    "graphUpdatedAt": "2026-11-07T00:57:00.637Z",
+    "publishedAt": "2026-11-12T13:46:04.600Z"
+  },
+  "totals": {
+    "shipped": 115,
+    "resolved": 115,
+    "withEval": 24
+  },
+  "skills": [
+    {
+      "name": "acos-meta",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/acos-meta"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:core/skills/acos-meta/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/acos-meta/SKILL.md",
+        "claude-code-config:skills/acos-meta/SKILL.md"
+      ]
+    },
+    {
+      "name": "acos-visual-gen",
+      "owner": {
+        "repo": "frankxai/creator-skills",
+        "path": "skills/images/acos-visual-gen"
+      },
+      "version": null,
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#acos-visual-gen",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/acos-visual-gen/SKILL.md",
+        "claude-skills-library:free-skills/acos-visual-gen/SKILL.md",
+        "claude-code-config:skills/acos-visual-gen/SKILL.md"
+      ]
+    },
+    {
+      "name": "agent-design-review",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/reviews/agent-design-review"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#agent-design-review",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:free-skills/agent-design-review/SKILL.md",
+        "claude-code-config:skills/agent-design-review/SKILL.md"
+      ]
+    },
+    {
+      "name": "agentic-jujutsu",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/agentic-jujutsu"
+      },
+      "version": "2.3.2",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/agentic-jujutsu/SKILL.md",
+        "claude-code-config:skills/agentic-jujutsu/SKILL.md"
+      ]
+    },
+    {
+      "name": "agentic-orchestration",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/orchestration/agentic-orchestration"
+      },
+      "version": "2.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#agentic-orchestration",
+        "note": "Remediated v2.0.0: Added Trigger Boundaries, self-contained runnable Maker-to-Verifier handoff contract (validateHandoffPacket), and anti-slop guardrails."
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/agentic-orchestration/SKILL.md",
+        "claude-skills-library:free-skills/agentic-orchestration/SKILL.md"
+      ]
+    },
+    {
+      "name": "ai-architect-newsletter",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/ai-architect-newsletter"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/ai-architect-newsletter/SKILL.md",
+        "claude-code-config:skills/ai-architect-newsletter/SKILL.md"
+      ]
+    },
+    {
+      "name": "ai-architect-review",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/ai-architect-review"
+      },
+      "version": null,
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#ai-architect-review",
+        "note": "Positive behavioral lift (+25 pts on MADE/DEFERRED decision table, 1.00 trigger rate, 0 false positives) + deterministic & planted-fault suite pass."
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/ai-architect-review/SKILL.md"
+      ]
+    },
+    {
+      "name": "ai-architecture",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/ai-architecture"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/ai-architecture/SKILL.md"
+      ]
+    },
+    {
+      "name": "algorithmic-art",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/algorithmic-art"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/algorithmic-art/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/algorithmic-art/SKILL.md"
+      ]
+    },
+    {
+      "name": "animejs",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/animejs"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/animejs/SKILL.md"
+      ]
+    },
+    {
+      "name": "arcanea-book-cover",
+      "owner": {
+        "repo": "frankxai/creator-skills",
+        "path": "skills/images/arcanea-book-cover"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/arcanea-book-cover/SKILL.md",
+        "claude-skills-library:free-skills/arcanea-book-cover/SKILL.md",
+        "claude-code-config:skills/arcanea-book-cover/SKILL.md"
+      ]
+    },
+    {
+      "name": "arcanea-infogenius",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/arcanea-infogenius"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/arcanea-infogenius/SKILL.md",
+        "claude-code-config:skills/arcanea-infogenius/SKILL.md"
+      ]
+    },
+    {
+      "name": "arcanea-meta",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/arcanea-meta"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/arcanea-meta/SKILL.md",
+        "claude-code-config:skills/arcanea-meta/SKILL.md"
+      ]
+    },
+    {
+      "name": "artifacts-builder",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/artifacts-builder"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/artifacts-builder/SKILL.md"
+      ]
+    },
+    {
+      "name": "book-publishing",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/book-publishing"
+      },
+      "version": null,
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#book-publishing",
+        "note": "Seeded-defects + clean-fixture + KEY.md answer key verified"
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/book-publishing/SKILL.md",
+        "claude-code-config:skills/book-publishing/SKILL.md"
+      ]
+    },
+    {
+      "name": "brand-guidelines",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/brand-guidelines"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/brand-guidelines/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/brand-guidelines/SKILL.md"
+      ]
+    },
+    {
+      "name": "brand-voice",
+      "owner": {
+        "repo": "frankxai/creator-skills",
+        "path": "skills/brand/brand-voice"
+      },
+      "version": null,
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#brand-voice",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-brand-pack",
+      "mirrors": [
+        "agentic-creator-skills:brand-architect/skills/brand-voice/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/brand-voice/SKILL.md",
+        "claude-skills-library:free-skills/brand-voice/SKILL.md",
+        "claude-code-config:skills/brand-voice/SKILL.md"
+      ]
+    },
+    {
+      "name": "cacos",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/cacos"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/cacos/SKILL.md",
+        "claude-code-config:skills/cacos/SKILL.md"
+      ]
+    },
+    {
+      "name": "canvas-design",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/canvas-design"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/canvas-design/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/canvas-design/SKILL.md"
+      ]
+    },
+    {
+      "name": "claude-sdk",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/frameworks/claude-sdk"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#claude-sdk",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/claude-sdk/SKILL.md",
+        "claude-skills-library:free-skills/claude-sdk/SKILL.md",
+        "external:skills/claude-sdk/SKILL.md"
+      ]
+    },
+    {
+      "name": "content-strategy",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/creative/content-strategy"
+      },
+      "version": "1.2.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/creative/content-strategy/SKILL.md"
+      ]
+    },
+    {
+      "name": "contribute-catalog",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/contribute-catalog"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/contribute-catalog/SKILL.md"
+      ]
+    },
+    {
+      "name": "creator-intelligence",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/technical/creator-intelligence"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/technical/creator-intelligence/SKILL.md"
+      ]
+    },
+    {
+      "name": "creator-meta",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/creator-meta"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/creator-meta/SKILL.md",
+        "claude-code-config:skills/creator-meta/SKILL.md"
+      ]
+    },
+    {
+      "name": "creator-productivity",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/creator-productivity"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:core/skills/creator-productivity/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/creator-productivity/SKILL.md",
+        "claude-code-config:skills/creator-productivity/SKILL.md"
+      ]
+    },
+    {
+      "name": "css-animations",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/css-animations"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/css-animations/SKILL.md"
+      ]
+    },
+    {
+      "name": "defuddle",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/tools/defuddle"
+      },
+      "version": null,
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#defuddle",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/defuddle/SKILL.md",
+        "claude-skills-library:free-skills/defuddle/SKILL.md",
+        "external:skills/defuddle/SKILL.md"
+      ]
+    },
+    {
+      "name": "docx",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/docx"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/docx/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/docx/SKILL.md"
+      ]
+    },
+    {
+      "name": "excellence-book-writing",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/excellence-book-writing"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#excellence-book-writing",
+        "note": "Seeded-defects + clean-fixture + KEY.md answer key verified"
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/excellence-book-writing/SKILL.md",
+        "claude-code-config:skills/excellence-book-writing/SKILL.md"
+      ]
+    },
+    {
+      "name": "feynman-thinking",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/feynman-thinking"
+      },
+      "version": "2.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#feynman-thinking",
+        "note": "Remediated v2.0.0: Added Trigger Boundaries, self-contained Event-Sourced Memory Vault worked example with ASCII flow + before/after code, and anti-slop checklist."
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/feynman-thinking/SKILL.md"
+      ]
+    },
+    {
+      "name": "framer-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/framer-expert"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/framer-expert/SKILL.md",
+        "claude-code-config:skills/framer-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "frankx-daily-execution",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/frankx-daily-execution"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/frankx-daily-execution/SKILL.md"
+      ]
+    },
+    {
+      "name": "github-code-review",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/github-code-review"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/github-code-review/SKILL.md",
+        "claude-code-config:skills/github-code-review/SKILL.md"
+      ]
+    },
+    {
+      "name": "github-multi-repo",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/github-multi-repo"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/github-multi-repo/SKILL.md",
+        "claude-code-config:skills/github-multi-repo/SKILL.md"
+      ]
+    },
+    {
+      "name": "github-project-management",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/github-project-management"
+      },
+      "version": "2.1.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/github-project-management/SKILL.md",
+        "claude-code-config:skills/github-project-management/SKILL.md"
+      ]
+    },
+    {
+      "name": "github-release-management",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/github-release-management"
+      },
+      "version": "2.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/github-release-management/SKILL.md",
+        "claude-code-config:skills/github-release-management/SKILL.md"
+      ]
+    },
+    {
+      "name": "greek-philosopher",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/greek-philosopher"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/greek-philosopher/SKILL.md",
+        "claude-code-config:skills/greek-philosopher/SKILL.md"
+      ]
+    },
+    {
+      "name": "gsap",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/gsap"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/gsap/SKILL.md"
+      ]
+    },
+    {
+      "name": "gym-training-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/gym-training-expert"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/gym-training-expert/SKILL.md",
+        "claude-code-config:skills/gym-training-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "health-nutrition-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/health-nutrition-expert"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/health-nutrition-expert/SKILL.md",
+        "claude-code-config:skills/health-nutrition-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "higgsfield-generate",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/higgsfield-generate"
+      },
+      "version": "0.3.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/higgsfield-generate/SKILL.md",
+        "external:skills/higgsfield-generate/SKILL.md"
+      ]
+    },
+    {
+      "name": "higgsfield-marketplace-cards",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/higgsfield-marketplace-cards"
+      },
+      "version": "0.3.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/higgsfield-marketplace-cards/SKILL.md",
+        "external:skills/higgsfield-marketplace-cards/SKILL.md"
+      ]
+    },
+    {
+      "name": "higgsfield-product-photoshoot",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/higgsfield-product-photoshoot"
+      },
+      "version": "0.3.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/higgsfield-product-photoshoot/SKILL.md",
+        "external:skills/higgsfield-product-photoshoot/SKILL.md"
+      ]
+    },
+    {
+      "name": "higgsfield-soul-id",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/higgsfield-soul-id"
+      },
+      "version": "0.3.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/higgsfield-soul-id/SKILL.md",
+        "external:skills/higgsfield-soul-id/SKILL.md"
+      ]
+    },
+    {
+      "name": "hive-mind-advanced",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/hive-mind-advanced"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/hive-mind-advanced/SKILL.md"
+      ]
+    },
+    {
+      "name": "hooks-automation",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/hooks-automation"
+      },
+      "version": "2.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#hooks-automation",
+        "note": "Remediated v2.0.0: Rewrote around native Claude Code .claude/settings.json hooks (PreToolUse/PostToolUse/Stop/SessionEnd), exit 0 vs 2 blocking gates, JSON stdout decision control, and secret/file guard scripts."
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/hooks-automation/SKILL.md",
+        "claude-code-config:skills/hooks-automation/SKILL.md"
+      ]
+    },
+    {
+      "name": "hyperframes-cli",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/hyperframes-cli"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/hyperframes-cli/SKILL.md",
+        "claude-code-config:skills/hyperframes-cli/SKILL.md"
+      ]
+    },
+    {
+      "name": "hyperframes-media",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/hyperframes-media"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/hyperframes-media/SKILL.md"
+      ]
+    },
+    {
+      "name": "hyperframes-registry",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/hyperframes-registry"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/hyperframes-registry/SKILL.md",
+        "claude-code-config:skills/hyperframes-registry/SKILL.md"
+      ]
+    },
+    {
+      "name": "internal-comms",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/internal-comms"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/internal-comms/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/internal-comms/SKILL.md"
+      ]
+    },
+    {
+      "name": "langgraph-patterns",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/frameworks/langgraph-patterns"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#langgraph-patterns",
+        "note": "Strongest measured behavioral lift (+42 pts on StateGraph + interrupt/checkpointer, 1.00 trigger rate, 0 false positives) + deterministic & planted-fault suite pass."
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/langgraph-patterns/SKILL.md",
+        "claude-skills-library:free-skills/langgraph-patterns/SKILL.md",
+        "external:skills/langgraph-patterns/SKILL.md"
+      ]
+    },
+    {
+      "name": "loop-designer",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/loop-designer"
+      },
+      "version": "2.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#loop-designer",
+        "note": "Remediated v2.0.0: Added Trigger Boundaries, self-contained .loop/skill-hygiene-ratchet/ (LOOP.md + state.json + backlog.md) fixture, and anti-slop ratchet checklist."
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/loop-designer/SKILL.md",
+        "claude-code-config:skills/loop-designer/SKILL.md"
+      ]
+    },
+    {
+      "name": "loop-orchestrator",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/loop-orchestrator"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/loop-orchestrator/SKILL.md",
+        "claude-code-config:skills/loop-orchestrator/SKILL.md"
+      ]
+    },
+    {
+      "name": "loop-runner",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/loop-runner"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/loop-runner/SKILL.md"
+      ]
+    },
+    {
+      "name": "lottie",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/lottie"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/lottie/SKILL.md"
+      ]
+    },
+    {
+      "name": "mcp-2025-patterns",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/mcp/mcp-2025-patterns"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#mcp-2025-patterns",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/mcp-2025-patterns/SKILL.md",
+        "claude-skills-library:free-skills/mcp-2025-patterns/SKILL.md",
+        "external:skills/mcp-2025-patterns/SKILL.md"
+      ]
+    },
+    {
+      "name": "mcp-architecture",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/mcp/mcp-architecture"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#mcp-architecture",
+        "note": "100% score (1.00) with 0 false positives; cross-model case + deterministic suite pass."
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/mcp-architecture/SKILL.md",
+        "claude-skills-library:free-skills/mcp-architecture/SKILL.md",
+        "external:skills/mcp-architecture/SKILL.md"
+      ]
+    },
+    {
+      "name": "mcp-builder",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/mcp-builder"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/mcp-builder/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/mcp-builder/SKILL.md"
+      ]
+    },
+    {
+      "name": "memory-prune",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/memory-prune"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/memory-prune/SKILL.md",
+        "claude-code-config:skills/memory-prune/SKILL.md"
+      ]
+    },
+    {
+      "name": "model-routing",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/models/model-routing"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#model-routing",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/model-routing/SKILL.md",
+        "claude-skills-library:free-skills/model-routing/SKILL.md",
+        "external:skills/model-routing/SKILL.md"
+      ]
+    },
+    {
+      "name": "nextjs-agent-team",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/nextjs-agent-team"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/nextjs-agent-team/SKILL.md",
+        "claude-code-config:skills/nextjs-agent-team/SKILL.md"
+      ]
+    },
+    {
+      "name": "nextjs-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/nextjs-expert"
+      },
+      "version": "2.1.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/nextjs-expert/SKILL.md",
+        "claude-code-config:skills/nextjs-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "nextjs-react-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/nextjs-react-expert"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#nextjs-react-expert",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/nextjs-react-expert/SKILL.md",
+        "claude-code-config:skills/nextjs-react-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "nextjs-upgrade-assistant",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/nextjs-upgrade-assistant"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/nextjs-upgrade-assistant/SKILL.md",
+        "claude-code-config:skills/nextjs-upgrade-assistant/SKILL.md"
+      ]
+    },
+    {
+      "name": "oci-drawio-icon-native",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/oci-drawio-icon-native"
+      },
+      "version": "1.1.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/oci-drawio-icon-native/SKILL.md",
+        "claude-code-config:skills/oci-drawio-icon-native/SKILL.md"
+      ]
+    },
+    {
+      "name": "oci-services-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/oci-services-expert"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/oci-services-expert/SKILL.md",
+        "claude-code-config:skills/oci-services-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "openai-agentkit",
+      "owner": {
+        "repo": "frankxai/skills",
+        "path": "skills/frameworks/openai-agentkit"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#openai-agentkit",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/openai-agentkit/SKILL.md",
+        "claude-skills-library:free-skills/openai-agentkit/SKILL.md",
+        "external:skills/openai-agentkit/SKILL.md"
+      ]
+    },
+    {
+      "name": "opus-extended-thinking",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/opus-extended-thinking"
+      },
+      "version": "2.1.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/opus-extended-thinking/SKILL.md",
+        "claude-code-config:skills/opus-extended-thinking/SKILL.md"
+      ]
+    },
+    {
+      "name": "oracle-adk",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/oracle-adk"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/oracle-adk/SKILL.md"
+      ]
+    },
+    {
+      "name": "oracle-agent-spec",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/oracle-agent-spec"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/oracle-agent-spec/SKILL.md"
+      ]
+    },
+    {
+      "name": "oracle-ai-architect",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/oracle-ai-architect"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/oracle-ai-architect/SKILL.md",
+        "claude-code-config:skills/oracle-ai-architect/SKILL.md"
+      ]
+    },
+    {
+      "name": "oracle-confidentiality",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/oracle-confidentiality"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/oracle-confidentiality/SKILL.md",
+        "claude-code-config:skills/oracle-confidentiality/SKILL.md"
+      ]
+    },
+    {
+      "name": "oracle-database-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/oracle-database-expert"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/oracle-database-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "oracle-solution-design",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/oracle-solution-design"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/oracle-solution-design/SKILL.md",
+        "claude-code-config:skills/oracle-solution-design/SKILL.md"
+      ]
+    },
+    {
+      "name": "pair-programming",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/pair-programming"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/pair-programming/SKILL.md",
+        "claude-code-config:skills/pair-programming/SKILL.md"
+      ]
+    },
+    {
+      "name": "partner-anthropic",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/partner-anthropic"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/partner-anthropic/SKILL.md",
+        "claude-code-config:skills/partner-anthropic/SKILL.md"
+      ]
+    },
+    {
+      "name": "partner-arrow",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/partner-arrow"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/partner-arrow/SKILL.md",
+        "claude-code-config:skills/partner-arrow/SKILL.md"
+      ]
+    },
+    {
+      "name": "partner-google",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/partner-google"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/partner-google/SKILL.md",
+        "claude-code-config:skills/partner-google/SKILL.md"
+      ]
+    },
+    {
+      "name": "partner-nvidia",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/partner-nvidia"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/partner-nvidia/SKILL.md",
+        "claude-code-config:skills/partner-nvidia/SKILL.md"
+      ]
+    },
+    {
+      "name": "partner-vercel",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/partner-vercel"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/partner-vercel/SKILL.md",
+        "claude-code-config:skills/partner-vercel/SKILL.md"
+      ]
+    },
+    {
+      "name": "pdf",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/pdf"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/pdf/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/pdf/SKILL.md"
+      ]
+    },
+    {
+      "name": "performance-analysis",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/performance-analysis"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/performance-analysis/SKILL.md",
+        "claude-code-config:skills/performance-analysis/SKILL.md"
+      ]
+    },
+    {
+      "name": "pptx",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/pptx"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/pptx/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/pptx/SKILL.md"
+      ]
+    },
+    {
+      "name": "product-management-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/product-management-expert"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#product-management-expert",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/product-management-expert/SKILL.md",
+        "claude-code-config:skills/product-management-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "prompt-hub",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/prompt-hub"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/prompt-hub/SKILL.md",
+        "claude-code-config:skills/prompt-hub/SKILL.md"
+      ]
+    },
+    {
+      "name": "reasoningbank-agentdb",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/reasoningbank-agentdb"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/reasoningbank-agentdb/SKILL.md",
+        "claude-code-config:skills/reasoningbank-agentdb/SKILL.md"
+      ]
+    },
+    {
+      "name": "reasoningbank-intelligence",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/reasoningbank-intelligence"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/reasoningbank-intelligence/SKILL.md",
+        "claude-code-config:skills/reasoningbank-intelligence/SKILL.md"
+      ]
+    },
+    {
+      "name": "remotion-to-hyperframes",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/remotion-to-hyperframes"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/remotion-to-hyperframes/SKILL.md",
+        "claude-code-config:skills/remotion-to-hyperframes/SKILL.md"
+      ]
+    },
+    {
+      "name": "si",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/si"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/si/SKILL.md",
+        "claude-code-config:skills/si/SKILL.md"
+      ]
+    },
+    {
+      "name": "skill-builder",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/skill-builder"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/skill-builder/SKILL.md"
+      ]
+    },
+    {
+      "name": "slack-gif-creator",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/slack-gif-creator"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/slack-gif-creator/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/slack-gif-creator/SKILL.md"
+      ]
+    },
+    {
+      "name": "social-media-strategy",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/social-media-strategy"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#social-media-strategy",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/social-media-strategy/SKILL.md",
+        "claude-code-config:skills/social-media-strategy/SKILL.md"
+      ]
+    },
+    {
+      "name": "sparc-methodology",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/sparc-methodology"
+      },
+      "version": "2.7.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/sparc-methodology/SKILL.md",
+        "claude-code-config:skills/sparc-methodology/SKILL.md"
+      ]
+    },
+    {
+      "name": "spartan-warrior",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/spartan-warrior"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/spartan-warrior/SKILL.md",
+        "claude-code-config:skills/spartan-warrior/SKILL.md"
+      ]
+    },
+    {
+      "name": "starlight-chronicle",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/starlight-chronicle"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/starlight-chronicle/SKILL.md",
+        "claude-code-config:skills/starlight-chronicle/SKILL.md"
+      ]
+    },
+    {
+      "name": "stream-chain",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/stream-chain"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/stream-chain/SKILL.md",
+        "claude-code-config:skills/stream-chain/SKILL.md"
+      ]
+    },
+    {
+      "name": "suno-ai-mastery",
+      "owner": {
+        "repo": "frankxai/creator-skills",
+        "path": "skills/music/suno-ai-mastery"
+      },
+      "version": "2.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#suno-ai-mastery",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/suno-ai-mastery/SKILL.md",
+        "claude-skills-library:free-skills/suno-ai-mastery/SKILL.md",
+        "claude-code-config:skills/suno-ai-mastery/SKILL.md"
+      ]
+    },
+    {
+      "name": "suno-prompt-architect",
+      "owner": {
+        "repo": "frankxai/creator-skills",
+        "path": "skills/music/suno-prompt-architect"
+      },
+      "version": "2.0.0",
+      "eval": null,
+      "resolvedBy": "curated-over-catalog",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/suno-prompt-architect/SKILL.md",
+        "claude-skills-library:free-skills/suno-prompt-architect/SKILL.md",
+        "claude-code-config:skills/suno-prompt-architect/SKILL.md"
+      ]
+    },
+    {
+      "name": "swarm-advanced",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/swarm-advanced"
+      },
+      "version": "2.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/swarm-advanced/SKILL.md"
+      ]
+    },
+    {
+      "name": "swarm-orchestration",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/swarm-orchestration"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/swarm-orchestration/SKILL.md"
+      ]
+    },
+    {
+      "name": "tailwind",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/tailwind"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/tailwind/SKILL.md"
+      ]
+    },
+    {
+      "name": "theme-factory",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/theme-factory"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/theme-factory/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/theme-factory/SKILL.md"
+      ]
+    },
+    {
+      "name": "three",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/three"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/three/SKILL.md"
+      ]
+    },
+    {
+      "name": "todo-discipline",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/todo-discipline"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#todo-discipline",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/todo-discipline/SKILL.md",
+        "unversioned:skills/todo-discipline/SKILL.md"
+      ]
+    },
+    {
+      "name": "ui-ux-design-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/ui-ux-design-expert"
+      },
+      "version": "1.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#ui-ux-design-expert",
+        "note": "Seeded-defects + clean-fixture + KEY.md answer key verified"
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/ui-ux-design-expert/SKILL.md",
+        "claude-code-config:skills/ui-ux-design-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "v-swarm",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/v-swarm"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/v-swarm/SKILL.md",
+        "claude-code-config:skills/v-swarm/SKILL.md"
+      ]
+    },
+    {
+      "name": "verification-quality",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/verification-quality"
+      },
+      "version": "2.0.0",
+      "eval": {
+        "verdict": "PASS",
+        "evaluatedAt": "2026-10-25",
+        "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#verification-quality",
+        "note": "Deterministic + planted-fault suite verified"
+      },
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/verification-quality/SKILL.md",
+        "claude-code-config:skills/verification-quality/SKILL.md"
+      ]
+    },
+    {
+      "name": "video-production-workflow",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/video-production-workflow"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/video-production-workflow/SKILL.md",
+        "claude-code-config:skills/video-production-workflow/SKILL.md"
+      ]
+    },
+    {
+      "name": "waapi",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/waapi"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/waapi/SKILL.md"
+      ]
+    },
+    {
+      "name": "web-design-expert",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/web-design-expert"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/web-design-expert/SKILL.md",
+        "claude-code-config:skills/web-design-expert/SKILL.md"
+      ]
+    },
+    {
+      "name": "webapp-testing",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/webapp-testing"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/webapp-testing/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/webapp-testing/SKILL.md"
+      ]
+    },
+    {
+      "name": "website-to-hyperframes",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/website-to-hyperframes"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/website-to-hyperframes/SKILL.md"
+      ]
+    },
+    {
+      "name": "worker-benchmarks",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/worker-benchmarks"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/worker-benchmarks/SKILL.md"
+      ]
+    },
+    {
+      "name": "worker-integration",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/worker-integration"
+      },
+      "version": "1.0.0",
+      "eval": null,
+      "resolvedBy": "canonical-path-within-repo",
+      "mirrors": [
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/worker-integration/SKILL.md"
+      ]
+    },
+    {
+      "name": "xlsx",
+      "owner": {
+        "repo": "frankxai/claude-skills-library",
+        "path": "free-skills/anthropic/xlsx"
+      },
+      "version": null,
+      "eval": null,
+      "resolvedBy": "catalog-over-internal-pack",
+      "mirrors": [
+        "agentic-creator-skills:skills/xlsx/SKILL.md",
+        "claude-skills-library:.claude/worktrees/thrift/free-skills/anthropic/xlsx/SKILL.md"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "schema": "claude-skills-library/catalog@1",
+  "schema": "claude-skills-library/catalog@2",
   "generatedBy": "scripts/build-catalog.mjs",
   "marketplace": {
     "name": "claude-skills-library",
@@ -7,12 +7,25 @@
     "description": "FrankX multi-brand plugin marketplace: the Agent Skills library plus validated brand packs for GenCreator creators and Starlight Academy.",
     "pluginCount": 4
   },
+  "ownership": {
+    "source": "starlight-command/graph/skills.graph.json",
+    "generator": "starlight/tools/gen-skills-graph.mjs",
+    "authority": "starlight/ops/skill-authority.json",
+    "resolverSchema": "starlight.skills.graph/v1",
+    "graphUpdatedAt": "2026-11-07T00:57:00.637Z",
+    "publishedAt": "2026-11-12T13:46:04.600Z"
+  },
   "totals": {
     "pluginsWithListedSkills": 1,
     "skills": 116,
-    "skillsWithEvals": 0,
+    "skillsWithEvals": 10,
+    "skillsWithEvalVerdict": 23,
+    "skillsWithVersion": 61,
+    "skillsOwnedElsewhere": 13,
+    "versionConflicts": 0,
     "pluginsFromOtherRepos": 3
   },
+  "versionConflicts": [],
   "plugins": [
     {
       "name": "claude-skills-library",
@@ -28,697 +41,1737 @@
           "name": "acos-meta",
           "description": "ACOS self-description and configuration skill. Documents how ACOS works, how to extend it, how to add new skills/commands/agents, and how to debug the hook system. Use when building new ACOS capabilities, understanding the system architecture, or onboarding to ACOS for the first time.",
           "path": "free-skills/acos-meta",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/acos-meta"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/acos-meta"
         },
         {
           "name": "acos-visual-gen",
           "description": "Generate research-grounded visuals using the InfoGenius pipeline. Use when creating infographics, diagrams, educational visuals, or any image that benefits from factual accuracy. Supports 8 visual styles (3D, technical, minimalist, photorealistic, futuristic, vintage, cartoon, standard) and 4 audience levels.",
           "path": "free-skills/acos-visual-gen",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#acos-visual-gen"
+          },
+          "owner": {
+            "repo": "frankxai/creator-skills",
+            "path": "skills/images/acos-visual-gen"
+          },
+          "uri": "github:frankxai/creator-skills/skills/images/acos-visual-gen"
         },
         {
           "name": "agent-hygiene",
           "description": "The quality bar for any agent working on agent definitions, skills, commands, hooks, AGENTS.md or CLAUDE.md, in any repo and any harness. Use at session start, before editing a file under .claude/agents, agents/, .claude/commands or any SKILL.md, before handing work back, and whenever choosing which model tier (Haiku, Sonnet, Opus, Fable) or effort level a task deserves. Carries the estate guardrails, the agent-file contract the linter enforces, the verification line every hand-back ends with, and the routing rule for spending the top tier.",
           "path": "free-skills/agent-hygiene",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/agent-hygiene"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/agent-hygiene@1.0.0"
         },
         {
           "name": "agentic-jujutsu",
           "description": "Quantum-resistant, self-learning version control for AI agents, with ReasoningBank intelligence and multi-agent coordination. Use when designing agent memory/versioning, coordinating multiple agents over shared state, or building experience-replay and learning loops into an agentic system.",
           "path": "free-skills/agentic-jujutsu",
-          "hasEvals": false
+          "version": "2.3.2",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/agentic-jujutsu"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/agentic-jujutsu@2.3.2"
         },
         {
           "name": "agentic-orchestration",
           "description": "Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Best practices for building and managing agent systems. Use when designing how multiple agents coordinate — splitting up tasks, defining handoffs, or choosing an orchestration topology.",
           "path": "free-skills/agentic-orchestration",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/agentic-orchestration"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#agentic-orchestration"
+          },
+          "owner": {
+            "repo": "frankxai/skills",
+            "path": "skills/orchestration/agentic-orchestration"
+          },
+          "uri": "github:frankxai/skills/skills/orchestration/agentic-orchestration@2.0.0"
         },
         {
           "name": "ai-architect-newsletter",
           "description": "Generate high-quality AI Architect newsletters with latest AI news, research integration, and visual design. Use when creating newsletters, researching AI developments, synthesizing AI news for architects, or distributing intelligence reports. Covers AI model releases, research papers, tool launches, architecture patterns, production systems, and enterprise AI trends. Integrates with FrankX research hub and supports both daily briefs and weekly deep-dives.",
           "path": "free-skills/ai-architect-newsletter",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/ai-architect-newsletter"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/ai-architect-newsletter"
         },
         {
           "name": "ai-architect-review",
           "description": "Review the architecture of a system that calls a language model. Use when adding an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system that worked in a demo is being prepared for production; or when asked to audit, review, or plan AI/agent architecture. Checks the four decisions that are expensive to reverse, then the seven planes and their boundaries.",
           "path": "free-skills/ai-architect-review",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/ai-architect-review"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#ai-architect-review"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/ai-architect-review"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/ai-architect-review"
         },
         {
           "name": "ai-architecture",
           "description": "Expert guidance on multi-cloud architecture, cost analysis, and technical decision-making for AI platforms across AWS, GCP, Azure, and OCI. Use when comparing clouds, estimating infra cost, or making build-vs-buy and architecture trade-off decisions for an AI product.",
           "path": "free-skills/ai-architecture",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/ai-architecture"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/ai-architecture@1.0.0"
         },
         {
           "name": "animejs",
           "description": "Anime.js adapter patterns for HyperFrames. Use when writing Anime.js animations or timelines inside HyperFrames compositions, registering animations on window.__hfAnime, making Anime.js seek-driven and deterministic, or translating Anime.js examples into render-safe HyperFrames HTML.",
           "path": "free-skills/animejs",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/animejs"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/animejs"
         },
         {
           "name": "algorithmic-art",
           "description": "Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, generative art, algorithmic art, flow fields, or particle systems. Create original algorithmic art rather than copying existing artists' work to avoid copyright violations.",
           "path": "free-skills/anthropic/algorithmic-art",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/algorithmic-art"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/algorithmic-art"
         },
         {
           "name": "artifacts-builder",
           "description": "Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts. Use when building complex, multi-component claude.ai HTML artifacts that need state, routing, or shadcn/ui.",
           "path": "free-skills/anthropic/artifacts-builder",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/artifacts-builder"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/artifacts-builder"
         },
         {
           "name": "brand-guidelines",
           "description": "Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.",
           "path": "free-skills/anthropic/brand-guidelines",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/brand-guidelines"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/brand-guidelines"
         },
         {
           "name": "canvas-design",
           "description": "Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs, never copying existing artists' work to avoid copyright violations.",
           "path": "free-skills/anthropic/canvas-design",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/canvas-design"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/canvas-design"
         },
         {
           "name": "docx",
           "description": "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. When Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks",
           "path": "free-skills/anthropic/docx",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/docx"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/docx"
         },
         {
           "name": "internal-comms",
           "description": "A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenever asked to write some sort of internal communications (status reports, leadership updates, 3P updates, company newsletters, FAQs, incident reports, project updates, etc.).",
           "path": "free-skills/anthropic/internal-comms",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/internal-comms"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/internal-comms"
         },
         {
           "name": "mcp-builder",
           "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).",
           "path": "free-skills/anthropic/mcp-builder",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/mcp-builder"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/mcp-builder"
         },
         {
           "name": "pdf",
           "description": "Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, and handling forms. When Claude needs to fill in a PDF form or programmatically process, generate, or analyze PDF documents at scale.",
           "path": "free-skills/anthropic/pdf",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/pdf"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/pdf"
         },
         {
           "name": "pptx",
           "description": "Presentation creation, editing, and analysis. When Claude needs to work with presentations (.pptx files) for: (1) Creating new presentations, (2) Modifying or editing content, (3) Working with layouts, (4) Adding comments or speaker notes, or any other presentation tasks",
           "path": "free-skills/anthropic/pptx",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/pptx"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/pptx"
         },
         {
           "name": "slack-gif-creator",
           "description": "Toolkit for creating animated GIFs optimized for Slack, with validators for size constraints and composable animation primitives. This skill applies when users request animated GIFs or emoji animations for Slack from descriptions like \"make me a GIF for Slack of X doing Y\".",
           "path": "free-skills/anthropic/slack-gif-creator",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/slack-gif-creator"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/slack-gif-creator"
         },
         {
           "name": "theme-factory",
           "description": "Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creating, or can generate a new theme on-the-fly. Use when styling slides, docs, reports, or HTML with a consistent theme, or generating a new theme on the fly.",
           "path": "free-skills/anthropic/theme-factory",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/theme-factory"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/theme-factory"
         },
         {
           "name": "webapp-testing",
           "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs. Use when testing or debugging a local web app, verifying frontend behavior, or capturing browser screenshots and logs.",
           "path": "free-skills/anthropic/webapp-testing",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/webapp-testing"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/webapp-testing"
         },
         {
           "name": "xlsx",
           "description": "Comprehensive spreadsheet creation, editing, and analysis with support for formulas, formatting, data analysis, and visualization. When Claude needs to work with spreadsheets (.xlsx, .xlsm, .csv, .tsv, etc) for: (1) Creating new spreadsheets with formulas and formatting, (2) Reading or analyzing data, (3) Modify existing spreadsheets while preserving formulas, (4) Data analysis and visualization in spreadsheets, or (5) Recalculating formulas",
           "path": "free-skills/anthropic/xlsx",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/anthropic/xlsx"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/anthropic/xlsx"
         },
         {
           "name": "arcanea-book-cover",
           "description": "Design and generate premium book covers using NB2 (Nano Banana 2 / Gemini 3.1 Flash Image) with deep thinking about book tension, emotion, and genre. Pulls from top book cover design principles (Chip Kidd, Peter Mendelsund, Coralie Bickford-Smith). Auto-activates when user requests book cover, cover art, cover design, or mentions generating a cover for a book project.",
           "path": "free-skills/arcanea-book-cover",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/creator-skills",
+            "path": "skills/images/arcanea-book-cover"
+          },
+          "uri": "github:frankxai/creator-skills/skills/images/arcanea-book-cover"
         },
         {
           "name": "arcanea-infogenius",
           "description": "Visual intelligence system for generating on-brand infographics, diagrams, and imagery with the Arcanea Gates color and composition framework. Use when creating branded infographics, explainer visuals, or diagrams that must follow the Arcanea visual system.",
           "path": "free-skills/arcanea-infogenius",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/arcanea-infogenius"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/arcanea-infogenius@1.0.0"
         },
         {
           "name": "arcanea-meta",
           "description": "Arcanea ecosystem self-description. Use when asked about the system map, where things live, canonical locations, how to add a skill/command/agent/hook, how to absorb a repo, or what's installed. Trigger phrases: arcanea meta, system map, where does X live, add a skill, absorb a repo, what's installed, ecosystem inventory.",
           "path": "free-skills/arcanea-meta",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/arcanea-meta"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/arcanea-meta"
         },
         {
           "name": "book-publishing",
           "description": "Multi-book content, voice, and production workflows for nonfiction authoring. Use when planning a book, maintaining consistent voice across chapters, structuring a manuscript, or running an end-to-end publishing pipeline.",
           "path": "free-skills/book-publishing",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#book-publishing"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/book-publishing"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/book-publishing"
         },
         {
           "name": "brand-voice",
           "description": "Apply and enforce brand voice across all content creation. Manages voice attributes, tone adaptation by channel, style rules, and terminology. Use when writing content, reviewing drafts, or defining brand voice for a new project. Loads voice config from CREATOR.md or creator-memory/voice.md.",
           "path": "free-skills/brand-voice",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#brand-voice"
+          },
+          "owner": {
+            "repo": "frankxai/creator-skills",
+            "path": "skills/brand/brand-voice"
+          },
+          "uri": "github:frankxai/creator-skills/skills/brand/brand-voice"
         },
         {
           "name": "cacos",
           "description": "Claude Agentic Creator OS — a native Claude Code implementation of the creator operating system. Use when setting up, extending, or operating ACOS-style skills, agents, and commands directly inside Claude Code.",
           "path": "free-skills/cacos",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/cacos"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/cacos@1.0.0"
         },
         {
           "name": "claude-sdk",
           "description": "Build autonomous AI agents with the Claude Agent SDK — computer use, tool calling, MCP integration, and production best practices for Anthropic models. Use when writing agent code against the Claude/Anthropic SDK, wiring tools or MCP servers, or hardening an agent for production.",
           "path": "free-skills/claude-sdk",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#claude-sdk"
+          },
+          "owner": {
+            "repo": "frankxai/skills",
+            "path": "skills/frameworks/claude-sdk"
+          },
+          "uri": "github:frankxai/skills/skills/frameworks/claude-sdk@1.0.0"
         },
         {
           "name": "contribute-catalog",
           "description": "Author a new HyperFrames registry block (caption style, VFX block, transition, lower third) or component (text effect, overlay, snippet) and ship it as an upstream PR to the hyperframes repo. Use ONLY when the user wants to CONTRIBUTE to the public catalog — for in-project caption/transition authoring use the `hyperframes` skill, for installing existing registry items use the `hyperframes-registry` skill.",
           "path": "free-skills/contribute-catalog",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/contribute-catalog"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/contribute-catalog"
         },
         {
           "name": "content-strategy",
           "description": "Strategic content planning with pillar mapping, editorial calendars, and SEO optimization. Use this skill when planning content, managing editorial calendars, auditing existing content, or developing content pillar strategies.",
           "path": "free-skills/creative/content-strategy",
-          "hasEvals": false
+          "version": "1.2.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/creative/content-strategy"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/creative/content-strategy@1.2.0"
         },
         {
           "name": "creator-meta",
           "description": "Creator-agnostic operating-system substrate. The abstract layer model + decision tree + brand-discipline framework that any creator can inherit and specialize. Use when designing a new creator's repo structure, asking 'what layer does X belong to?', booting a new creator's Claude Code config, or reasoning about the creator-tooling stack independent of any specific creator. Trigger phrases: creator meta, creator system map, creator OS, what layer does X go in, creator layer model, generalize for creators, bootable creator skill.",
           "path": "free-skills/creator-meta",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/creator-meta"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/creator-meta"
         },
         {
           "name": "creator-productivity",
           "description": "Task management and workspace memory for creative work sessions. Manages a TASKS.md file for project tracking, a two-tier memory system (CREATOR.md + creator-memory/), and a daily sprint structure. Use when organizing creative projects, tracking content tasks, or starting a focused work session.",
           "path": "free-skills/creator-productivity",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/creator-productivity"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/creator-productivity"
         },
         {
           "name": "css-animations",
           "description": "CSS animation adapter patterns for HyperFrames. Use when authoring CSS keyframes, animation-delay based timing, animation-fill-mode, animation-play-state, or CSS-only motion that HyperFrames must seek deterministically during preview and rendering.",
           "path": "free-skills/css-animations",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/css-animations"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/css-animations"
         },
         {
           "name": "defuddle",
           "description": "Extract clean markdown content from web pages using Defuddle CLI, removing clutter and navigation to save tokens. Use instead of WebFetch when the user provides a URL to read or analyze, for online documentation, articles, blog posts, or any standard web page. Do NOT use for URLs ending in .md — those are already markdown, use WebFetch directly.",
           "path": "free-skills/defuddle",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#defuddle"
+          },
+          "owner": {
+            "repo": "frankxai/skills",
+            "path": "skills/tools/defuddle"
+          },
+          "uri": "github:frankxai/skills/skills/tools/defuddle"
         },
         {
           "name": "design-asset-intake",
           "description": "Triage an external GitHub design/UI/motion/shader library before wiring it into any site's design system. Use when someone shares a \"free design asset library\" repo/link (social media, a README, a tweet), when deciding whether to npm-install, vendor-copy, or just study a repo, or when logging a new entry in registries/design-assets.json.",
           "path": "free-skills/design-asset-intake",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/design-asset-intake"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/design-asset-intake"
         },
         {
           "name": "excellence-book-writing",
           "description": "High-quality nonfiction writing patterns for structure, clarity, narrative flow, and editorial polish. Use when drafting or revising long-form nonfiction, tightening chapters, or raising prose from competent to excellent.",
           "path": "free-skills/excellence-book-writing",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#excellence-book-writing"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/excellence-book-writing"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/excellence-book-writing@1.0.0"
         },
         {
           "name": "feynman-thinking",
           "description": "Transform Claude into a Feynman mentor. Focuses on simple explanations, architectural models, Socratic questioning, and stripping away unnecessary complexity. Triggers on: feynman, feynman alignment, explain simply, explain architecture, explain logic, explain concept, build mental model.",
           "path": "free-skills/feynman-thinking",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/feynman-thinking"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#feynman-thinking"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/feynman-thinking"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/feynman-thinking@2.0.0"
         },
         {
           "name": "framer-expert",
           "description": "Expert Framer design and development — interactive prototypes, production sites, Framer Motion, CMS integration, and the Framer MCP server. Use when building or styling Framer sites, animating with Framer Motion, or wiring Framer CMS/MCP.",
           "path": "free-skills/framer-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/framer-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/framer-expert@1.0.0"
         },
         {
           "name": "frankx-daily-execution",
           "description": "Executes Frank's daily workflow using the FrankX agent system, Starlight Intelligence, and productivity methods. Use when planning Frank's day, running a focused work sprint, or turning intentions into a concrete execution plan.",
           "path": "free-skills/frankx-daily-execution",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/frankx-daily-execution"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/frankx-daily-execution@1.0.0"
         },
         {
           "name": "github-code-review",
           "description": "Comprehensive GitHub pull-request code review with multi-agent coordination. Use when reviewing a PR or diff, auditing changes for correctness/security/style before merge, or generating actionable inline review comments.",
           "path": "free-skills/github-code-review",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/github-code-review"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/github-code-review@1.0.0"
         },
         {
           "name": "github-multi-repo",
           "description": "Multi-repository coordination, synchronization, and architecture management across many GitHub repos. Use when changes span several repositories, keeping repos in sync, or planning cross-repo architecture and dependency work.",
           "path": "free-skills/github-multi-repo",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/github-multi-repo"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/github-multi-repo@1.0.0"
         },
         {
           "name": "github-project-management",
           "description": "GitHub project management with issue tracking, project-board automation, and sprint planning. Use when triaging or organizing issues, automating a project board, planning a sprint, or running release/roadmap coordination on GitHub.",
           "path": "free-skills/github-project-management",
-          "hasEvals": false
+          "version": "2.1.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/github-project-management"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/github-project-management@2.1.0"
         },
         {
           "name": "github-release-management",
           "description": "GitHub release orchestration — automated versioning, testing, deployment, and rollback. Use when cutting a release, tagging a version, drafting release notes, or coordinating a deploy/rollback workflow.",
           "path": "free-skills/github-release-management",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/github-release-management"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/github-release-management@2.0.0"
         },
         {
           "name": "greek-philosopher",
           "description": "Channel ancient wisdom through Socratic questioning, Stoic principles, and philosophical inquiry to examine life's deepest questions with poetic eloquence and timeless insight. Use when examining a life decision, seeking Stoic perspective on adversity, or wanting Socratic questioning of an assumption.",
           "path": "free-skills/greek-philosopher",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/greek-philosopher"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/greek-philosopher@1.0.0"
         },
         {
           "name": "gsap",
           "description": "GSAP animation reference for HyperFrames. Covers gsap.to(), from(), fromTo(), easing, stagger, defaults, timelines (gsap.timeline(), position parameter, labels, nesting, playback), and performance (transforms, will-change, quickTo). Use when writing GSAP animations in HyperFrames compositions.",
           "path": "free-skills/gsap",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/gsap"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/gsap"
         },
         {
           "name": "gym-training-expert",
           "description": "Apply cutting-edge exercise science from 2025 research on hypertrophy, progressive overload, biomechanics, and evidence-based training protocols for optimal strength and muscle development. Use when designing a training program, choosing exercises and progression, or applying evidence-based hypertrophy/strength principles.",
           "path": "free-skills/gym-training-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/gym-training-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/gym-training-expert@1.0.0"
         },
         {
           "name": "health-nutrition-expert",
           "description": "Apply cutting-edge 2025 nutrition science on longevity, metabolic health, gut microbiome, and evidence-based dietary patterns for optimal vitality and disease prevention. Use when planning a diet, evaluating a nutrition claim, or applying evidence-based guidance on longevity, metabolic, and gut health.",
           "path": "free-skills/health-nutrition-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/health-nutrition-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/health-nutrition-expert@1.0.0"
         },
         {
           "name": "higgsfield-generate",
           "description": "Generate images/videos via Higgsfield AI. Default: GPT\nImage 2 for images/design/text, Seedance 2.0 for video,\nNano Banana 2/Pro for character/reference image work,\nMarketing Studio for ads with avatars/products/hooks,\nsettings, plus Soul V2/Cinema/Cast/Location and Kling\n3.0. Use when: \"generate an image\", \"make a video\",\n\"animate this photo\", \"image-to-video\",\n\"edit/stylize/remix this image\", \"produce a clip\",\n\"create an ad\", \"make a UGC video\", \"product demo\",\n\"unboxing\", \"brand video\", \"presenter video\",\n\"import product from URL\", \"create avatar for ad\",\nor \"analyze video virality\". Supports image-to-image,\nimage-to-video, references, job/upload IDs, and\nMarketing Studio. Chain with higgsfield-soul-id for\nface/identity consistency. Virality Predictor\n(`brain_activity`) analyzes video virality: hook strength,\nattention, retention, distraction risk, and creative\nscore. NOT for: Soul Character training (use\nhiggsfield-soul-id), product photoshoots, marketplace\nlisting cards, text/chat/TTS tasks.",
           "path": "free-skills/higgsfield-generate",
-          "hasEvals": false
+          "version": "0.3.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/higgsfield-generate"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/higgsfield-generate@0.3.0"
         },
         {
           "name": "higgsfield-marketplace-cards",
           "description": "Generate marketplace product image cards through Higgsfield: compliant\nmain image, secondary product images, and A+ style content modules. Use when\nthe user asks for marketplace listing images, product detail cards,\nsecondary product images, product infographics, lifestyle listing shots,\nA+ style content, marketplace image sets, or sales-ready product visuals.\nBackend owns marketplace compliance references and prompt templates; this skill\nonly routes user intent to the CLI.\nNOT for generic brand product photography without marketplace/listing context\n(use higgsfield-product-photoshoot), video generation or UGC ads (use\nhiggsfield-generate), or Soul Character training (use higgsfield-soul-id).",
           "path": "free-skills/higgsfield-marketplace-cards",
-          "hasEvals": false
+          "version": "0.3.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/higgsfield-marketplace-cards"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/higgsfield-marketplace-cards@0.3.0"
         },
         {
           "name": "higgsfield-product-photoshoot",
           "description": "Generate brand-quality product images through Higgsfield product-photoshoot\nprompt enhancement on GPT Image 2 / gpt_image_2. Entry point for professional\nbrand/product visuals.\nUse when: \"product photo\", \"studio shot\", \"lifestyle image\", \"Pinterest pin\",\n\"hero/banner\", \"carousel\", \"ad creative\", \"Meta ads\", \"virtual try-on\",\n\"model wearing\", \"person holding product\", \"closeup with hands\",\n\"levitating/floating/splash product\", \"CGI/surreal product\", \"restyle\",\n\"seasonal/aesthetic variation\", or any product, brand, or paid-social creative.\nModes: product_shot, lifestyle_scene, closeup_product_with_person,\nmoodboard_pin, hero_banner, social_carousel, ad_creative_pack,\nvirtual_model_tryout, conceptual_product, restyle. Backend assembles the final\nprompt; never freehand it.\nNOT for: no-product text-to-image (use higgsfield-generate), branded avatar\nvideo (use higgsfield-generate Marketing Studio), marketplace listing cards\n(use higgsfield-marketplace-cards), Soul Character training (use\nhiggsfield-soul-id).",
           "path": "free-skills/higgsfield-product-photoshoot",
-          "hasEvals": false
+          "version": "0.3.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/higgsfield-product-photoshoot"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/higgsfield-product-photoshoot@0.3.0"
         },
         {
           "name": "higgsfield-soul-id",
           "description": "Train a Soul Character — a personalized model on a person's face that\nHiggsfield uses for identity-faithful image and video generation.\nUse when: \"create my Soul\", \"train my face\", \"make my digital twin\",\n\"build me an avatar\", \"learn my appearance\", \"create a character of me\",\n\"set up identity for video\", \"I want my face in generated images\".\nChain: train Soul (one-time, returns reference_id) → use in\nhiggsfield-generate via `--soul-id <id>` with models like\n`text2image_soul_v2` or `soul_cinema_studio`.\nNOT for: one-shot face swaps (use higgsfield-generate with --image),\nnamed-character / non-photo avatars (use higgsfield-generate with prompt).",
           "path": "free-skills/higgsfield-soul-id",
-          "hasEvals": false
+          "version": "0.3.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/higgsfield-soul-id"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/higgsfield-soul-id@0.3.0"
         },
         {
           "name": "hive-mind-advanced",
           "description": "Queen-led collective-intelligence coordination with consensus mechanisms and persistent shared memory. Use when orchestrating a large swarm of agents under a lead coordinator, building consensus across agents, or maintaining durable cross-agent memory.",
           "path": "free-skills/hive-mind-advanced",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/hive-mind-advanced"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/hive-mind-advanced@1.0.0"
         },
         {
           "name": "hooks-automation",
           "description": "Configure and automate Claude Code hooks in .claude/settings.json (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStop, SessionEnd). Use when setting up Claude Code hooks to auto-format files after edits, run pre-commit or safety checks before Bash commands, guard secrets or protected files, save session state on Stop or SessionEnd, or wire optional external CLI and MCP hook runners.",
           "path": "free-skills/hooks-automation",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/hooks-automation"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#hooks-automation"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/hooks-automation"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/hooks-automation@2.0.0"
         },
         {
           "name": "hyperframes-cli",
           "description": "HyperFrames CLI dev loop — `npx hyperframes` for scaffolding (init), validation (lint, inspect), preview, render, and environment troubleshooting (doctor, browser, info, upgrade). Use when running any of these commands or troubleshooting the HyperFrames build/render environment. For asset preprocessing commands (`tts`, `transcribe`, `remove-background`), invoke the `hyperframes-media` skill instead.",
           "path": "free-skills/hyperframes-cli",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/hyperframes-cli"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/hyperframes-cli"
         },
         {
           "name": "hyperframes-media",
           "description": "Asset preprocessing for HyperFrames compositions — text-to-speech narration (Kokoro), audio/video transcription (Whisper), and background removal for transparent overlays (u2net). Use when generating voiceover from text, transcribing speech for captions, removing the background from a video or image to use as a transparent overlay, choosing a TTS voice or whisper model, or chaining these (TTS → transcribe → captions). Each command downloads its own model on first run.",
           "path": "free-skills/hyperframes-media",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/hyperframes-media"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/hyperframes-media"
         },
         {
           "name": "hyperframes-registry",
           "description": "Install and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add, installing a block or component, wiring an installed item into index.html, or working with hyperframes.json. Covers the add command, install locations, block sub-composition wiring, component snippet merging, and registry discovery.",
           "path": "free-skills/hyperframes-registry",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/hyperframes-registry"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/hyperframes-registry"
         },
         {
           "name": "langgraph-patterns",
           "description": "Production-grade agentic workflows with LangGraph — graph orchestration, state machines, human-in-the-loop, and advanced control flow. Use when building or debugging a LangGraph app, modeling agent state, or adding checkpoints and human approval steps.",
           "path": "free-skills/langgraph-patterns",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/langgraph-patterns"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#langgraph-patterns"
+          },
+          "owner": {
+            "repo": "frankxai/skills",
+            "path": "skills/frameworks/langgraph-patterns"
+          },
+          "uri": "github:frankxai/skills/skills/frameworks/langgraph-patterns@1.0.0"
         },
         {
           "name": "loop-designer",
           "description": "Compile a goal into a durable, file-backed agent loop — a .loop/<name>/ charter any coding agent (Claude Code, Codex, Gemini, Grok) can execute unattended. Use when the user wants to \"build a loop\", \"design a loop\", \"run X continuously/24-7\", \"make an agent keep working on Y\", automate recurring work, or convert a big backlog into autonomous iteration. Produces LOOP.md + state.json + backlog.md, ready for loop-runner.",
           "path": "free-skills/loop-designer",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/loop-designer"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#loop-designer"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/loop-designer"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/loop-designer@2.0.0"
         },
         {
           "name": "loop-orchestrator",
           "description": "Operate a fleet of durable agent loops under .loop/ — schedule which loop runs next, assign agents to roles (maker vs checker), enforce promotion gates from propose-only to write access, allocate budgets, detect stalled or dead loops, and roll up fleet status into one report. Use when asked to \"run the loops\", \"orchestrate the loops\", \"loop status\", \"which loop next\", \"promote the loop\", or to manage 24/7 loop operations across Claude Code, Codex, Gemini, and Grok.",
           "path": "free-skills/loop-orchestrator",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/loop-orchestrator"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/loop-orchestrator"
         },
         {
           "name": "loop-runner",
           "description": "Execute exactly one disciplined iteration of a designed loop from .loop/<name>/ (LOOP.md charter + state.json + journal.md). Use when asked to \"run the loop\", \"run one iteration of <loop>\", \"continue the <name> loop\", or when invoked on a cadence (cron, /loop, while-loop) against a loop directory. Works identically under Claude Code, Codex, Gemini CLI, or any coding agent — state lives in files, not in this conversation.",
           "path": "free-skills/loop-runner",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/loop-runner"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/loop-runner"
         },
         {
           "name": "lottie",
           "description": "Lottie and dotLottie adapter patterns for HyperFrames. Use when embedding lottie-web JSON animations, .lottie files, @lottiefiles/dotlottie-web players, registering instances on window.__hfLottie, or making After Effects exports deterministic in HyperFrames.",
           "path": "free-skills/lottie",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/lottie"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/lottie"
         },
         {
           "name": "mcp-2025-patterns",
           "description": "Current best practices for Model Context Protocol server design, implementation, and integration, including multi-server orchestration, security, and performance. Use when designing an MCP server, choosing transport/auth, or reviewing an MCP integration for 2025+ patterns.",
           "path": "free-skills/mcp-2025-patterns",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#mcp-2025-patterns"
+          },
+          "owner": {
+            "repo": "frankxai/skills",
+            "path": "skills/mcp/mcp-2025-patterns"
+          },
+          "uri": "github:frankxai/skills/skills/mcp/mcp-2025-patterns@1.0.0"
         },
         {
           "name": "mcp-architecture",
           "description": "Design and implement Model Context Protocol servers with resources, tools, prompts, and security best practices. Use when architecting an MCP server, modeling its resources/tools/prompts, or integrating a service as an MCP endpoint.",
           "path": "free-skills/mcp-architecture",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/mcp-architecture"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#mcp-architecture"
+          },
+          "owner": {
+            "repo": "frankxai/skills",
+            "path": "skills/mcp/mcp-architecture"
+          },
+          "uri": "github:frankxai/skills/skills/mcp/mcp-architecture@1.0.0"
         },
         {
           "name": "memory-prune",
           "description": "Manual reviewable prune of stale memory entries. Lists project_* entries older than 30 days with content preview; Frank decides per-entry [keep | archive | pin]. Keeps MEMORY.md under the auto-load 200-line truncation. Use when MEMORY.md exceeds 180 lines or session-end after a heavy work week.",
           "path": "free-skills/memory-prune",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/memory-prune"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/memory-prune"
         },
         {
           "name": "model-routing",
           "description": "Intelligent model selection — routes tasks to Haiku (fast/cheap), Sonnet (balanced), or Opus (complex/strategic) by analyzing task complexity. Use when deciding which model to run, optimizing cost vs quality, or building a tiered routing layer.",
           "path": "free-skills/model-routing",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/model-routing"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#model-routing"
+          },
+          "owner": {
+            "repo": "frankxai/skills",
+            "path": "skills/models/model-routing"
+          },
+          "uri": "github:frankxai/skills/skills/models/model-routing@1.0.0"
         },
         {
           "name": "nextjs-agent-team",
           "description": "Multi-agent workflow for planning, building, testing, and shipping Next.js applications. Use when building a Next.js app end-to-end with a team of specialist agents, or coordinating plan→build→test→ship for a Next.js project.",
           "path": "free-skills/nextjs-agent-team",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/nextjs-agent-team"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/nextjs-agent-team@1.0.0"
         },
         {
           "name": "nextjs-expert",
           "description": "Comprehensive Next.js expertise across App Router, server/client boundaries, data and caching patterns, and production operations. Use when building, debugging, or optimizing a Next.js app, deciding server vs client components, or resolving App Router gotchas.",
           "path": "free-skills/nextjs-expert",
-          "hasEvals": false
+          "version": "2.1.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/nextjs-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/nextjs-expert@2.1.0"
         },
         {
           "name": "nextjs-react-expert",
           "description": "Advanced Next.js (App Router) and React engineering for architecture, server/client boundaries, data fetching, caching, performance, and production operations. Use when building, reviewing, or debugging modern React/Next.js applications.",
           "path": "free-skills/nextjs-react-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#nextjs-react-expert"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/nextjs-react-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/nextjs-react-expert@1.0.0"
         },
         {
           "name": "nextjs-upgrade-assistant",
           "description": "Guided Next.js upgrade workflow — version migration, compatibility checks, and safe rollout. Use when upgrading Next.js across major versions, resolving breaking changes, or planning a staged migration.",
           "path": "free-skills/nextjs-upgrade-assistant",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/nextjs-upgrade-assistant"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/nextjs-upgrade-assistant@1.0.0"
         },
         {
           "name": "oci-drawio-icon-native",
           "description": "Build and validate OCI draw.io diagrams in icon-native mode so they never depend on `mxgraph.oci.*` runtime libraries. Use when authoring or fixing Oracle Cloud architecture diagrams in draw.io that must render portably.",
           "path": "free-skills/oci-drawio-icon-native",
-          "hasEvals": false
+          "version": "1.1.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/oci-drawio-icon-native"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/oci-drawio-icon-native@1.1.0"
         },
         {
           "name": "oci-services-expert",
           "description": "Expert guidance on Oracle Cloud Infrastructure services, architecture patterns, cost optimization, and deployment strategies. Use when designing on OCI, selecting OCI services, estimating cost, or applying OCI enterprise best practices.",
           "path": "free-skills/oci-services-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/oci-services-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/oci-services-expert@1.0.0"
         },
         {
           "name": "openai-agentkit",
           "description": "Build production multi-agent systems with OpenAI AgentKit and the Agents SDK — orchestration, handoffs, and routines. Use when writing agents against OpenAI's AgentKit/Agents SDK or porting an agent design to the OpenAI stack.",
           "path": "free-skills/openai-agentkit",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#openai-agentkit"
+          },
+          "owner": {
+            "repo": "frankxai/skills",
+            "path": "skills/frameworks/openai-agentkit"
+          },
+          "uri": "github:frankxai/skills/skills/frameworks/openai-agentkit@1.0.0"
         },
         {
           "name": "opus-extended-thinking",
           "description": "Use Claude's extended/adaptive thinking for deep reasoning, complex analysis, and multi-step synthesis — both the prompt patterns that elicit deliberation and the current thinking API (adaptive thinking + the effort parameter). Use when a problem needs thorough deliberation before answering, or when configuring thinking on a Claude request.",
           "path": "free-skills/opus-extended-thinking",
-          "hasEvals": false
+          "version": "2.1.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/opus-extended-thinking"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/opus-extended-thinking@2.1.0"
         },
         {
           "name": "oracle-adk",
           "description": "Build production agentic applications on OCI with Oracle's Agent Development Kit — multi-agent orchestration, function tools, and enterprise patterns. Use when developing agents on OCI with the Oracle ADK or integrating Oracle enterprise services into an agent.",
           "path": "free-skills/oracle-adk",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/oracle-adk"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/oracle-adk@1.0.0"
         },
         {
           "name": "oracle-agent-spec",
           "description": "Design framework-agnostic AI agents with Oracle's Open Agent Specification for portable, interoperable agents defined in JSON/YAML. Use when authoring an Open Agent Spec definition or making an agent portable across frameworks.",
           "path": "free-skills/oracle-agent-spec",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/oracle-agent-spec"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/oracle-agent-spec@1.0.0"
         },
         {
           "name": "oracle-ai-architect",
           "description": "Deep reference for Oracle AI architecture with end-to-end technical implementations. Use when architecting Oracle AI/GenAI solutions, designing enterprise Oracle AI systems, or needing detailed Oracle AI reference patterns.",
           "path": "free-skills/oracle-ai-architect",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/oracle-ai-architect"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/oracle-ai-architect@1.0.0"
         },
         {
           "name": "oracle-confidentiality",
           "description": "Enforce confidentiality across Oracle deliverables — pre-delivery audits, codename enforcement, and content sanitization. Use before any Oracle client handoff, when sanitizing documents, or when checking deliverables for confidential leaks.",
           "path": "free-skills/oracle-confidentiality",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/oracle-confidentiality"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/oracle-confidentiality@1.0.0"
         },
         {
           "name": "oracle-database-expert",
           "description": "Expert Oracle Database engineering across Oracle Database 23ai, Autonomous Database, SQL/PLSQL tuning, AI Vector Search, JSON Relational Duality, partitioning, high availability, and security. Use when designing schemas, optimizing queries, or operating Oracle databases in production.",
           "path": "free-skills/oracle-database-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/oracle-database-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/oracle-database-expert@1.0.0"
         },
         {
           "name": "oracle-solution-design",
           "description": "Orchestrate complete OCI solution designs with parallel agents and quality gates, producing Solution Design Documents, architectures, and bills of materials. Use when producing an OCI SDD, end-to-end solution architecture, or a bill of materials.",
           "path": "free-skills/oracle-solution-design",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/oracle-solution-design"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/oracle-solution-design@1.0.0"
         },
         {
           "name": "pair-programming",
           "description": "AI-assisted pair programming with multiple modes (driver/navigator/switch), real-time verification, quality monitoring, and comprehensive testing. Supports TDD, debugging, refactoring, and learning sessions. Features automatic role switching, continuous code review, security scanning, and performance optimization with truth-score verification. Use when pairing on code with driver/navigator roles, doing TDD, or wanting real-time review while building.",
           "path": "free-skills/pair-programming",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/pair-programming"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/pair-programming"
         },
         {
           "name": "partner-anthropic",
           "description": "Anthropic intelligence — Claude model family, Claude Code, MCP protocol, Claude for Work programs, May 2026 state, Frank's relationship state, integration patterns. Use when generating Anthropic content, writing about Claude/MCP/Claude Code, partnership-conversation prep for Anthropic, or evaluating new Anthropic releases.",
           "path": "free-skills/partner-anthropic",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/partner-anthropic"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/partner-anthropic"
         },
         {
           "name": "partner-arrow",
           "description": "Arrow Electronics ECS intelligence — ArrowSphere marketplace, AI Accelerator program, Oracle Global Distributor of the Year 2025, Oracle x NVIDIA accelerator pack, May 2026 state, Frank's active strategic conversation, integration patterns. Use when generating Arrow content, writing about ArrowSphere or the EMEA distribution channel, partnership-conversation prep for Arrow, or evaluating new Arrow programs.",
           "path": "free-skills/partner-arrow",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/partner-arrow"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/partner-arrow"
         },
         {
           "name": "partner-google",
           "description": "Google Cloud intelligence — Gemini (Nano Banana / Veo / Imagen), Vertex AI, ADK, A2A protocol, Cloud Partner Advantage, May 2026 state, Frank's relationship state, integration patterns. Use when generating Google Cloud content, writing about Gemini/ADK/A2A, partnership-conversation prep for Google, or evaluating new Google Cloud releases.",
           "path": "free-skills/partner-google",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/partner-google"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/partner-google"
         },
         {
           "name": "partner-nvidia",
           "description": "NVIDIA intelligence — NIM microservices, NeMo, NVIDIA AI Enterprise, DGX Cloud, Inception program, EMEA accelerator wave, May 2026 state, Frank's relationship state, integration patterns. Use when generating NVIDIA content, writing about NIM/NeMo/AI Enterprise, partnership-conversation prep for NVIDIA, or evaluating new NVIDIA releases.",
           "path": "free-skills/partner-nvidia",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/partner-nvidia"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/partner-nvidia"
         },
         {
           "name": "partner-vercel",
           "description": "Vercel intelligence — Next.js + Turbopack, AI SDK, AI Gateway, Fluid Compute, Sandbox, Queues, Agent, Vercel Partner Program, May 2026 state, Frank's relationship state, integration patterns. Use when generating Vercel content, writing about Next.js or the AI SDK, partnership-conversation prep for Vercel, or evaluating new Vercel releases.",
           "path": "free-skills/partner-vercel",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/partner-vercel"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/partner-vercel"
         },
         {
           "name": "performance-analysis",
           "description": "Performance analysis, bottleneck detection, and optimization recommendations. Use when profiling slow code or systems, hunting a performance regression, or producing an optimization plan with measurable targets.",
           "path": "free-skills/performance-analysis",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/performance-analysis"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/performance-analysis@1.0.0"
         },
         {
           "name": "product-management-expert",
           "description": "Product management expertise for strategy, discovery, prioritization, roadmaps, PRDs, metrics, and stakeholder communication. Use when defining what to build, why, and how to measure success.",
           "path": "free-skills/product-management-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#product-management-expert"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/product-management-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/product-management-expert@1.0.0"
         },
         {
           "name": "prompt-hub",
           "description": "Compose the 13-agent Prompt Hub team via @prompt-conductor. Use when designing prompts, optimizing prompts, evaluating prompts, importing patterns from Fabric / awesome-chatgpt-prompts / awesome-claude-prompts, running IFS introspection or psychometric profiling, or building knowledge-base prompt sets. Auto-trigger on phrases like \"design a prompt for X\", \"optimize this prompt\", \"evaluate my system prompt\", \"harvest patterns from Y\", \"rerank category Z\", \"IFS session\", \"profile me on Big Five\", \"build RAG prompts for X\". The Hub is horizontal substrate — every FrankX pillar can use it. Composes into /acos-meta + /superintelligence.",
           "path": "free-skills/prompt-hub",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/prompt-hub"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/prompt-hub"
         },
         {
           "name": "reasoningbank-agentdb",
           "description": "Implement ReasoningBank adaptive learning with AgentDB's 150x faster vector database. Includes trajectory tracking, verdict judgment, memory distillation, and pattern recognition. Use when building self-learning agents, optimizing decision-making, or implementing experience replay systems.",
           "path": "free-skills/reasoningbank-agentdb",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/reasoningbank-agentdb"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/reasoningbank-agentdb"
         },
         {
           "name": "reasoningbank-intelligence",
           "description": "Implement adaptive learning with ReasoningBank for pattern recognition, strategy optimization, and continuous improvement. Use when building self-learning agents, optimizing workflows, or implementing meta-cognitive systems.",
           "path": "free-skills/reasoningbank-intelligence",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/reasoningbank-intelligence"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/reasoningbank-intelligence"
         },
         {
           "name": "remotion-to-hyperframes",
           "description": "Translate an existing Remotion (React-based) video composition into a HyperFrames HTML composition. Use ONLY when the user explicitly asks to port, convert, migrate, translate, or rewrite a Remotion composition as HyperFrames (e.g. \"port my Remotion project to HyperFrames\"). Do NOT use when (a) authoring a NEW HyperFrames composition (even if A/B-testing a Remotion video); (b) Remotion is mentioned in passing; (c) Remotion code is shared as reference, not for translation; (d) the user wants \"the same video as my Remotion one\" without explicitly asking to migrate the source — treat as a fresh HyperFrames build. When in doubt, default to the `hyperframes` skill. Detects unsupported patterns (useState, useEffect side effects, async calculateMetadata, third-party React component libraries, `@remotion/lambda`) and recommends the runtime interop escape hatch instead of a lossy translation.",
           "path": "free-skills/remotion-to-hyperframes",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/remotion-to-hyperframes"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/remotion-to-hyperframes"
         },
         {
           "name": "si",
           "description": "Superintelligence router — composes /superintelligence reasoning with swarm execution only when verb intent demands it. Defaults to reasoning-only to prevent runaway swarm cost. Triggers — /si <ask>, \"think deeply about X\", \"analyze X with full depth\", or any ask requiring multi-perspective + first-principles + contrarian framing.",
           "path": "free-skills/si",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/si"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/si"
         },
         {
           "name": "skill-builder",
           "description": "Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification.",
           "path": "free-skills/skill-builder",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/skill-builder"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/skill-builder"
         },
         {
           "name": "social-media-strategy",
           "description": "Platform-specific tactics, content optimization, audience growth, and analytics-driven social media strategy. Use when planning a social strategy, optimizing posts for a specific platform, or growing and measuring an audience.",
           "path": "free-skills/social-media-strategy",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#social-media-strategy"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/social-media-strategy"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/social-media-strategy@1.0.0"
         },
         {
           "name": "sparc-methodology",
           "description": "SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) development methodology with multi-agent orchestration. Use when running a structured spec-to-code workflow or decomposing a feature through the SPARC phases.",
           "path": "free-skills/sparc-methodology",
-          "hasEvals": false
+          "version": "2.7.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/sparc-methodology"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/sparc-methodology@2.7.0"
         },
         {
           "name": "spartan-warrior",
           "description": "Embody the unbreakable Spartan ethos of discipline, courage, and relentless excellence through laconic wisdom and warrior mentality forged in hardship. Use when facing procrastination or hardship and wanting disciplined, laconic resolve and a do-hard-things mindset.",
           "path": "free-skills/spartan-warrior",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/spartan-warrior"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/spartan-warrior@1.0.0"
         },
         {
           "name": "starlight-chronicle",
           "description": "The reflective layer of the FrankX OS. A four-cadence practice — weekly Palace Review, monthly Survey, quarterly Constellation Census, annual Legacy Audit — that witnesses what's been built, blesses what is whole, and orients the next move from a sovereign vantage. Couples to /changelog as its factual underlayer. Use when invoking /palace, /chronicle, /bless, or when a Sunday reflection is requested.",
           "path": "free-skills/starlight-chronicle",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/starlight-chronicle"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/starlight-chronicle"
         },
         {
           "name": "stream-chain",
           "description": "Stream-JSON chaining for multi-agent pipelines, data transformation, and sequential workflows. Use when piping output between agents/tools as streaming JSON or building a sequential transform pipeline.",
           "path": "free-skills/stream-chain",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/stream-chain"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/stream-chain@1.0.0"
         },
         {
           "name": "suno-ai-mastery",
           "description": "Expert prompt engineering and music generation with Suno AI v4.5+ for professional-quality songs across all genres. Use when writing Suno prompts, designing song structure/styles, or producing commercial-quality AI music.",
           "path": "free-skills/suno-ai-mastery",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#suno-ai-mastery"
+          },
+          "owner": {
+            "repo": "frankxai/creator-skills",
+            "path": "skills/music/suno-ai-mastery"
+          },
+          "uri": "github:frankxai/creator-skills/skills/music/suno-ai-mastery@2.0.0"
         },
         {
           "name": "suno-prompt-architect",
           "description": "Expert Suno AI prompt engineering for professional music creation. Use this skill when creating Suno prompts for any AI-generated music that needs commercial quality.",
           "path": "free-skills/suno-prompt-architect",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/creator-skills",
+            "path": "skills/music/suno-prompt-architect"
+          },
+          "uri": "github:frankxai/creator-skills/skills/music/suno-prompt-architect@2.0.0"
         },
         {
           "name": "swarm-advanced",
           "description": "Advanced swarm-orchestration patterns for research, development, testing, and complex distributed workflows. Use when scaling beyond a few agents, designing dynamic swarm topologies, or coordinating large parallel agent workloads.",
           "path": "free-skills/swarm-advanced",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/swarm-advanced"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/swarm-advanced@2.0.0"
         },
         {
           "name": "swarm-orchestration",
           "description": "Orchestrate multi-agent swarms with agentic-flow for parallel task execution, dynamic topology, and intelligent coordination. Use when scaling beyond single agents, implementing complex workflows, or building distributed AI systems.",
           "path": "free-skills/swarm-orchestration",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/swarm-orchestration"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/swarm-orchestration"
         },
         {
           "name": "tailwind",
           "description": "Tailwind CSS v4.2 browser-runtime patterns for HyperFrames compositions. Use when scaffolding or editing projects created with `hyperframes init --tailwind`, writing Tailwind utility classes in composition HTML, adding CSS-first Tailwind v4 theme tokens, debugging v3 vs v4 syntax, or deciding when to compile Tailwind to CSS instead of using the browser runtime.",
           "path": "free-skills/tailwind",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/tailwind"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/tailwind"
         },
         {
           "name": "creator-intelligence",
           "description": "Transform Claude Code into your personal Jarvis - an AI operating system that knows your projects, preferences, and workflows across sessions. Use this skill when setting up personal AI systems, building context-aware assistants, or creating persistent memory across projects.",
           "path": "free-skills/technical/creator-intelligence",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/technical/creator-intelligence"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/technical/creator-intelligence@1.0.0"
         },
         {
           "name": "three",
           "description": "Three.js and WebGL adapter patterns for HyperFrames. Use when creating deterministic Three.js scenes, WebGL canvas layers, AnimationMixer timelines, camera motion, shader-driven visuals, or canvas renders that respond to HyperFrames hf-seek events.",
           "path": "free-skills/three",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/three"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/three"
         },
         {
           "name": "todo-discipline",
           "description": "Use when starting any complex task (3+ steps) or before declaring work complete. Enforces todo/task state to match reality — merge updates + read verification. Prevents false completion.",
           "path": "free-skills/todo-discipline",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/todo-discipline"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#todo-discipline"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/todo-discipline"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/todo-discipline@1.0.0"
         },
         {
           "name": "ui-ux-design-expert",
           "description": "Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user research, and creating inclusive, user-centered interfaces with 2025 best practices. Use when designing or auditing an interface, building a design system, or checking accessibility against WCAG 2.2.",
           "path": "free-skills/ui-ux-design-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#ui-ux-design-expert"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/ui-ux-design-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/ui-ux-design-expert@1.0.0"
         },
         {
           "name": "v-swarm",
           "description": "Vercel/Next.js excellence swarm orchestration. Use when /v fires, or any time the user asks to build, deploy, audit, research, or fix something on a Next.js+Vercel stack. Routes work to parallel specialist agents (nextjs-vercel-deployment, performance-guardian, frankx-website-builder, accessibility-auditor, ui-ux-design-guidance), runs Vercel MCP deployment checks (deploy_to_vercel, get_deployment, search_vercel_documentation, get_runtime_logs), and grounds recommendations in references/thought-leaders.md, references/best-practices-2026.md, references/deployment-checklist.md.",
           "path": "free-skills/v-swarm",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/v-swarm"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/v-swarm"
         },
         {
           "name": "verification-quality",
           "description": "Truth scoring, code-quality verification, and automatic rollback with a high accuracy threshold. Use when validating agent output before it ships, gating changes on quality, or adding a verify-and-rollback safety loop.",
           "path": "free-skills/verification-quality",
-          "hasEvals": false
+          "version": "2.0.0",
+          "hasEvals": true,
+          "evalSuites": [
+            "packs/skills-with-evals/evals/verification-quality"
+          ],
+          "eval": {
+            "verdict": "PASS",
+            "evaluatedAt": "2026-10-25",
+            "receipt": "queen/reports/skill-eval-receipts-2026-10-25.json#verification-quality"
+          },
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/verification-quality"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/verification-quality@2.0.0"
         },
         {
           "name": "video-production-workflow",
           "description": "End-to-end video production workflow covering ideation, scripting, storyboarding, shooting/recording, editing, sound design, publishing, and data-driven iteration for YouTube, shorts, and brand content. Use when planning or producing video at a professional standard.",
           "path": "free-skills/video-production-workflow",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/video-production-workflow"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/video-production-workflow@1.0.0"
         },
         {
           "name": "waapi",
           "description": "Web Animations API adapter patterns for HyperFrames. Use when authoring element.animate() motion, Animation currentTime seeking, document.getAnimations(), KeyframeEffect timing, fill modes, or native browser animations that must render deterministically in HyperFrames.",
           "path": "free-skills/waapi",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/waapi"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/waapi"
         },
         {
           "name": "web-design-expert",
           "description": "Web design and UX guidance for visual systems, accessibility, interaction patterns, and performance-aware interfaces. Use when designing a website's look and feel, improving UX/accessibility, or reviewing a UI for polish and performance.",
           "path": "free-skills/web-design-expert",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/web-design-expert"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/web-design-expert@1.0.0"
         },
         {
           "name": "website-to-hyperframes",
           "description": "Capture a website and create a HyperFrames video from it. Use when: (1) a user provides a URL and wants a video, (2) someone says \"capture this site\", \"turn this into a video\", \"make a promo from my site\", (3) the user wants a social ad, product tour, or any video based on an existing website, (4) the user shares a link and asks for any kind of video content. Even if the user just pastes a URL — this is the skill to use.",
           "path": "free-skills/website-to-hyperframes",
-          "hasEvals": false
+          "version": null,
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/website-to-hyperframes"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/website-to-hyperframes"
         },
         {
           "name": "worker-benchmarks",
           "description": "Run comprehensive worker-system benchmarks and performance analysis. Use when benchmarking worker throughput/latency, comparing worker configurations, or diagnosing worker performance.",
           "path": "free-skills/worker-benchmarks",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/worker-benchmarks"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/worker-benchmarks@1.0.0"
         },
         {
           "name": "worker-integration",
           "description": "Worker–agent integration for intelligent task dispatch and performance tracking. Use when wiring agents to a worker pool, routing tasks to workers, or instrumenting worker performance.",
           "path": "free-skills/worker-integration",
-          "hasEvals": false
+          "version": "1.0.0",
+          "hasEvals": false,
+          "evalSuites": [],
+          "eval": null,
+          "owner": {
+            "repo": "frankxai/claude-skills-library",
+            "path": "free-skills/worker-integration"
+          },
+          "uri": "github:frankxai/claude-skills-library/free-skills/worker-integration@1.0.0"
         }
       ],
       "install": {
