@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "engineering/diagnosing-bugs",
+  "source": {
+    "repository": "https://github.com/mattpocock/skills",
+    "commit": "4ae2317ddb22b046e26455e4f9c9b3aaaf62212d",
+    "path": "skills/engineering/diagnosing-bugs/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-11-12",
+    "by": "claude"
+  },
+  "changed": "Kept the loop-first discipline, the ways to build a loop, shrink, falsifiable ranked hypotheses, tagged debug logs and the seam rule; added Windows event-log and file-state probes as loops, the no-WSL and RAM-floor notes, read-only probe rule, secret guard, and a MEASURED-tagged record plus memory note for systemic causes; dropped the HITL bash template.",
+  "distinctness": {
+    "nearest": "absorbed/engineering/to-spec/SKILL.md",
+    "similarity": 0.003
+  }
+}
