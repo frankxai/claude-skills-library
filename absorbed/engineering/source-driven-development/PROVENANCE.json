@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "engineering/source-driven-development",
+  "source": {
+    "repository": "https://github.com/addyosmani/agent-skills",
+    "commit": "301b02b12bff98e4688e6984af6556802322bbde",
+    "path": "skills/source-driven-development/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-11-12",
+    "by": "claude"
+  },
+  "changed": "Kept the detect-fetch-implement-cite loop and source ranking; replaced generic fetching with the estate spend order (Context7, built-in fetch, metered last), added INTEL-BRIEF for model facts, gh-api advisory-ID verification and the MEASURED/OPEN claim tags; dropped the React and Django walkthroughs.",
+  "distinctness": {
+    "nearest": "absorbed/harness/search-first/SKILL.md",
+    "similarity": 0.004
+  }
+}
