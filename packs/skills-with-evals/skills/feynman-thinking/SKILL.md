@@ -55,14 +55,16 @@ Flag each of these with the line or file it appears in:
 **Problem**: two devices edit agent memory offline and sync files through a shared folder. If both
 overwrite one SQLite file, one device's edits are lost.
 
-**Mental model**: an append-only `vault.jsonl` is the ledger (one note per line, so concurrent
-appends merge cleanly). SQLite FTS5 is a disposable index rebuilt from that file.
+**Mental model**: each device appends only to its own ledger, `vault.<device-id>.jsonl` (one note
+per line). One writer per file means the sync tool never sees two edits to the same file. The
+explicit merge happens on read: concatenate every device file, de-duplicate by note `id`, and keep the
+entry with the latest `ts`. SQLite FTS5 is a disposable index rebuilt from that merged stream.
 
 **Flow**:
 
 ```text
-Write: agent note ──> append one line to vault.jsonl
-Read:  vault.jsonl (from last byte offset) ──> SQLite FTS5 index ──> BM25 + recency rank ──> top-K snippets
+Write: agent note ──> append one line to vault.<this-device>.jsonl
+Read:  vault.*.jsonl ──> merge: de-dup by id, latest ts wins ──> SQLite FTS5 index ──> BM25 + recency rank ──> top-K snippets
 ```
 
 **Simplest solution**, before and after:
@@ -73,15 +75,18 @@ class AbstractStorageStrategyFactory {
   createAdapter(type) { return new JsonlAppendDelegator(type); }
 }
 
-// AFTER: the mechanism itself
+// AFTER: the mechanism itself, one file per device
 import { appendFileSync } from 'node:fs';
-export function appendVaultEntry(jsonlPath, entry) {
-  appendFileSync(jsonlPath, JSON.stringify({ ...entry, ts: new Date().toISOString() }) + '\n', 'utf8');
+import { join } from 'node:path';
+export function appendVaultEntry(vaultDir, deviceId, entry) {
+  const line = JSON.stringify({ ...entry, device: deviceId, ts: new Date().toISOString() }) + '\n';
+  appendFileSync(join(vaultDir, `vault.${deviceId}.jsonl`), line, 'utf8');
 }
 ```
 
-**Questions**: What happens if two devices append the same note id? Is a full index rebuild cheap
-enough at 100,000 lines, or do we need the byte offset?
+**Questions**: Two devices edit the same note id offline, and "latest ts wins" keeps one edit: is
+losing the other acceptable, or do we need to keep both? Device clocks drift: is `ts` safe to order
+by? Is a full index rebuild cheap enough at 100,000 lines, or do we track a byte offset per file?
 
 ## Check before sending
 

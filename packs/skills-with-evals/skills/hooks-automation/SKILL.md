@@ -104,11 +104,20 @@ set -euo pipefail
 trap 'echo "pre-commit-check: hook error, blocking until fixed" >&2; exit 2' ERR
 PAYLOAD="$(cat)"
 CMD="$(printf '%s' "$PAYLOAD" | jq -r '.tool_input.command // empty')"
-# Matches `git commit`, `git -C repo commit`, `git -c k=v commit`, and chained forms.
-# Over-matches some read-only commands (e.g. `git log --grep commit`): that only runs the checks.
-COMMIT_RE='(^|[;&|(`[:space:]])git([[:space:]]+[^;&|]*)?[[:space:]]commit([[:space:]]|$)'
+HOOK_CWD="$(printf '%s' "$PAYLOAD" | jq -r '.cwd // empty')"
+# Matches `git commit`, `git -C repo commit`, `git -c k=v commit`, and chained forms
+# such as `git commit&&git push`. Over-matches some read-only commands
+# (e.g. `git log --grep commit`): that only runs the checks.
+COMMIT_RE='(^|[;&|(`[:space:]])git([[:space:]]+[^;&|]*)?[[:space:]]commit([[:space:];&|)`]|$)'
+GIT_C_RE='git[[:space:]]+-C[[:space:]]+([^[:space:];&|]+)'
 
 if [[ "$CMD" =~ $COMMIT_RE ]]; then
+  # Run the checks in the repository being committed: the session cwd, then any `git -C <dir>`.
+  # A -C target that cannot be entered (missing, or quoted with spaces) blocks the commit.
+  [[ -n "$HOOK_CWD" ]] && cd "$HOOK_CWD"
+  if [[ "$CMD" =~ $GIT_C_RE ]]; then
+    cd "${BASH_REMATCH[1]}" 2>/dev/null || { echo "pre-commit-check: cannot enter git -C target ${BASH_REMATCH[1]}, blocking" >&2; exit 2; }
+  fi
   if ! npm run lint --silent || ! npm test --silent; then
     echo "Pre-commit check failed: fix lint/test errors before committing." >&2
     exit 2
@@ -128,7 +137,8 @@ PAYLOAD="$(cat)"
 FILE_PATH="$(printf '%s' "$PAYLOAD" | jq -r '.tool_input.file_path // empty')"
 CONTENT="$(printf '%s' "$PAYLOAD" | jq -r '(.tool_input.content // .tool_input.new_string // empty)')"
 
-if [[ "$FILE_PATH" =~ (^|/)(\.env|CANON_LOCKED\.md)$ ]]; then
+# Accept both separators: on Windows, hooks receive native paths such as C:\repo\.env.
+if [[ "$FILE_PATH" =~ (^|[/\\])(\.env|CANON_LOCKED\.md)$ ]]; then
   echo "Blocked write to protected file: $FILE_PATH" >&2
   exit 2
 fi
