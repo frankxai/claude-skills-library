@@ -38,6 +38,11 @@ PACK_SKILLS = [
     "brandkit",
     "gpu-surface",
     "web-steward",
+    "liquid-logo",
+    "shader-backdrop",
+    "liquid-glass",
+    "r3f-scene",
+    "material-system",
 ]
 
 # Repo-level design contracts, in precedence order. These beat the pack.

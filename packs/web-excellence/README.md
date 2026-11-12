@@ -9,10 +9,13 @@ It is four things:
 1. **Eleven vendored skills** from the best public sources (Vercel, Emil Kowalski,
    nextlevelbuilder, arvindrk, Leonxlnx) — pinned to commits, re-syncable, MIT.
    See [SOURCES.md](SOURCES.md) for provenance and the assessment of each.
-2. **Five native skills** that fill what none of them do: sequencing
+2. **Ten native skills** that fill what none of them do: sequencing
    (`web-release-gate`), measurement (`core-web-vitals`), evidence
-   (`visual-proof`), one governed shader or 3D surface per page
-   (`gpu-surface`), and dependency upkeep with a peer check (`web-steward`).
+   (`visual-proof`), dependency upkeep with a peer check (`web-steward`), and
+   the GPU surface set: one governed shader or 3D surface per page with a
+   probe that checks it (`gpu-surface`), a recipe per engine (`liquid-logo`,
+   `shader-backdrop`, `liquid-glass`, `r3f-scene`), and one material and
+   surface map per site (`material-system`).
 3. **Three hooks** that make the sequence the default instead of a suggestion.
 4. **Three agents** that hold the roles: `worker-web-builder` (the maker),
    `worker-visual-qa` (the judge, on a different model), and
@@ -183,9 +186,9 @@ packs/web-excellence/
 ├── settings.snippet.json  the hooks block install.sh merges
 ├── ci/                    the model-free linter + its workflow
 ├── hooks/                 the three hooks
-├── tests/                 test_hooks.py, peer-check.test.mjs, install-agents.test.mjs
+├── tests/                 test_hooks.py, peer-check.test.mjs, install-agents.test.mjs, gpu-scripts.test.mjs
 ├── agents/                3 agents — compiled in agentic-creator-os, never edited here
-└── skills/                16 skills — 11 vendored, 5 native
+└── skills/                21 skills — 11 vendored, 10 native
 ```
 
 Vendored skills are verbatim copies. Never hand-edit one — `sync-upstream.sh`

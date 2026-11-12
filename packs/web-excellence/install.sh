@@ -231,7 +231,7 @@ fi
 # ---------------------------------------------------------------- gitignore
 # Line by line, so a repo installed by an older version picks up new entries.
 GI="$TARGET/.gitignore"
-IGNORES=(.visual-proof/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/' .claude/agents.replaced/)
+IGNORES=(.visual-proof/ .gpu-export/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/' .claude/agents.replaced/)
 if [ $DRY -eq 1 ]; then
   say "  would: ensure ${IGNORES[*]} are gitignored"
 else
