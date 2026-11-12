@@ -25,7 +25,7 @@ Pick the first that reaches the bug:
 7. A property or fuzz loop for "sometimes wrong".
 8. A bisection script for "worked at X, broken at Y" (`git bisect run <script>`).
 9. A differential run: same input through old and new, diff the outputs.
-10. For machine state, an event-log or file-state probe: Windows event logs (`Get-WinEvent` on the right channel), file timestamps, SQLite row counts read with `immutable=1`. These are loops too, and often the only honest ones.
+10. For machine state, an event-log or file-state probe: Windows event logs (`Get-WinEvent` on the right channel), file timestamps, SQLite row counts. These are loops too, and often the only honest ones. Read SQLite read-only and check its journal mode first: `immutable=1` is safe for rollback-journal databases, but on a live WAL database it ignores committed rows still in the `-wal` file. For WAL, copy the database with its `-wal` and `-shm` files together and query the copy, or treat the count as possibly stale.
 
 Tighten it: faster setup, an assertion on the exact symptom rather than "did not crash", pinned time, seeds and network. For flaky bugs the goal is a higher reproduction rate, not a clean repro: loop the trigger, add stress, narrow timing.
 
@@ -33,7 +33,7 @@ Machine notes: there is no WSL here, so loops that shell out to `bash` fail for 
 
 If no loop is possible, stop and say so. List what you tried and ask for access, a redacted capture (HAR, log dump, recording with timestamps) or permission for temporary instrumentation. Do not move to theories.
 
-**Exit criterion:** one command you have already run, shown with its redacted output, that drives the real code path, asserts the user's exact symptom, gives the same verdict each run, finishes in seconds and runs unattended.
+**Exit criterion:** one command you have already run, shown with its redacted output, that drives the real code path, asserts the user's exact symptom and runs unattended. For a deterministic bug it gives the same verdict every run and finishes in seconds. For a flaky bug it runs the trigger N times and reports a reproduction rate (for example "red in 41 of 100"), stable enough across runs to tell a fix from noise; that counts, even if one batch takes minutes.
 
 ## 2. Reproduce and shrink
 
