@@ -122,18 +122,34 @@ with tempfile.TemporaryDirectory(dir="/tmp") as d0:
     d, _ = gate('rm -rf "$TMPDIR/esc/x"', {"TMPDIR": d0})
     check("$TMPDIR path through a symlink out of /tmp asks", d == "ask", f"got {d}")
 # Inline VAR= and env prefixes no longer hide an rm from the gate.
-for cmd in ["FOO=1 rm -rf node_modules", "env FOO=1 rm -rf node_modules", "sudo env rm -rf build"]:
+# Wrapper options with a separate operand (env -u NAME, sudo -u USER, nice -n N)
+# and other common wrappers: these returned no decision before (review on #124).
+for cmd in ["FOO=1 rm -rf node_modules", "env FOO=1 rm -rf node_modules", "sudo env rm -rf build",
+            "env -u PATH rm -rf node_modules", "sudo -u root rm -rf node_modules", "sudo -u root -g wheel rm -rf build",
+            "sudo -E rm -rf build", "doas -u root rm -rf build", "command rm -rf build", "exec rm -rf build",
+            "nohup rm -rf build", "nice -n 10 rm -rf build", "time rm -rf build", "time -p rm -rf build",
+            "sudo -u root env -u X FOO=1 rm -rf build", 'env -u TMPDIR rm -rf "$TMPDIR/x"']:
     d, rc = gate(cmd)
     check(f"prefixed rm asks: {cmd}", d == "ask" and rc == 0, f"got {d}")
-for cmd in ["FOO=1 rm -rf ~", "env X=1 rm -rf /", 'A="b c" rm -rf $HOME']:
+for cmd in ["FOO=1 rm -rf ~", "env X=1 rm -rf /", 'A="b c" rm -rf $HOME', "sudo -u root rm -rf /", "env -u PATH rm -rf ~",
+            "env -C /x rm -rf ~", "nice -n 5 rm -rf /home/frank", "doas -u root rm -rf $HOME"]:
     d, rc = gate(cmd)
     check(f"prefixed rm denies: {cmd}", d == "deny" and rc == 0, f"got {d}")
-for cmd in ["echo TMPDIR=/ rm -rf x", "FOO=1 rm -f a.txt", "TMPDIR=/tmp/x make test"]:
+for cmd in ["echo TMPDIR=/ rm -rf x", "FOO=1 rm -f a.txt", "TMPDIR=/tmp/x make test", "sudo -u root rm -rf /tmp/build",
+            "nice -n 10 rm -rf /tmp/build", "env -u PATH rm -rf /tmp/build", "echo sudo -u root rm -rf /", "sudo -u root ls -la"]:
     d, rc = gate(cmd, SCRATCH_ENV)
     check(f"prefixed pass: {cmd}", d is None and rc == 0, f"got {d}")
 for cmd in ["rm -rf ~", "rm -rf /", "rm -rf $HOME", "rm -rf / /tmp/a"]:
     d, rc = gate(cmd)
     check(f"scratch still deny: {cmd}", d == "deny" and rc == 0, f"got {d}")
+# Wrapper stripping must stay linear: a regex version backtracked exponentially
+# on repeated `sudo -u ` and hung the hook. Each case must finish well under 5s.
+import time
+for label, cmd in [("repeated sudo -u", "sudo -u " * 3000), ("repeated wrapper+rm", "sudo -u root " * 3000 + "rm -rf /"),
+                   ("repeated assignments", "A=1 " * 5000 + "rm -rf ~"), ("repeated options", "sudo " + "-a b " * 2000 + "ls")]:
+    t0 = time.time()
+    d, rc = gate(cmd)
+    check(f"linear time: {label}", rc == 0 and time.time() - t0 < 5, f"{time.time() - t0:.1f}s")
 d, _ = gate("git push --force origin main", {"ESTATE_GUARD_ALLOW_FORCE": "1"})
 check("ALLOW_FORCE downgrades force-push to ask", d == "ask")
 d, _ = gate("git push --force origin main", {"ESTATE_GUARD_OFF": "1"})

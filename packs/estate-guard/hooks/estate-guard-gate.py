@@ -27,7 +27,10 @@ like a literal one) AND the command does not itself assign TMPDIR anywhere
 also runs `ln`/`mount` gets no exception. Relative paths (`cd /tmp && rm -rf x`),
 ~, $HOME, anything else, or a single non-scratch target in any rm still ASK.
 The root/home DENY runs first and is unchanged; every other ASK rule still fires
-even when the command also contains a scratch rm. Agents: delete scratch with an
+even when the command also contains a scratch rm. Leading VAR=value prefixes
+and sudo/doas/env/command/exec/nohup/nice/time wrappers (with their options)
+are looked through; xargs, find -exec, bash -c, aliases and functions are not.
+Agents: delete scratch with an
 absolute /tmp path. This is an accident gate, not an adversarial sandbox.
 
 Anything else passes untouched. Malformed input passes (fail-open): this is a
@@ -48,9 +51,7 @@ import sys
 
 # A command position: start of line, after a separator, or inside a substitution.
 # Keeps `echo "never run rm -rf /"` from tripping the gate.
-# Also skips leading sudo/env (with flags) and inline VAR=value prefixes, so
-# `TMPDIR=/ rm -rf x` and `env X=1 rm -rf x` are still seen as an rm.
-CMD = r"(?:^|[;&|]\s*|\(\s*|\$\(\s*|`\s*|&&\s*|\|\|\s*)(?:(?:sudo|env)(?:\s+-\S+)*\s+|\w+=(?:\"[^\"]*\"|'[^']*'|[^\s;&|]*)\s+)*"
+CMD = r"(?:^|[;&|]\s*|\(\s*|\$\(\s*|`\s*|&&\s*|\|\|\s*)(?:sudo\s+)?"
 
 DENY = [
     (r"git\s+push\b[^|;&]*\s(?:--force|-f|--force-with-lease)\b[^|;&]*\b(?:main|master|production)\b", "force-push to a protected branch"),
@@ -80,6 +81,59 @@ ASK = [
     (r"\bgh\s+secret\s+set\b", "writing a repository secret"),
     (r"\b(?:resend|sendgrid|mailchimp)\b[^|;&]*\b(?:send|broadcast|campaign)\b", "sending email to people"),
 ]
+
+
+# Command wrappers and inline VAR=value prefixes are stripped (procedurally, in
+# linear time; a regex for this backtracks exponentially) before the rules run a
+# second time, so `TMPDIR=/ rm -rf x`, `env -u X rm -rf x`, `nice -n 5 rm -rf x`
+# and `sudo -u root rm -rf /` are still seen as an rm at command position.
+# Stripping only removes leading words, so it can add matches, never hide one.
+WRAPPER_OPERAND_FLAGS = {
+    "sudo": {"-u", "-g", "-C", "-D", "-h", "-p", "-r", "-t", "-T", "-U", "--user", "--group",
+             "--close-from", "--chdir", "--host", "--prompt", "--role", "--type", "--command-timeout", "--other-user"},
+    "doas": {"-u", "-C"},
+    "env": {"-u", "-C", "-S", "--unset", "--chdir", "--split-string"},
+    "nice": {"-n", "--adjustment"},
+    "time": {"-o", "-f", "--output", "--format"},
+    "command": set(),
+    "exec": {"-a"},
+    "nohup": set(),
+}
+CMD_SEPARATOR = re.compile(r"(\$\(|[;&|\n(`])")
+ASSIGNMENT = re.compile(r"\w+(?:\+)?=")
+
+
+def _strip_wrappers(cmd: str) -> str:
+    out = []
+    for piece in CMD_SEPARATOR.split(cmd):
+        if not piece or CMD_SEPARATOR.fullmatch(piece):
+            out.append(piece)
+            continue
+        words = piece.split()
+        i, wrapper = 0, None
+        while i < len(words):
+            w = words[i]
+            if w in WRAPPER_OPERAND_FLAGS:
+                wrapper = w
+            elif wrapper and w.startswith("-") and w != "--":
+                if w in WRAPPER_OPERAND_FLAGS[wrapper]:
+                    i += 1  # the flag's separate operand
+            elif wrapper and w == "--":
+                pass
+            elif ASSIGNMENT.match(w):
+                if w.count('"') % 2 or w.count("'") % 2:  # VAR="a b": skip to the closing quote
+                    q = '"' if w.count('"') % 2 else "'"
+                    while i + 1 < len(words) and q not in words[i + 1]:
+                        i += 1
+                    i += 1
+            else:
+                break
+            i += 1
+        if i == 0:
+            out.append(piece)
+        else:
+            out.append(" ".join(words[i:]))
+    return "".join(out)
 
 
 RECURSIVE_DELETE = "recursive delete"
@@ -194,13 +248,19 @@ def rm_only_scratch(cmd: str) -> bool:
 
 def decision(cmd: str):
     allow_force = bool(os.environ.get("ESTATE_GUARD_ALLOW_FORCE"))
+    stripped = _strip_wrappers(cmd)
+    views = (cmd,) if stripped == cmd else (cmd, stripped)
+
+    def hit(pat):
+        return any(re.search(pat, v, re.I) for v in views)
+
     for pat, why in DENY:
-        if re.search(pat, cmd, re.I):
+        if hit(pat):
             if allow_force and "force-push" in why:
                 return "ask", why + " (ESTATE_GUARD_ALLOW_FORCE is set)"
             return "deny", why
     for pat, why in ASK:
-        if re.search(pat, cmd, re.I):
+        if hit(pat):
             if why == RECURSIVE_DELETE and rm_only_scratch(cmd):
                 continue
             return "ask", why

@@ -105,7 +105,11 @@ A `$TMPDIR` target counts only when the hook's own `TMPDIR` is set and resolves
 under a scratch root, and the command does not assign `TMPDIR` itself (inline
 `TMPDIR=… rm`, `export`, `declare`, `env`, `set`, `unset` all ask). Relative paths (`cd /tmp && rm
 -rf x`), `~`, `$HOME`, or one non-scratch target anywhere still ask; the
-root/home deny and every other ask rule are unchanged. **Agents: delete scratch
+root/home deny and every other ask rule are unchanged. Leading `VAR=value`
+assignments and the wrappers `sudo`, `doas`, `env`, `command`, `exec`, `nohup`,
+`nice` and `time` (with their options, including `sudo -u USER`, `env -u NAME`,
+`nice -n N`) are looked through, so a wrapped `rm` gets the same decision. Other
+wrappers (`xargs`, `find -exec`, `bash -c`, aliases, functions) are not parsed. **Agents: delete scratch
 with an absolute path** (`rm -rf /tmp/claude-0/acos`, not `cd /tmp/claude-0 &&
 rm -rf acos`), or an unattended run stalls waiting for a human.
 
