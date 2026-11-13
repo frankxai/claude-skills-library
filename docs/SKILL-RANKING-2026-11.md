@@ -102,15 +102,15 @@ Highest score. Because eval points are 0 for all, this ranks on hygiene only; it
 | # | Skill | Score | Fix |
 |---|---|---|---|
 | 38 | skills-with-evals/model-routing | 50 | move non-spec frontmatter keys under `metadata` (validate_skills.py warning) |
-| 39 | stack-kits/shadcn | 50 | add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals); move non-spec frontmatter keys under `metadata` (validate_skills.py warning) |
+| 39 | stack-kits/shadcn | 50 | add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals); split the 1,184-word body and move depth into `references/` (the validate_skills.py warning is body length) |
 | 40 | skills-with-evals/todo-discipline | 50 | move non-spec frontmatter keys under `metadata` (validate_skills.py warning) |
 | 41 | skills-with-evals/verification-quality | 50 | move non-spec frontmatter keys under `metadata` (validate_skills.py warning) |
 | 42 | web-excellence/apple-design | 40 | split 3,426-word body; move depth into `references/`; add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals) |
 | 43 | web-excellence/extract-design-system | 35 | rewrite `description` to say when to use it (add a 'Use when ...' sentence); add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals) |
 | 44 | web-excellence/review-animations | 35 | rewrite `description` to say when to use it (add a 'Use when ...' sentence); add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals); note: `disable-model-invocation: true`, so a trigger description matters less; still add a one-line use case |
-| 45 | web-excellence/image-to-code | 35 | rewrite `description` to say when to use it (add a 'Use when ...' sentence); split 5,820-word body; move depth into `references/`; add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals); move non-spec frontmatter keys under `metadata` (validate_skills.py warning) |
-| 46 | web-excellence/brandkit | 25 | rewrite `description` to say when to use it (add a 'Use when ...' sentence); split 2,600-word body; move depth into `references/`; add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals); move non-spec frontmatter keys under `metadata` (validate_skills.py warning) |
-| 47 | web-excellence/emil-design-eng | 25 | rewrite `description` to say when to use it (add a 'Use when ...' sentence); split 3,877-word body; move depth into `references/`; add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals); move non-spec frontmatter keys under `metadata` (validate_skills.py warning) |
+| 45 | web-excellence/image-to-code | 35 | rewrite `description` to say when to use it (add a 'Use when ...' sentence); split 5,820-word body; move depth into `references/`; add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals) (this also clears the validate_skills.py body-length warning) |
+| 46 | web-excellence/brandkit | 25 | rewrite `description` to say when to use it (add a 'Use when ...' sentence); split 2,600-word body; move depth into `references/`; add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals) (this also clears the validate_skills.py body-length warning) |
+| 47 | web-excellence/emil-design-eng | 25 | rewrite `description` to say when to use it (add a 'Use when ...' sentence); split 3,877-word body; move depth into `references/`; add `evals/<skill>/{outcome-a,outcome-b,no-trigger}/case.yaml` (pattern: packs/skills-with-evals/evals) (this also clears the validate_skills.py body-length warning) |
 
 ## Duplicates and overlaps
 
