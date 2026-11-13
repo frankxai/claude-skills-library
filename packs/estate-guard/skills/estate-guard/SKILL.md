@@ -99,8 +99,11 @@ if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 command deletes nothing but scratch targets: absolute paths under `/tmp/`,
 `/var/tmp/`, `/private/tmp/`, `$TMPDIR/` or `${TMPDIR}/` with a real segment
 after the prefix, no `..`, no `$(`/backtick or other `$` expansion, no braces,
-not a glob over the root itself (`/tmp`, `/tmp/*` still ask), and not resolving
-through a symlink to outside the scratch roots. Relative paths (`cd /tmp && rm
+not a glob over the root itself (`/tmp`, `/tmp/*` still ask), no glob before the
+final segment, and not resolving through a symlink to outside the scratch roots.
+A `$TMPDIR` target counts only when the hook's own `TMPDIR` is set and resolves
+under a scratch root, and the command does not assign `TMPDIR` itself (inline
+`TMPDIR=… rm`, `export`, `declare`, `env`, `set`, `unset` all ask). Relative paths (`cd /tmp && rm
 -rf x`), `~`, `$HOME`, or one non-scratch target anywhere still ask; the
 root/home deny and every other ask rule are unchanged. **Agents: delete scratch
 with an absolute path** (`rm -rf /tmp/claude-0/acos`, not `cd /tmp/claude-0 &&

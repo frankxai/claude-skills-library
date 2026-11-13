@@ -18,8 +18,12 @@ scratch target is an absolute path under /tmp/, /var/tmp/, /private/tmp/,
 $TMPDIR/ or ${TMPDIR}/ with at least one real segment after that prefix, made
 only of plain path characters (no '..', no '$(' or backtick, no other $
 expansion, no braces, quotes-inside-path, ~ or spaces), whose first segment is
-not a bare glob (so /tmp, /tmp/ and /tmp/* still ask), and whose literal path
-does not resolve through a symlink to outside the scratch roots. A command that
+not a bare glob (so /tmp, /tmp/ and /tmp/* still ask), with no glob before the
+final segment, and whose literal path does not resolve through a symlink to
+outside the scratch roots. A $TMPDIR target counts only when the hook's own
+TMPDIR is set and resolves to a scratch root (the expanded path is then checked
+like a literal one) AND the command does not itself assign TMPDIR anywhere
+(inline prefix, export, declare, env, set, unset, ...); otherwise it asks. A command that
 also runs `ln`/`mount` gets no exception. Relative paths (`cd /tmp && rm -rf x`),
 ~, $HOME, anything else, or a single non-scratch target in any rm still ASK.
 The root/home DENY runs first and is unchanged; every other ASK rule still fires
@@ -44,7 +48,9 @@ import sys
 
 # A command position: start of line, after a separator, or inside a substitution.
 # Keeps `echo "never run rm -rf /"` from tripping the gate.
-CMD = r"(?:^|[;&|]\s*|\(\s*|\$\(\s*|`\s*|&&\s*|\|\|\s*)(?:sudo\s+)?"
+# Also skips leading sudo/env (with flags) and inline VAR=value prefixes, so
+# `TMPDIR=/ rm -rf x` and `env X=1 rm -rf x` are still seen as an rm.
+CMD = r"(?:^|[;&|]\s*|\(\s*|\$\(\s*|`\s*|&&\s*|\|\|\s*)(?:(?:sudo|env)(?:\s+-\S+)*\s+|\w+=(?:\"[^\"]*\"|'[^']*'|[^\s;&|]*)\s+)*"
 
 DENY = [
     (r"git\s+push\b[^|;&]*\s(?:--force|-f|--force-with-lease)\b[^|;&]*\b(?:main|master|production)\b", "force-push to a protected branch"),
@@ -89,6 +95,10 @@ ENV_SCRATCH_ROOTS = ("$TMPDIR/", "${TMPDIR}/")
 SAFE_REST = re.compile(r"[A-Za-z0-9._@%+=:,/*?-]+")
 GLOB_ONLY = re.compile(r"[.*?]+")
 LINKERS = re.compile(r"(?:^|[^\w-])(?:ln|mount|bindfs)\s", re.I)
+# Any bare TMPDIR word that is not an expansion ($TMPDIR, ${TMPDIR}) is treated
+# as a reassignment: inline prefix (TMPDIR=x rm), export/declare/typeset/local/
+# readonly/env/set TMPDIR=x, TMPDIR+=x, unset TMPDIR, read TMPDIR, for TMPDIR in.
+TMPDIR_WRITE = re.compile(r"(?<![$\w{])TMPDIR(?!\w)")
 
 
 def _under_scratch(path: str) -> bool:
@@ -106,7 +116,24 @@ def _under_scratch(path: str) -> bool:
     return False
 
 
-def is_scratch_target(target: str) -> bool:
+def _env_scratch_root() -> str | None:
+    """The real path of $TMPDIR from the hook's own environment, if it is a scratch root.
+
+    Unset, empty, relative, or resolving anywhere outside the literal scratch
+    roots returns None, so a $TMPDIR target is not treated as scratch.
+    """
+    value = os.environ.get("TMPDIR", "")
+    if not value.startswith("/"):
+        return None
+    real = os.path.realpath(value)
+    for root in LITERAL_SCRATCH_ROOTS:
+        real_root = os.path.realpath(root.rstrip("/"))
+        if real == real_root or real.startswith(real_root + "/"):
+            return real
+    return None
+
+
+def is_scratch_target(target: str, tmpdir_reassigned: bool = False) -> bool:
     if "$(" in target or "`" in target or ".." in target:
         return False
     literal = target.startswith(LITERAL_SCRATCH_ROOTS)
@@ -120,13 +147,28 @@ def is_scratch_target(target: str) -> bool:
     segments = [seg for seg in rest.split("/") if seg]
     if not segments or GLOB_ONLY.fullmatch(segments[0]):
         return False
-    return _under_scratch(target) if literal else True
+    # A glob is allowed only in the final segment: /tmp/a/*/x can expand into
+    # anything the glob matches, including symlinks, before the last segment.
+    if any(c in seg for seg in segments[:-1] for c in "*?"):
+        return False
+    if literal:
+        return _under_scratch(target)
+    # $TMPDIR target: never trust the literal prefix. If the command itself
+    # assigns TMPDIR, the value the shell expands is unknown here, so ask.
+    # Otherwise expand with the hook's own TMPDIR, which must be a scratch root.
+    if tmpdir_reassigned:
+        return False
+    env_root = _env_scratch_root()
+    if env_root is None:
+        return False
+    return _under_scratch(os.path.normpath(env_root + "/" + rest))
 
 
 def rm_only_scratch(cmd: str) -> bool:
     """True only if every rm invocation in cmd deletes nothing but scratch targets."""
     if "`" in cmd or "$(" in cmd or LINKERS.search(cmd):
         return False
+    tmpdir_reassigned = bool(TMPDIR_WRITE.search(cmd))
     found = False
     for m in RM_AT.finditer(cmd):
         found = True
@@ -145,7 +187,7 @@ def rm_only_scratch(cmd: str) -> bool:
                 continue
             else:
                 targets.append(tok)
-        if not targets or not all(is_scratch_target(t) for t in targets):
+        if not targets or not all(is_scratch_target(t, tmpdir_reassigned) for t in targets):
             return False
     return found
 
