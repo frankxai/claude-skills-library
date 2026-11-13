@@ -15,13 +15,13 @@ graders:
     input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""
   - name: rx-0
     type: regex
-    pattern: "claude-sonnet-5"
+    pattern: "claude-sonnet-5-5"
     flags: i
   - name: rx-1
     type: regex
-    pattern: "claude-opus-5"
+    pattern: "claude-opus-5-5"
     flags: i
   - name: rx-2
     type: regex
-    pattern: "claude-haiku-4-5"
+    pattern: "claude-haiku-5-5"
     flags: i

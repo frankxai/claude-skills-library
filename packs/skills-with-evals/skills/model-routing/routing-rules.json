@@ -2,14 +2,18 @@
   "_description": "ACOS v6.2 Model Routing Rules - Intelligent Haiku/Sonnet/Opus selection",
   "_version": "1.1.0",
   "_source": "claude-flow Q-Learning Router pattern + model-registry.json",
-  "_updated": "2026-06-22",
-  "_note": "Current family: Haiku 4.5 / Sonnet 4.6 / Opus 4.8 (default). Escalate above Opus to claude-fable-5 for the hardest long-horizon reasoning (priced above Opus tier). Verify IDs/pricing at platform.claude.com.",
+  "_updated": "2026-11-11",
+  "_note": "Current family: Haiku 5.5 / Sonnet 5.5 / Opus 5.5 (default); escalate to claude-fable-5-2 only after Opus falls short. First-party prices checked 2026-11-11 against https://platform.claude.com/docs/en/about-claude/pricing; IDs against the claude-api skill model table (cached 2026-11-03). Re-verify with GET /v1/models and platform.claude.com pricing before trusting. Haiku 5.5 has a higher rate for prompts over 100K tokens; see models.haiku. command_routing and agent_routing name FrankX estate commands and agents that do not ship with this pack.",
 
   "models": {
     "haiku": {
-      "id": "claude-haiku-4-5-20251001",
-      "cost_per_1m_input": 1.0,
-      "cost_per_1m_output": 5.0,
+      "id": "claude-haiku-5-5",
+      "cost_per_1m_input": 0.1,
+      "cost_per_1m_output": 0.5,
+      "long_prompt_threshold_tokens": 100000,
+      "cost_per_1m_input_long_prompt": 0.5,
+      "cost_per_1m_output_long_prompt": 2.5,
+      "pricing_note": "Prompts over 100,000 input tokens (cache reads and writes included) pay the long_prompt rates for the whole request.",
       "latency": "fastest",
       "capability": "basic",
       "use_for": [
@@ -22,9 +26,9 @@
       ]
     },
     "sonnet": {
-      "id": "claude-sonnet-4-6",
-      "cost_per_1m_input": 3.0,
-      "cost_per_1m_output": 15.0,
+      "id": "claude-sonnet-5-5",
+      "cost_per_1m_input": 2.0,
+      "cost_per_1m_output": 10.0,
       "latency": "medium",
       "capability": "balanced",
       "use_for": [
@@ -37,11 +41,10 @@
       ]
     },
     "opus": {
-      "id": "claude-opus-4-8",
-      "cost_per_1m_input": 5.0,
-      "cost_per_1m_output": 25.0,
-      "context_window": 200000,
-      "context_window_beta": 1000000,
+      "id": "claude-opus-5-5",
+      "cost_per_1m_input": 4.0,
+      "cost_per_1m_output": 20.0,
+      "context_window": 1000000,
       "max_output_tokens": 128000,
       "thinking_mode": "adaptive",
       "effort_levels": ["low", "medium", "high", "xhigh", "max"],
