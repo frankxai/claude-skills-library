@@ -134,6 +134,8 @@ function loadConfig(root, explicit) {
 
 // ------------------------------------------------------------------- rules
 // Every rule: { id, severity, title, fix }. Findings reference the id.
+const RELATIVE_HOOK_PATH = /(?:^|[\s"'=;&|(])(?:\.\/)?\.claude\/hooks\//;
+
 export const RULES = {
   WF001: { severity: 'high', title: 'pull_request_target checks out the PR head', fix: 'Check out base.sha for trusted code; if the PR tree is needed, check it out to a separate path with persist-credentials:false and never run its scripts or expose secrets after it.' },
   WF002: { severity: 'high', title: 'Untrusted event text interpolated directly into a run: step', fix: 'Pass it through env: (e.g. `env: BODY: ${{ github.event.comment.body }}` then use "$BODY") so it is data, not shell.' },
@@ -354,7 +356,9 @@ export function scanRepo(root, opts = {}) {
       // a relative hook path breaks after any `cd` either way.
       if (d) for (const ev of Object.values(d.hooks || {})) for (const e of ev) for (const h of e.hooks || []) {
         const cmd = h.command || '';
-        if (/\.claude\/hooks\//.test(cmd) && !/\$\{?CLAUDE_PROJECT_DIR\}?/.test(cmd)) add('HK008', rel, 1, cmd);
+        // Only a path that starts at a token boundary is relative; "$HOME"/.claude/hooks,
+        // ~/.claude/hooks and /abs/.claude/hooks do not depend on the working directory.
+        if (RELATIVE_HOOK_PATH.test(cmd)) add('HK008', rel, 1, cmd);
       }
     }
     if (/(^|\/)\.claude\/hooks\/[^/]+\.(sh|py|js|mjs|cjs|ts|ps1)$/.test(rel) || /^hooks\/[^/]+\.(sh|py|js|mjs|cjs)$/.test(rel)) {
