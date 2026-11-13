@@ -179,6 +179,18 @@ def main() -> int:
         "",
         "Installed: " + ", ".join(present) + ".",
     ]
+    recipes = [r for r in ("liquid-logo", "shader-backdrop", "liquid-glass", "r3f-scene") if r in present]
+    if "gpu-surface" in present and recipes:
+        lines += [
+            "",
+            "A shader, canvas, glass panel, liquid-metal or chrome mark, or 3D element goes "
+            "through `gpu-surface` FIRST: it decides whether the page earns one (one per "
+            "route, the repo's taste file first) and hands the build to "
+            + ", ".join(f"`{r}`" for r in recipes)
+            + (". A look across the whole site is decided once in `material-system`."
+               if "material-system" in present else ".")
+            + " Prove it with `gpu-surface/probe.mjs`.",
+        ]
     if contracts:
         lines += [
             "",

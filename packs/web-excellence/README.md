@@ -174,6 +174,45 @@ Hooks cover the session. For drift between sessions, schedule the audit:
 - A **CI job** running the static half — the `web-design-guidelines` rule list
   is a fetchable markdown file, so a grep-based subset works without a model.
 
+## What activates on its own
+
+Nothing is a suggestion that a session can skip by not reading it. Each layer
+catches the work at a different moment, and each one is tested.
+
+| Layer | Fires when | What it does | Lives in |
+|---|---|---|---|
+| Skill descriptions | A request matches: "liquid metal logo", "mesh gradient hero", "frosted glass nav", "react-three-fiber scene", a ShaderGradient or Liquid Glass link | The model loads `gpu-surface` or the matching recipe | each `SKILL.md` `description` |
+| `SessionStart` hook | Every session in a repo with the pack | Names the routing: shader, glass, mark or 3D work goes through `gpu-surface` first, then its recipe; the site-wide look goes through `material-system` | `web-excellence-session.py` |
+| `PreToolUse` hook | An edit adds a canvas, shader, or 3D element (`<Canvas`, `@react-three/`, `@paper-design/`, `ShaderMount`, a WebGL context), or uses `backdrop-filter` | Injects the pointer to the recipe at that edit, even if the general reminder already fired. A canvas edit also arms the probe requirement | `web-excellence-gate.py` |
+| `Stop` hook | A turn ends after a canvas edit | Blocks once unless `probe.mjs` ran after the last edit with every check passing, or printed its own `Cannot probe:` line. A failed report, a `cat` of the script, or pasted output does not count | `web-excellence-stop.py` |
+| `CLAUDE.md` / `AGENTS.md` block | A harness reads the prompt, including Codex and Grok, which never load `.claude/skills` | Routes by name to the gate, the governor, the recipes and the three agents | `install.sh --claude-md`, from `claude-md.snippet.md` |
+| Agents | A build or review is delegated | `worker-web-builder` routes to the recipes and runs the probe; `worker-visual-qa` runs the probe on any page with a canvas and treats a failed check as blocking | `agents/`, compiled in agentic-creator-os |
+
+### Turn it on in a repo
+
+```bash
+packs/web-excellence/install.sh /path/to/repo --claude-md
+```
+
+Re-running upgrades the skills, hooks and agents in place. `--claude-md` writes
+one fenced block (`<!-- web-excellence:begin -->` to `<!-- web-excellence:end -->`),
+replaces it in place on every run, and never touches a hand-written "Web design
+gate" section: it tells you when that section does not name `gpu-surface`.
+
+### What it does not do
+
+- **A package installed from the shell is not seen.** `pnpm add three` runs
+  through Bash, and the gate hooks only watch edits. The skill descriptions and
+  the prompt block are what catch it; `gpu-surface` section 2 says to run the
+  peer check before installing.
+- **Repos that already have the pack need a re-install** to receive the recipes
+  and the new hooks. Nothing updates them by itself.
+- **A site's material is an owner decision.** `material-system` drafts a block
+  and a surface map as a proposal. No hook can approve it, and
+  `worker-web-builder` is forbidden from writing it into `design.md`.
+- **The probe checks the states exist, not that they look good.** The stills
+  still have to be opened and judged.
+
 ## Layout
 
 ```
@@ -184,6 +223,7 @@ packs/web-excellence/
 ├── sync-upstream.sh       re-vendor from upstream, rewrite the pin table
 ├── sync-agents.sh         re-vendor the agents from an agentic-creator-os checkout
 ├── settings.snippet.json  the hooks block install.sh merges
+├── claude-md.snippet.md   the CLAUDE.md / AGENTS.md block install.sh --claude-md writes
 ├── ci/                    the model-free linter + its workflow
 ├── hooks/                 the three hooks
 ├── tests/                 test_hooks.py, peer-check.test.mjs, install-agents.test.mjs, gpu-scripts.test.mjs

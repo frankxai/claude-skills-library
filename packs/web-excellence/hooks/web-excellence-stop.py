@@ -68,6 +68,14 @@ VISUAL_EVIDENCE = (
     "cannot capture:",         # capture.mjs honest-failure line — reporting counts
 )
 CAPTURE_RUN = re.compile(r"\bnode\s+(?:--?\S+\s+)*\S*capture\.mjs\b")
+# The GPU check. A canvas, shader, or 3D edit is not finished until probe.mjs
+# ran against the route and every check held, or it honestly could not run.
+GPU_EVIDENCE = (
+    "gpu surface probe \u2014",  # probe.mjs report header
+    "cannot probe:",            # probe.mjs honest-failure line
+)
+PROBE_RUN = re.compile(r"\bnode\s+(?:--?\S+\s+)*\S*probe\.mjs\b")
+PROBE_FAIL = re.compile(r"^\s*fail\b", re.I | re.M)
 SHELL_FETCH = re.compile(r"\b(curl|wget)\b")
 
 # Mirrors UI_PATH / NOT_UI in web-excellence-gate.py. Applied to files changed
@@ -186,6 +194,16 @@ def captured(text: str) -> bool:
     return REQUIRED_SHOTS <= {m.groups() for m in SHOT_PATH.finditer(low)}
 
 
+def probed(text: str) -> bool:
+    """A probe run that proves something: every check it made held, or an
+    honest report that it could not run. A report with a failed check proves
+    nothing: fix it and run it again."""
+    low = text.lower()
+    if "cannot probe:" in low:
+        return True
+    return "gpu surface probe \u2014" in low and not PROBE_FAIL.search(text)
+
+
 # How a fetch that did not fail as a call can still have failed: a tool that
 # reports the error as text, or curl without -f printing an error page with
 # exit 0. GitHub's raw host answers with a status line ("429: Too Many
@@ -209,8 +227,11 @@ def fetched(block: dict) -> bool:
             and not any(m in head for m in FETCH_FAILED))
 
 
-def receipts(path: str, since: float = 0.0, proof_since: float = 0.0):
-    """(audited, proved) from calls made at or after `since`, not from prose.
+def receipts(path: str, since: float = 0.0, proof_since: float = 0.0, need_probe: bool = False):
+    """(audited, proved, probe_ok) from calls made at or after `since`, not from prose.
+
+    `probe_ok` is True when no probe was asked for, or when a probe.mjs run
+    passed (or honestly could not run) after the last UI edit.
 
     A call counts only through its own result: a fetch whose result is not an
     error, and a capture.mjs run whose result shows the matrix was captured or
@@ -220,7 +241,8 @@ def receipts(path: str, since: float = 0.0, proof_since: float = 0.0):
     guessed away.
     """
     audited = proved = False
-    fetch_ids, capture_ids = set(), {}
+    probe_ok = not need_probe
+    fetch_ids, capture_ids, probe_ids = set(), {}, {}
     for f in transcript_files(path):
         try:
             fh = open(f, "r", encoding="utf-8", errors="ignore")
@@ -229,10 +251,11 @@ def receipts(path: str, since: float = 0.0, proof_since: float = 0.0):
         with fh:
             for line in fh:
                 low = line.lower()
-                pending = fetch_ids | set(capture_ids)
+                pending = fetch_ids | set(capture_ids) | set(probe_ids)
                 # Cheap prefilter: most lines mention none of these and are
                 # never parsed.
                 if not ("capture.mjs" in low
+                        or "probe.mjs" in low
                         or any(n in low for n in EVIDENCE)
                         or (pending and '"tool_result"' in line
                             and any(i and i in line for i in pending))):
@@ -256,6 +279,8 @@ def receipts(path: str, since: float = 0.0, proof_since: float = 0.0):
                             fetch_ids.add(tid)
                         if name == "Bash" and CAPTURE_RUN.search(args):
                             capture_ids[tid] = stamp
+                        if name == "Bash" and PROBE_RUN.search(args):
+                            probe_ids[tid] = stamp
                     elif kind == "tool_result":
                         tid = block.get("tool_use_id")
                         if tid in fetch_ids and fetched(block):
@@ -263,9 +288,12 @@ def receipts(path: str, since: float = 0.0, proof_since: float = 0.0):
                         if (tid in capture_ids and captured(result_text(block))
                                 and (not capture_ids[tid] or capture_ids[tid] >= proof_since)):
                             proved = True
-                if audited and proved:
-                    return True, True
-    return audited, proved
+                        if (need_probe and tid in probe_ids and probed(result_text(block))
+                                and (not probe_ids[tid] or probe_ids[tid] >= proof_since)):
+                            probe_ok = True
+                if audited and proved and probe_ok:
+                    return True, True, True
+    return audited, proved, probe_ok
 
 
 def git(cwd: str, *args: str):
@@ -369,7 +397,8 @@ def changed_outside_tools(cwd: str, baselines: dict) -> list:
 
 def close_window(state: dict, cwd: str) -> None:
     """End this change set: the next UI change opens a fresh window."""
-    state.update({"touched": [], "fired": False, "blocked": False,
+    state.update({"touched": [], "fired": False, "blocked": False, "gpu": False,
+                  "gpu_fired": False, "glass_fired": False,
                   "window_start": None, "closed_at": time.time()})
     root = (git(cwd, "rev-parse", "--show-toplevel") or "").strip()
     baselines = state.get("baseline") or {}
@@ -421,15 +450,16 @@ def main() -> int:
     # The capture must also follow the last UI edit: screenshots taken before
     # a final tweak show a state that no longer exists.
     window = state.get("window_start") or floor
-    audited, proved = receipts(payload.get("transcript_path", ""), window,
-                               max(window, last_edit(cwd, touched)))
+    need_probe = bool(state.get("gpu"))
+    audited, proved, probe_ok = receipts(payload.get("transcript_path", ""), window,
+                                         max(window, last_edit(cwd, touched)), need_probe)
     # BOTH halves close the gate. Gating on `audited` alone let a turn that ran
     # the guidelines audit but never rendered anything pass silently, which is
     # exactly the enforcement-that-does-not-enforce failure this hook exists to
     # prevent. `proved` is satisfied by a complete capture.mjs run OR by its
     # honest "cannot capture:" line — reporting that you could not render
     # counts; a partial matrix does not.
-    if (audited and proved) or state.get("blocked"):
+    if (audited and proved and probe_ok) or state.get("blocked"):
         close_window(state, cwd)
         write_state(sp, state)
         return 0
@@ -444,6 +474,9 @@ def main() -> int:
         missing.append("`web-design-guidelines` audit on the changed files (it starts by fetching the live guidelines)")
     if not proved:
         missing.append("`visual-proof` capture of the final state, after the last UI edit, at 375 / 768 / 1440 in light and dark with `node .claude/skills/visual-proof/capture.mjs` (or an explicit statement that capture was impossible here, and why)")
+
+    if not probe_ok:
+        missing.append("`gpu-surface` probe on the route that carries the canvas, shader, or 3D element, after the last edit, with every check passing: `node .claude/skills/gpu-surface/probe.mjs --url <route> --baseline <a route without a surface>` (or the probe's own \"Cannot probe:\" line if it cannot run)")
 
     reason = (
         "web-release-gate: this turn changed UI files but the gate did not close.\n\n"
