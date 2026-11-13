@@ -33,6 +33,15 @@ hooks that block "done" until the evidence exists.
 > business pack, and the MIT open-core plugin kernel.
 > **[Start with one](https://www.agenticincome.ai/offers).**
 
+## Where to start
+
+Two doors are open right now:
+
+- [Operator lab waitlist](https://frankx.ai/community): join the waitlist at frankx.ai/community.
+- [Blueprint request access](https://www.agenticincome.ai/offers/blueprint#request-access): request access to the Blueprint.
+
+For the skills themselves, see [the skill ranking](docs/SKILL-RANKING-2026-11.md) for which ones are best formed today.
+
 ## Install
 
 > [!IMPORTANT]
