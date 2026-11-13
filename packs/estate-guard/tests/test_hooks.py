@@ -66,11 +66,11 @@ for cmd in ["git status", "git push -u origin agent/claude/scope", "pnpm run typ
             "echo 'never run rm -rf /'", "git push --dry-run origin main"]:
     d, rc = gate(cmd)
     check(f"pass: {cmd}", d is None and rc == 0, f"got {d}")
-# Scratch-delete exception: absolute scratch targets pass; everything else still asks/denies.
+# Fail-closed contract: all recursive deletes, including scratch paths, require approval.
 for cmd in ["rm -rf /tmp/claude-0/acos", "rm -rf /var/tmp/x /tmp/y", 'rm -rf "$TMPDIR/build"', "rm -rf ${TMPDIR}/build",
             "rm -rf /tmp/claude-0/acos && git status", "rm -rf -- /tmp/a/b"]:
     d, rc = gate(cmd)
-    check(f"scratch pass: {cmd}", d is None and rc == 0, f"got {d}")
+    check(f"scratch requires approval: {cmd}", d == "ask" and rc == 0, f"got {d}")
 for cmd in ["rm -rf acos", "cd /tmp && rm -rf acos", "cd /tmp/claude-0 && rm -rf acos", "rm -rf /tmp/../home/user", "rm -rf /tmp/*",
             "rm -rf /tmp", "rm -rf /tmp/", "rm -rf /var/tmp", "rm -rf /tmp/a ./b", "rm -rf /tmp/$(whoami)", "rm -rf /tmp/`whoami`",
             "rm -rf /tmp/a && git reset --hard", "rm -rf /tmp/a; rm -rf b", "rm -rf /tmp/a\nrm -rf b", "rm -rf /tmp/a\n  rm -rf b", "rm -rf /tmp/a && xargs rm -rf < list", "rm -rf /tmp/$X", "rm -rf /tmp/{a,}",
