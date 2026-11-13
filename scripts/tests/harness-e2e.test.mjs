@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, rmSync, chmodSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, chmodSync, mkdirSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -12,6 +12,47 @@ const SANTA = join(ROOT, 'absorbed', 'harness', 'santa-round.mjs');
 const EVAL = join(ROOT, 'absorbed', 'harness', 'eval-estate.mjs');
 const FIXTURE_HOOKS = mkdtempSync(join(tmpdir(), 'harness-e2e-hooks-'));
 const LIVE_TOKEN = ['sk', 'ant', 'api03', 'abcdefghij'].join('-');
+
+function validateSkill(body) {
+  const root = mkdtempSync(join(tmpdir(), 'skill-validator-redaction-'));
+  try {
+    mkdirSync(join(root, 'scripts'));
+    mkdirSync(join(root, 'free-skills', 'fixture'), { recursive: true });
+    copyFileSync(join(ROOT, 'scripts', 'validate-skills.mjs'), join(root, 'scripts', 'validate-skills.mjs'));
+    writeFileSync(join(root, 'free-skills', 'fixture', 'SKILL.md'),
+      `---\nname: fixture\ndescription: A local validator regression fixture.\n---\n${body}\n`);
+    const result = spawnSync(process.execPath, [join(root, 'scripts', 'validate-skills.mjs')],
+      { encoding: 'utf8', timeout: 10000 });
+    assert.ifError(result.error);
+    return { code: result.status, out: result.stdout + result.stderr };
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+test('skill credential findings fail validation without copying credential lines into logs', () => {
+  const fixtures = [
+    ['api', 'key'].join('_') + '=\"' + 'x'.repeat(20) + '\"',
+    ['pass', 'word'].join('') + '=\"local-fixture-value\"',
+    ['gh', 'p_'].join('') + 'x'.repeat(36),
+    ['sk', '-'].join('') + 'x'.repeat(32),
+  ];
+  for (const credential of fixtures) {
+    const result = validateSkill(`private-context ${credential}`);
+    assert.equal(result.code, 1);
+    assert.match(result.out, /\[FAIL\] fixture/);
+    assert.match(result.out, /Potential credential\/secret detected on line 5/);
+    assert.ok(!result.out.includes(credential), 'Credential material must stay out of logs');
+    assert.ok(!result.out.includes('private-context'), 'The matched line must stay out of logs');
+  }
+});
+
+test('ordinary skill content still passes validation', () => {
+  const result = validateSkill('Read the input, produce the requested artifact, and check the result.');
+  assert.equal(result.code, 0);
+  assert.match(result.out, /\[PASS\] fixture/);
+  assert.match(result.out, /Failed: 0/);
+});
 
 function git(repo, args) {
   const result = spawnSync('git', ['-c', `core.hooksPath=${FIXTURE_HOOKS}`, ...args], { cwd: repo, encoding: 'utf8' });

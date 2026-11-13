@@ -102,7 +102,7 @@ folders.forEach(folder => {
     lines.forEach((line, idx) => {
         secretRegexes.forEach(regex => {
             if (regex.test(line)) {
-                errors.push(`Potential credential/secret detected on line ${idx + 1}: "${line.trim()}"`);
+                errors.push(`Potential credential/secret detected on line ${idx + 1}`);
             }
         });
     });
