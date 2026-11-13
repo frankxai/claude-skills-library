@@ -149,6 +149,7 @@ export const RULES = {
   HK004: { severity: 'low', title: 'Hook references a machine-specific absolute path', fix: 'Use a repo-relative path. On any other machine this hook silently fails and the gate it implements does not exist.' },
   HK005: { severity: 'high', title: 'Hook script contains a destructive or remote-exec primitive', fix: 'Hooks run unattended on every event. Remove curl|sh, eval of tool input, recursive deletes outside a temp dir, and force-pushes.' },
   HK006: { severity: 'medium', title: 'enableAllProjectMcpServers is true in a tracked settings file', fix: 'Approve MCP servers explicitly. Auto-approving every project .mcp.json means a PR can add a server that runs on checkout.' },
+  HK008: { severity: 'high', title: 'Hook command uses a relative .claude/hooks/ path', fix: 'After any `cd` in Bash a relative hook path breaks every later tool call. Use `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/<name>.py` (or `${CLAUDE_PROJECT_DIR}`); re-running `install.sh` writes the correct form.' },
   HK007: { severity: 'high', title: 'Permission bypass mode committed to the repo', fix: 'Remove bypassPermissions / skip-prompt settings from tracked config. Bypass is a per-session decision, never a repo default.' },
 
   MCP001: { severity: 'high', title: 'Inline secret-looking value in MCP server env', fix: 'Reference environment variables (`${VAR}`) and keep values in the machine keychain or .env (untracked).' },
@@ -348,6 +349,12 @@ export function scanRepo(root, opts = {}) {
           if (MACHINE_PATH.test(cmd)) add('HK004', rel, 1, cmd);
           if (CURL_PIPE_SH.test(cmd)) add('HK005', rel, 1, cmd);
         }
+      }
+      // HK008 applies to settings.json and settings.local.json, tracked or not:
+      // a relative hook path breaks after any `cd` either way.
+      if (d) for (const ev of Object.values(d.hooks || {})) for (const e of ev) for (const h of e.hooks || []) {
+        const cmd = h.command || '';
+        if (/\.claude\/hooks\//.test(cmd) && !/\$\{?CLAUDE_PROJECT_DIR\}?/.test(cmd)) add('HK008', rel, 1, cmd);
       }
     }
     if (/(^|\/)\.claude\/hooks\/[^/]+\.(sh|py|js|mjs|cjs|ts|ps1)$/.test(rel) || /^hooks\/[^/]+\.(sh|py|js|mjs|cjs)$/.test(rel)) {

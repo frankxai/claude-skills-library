@@ -34,6 +34,7 @@ every PR and weekly; a high finding fails the check.
    delete the line; the credential is already in git.
 2. **high**: fix in this PR if it is in files the PR touches; otherwise open a
    separate PR titled `estate-guard: <rule> in <file>` and link it.
+   **HK008 (high)**: a hook `command` in `.claude/settings.json` / `settings.local.json` that references `.claude/hooks/` without `$CLAUDE_PROJECT_DIR` breaks after any `cd`; use `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/<name>.py` or re-run `install.sh`.
 3. **medium**: fix when you are in the file anyway. HK003 (hooks running
    `@latest`) and HK006 (auto-approving every MCP server) are worth their own
    PR because they execute on every session.
