@@ -128,9 +128,15 @@ test('HK008: relative .claude/hooks path is high, in settings.json and settings.
   assert.ok(rules(scanRepo(repo({ '.claude/settings.local.json': hookSettings(rel) }))).includes('HK008'));
 });
 
-test('HK008: $CLAUDE_PROJECT_DIR (quoted) and ${CLAUDE_PROJECT_DIR} forms are clean', () => {
-  for (const cmd of ['python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/estate-guard-gate.py', 'python3 "${CLAUDE_PROJECT_DIR}"/.claude/hooks/estate-guard-gate.py']) {
+test('HK008: project-dir and absolute or home hook paths are clean', () => {
+  for (const cmd of ['python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/estate-guard-gate.py', 'python3 "${CLAUDE_PROJECT_DIR}"/.claude/hooks/estate-guard-gate.py', 'python3 "$HOME"/.claude/hooks/gate.py', 'python3 ~/.claude/hooks/gate.py', 'python3 /opt/shared/.claude/hooks/gate.py']) {
     assert.ok(!rules(scanRepo(repo({ '.claude/settings.json': hookSettings(cmd) }))).includes('HK008'), cmd);
+  }
+});
+
+test('HK008: quoted and ./ relative forms are flagged', () => {
+  for (const cmd of ['python3 ".claude/hooks/estate-guard-gate.py"', 'python3 ./.claude/hooks/estate-guard-gate.py', 'cd x && python3 .claude/hooks/g.py']) {
+    assert.ok(rules(scanRepo(repo({ '.claude/settings.json': hookSettings(cmd) }))).includes('HK008'), cmd);
   }
 });
 
