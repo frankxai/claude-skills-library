@@ -134,6 +134,8 @@ function loadConfig(root, explicit) {
 
 // ------------------------------------------------------------------- rules
 // Every rule: { id, severity, title, fix }. Findings reference the id.
+const RELATIVE_HOOK_PATH = /(?:^|[\s"'=;&|(])(?:\.\/)?\.claude\/hooks\//;
+
 export const RULES = {
   WF001: { severity: 'high', title: 'pull_request_target checks out the PR head', fix: 'Check out base.sha for trusted code; if the PR tree is needed, check it out to a separate path with persist-credentials:false and never run its scripts or expose secrets after it.' },
   WF002: { severity: 'high', title: 'Untrusted event text interpolated directly into a run: step', fix: 'Pass it through env: (e.g. `env: BODY: ${{ github.event.comment.body }}` then use "$BODY") so it is data, not shell.' },
@@ -146,9 +148,10 @@ export const RULES = {
   HK001: { severity: 'medium', title: 'settings.local.json is tracked in git', fix: 'It is per-machine by design. `git rm --cached` it and add it to .gitignore.' },
   HK002: { severity: 'high', title: 'Blanket Bash permission in Claude settings', fix: 'Replace `Bash(*)` with explicit command prefixes. A blanket allow makes every hook and skill a code-execution path.' },
   HK003: { severity: 'medium', title: 'Hook executes an unpinned remote package on every event', fix: 'Pin the version (`pkg@1.2.3`) or vendor the script. `@latest` on a hook means a compromised release runs with your privileges on the next edit.' },
-  HK004: { severity: 'low', title: 'Hook references a machine-specific absolute path', fix: 'Use a repo-relative path. On any other machine this hook silently fails and the gate it implements does not exist.' },
+  HK004: { severity: 'low', title: 'Hook references a machine-specific absolute path', fix: 'Use `"$CLAUDE_PROJECT_DIR"/.claude/hooks/<name>` (a bare relative path trips HK008). On any other machine this hook silently fails and the gate it implements does not exist.' },
   HK005: { severity: 'high', title: 'Hook script contains a destructive or remote-exec primitive', fix: 'Hooks run unattended on every event. Remove curl|sh, eval of tool input, recursive deletes outside a temp dir, and force-pushes.' },
   HK006: { severity: 'medium', title: 'enableAllProjectMcpServers is true in a tracked settings file', fix: 'Approve MCP servers explicitly. Auto-approving every project .mcp.json means a PR can add a server that runs on checkout.' },
+  HK008: { severity: 'high', title: 'Hook command uses a relative .claude/hooks/ path', fix: 'After any `cd` in Bash a relative hook path breaks every later tool call. Use `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/<name>.py` (or `${CLAUDE_PROJECT_DIR}`); re-running `install.sh` writes the correct form.' },
   HK007: { severity: 'high', title: 'Permission bypass mode committed to the repo', fix: 'Remove bypassPermissions / skip-prompt settings from tracked config. Bypass is a per-session decision, never a repo default.' },
 
   MCP001: { severity: 'high', title: 'Inline secret-looking value in MCP server env', fix: 'Reference environment variables (`${VAR}`) and keep values in the machine keychain or .env (untracked).' },
@@ -348,6 +351,14 @@ export function scanRepo(root, opts = {}) {
           if (MACHINE_PATH.test(cmd)) add('HK004', rel, 1, cmd);
           if (CURL_PIPE_SH.test(cmd)) add('HK005', rel, 1, cmd);
         }
+      }
+      // HK008 applies to settings.json and settings.local.json, tracked or not:
+      // a relative hook path breaks after any `cd` either way.
+      if (d) for (const ev of Object.values(d.hooks || {})) for (const e of ev) for (const h of e.hooks || []) {
+        const cmd = h.command || '';
+        // Only a path that starts at a token boundary is relative; "$HOME"/.claude/hooks,
+        // ~/.claude/hooks and /abs/.claude/hooks do not depend on the working directory.
+        if (RELATIVE_HOOK_PATH.test(cmd)) add('HK008', rel, 1, cmd);
       }
     }
     if (/(^|\/)\.claude\/hooks\/[^/]+\.(sh|py|js|mjs|cjs|ts|ps1)$/.test(rel) || /^hooks\/[^/]+\.(sh|py|js|mjs|cjs)$/.test(rel)) {

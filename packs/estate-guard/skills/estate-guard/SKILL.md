@@ -34,6 +34,7 @@ every PR and weekly; a high finding fails the check.
    delete the line; the credential is already in git.
 2. **high**: fix in this PR if it is in files the PR touches; otherwise open a
    separate PR titled `estate-guard: <rule> in <file>` and link it.
+   **HK008 (high)**: a hook `command` in `.claude/settings.json` / `settings.local.json` that references `.claude/hooks/` without `$CLAUDE_PROJECT_DIR` breaks after any `cd`; use `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/<name>.py` or re-run `install.sh`.
 3. **medium**: fix when you are in the file anyway. HK003 (hooks running
    `@latest`) and HK006 (auto-approving every MCP server) are worth their own
    PR because they execute on every session.
@@ -99,10 +100,17 @@ if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 command deletes nothing but scratch targets: absolute paths under `/tmp/`,
 `/var/tmp/`, `/private/tmp/`, `$TMPDIR/` or `${TMPDIR}/` with a real segment
 after the prefix, no `..`, no `$(`/backtick or other `$` expansion, no braces,
-not a glob over the root itself (`/tmp`, `/tmp/*` still ask), and not resolving
-through a symlink to outside the scratch roots. Relative paths (`cd /tmp && rm
+not a glob over the root itself (`/tmp`, `/tmp/*` still ask), no glob before the
+final segment, and not resolving through a symlink to outside the scratch roots.
+A `$TMPDIR` target counts only when the hook's own `TMPDIR` is set and resolves
+under a scratch root, and the command does not assign `TMPDIR` itself (inline
+`TMPDIR=… rm`, `export`, `declare`, `env`, `set`, `unset` all ask). Relative paths (`cd /tmp && rm
 -rf x`), `~`, `$HOME`, or one non-scratch target anywhere still ask; the
-root/home deny and every other ask rule are unchanged. **Agents: delete scratch
+root/home deny and every other ask rule are unchanged. Leading `VAR=value`
+assignments and the wrappers `sudo`, `doas`, `env`, `command`, `exec`, `nohup`,
+`nice` and `time` (with their options, including `sudo -u USER`, `env -u NAME`,
+`nice -n N`) are looked through, so a wrapped `rm` gets the same decision. Other
+wrappers (`xargs`, `find -exec`, `bash -c`, aliases, functions) are not parsed. **Agents: delete scratch
 with an absolute path** (`rm -rf /tmp/claude-0/acos`, not `cd /tmp/claude-0 &&
 rm -rf acos`), or an unattended run stalls waiting for a human.
 

@@ -38,7 +38,11 @@ def run(path, payload, env=None, cwd=None, raw=None):
     e = dict(os.environ)
     e.pop("ESTATE_GUARD_OFF", None)
     e.pop("ESTATE_GUARD_ALLOW_FORCE", None)
-    e.update(env or {})
+    for k, v in (env or {}).items():
+        if v is None:
+            e.pop(k, None)  # None means "unset in the hook's environment"
+        else:
+            e[k] = v
     p = subprocess.run([sys.executable, path], input=raw if raw is not None else json.dumps(payload), capture_output=True, text=True, env=e, cwd=cwd)
     out = p.stdout.strip()
     return (json.loads(out) if out else None), p.returncode
@@ -67,9 +71,13 @@ for cmd in ["git status", "git push -u origin agent/claude/scope", "pnpm run typ
     d, rc = gate(cmd)
     check(f"pass: {cmd}", d is None and rc == 0, f"got {d}")
 # Scratch-delete exception: absolute scratch targets pass; everything else still asks/denies.
+# $TMPDIR targets are only scratch when the hook's own TMPDIR is a scratch root,
+# so pin it here instead of inheriting whatever the test runner has.
+SCRATCH_ENV = {"TMPDIR": "/tmp"}
 for cmd in ["rm -rf /tmp/claude-0/acos", "rm -rf /var/tmp/x /tmp/y", 'rm -rf "$TMPDIR/build"', "rm -rf ${TMPDIR}/build",
-            "rm -rf /tmp/claude-0/acos && git status", "rm -rf -- /tmp/a/b"]:
-    d, rc = gate(cmd)
+            "rm -rf /tmp/claude-0/acos && git status", "rm -rf -- /tmp/a/b", "rm -rf /tmp/build-123", "rm -rf /tmp/build/*",
+            'rm -rf "$TMPDIR/build/sub"']:
+    d, rc = gate(cmd, SCRATCH_ENV)
     check(f"scratch pass: {cmd}", d is None and rc == 0, f"got {d}")
 for cmd in ["rm -rf acos", "cd /tmp && rm -rf acos", "cd /tmp/claude-0 && rm -rf acos", "rm -rf /tmp/../home/user", "rm -rf /tmp/*",
             "rm -rf /tmp", "rm -rf /tmp/", "rm -rf /var/tmp", "rm -rf /tmp/a ./b", "rm -rf /tmp/$(whoami)", "rm -rf /tmp/`whoami`",
@@ -84,9 +92,64 @@ with tempfile.TemporaryDirectory(dir="/tmp") as d0:
     os.symlink(os.path.expanduser("~"), link)
     d, _ = gate(f"rm -rf {link}/x")
     check("scratch symlink escaping /tmp still asks", d == "ask", f"got {d}")
+# TMPDIR reassignment / untrusted $TMPDIR: the literal $TMPDIR/ prefix must not
+# be trusted. Every one of these returned no decision (allowed) before the fix.
+for cmd in ['TMPDIR=/c/Users rm -rf "$TMPDIR/frank"', "export TMPDIR=/home; rm -rf $TMPDIR/user", 'TMPDIR=/ rm -rf "$TMPDIR/"',
+            'TMPDIR=/home rm -rf "$TMPDIR/user"', 'declare TMPDIR=/home; rm -rf "$TMPDIR/user"',
+            'declare -x TMPDIR=/home && rm -rf ${TMPDIR}/user', 'env TMPDIR=/home rm -rf "$TMPDIR/user"',
+            'env -i TMPDIR=/home rm -rf "$TMPDIR/user"', 'set TMPDIR=/home; rm -rf "$TMPDIR/user"',
+            'typeset TMPDIR=/home; rm -rf "$TMPDIR/user"', 'TMPDIR+=/../home; rm -rf "$TMPDIR/user"',
+            'unset TMPDIR; rm -rf "$TMPDIR/user"', 'read TMPDIR < f; rm -rf "$TMPDIR/user"',
+            'export TMPDIR=/tmp; rm -rf "$TMPDIR/build"',  # even a "safe" reassignment asks: the value is not checked
+            'X=1 TMPDIR=/home rm -rf "$TMPDIR/user"', 'TMPDIR="/home" rm -rf "$TMPDIR/user"',
+            "rm -rf $TMPDIR/*/../..", "rm -rf /tmp/../home/x", "rm -rf /tmp/a/../../home", "rm -rf /tmp/*/x", "rm -rf /tmp/a/*/b",
+            "rm -rf /tmp/a?/b", 'rm -rf "$TMPDIR/*/x"', "rm -rf $TMPDIR/../home"]:
+    d, rc = gate(cmd, SCRATCH_ENV)
+    check(f"tmpdir still ask: {cmd}", d == "ask" and rc == 0, f"got {d}")
+for env, label in [({"TMPDIR": None}, "unset"), ({"TMPDIR": ""}, "empty"), ({"TMPDIR": "/home"}, "/home"),
+                   ({"TMPDIR": "/"}, "/"), ({"TMPDIR": "tmp"}, "relative"), ({"TMPDIR": "/tmpfoo"}, "/tmpfoo")]:
+    for cmd in ['rm -rf "$TMPDIR/build"', "rm -rf ${TMPDIR}/build"]:
+        d, rc = gate(cmd, env)
+        check(f"tmpdir {label} asks: {cmd}", d == "ask" and rc == 0, f"got {d}")
+with tempfile.TemporaryDirectory(dir="/tmp") as d0:
+    link = os.path.join(d0, "home-link")
+    os.symlink(os.path.expanduser("~"), link)
+    d, _ = gate('rm -rf "$TMPDIR/x"', {"TMPDIR": link})
+    check("TMPDIR symlinked out of /tmp asks", d == "ask", f"got {d}")
+    d, _ = gate('rm -rf "$TMPDIR/x"', {"TMPDIR": d0})
+    check("TMPDIR under /tmp passes", d is None, f"got {d}")
+    os.symlink(os.path.expanduser("~"), os.path.join(d0, "esc"))
+    d, _ = gate('rm -rf "$TMPDIR/esc/x"', {"TMPDIR": d0})
+    check("$TMPDIR path through a symlink out of /tmp asks", d == "ask", f"got {d}")
+# Inline VAR= and env prefixes no longer hide an rm from the gate.
+# Wrapper options with a separate operand (env -u NAME, sudo -u USER, nice -n N)
+# and other common wrappers: these returned no decision before (review on #124).
+for cmd in ["FOO=1 rm -rf node_modules", "env FOO=1 rm -rf node_modules", "sudo env rm -rf build",
+            "env -u PATH rm -rf node_modules", "sudo -u root rm -rf node_modules", "sudo -u root -g wheel rm -rf build",
+            "sudo -E rm -rf build", "doas -u root rm -rf build", "command rm -rf build", "exec rm -rf build",
+            "nohup rm -rf build", "nice -n 10 rm -rf build", "time rm -rf build", "time -p rm -rf build",
+            "sudo -u root env -u X FOO=1 rm -rf build", 'env -u TMPDIR rm -rf "$TMPDIR/x"']:
+    d, rc = gate(cmd)
+    check(f"prefixed rm asks: {cmd}", d == "ask" and rc == 0, f"got {d}")
+for cmd in ["FOO=1 rm -rf ~", "env X=1 rm -rf /", 'A="b c" rm -rf $HOME', "sudo -u root rm -rf /", "env -u PATH rm -rf ~",
+            "env -C /x rm -rf ~", "nice -n 5 rm -rf /home/frank", "doas -u root rm -rf $HOME"]:
+    d, rc = gate(cmd)
+    check(f"prefixed rm denies: {cmd}", d == "deny" and rc == 0, f"got {d}")
+for cmd in ["echo TMPDIR=/ rm -rf x", "FOO=1 rm -f a.txt", "TMPDIR=/tmp/x make test", "sudo -u root rm -rf /tmp/build",
+            "nice -n 10 rm -rf /tmp/build", "env -u PATH rm -rf /tmp/build", "echo sudo -u root rm -rf /", "sudo -u root ls -la"]:
+    d, rc = gate(cmd, SCRATCH_ENV)
+    check(f"prefixed pass: {cmd}", d is None and rc == 0, f"got {d}")
 for cmd in ["rm -rf ~", "rm -rf /", "rm -rf $HOME", "rm -rf / /tmp/a"]:
     d, rc = gate(cmd)
     check(f"scratch still deny: {cmd}", d == "deny" and rc == 0, f"got {d}")
+# Wrapper stripping must stay linear: a regex version backtracked exponentially
+# on repeated `sudo -u ` and hung the hook. Each case must finish well under 5s.
+import time
+for label, cmd in [("repeated sudo -u", "sudo -u " * 3000), ("repeated wrapper+rm", "sudo -u root " * 3000 + "rm -rf /"),
+                   ("repeated assignments", "A=1 " * 5000 + "rm -rf ~"), ("repeated options", "sudo " + "-a b " * 2000 + "ls")]:
+    t0 = time.time()
+    d, rc = gate(cmd)
+    check(f"linear time: {label}", rc == 0 and time.time() - t0 < 5, f"{time.time() - t0:.1f}s")
 d, _ = gate("git push --force origin main", {"ESTATE_GUARD_ALLOW_FORCE": "1"})
 check("ALLOW_FORCE downgrades force-push to ask", d == "ask")
 d, _ = gate("git push --force origin main", {"ESTATE_GUARD_OFF": "1"})
