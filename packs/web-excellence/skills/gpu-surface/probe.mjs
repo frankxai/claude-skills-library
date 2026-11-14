@@ -222,8 +222,8 @@ const checks = [
   },
   {
     name: 'still under reduced motion',
-    pass: still.moving !== true,
-    detail: still.canvases.length === 0 ? 'no canvas under reduced motion' : still.moving === false ? 'canvas present and still' : still.moving === null ? 'canvas present; movement could not be measured' : 'canvas keeps moving',
+    pass: still.loaded && (still.canvases.length === 0 || still.moving === false),
+    detail: !still.loaded ? 'reduced-motion visit did not load' : still.canvases.length === 0 ? 'no canvas under reduced motion' : still.moving === false ? 'canvas present and still' : still.moving === null ? 'canvas present; movement could not be measured' : 'canvas keeps moving',
   },
   {
     name: 'no console errors',
@@ -232,8 +232,8 @@ const checks = [
   },
   {
     name: 'no canvas without a GPU',
-    pass: noGpu.canvases.length === 0,
-    detail: noGpu.canvases.length === 0 ? 'poster carries the page' : `${noGpu.canvases.length} canvas(es) still attached`,
+    pass: noGpu.loaded && noGpu.canvases.length === 0,
+    detail: !noGpu.loaded ? 'no-GPU visit did not load' : noGpu.canvases.length === 0 ? 'poster carries the page' : `${noGpu.canvases.length} canvas(es) still attached`,
   },
   {
     name: 'canvas is not the LCP',
@@ -256,7 +256,7 @@ if (asJson) {
 } else {
   console.log(`GPU surface probe — ${url}`);
   for (const check of checks) console.log(`  ${check.pass ? 'ok  ' : 'FAIL'} ${check.name} — ${check.detail}`);
-  console.log(`  info motion state — ${motion.canvases.length === 0 ? 'no GPU canvas on this page' : motion.moving ? 'canvas is moving' : 'canvas is still'}`);
+  console.log(`  info motion state — ${motion.canvases.length === 0 ? 'no GPU canvas on this page' : motion.moving === true ? 'canvas is moving' : motion.moving === false ? 'canvas is still' : 'canvas movement could not be measured'}`);
   console.log(`  info JavaScript transferred — ${kb(motion.jsBytes)}${base ? ` (baseline ${kb(base.jsBytes)}, surface costs ${kb(motion.jsBytes - base.jsBytes)})` : ''}`);
   for (const shot of report.shots) console.log(`  shot ${shot}`);
 }

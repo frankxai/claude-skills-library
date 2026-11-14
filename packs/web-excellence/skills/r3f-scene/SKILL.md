@@ -103,7 +103,7 @@ type SceneSurfaceProps = {
 
 export function SceneSurface({ poster, stillTime, color, className = '', children }: SceneSurfaceProps) {
   const reduced = useReducedMotion()
-  const gpu = useGpu('webgl')
+  const gpu = useGpu()
   const box = useRef<HTMLDivElement>(null)
   const [onScreen, setOnScreen] = useState(false)
 
