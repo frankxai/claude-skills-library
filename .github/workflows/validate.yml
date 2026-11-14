@@ -34,6 +34,12 @@ jobs:
       - name: Run the harness end-to-end checks
         run: node --test scripts/tests/harness-e2e.test.mjs
 
+      # The catalog used to report zero skills with evals while ten skills shipped
+      # their suite inside a pack, and it carried no version, owner or install URI.
+      # These checks fail against that catalog.
+      - name: Check the catalog registry carries owner, version, eval and install URI
+        run: node --test scripts/tests/catalog-registry.test.mjs
+
       - name: Check catalog is in sync
         run: python3 scripts/generate_catalog.py --check
 
