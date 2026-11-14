@@ -63,11 +63,18 @@ export default function LiquidMetalLayer(props: LiquidMetalProps) {
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
+import { createContext, Suspense, useContext, type ReactNode } from 'react'
 import type { LiquidMetalProps } from '@paper-design/shaders-react'
 import { useGpu, useReducedMotion } from './use-surface'
 
-const LiquidMetalLayer = dynamic(() => import('./LiquidMetalLayer'), { ssr: false })
+const Fallback = createContext<ReactNode>(null)
+
+const LiquidMetalLayer = dynamic(() => import('./LiquidMetalLayer'), {
+  ssr: false,
+  loading: function MarkFallback() {
+    return <>{useContext(Fallback)}</>
+  },
+})
 
 type LiquidMarkProps = {
   /** Same-origin SVG or transparent PNG of the mark. */
@@ -87,29 +94,31 @@ type LiquidMarkProps = {
 export function LiquidMark({ src, label, size, colorBack, colorTint, stillFrame, speed = 0.6, ...look }: LiquidMarkProps) {
   const reduced = useReducedMotion()
   const gpu = useGpu()
-  // The flat mark is the server render, the no-WebGL render, and the fallback while the shader prepares the image.
+  // The flat mark is the server render, the no-WebGL render, and the fallback while the shader chunk loads and prepares the image.
   const flat = <img src={src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
 
   return (
     <span role="img" aria-label={label} style={{ position: 'relative', display: 'inline-block', width: size, aspectRatio: '1' }}>
       {gpu ? (
-        <Suspense fallback={flat}>
-          <LiquidMetalLayer
-            aria-hidden
-            image={src}
-            suspendWhenProcessingImage
-            shape="none"
-            fit="contain"
-            scale={1}
-            colorBack={colorBack}
-            colorTint={colorTint}
-            {...look}
-            speed={reduced ? 0 : speed}
-            frame={stillFrame}
-            maxPixelCount={1024 * 1024}
-            style={{ position: 'absolute', inset: 0 }}
-          />
-        </Suspense>
+        <Fallback.Provider value={flat}>
+          <Suspense fallback={flat}>
+            <LiquidMetalLayer
+              aria-hidden
+              image={src}
+              suspendWhenProcessingImage
+              shape="none"
+              fit="contain"
+              scale={1}
+              colorBack={colorBack}
+              colorTint={colorTint}
+              {...look}
+              speed={reduced ? 0 : speed}
+              frame={stillFrame}
+              maxPixelCount={1024 * 1024}
+              style={{ position: 'absolute', inset: 0 }}
+            />
+          </Suspense>
+        </Fallback.Provider>
       ) : (
         flat
       )}

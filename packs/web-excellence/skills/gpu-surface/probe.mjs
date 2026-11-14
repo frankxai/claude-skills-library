@@ -145,7 +145,8 @@ async function visit(target, { reduced = false, blockGpu = false, shotName = nul
 
   const result = { loaded: false, errors, jsBytes: 0, canvases: [], moving: null, lcp: null, shot: null };
   try {
-    await page.goto(target, { waitUntil: 'load', timeout: 45000 });
+    const response = await page.goto(target, { waitUntil: 'load', timeout: 45000 });
+    if (response && !response.ok()) throw new Error(`HTTP ${response.status()}`);
     await page.waitForTimeout(settle);
     result.loaded = true;
   } catch (err) {
