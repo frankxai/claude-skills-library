@@ -74,6 +74,10 @@ GPU_EVIDENCE = (
     "gpu surface probe \u2014",  # probe.mjs report header
     "cannot probe:",            # probe.mjs honest-failure line
 )
+GPU_CANVAS = re.compile(
+    r"<Canvas\b|@react-three/|@paper-design/|ShaderMount|\bnew\s+THREE\.|from\s+['\"]three['\"]"
+    r"|getContext\(\s*['\"](?:webgl2?|webgpu|experimental-webgl)['\"]"
+)
 PROBE_RUN = re.compile(r"\bnode\s+(?:--?\S+\s+)*\S*probe\.mjs\b")
 PROBE_FAIL = re.compile(r"^\s*fail\b", re.I | re.M)
 SHELL_FETCH = re.compile(r"\b(curl|wget)\b")
@@ -431,6 +435,19 @@ def write_state(path: str, state: dict) -> None:
         pass
 
 
+def file_has_gpu(root: str, rel: str) -> bool:
+    """Best-effort check whether an edited UI file uses a GPU surface."""
+    try:
+        fd = os.open(os.path.join(root, rel), os.O_RDONLY | NOFOLLOW)
+    except OSError:
+        return False
+    try:
+        with os.fdopen(fd, "r", encoding="utf-8", errors="ignore") as fh:
+            return bool(GPU_CANVAS.search(fh.read(262144)))
+    except OSError:
+        return False
+
+
 def main() -> int:
     if os.environ.get("WEB_GATE_NO_STOP") == "1":
         return 0
@@ -454,9 +471,9 @@ def main() -> int:
         return 0
 
     floor = state.get("closed_at") or state.get("started") or 0.0
+    outside = changed_outside_tools(cwd, state.get("baseline") or {})
     touched = list(state.get("touched") or [])
-    touched += [p for p in changed_outside_tools(cwd, state.get("baseline") or {})
-                if p not in touched]
+    touched += [p for p in outside if p not in touched]
     if not touched:
         return 0
 
@@ -465,7 +482,8 @@ def main() -> int:
     # The capture must also follow the last UI edit: screenshots taken before
     # a final tweak show a state that no longer exists.
     window = state.get("window_start") or floor
-    need_probe = bool(state.get("gpu"))
+    root = (git(cwd, "rev-parse", "--show-toplevel") or "").strip() or cwd
+    need_probe = bool(state.get("gpu")) or any(file_has_gpu(root, rel) for rel in outside)
     audited, proved, probe_ok = receipts(payload.get("transcript_path", ""), window,
                                          max(window, last_edit(cwd, touched)), need_probe)
     # BOTH halves close the gate. Gating on `audited` alone let a turn that ran

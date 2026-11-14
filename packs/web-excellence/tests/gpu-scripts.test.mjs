@@ -166,6 +166,7 @@ test('probe fails a page that logs a console error', async (t) => {
 test('probe reports a page that does not load as exit 5, never as a pass', async (t) => {
   if (skip) return t.skip(skip);
   assert.equal((await run(PROBE, ['--url', 'http://127.0.0.1:1/', '--settle', '200'])).status, 5);
+  assert.equal((await run(PROBE, ['--url', `${base}/clean`, '--baseline', 'http://127.0.0.1:1/', '--settle', '200'])).status, 5);
 });
 
 test('export writes the same still for the same frame, and the loop starts on it', async (t) => {

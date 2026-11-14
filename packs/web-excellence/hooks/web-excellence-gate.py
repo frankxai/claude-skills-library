@@ -90,12 +90,27 @@ use that one.\
 
 
 def edited_text(tool_input: dict) -> str:
-    """The text this edit puts in the file: Write content, Edit/MultiEdit new strings."""
-    parts = [tool_input.get(k) for k in ("content", "new_string", "new_source")]
+    """The text this edit touches: Write content, Edit/MultiEdit new and old strings."""
+    parts = [tool_input.get(k) for k in ("content", "new_string", "old_string", "new_source")]
     for edit in tool_input.get("edits") or []:
         if isinstance(edit, dict):
             parts.append(edit.get("new_string"))
+            parts.append(edit.get("old_string"))
     return "\n".join(p for p in parts if isinstance(p, str))
+
+
+def existing_text(path: str, cwd: str) -> str:
+    """Read an existing UI file safely when handling a partial Edit/MultiEdit."""
+    target = path if os.path.isabs(path) else os.path.join(cwd or os.getcwd(), path)
+    try:
+        fd = os.open(target, os.O_RDONLY | NOFOLLOW)
+    except OSError:
+        return ""
+    try:
+        with os.fdopen(fd, "r", encoding="utf-8", errors="ignore") as fh:
+            return fh.read(262144)
+    except OSError:
+        return ""
 
 
 # The state path is predictable and the temp dir is world-writable, so on a
@@ -167,10 +182,12 @@ def main() -> int:
     if not already_fired or os.environ.get("WEB_GATE_EVERY_EDIT") == "1":
         notes.append(REMINDER)
 
-    # GPU work is announced once per window, at the edit that introduces it,
-    # even when the general reminder already fired on an earlier edit.
+    # GPU work is announced once per window, at the edit that introduces or
+    # modifies a GPU surface file, even when the general reminder already fired.
     text = edited_text(tool_input)
-    if GPU_CANVAS.search(text):
+    is_partial_edit = "content" not in tool_input and "new_source" not in tool_input
+    surface_text = text + ("\n" + existing_text(path, payload.get("cwd") or "") if is_partial_edit else "")
+    if GPU_CANVAS.search(surface_text):
         state["gpu"] = True  # the Stop hook now asks for the probe's receipt
         if not state.get("gpu_fired"):
             state["gpu_fired"] = True

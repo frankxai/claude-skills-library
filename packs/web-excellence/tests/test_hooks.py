@@ -1106,6 +1106,29 @@ def test_gate_routes_gpu_edits_to_the_recipes() -> None:
         {"old_string": "a", "new_string": "import { Canvas } from '@react-three/fiber'"}]}})[0]
     check("gate reads the new strings of a multi-edit",
           "GPU SURFACE" in (multi or {}).get("hookSpecificOutput", {}).get("additionalContext", ""))
+    with tempfile.TemporaryDirectory() as d:
+        scene = os.path.join(d, "components", "Scene.tsx")
+        os.makedirs(os.path.dirname(scene), exist_ok=True)
+        with open(scene, "w", encoding="utf-8") as fh:
+            fh.write(CANVAS_SOURCE)
+        try:
+            os.remove(os.path.join(tempfile.gettempdir(), "web-gate-gpu-existing.json"))
+        except OSError:
+            pass
+        existing_edit = run_hook(GATE, {
+            "session_id": "gpu-existing",
+            "cwd": d,
+            "tool_input": {
+                "file_path": "components/Scene.tsx",
+                "old_string": "frameloop={running ? 'always' : 'demand'}",
+                "new_string": "frameloop='always'",
+            },
+        })[0]
+        check("gate detects GPU context when Edit changes an existing GPU component",
+              "GPU SURFACE" in (existing_edit or {}).get("hookSpecificOutput", {}).get("additionalContext", ""))
+        stop_out = stop_run("gpu-existing", AUDIT_LINE + SHOTS_LINE)
+        check("stop requires probe after Edit on an existing GPU component",
+              stop_out is not None and "probe.mjs" in reason_of(stop_out), reason_of(stop_out)[-200:])
 
 
 def test_gpu_reminder_fires_once_even_after_the_general_one() -> None:

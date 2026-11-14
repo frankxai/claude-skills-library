@@ -206,6 +206,11 @@ if (!motion.loaded) {
 const still = await visit(url, { reduced: true, shotName: 'reduced-motion' });
 const noGpu = await visit(url, { blockGpu: true, shotName: 'no-gpu' });
 const base = baseline ? await visit(String(baseline)) : null;
+if (base && !base.loaded) {
+  console.error(`Cannot probe: baseline ${baseline} did not load — ${base.errors.at(-1) ?? 'unknown reason'}`);
+  await browser.close();
+  process.exit(5);
+}
 await browser.close();
 
 const kb = (bytes) => `${(bytes / 1024).toFixed(1)} kB`;
