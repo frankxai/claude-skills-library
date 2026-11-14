@@ -4,7 +4,8 @@ Every third-party skill in this pack is a **verbatim copy** of an upstream direc
 pinned to a commit. Nothing is hand-edited after vendoring — the next
 `./sync-upstream.sh` overwrites it. Local behavior lives in the native skills
 (`web-release-gate`, `core-web-vitals`, `visual-proof`, `gpu-surface`,
-`web-steward`) and in `hooks/`.
+`web-steward`, `liquid-logo`, `shader-backdrop`, `liquid-glass`, `r3f-scene`,
+`material-system`) and in `hooks/`.
 
 All upstreams are MIT-licensed. Each vendored skill directory carries the
 upstream `LICENSE` as `UPSTREAM-LICENSE`. Where an upstream ships no LICENSE
@@ -87,7 +88,7 @@ drift whatever it points at.
 | `image-to-code` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) `skills/image-to-code-skill` | MIT | `e988add20dab` | 2026-07-27 |
 | `brandkit` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) `skills/brandkit` | MIT | `e988add20dab` | 2026-07-27 |
 
-Native to this pack (not vendored): `web-release-gate` `core-web-vitals` `visual-proof` `gpu-surface` `web-steward` 
+Native to this pack (not vendored): `web-release-gate` `core-web-vitals` `visual-proof` `gpu-surface` `web-steward` `liquid-logo` `shader-backdrop` `liquid-glass` `r3f-scene` `material-system` 
 
 <!-- PINS:END -->
 
@@ -118,9 +119,29 @@ The upstream set is strong on *judgment* and weak on *proof*. Nothing in it:
 - sequences the others, or refuses to let work be called done (`web-release-gate`)
 - measures anything — no Core Web Vitals, no bundle budget, no Lighthouse (`core-web-vitals`)
 - produces before/after visual evidence at real breakpoints in both themes (`visual-proof`)
-- governs a shader or 3D surface: whether the page earns one, one per page, a designed reduced-motion still (`gpu-surface`)
+- governs a shader or 3D surface: whether the page earns one, one per page, a designed reduced-motion still, and a probe that checks all of it in a browser (`gpu-surface`)
+- builds each kind of surface from the repo's tokens with a fallback that works without WebGL (`liquid-logo`, `shader-backdrop`, `liquid-glass`, `r3f-scene`)
+- decides once per site what the material is and which route carries it, and exports the same frame as a still and a loop (`material-system`)
 - keeps dependencies honest: unmet peers read from the lockfile, drift against the registry, one upgrade branch with proof (`web-steward`)
 - knows your tokens exist (the native skills read `design.md` / `taste.md` / `tailwind.config.js` when present)
+
+## GPU surface libraries: what was tested
+
+The four recipe skills were written against a lab that installed each library
+and rendered it in headless Chromium on 2026-11-12 (Next 16.4.5, React 19.3.1).
+No library code is copied into this pack; the recipes import published
+packages or use CSS.
+
+| Library | Licence | Tested | Result | Verdict |
+|---|---|---|---|---|
+| `@paper-design/shaders-react` | Apache-2.0 (ships a NOTICE) | 0.0.82 | Mesh gradient +11.6 kB, liquid metal on a mark +15.0 kB of JavaScript transferred; still under reduced motion; no errors without WebGL when wrapped | **Build with it** (`shader-backdrop`, `liquid-logo`) |
+| `@react-three/fiber` + `three` | MIT | 9.8.2 + 0.187.0 | +244.3 kB; renders off-screen until told to stop; peers require React 19 | **Build with it when the job needs depth** (`r3f-scene`) |
+| `@shadergradient/react` | MIT | 2.4.20 | +285.3 kB; shader fails to compile against `three@0.187.0` and the canvas stays blank; console error without WebGL | **Do not install.** Translate the look (`shader-backdrop` section 4) |
+| `dashersw/liquid-glass-js` | MIT | commit `78cb6ccb0b99` | Not on npm; needs `html2canvas`; one static page snapshot; one WebGL context per glass element | **Reference only.** Build with CSS (`liquid-glass`) |
+| `paper-design/liquid-logo` | PolyForm Shield 1.0.0 | commit `689bb38a1e0d` | The source of a hosted tool; publishes no package; pins `@paper-design/shaders-react@0.0.21` | **Do not copy.** The shader it demonstrates is in the Apache-2.0 package |
+
+PolyForm Shield is not on this repository's absorption allowlist, which is
+why `liquid-logo` names the package and not the repository.
 
 ## Agents — compiled in Agent OS, carried here
 
@@ -143,9 +164,9 @@ including cloud sessions that clone one site repo and nothing else. Never edit
 
 | Agent | Spec version | Compiled at agentic-creator-os | Synced |
 |---|---|---|---|
-| `worker-web-builder` | 1.0.0 | `7fec5405900f` (main) | 2026-11-09 |
+| `worker-web-builder` | 1.0.0 | `7d0cf3196817` (ccr-1c50a8bb-9tcz0g) | 2026-11-13 |
 | `worker-web-steward` | 1.0.0 | `7fec5405900f` (main) | 2026-11-09 |
-| `worker-visual-qa` | 1.1.0 | `7fec5405900f` (main) | 2026-11-09 |
+| `worker-visual-qa` | 1.1.0 | `7d0cf3196817` (ccr-1c50a8bb-9tcz0g) | 2026-11-13 |
 
 <!-- AGENT-PINS:END -->
 

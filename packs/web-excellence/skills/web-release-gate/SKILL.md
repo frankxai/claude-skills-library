@@ -80,7 +80,13 @@ Write the code. During this phase:
   tokens of record.
 - **A shader, canvas, or 3D element** — `gpu-surface`. It decides whether the
   page earns one at all, caps it at one per page, and defines the wrapper, the
-  reduced-motion still, and the extra proof lines.
+  reduced-motion still, and the extra proof lines. It hands the build to one
+  recipe: `liquid-logo` (the mark in liquid metal, plus its exported still and
+  loop), `shader-backdrop` (a gradient or grain field), or `r3f-scene` (real
+  3D). Glass panels are CSS and go through `liquid-glass`.
+- **Surfaces across a whole site** — `material-system`, before the first one
+  is built: one Material block in `design.md` and a map of which route
+  carries a surface.
 - **New sub-brand or product identity** — `brandkit`. Not for a property whose
   identity is already locked; that is a fight with the existing brand system,
   and the brand system wins.
