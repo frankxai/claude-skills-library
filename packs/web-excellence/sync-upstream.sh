@@ -42,7 +42,7 @@ CHECK_ONLY=0
 [ "${1:-}" = "--check" ] && CHECK_ONLY=1
 
 # Skills authored here, never overwritten by a sync.
-NATIVE="web-release-gate core-web-vitals visual-proof gpu-surface web-steward"
+NATIVE="web-release-gate core-web-vitals visual-proof gpu-surface web-steward liquid-logo shader-backdrop liquid-glass r3f-scene material-system"
 
 # repo | license | source path in repo | destination skill dir
 UPSTREAM=(

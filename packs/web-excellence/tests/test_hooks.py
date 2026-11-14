@@ -1038,6 +1038,161 @@ def test_installer_keeps_a_repo_tuned_workflow() -> None:
               os.path.exists(os.path.join(d, ".github", "workflows", "web-excellence.yml")))
 
 
+# --------------------------------------------------------------------------
+# GPU surface routing: the gate names the recipes, the Stop hook wants the probe.
+# --------------------------------------------------------------------------
+PROBE_CMD = "node .claude/skills/gpu-surface/probe.mjs --url http://localhost:3000/ --baseline http://localhost:3000/about"
+PROBE_PASS = ("GPU surface probe — http://localhost:3000/\n"
+              "  ok   one GPU surface at most — 1 GPU canvas(es): webgl2 1440x996\n"
+              "  ok   no console errors — none in motion, reduced motion, or no-GPU\n"
+              "  info JavaScript transferred — 145.5 kB (baseline 134.0 kB, surface costs 11.6 kB)")
+PROBE_FAILED = PROBE_PASS.replace("  ok   one GPU surface at most", "  FAIL one GPU surface at most")
+CANVAS_SOURCE = "import { Canvas } from '@react-three/fiber'\nexport const Scene = () => <Canvas />\n"
+
+
+def arm(sid: str, file_path: str, content: str = "") -> dict:
+    """Start a fresh session state and fire the gate for one edit."""
+    sp = os.path.join(tempfile.gettempdir(), f"web-gate-{sid}.json")
+    try:
+        os.remove(sp)
+    except OSError:
+        pass
+    tool_input = {"file_path": file_path}
+    if content:
+        tool_input["content"] = content
+    out, _ = run_hook(GATE, {"session_id": sid, "tool_input": tool_input})
+    return out
+
+
+def stop_run(sid: str, body: str):
+    """Run the Stop hook against a fake transcript, without touching the state."""
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, f"{sid}.jsonl")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(body)
+        out, _ = run_hook(STOP, {"session_id": sid, "transcript_path": path})
+    return out
+
+
+def reason_of(out) -> str:
+    return (out or {}).get("reason", "stop hook passed")
+
+
+def test_gate_routes_gpu_edits_to_the_recipes() -> None:
+    gpu_cases = [
+        ("react-three", CANVAS_SOURCE),
+        ("paper", "import { MeshGradient } from '@paper-design/shaders-react'\n"),
+        ("raw-gl", "const gl = canvas.getContext('webgl2')\n"),
+        ("mount", "<ShaderMount fragmentShader={f} uniforms={u} />\n"),
+    ]
+    for name, content in gpu_cases:
+        ctx = (arm(f"gpu-{name}", "components/Scene.tsx", content) or {}).get("hookSpecificOutput", {}).get("additionalContext", "")
+        check(f"gate names gpu-surface and its recipes for {name}",
+              "GPU SURFACE" in ctx and "gpu-surface" in ctx and "liquid-logo" in ctx
+              and "shader-backdrop" in ctx and "r3f-scene" in ctx and "probe.mjs" in ctx, ctx[-200:])
+    plain = (arm("gpu-plain", "components/Card.tsx", "export const Card = () => <div className=\"backdrop-blur-md p-4\" />\n") or {}).get(
+        "hookSpecificOutput", {}).get("additionalContext", "")
+    check("gate adds no GPU or glass text for an ordinary component (a Tailwind blur class is not glass)",
+          "GPU SURFACE" not in plain and "GLASS" not in plain and "web-release-gate" in plain, plain[-200:])
+    glass = (arm("gpu-glass", "components/Nav.tsx", ".nav { backdrop-filter: blur(12px) }\n") or {}).get(
+        "hookSpecificOutput", {}).get("additionalContext", "")
+    check("gate routes backdrop-filter to liquid-glass without asking for a probe",
+          "liquid-glass" in glass and "GPU SURFACE" not in glass, glass[-200:])
+    try:
+        os.remove(os.path.join(tempfile.gettempdir(), "web-gate-gpu-multi.json"))
+    except OSError:
+        pass
+    multi = run_hook(GATE, {"session_id": "gpu-multi", "tool_input": {"file_path": "components/S.tsx", "edits": [
+        {"old_string": "a", "new_string": "import { Canvas } from '@react-three/fiber'"}]}})[0]
+    check("gate reads the new strings of a multi-edit",
+          "GPU SURFACE" in (multi or {}).get("hookSpecificOutput", {}).get("additionalContext", ""))
+
+
+def test_gpu_reminder_fires_once_even_after_the_general_one() -> None:
+    sid = "gpu-later"
+    first = arm(sid, "components/Hero.tsx", "export const Hero = () => <h1>Hi</h1>\n")
+    second, _ = run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/Scene.tsx", "content": CANVAS_SOURCE}})
+    third, _ = run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/Scene2.tsx", "content": CANVAS_SOURCE}})
+    check("the first plain edit fires the general reminder", first is not None)
+    ctx = (second or {}).get("hookSpecificOutput", {}).get("additionalContext", "")
+    check("a later canvas edit still gets the GPU text, without repeating the general reminder",
+          "GPU SURFACE" in ctx and "UI FILE TOUCHED" not in ctx, ctx[:120])
+    check("a second canvas edit in the same window stays silent", third is None)
+
+
+def test_gpu_reminders_cannot_satisfy_evidence() -> None:
+    src = open(GATE, encoding="utf-8").read()
+    texts = [m.group(1) for m in re.finditer(r'(?:GPU_REMINDER|GLASS_REMINDER) = """\\\n(.*?)"""', src, re.S)]
+    markers = load_tuple(STOP, "GPU_EVIDENCE")
+    check("both GPU reminders were found", len(texts) == 2, str(len(texts)))
+    for text in texts:
+        hits = [m for m in markers if m.lower() in text.lower()]
+        check("no GPU evidence marker appears in a PreToolUse reminder", not hits, str(hits))
+    for rel in ("gpu-surface", "liquid-logo", "shader-backdrop", "liquid-glass", "r3f-scene", "material-system"):
+        body = open(os.path.join(PACK, "skills", rel, "SKILL.md"), encoding="utf-8").read().lower()
+        hits = [m for m in markers if m.lower() in body]
+        check(f"{rel}/SKILL.md carries no GPU evidence marker", not hits, str(hits))
+
+
+def test_stop_asks_for_the_probe_after_canvas_work() -> None:
+    sid = "gpu-stop"
+    base = AUDIT_LINE + SHOTS_LINE
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    out = stop_run(sid, base)
+    check("canvas work with audit and capture but no probe is blocked, and names the probe",
+          out is not None and "probe.mjs" in reason_of(out) and "web-design-guidelines" not in reason_of(out), reason_of(out)[-300:])
+
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    out = stop_run(sid, base + tool_use("pr1", "Bash", {"command": PROBE_CMD}) + tool_result("pr1", PROBE_PASS))
+    check("a passing probe run closes the gate", out is None, reason_of(out))
+
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    out = stop_run(sid, base + tool_use("pr1", "Bash", {"command": PROBE_CMD}) + tool_result("pr1", PROBE_FAILED))
+    check("a probe report with a failed check is not proof", out is not None and "probe.mjs" in reason_of(out), reason_of(out)[-200:])
+
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    out = stop_run(sid, base + tool_use("pr1", "Bash", {"command": PROBE_CMD}) + tool_result(
+        "pr1", "Cannot probe: Playwright is not available in this project."))
+    check("an honest 'Cannot probe:' line counts, like 'Cannot capture:'", out is None, reason_of(out))
+
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    out = stop_run(sid, base + tool_use("pr2", "Bash", {"command": "cat .claude/skills/gpu-surface/probe.mjs"}) + tool_result("pr2", PROBE_PASS))
+    check("reading probe.mjs, or any non-node command, is not a run", out is not None and "probe.mjs" in reason_of(out), reason_of(out)[-200:])
+
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    out = stop_run(sid, base + user_text(PROBE_PASS))
+    check("probe text that reached the transcript outside a run is not proof", out is not None and "probe.mjs" in reason_of(out))
+
+
+def test_the_probe_is_not_asked_for_ordinary_ui_or_a_later_window() -> None:
+    base = AUDIT_LINE + SHOTS_LINE
+    arm("gpu-ordinary", "components/Hero.tsx", "export const Hero = () => <h1>Hi</h1>\n")
+    check("an ordinary UI change closes on audit and capture alone", stop_run("gpu-ordinary", base) is None)
+
+    sid = "gpu-window"
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    closed = stop_run(sid, base + tool_use("pr1", "Bash", {"command": PROBE_CMD}) + tool_result("pr1", PROBE_PASS))
+    check("the canvas window closes with its probe", closed is None)
+    run_hook(GATE, {"session_id": sid, "tool_input": {"file_path": "components/Hero.tsx", "content": "export const Hero = () => <h1>Hi</h1>\n"}})
+    check("a later plain UI change does not inherit the probe requirement", stop_run(sid, base) is None)
+
+
+def test_session_note_names_the_gpu_routing() -> None:
+    with tempfile.TemporaryDirectory() as d:
+        for name in ("web-release-gate", "gpu-surface", "liquid-logo", "shader-backdrop", "liquid-glass", "r3f-scene", "material-system"):
+            os.makedirs(os.path.join(d, ".claude", "skills", name))
+        out, _ = run_hook(SESSION, {"cwd": d})
+        ctx = (out or {}).get("hookSpecificOutput", {}).get("additionalContext", "")
+        check("session note routes shader, glass, mark and 3D work through gpu-surface first",
+              "`gpu-surface` FIRST" in ctx and "`liquid-logo`" in ctx and "`r3f-scene`" in ctx
+              and "`material-system`" in ctx and "probe.mjs" in ctx, ctx[-400:])
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, ".claude", "skills", "web-release-gate"))
+        out, _ = run_hook(SESSION, {"cwd": d})
+        ctx = (out or {}).get("hookSpecificOutput", {}).get("additionalContext", "")
+        check("session note stays quiet about GPU surfaces where the skills are not installed", "gpu-surface" not in ctx)
+
+
 if __name__ == "__main__":
     print("web-excellence hook tests\n")
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
