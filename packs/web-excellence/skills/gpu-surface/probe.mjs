@@ -93,7 +93,10 @@ function instrument(blockGpu) {
   const original = HTMLCanvasElement.prototype.getContext;
   HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
     if (GPU.includes(type)) {
-      if (blockGpu) return null;
+      if (blockGpu) {
+        seen.set(this, type);
+        return null;
+      }
       const context = original.call(this, type, ...rest);
       if (context) seen.set(this, type);
       return context;

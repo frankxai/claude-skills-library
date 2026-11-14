@@ -55,6 +55,7 @@ const PAGES = {
   '/one': `<h1>One surface</h1>${glCanvas({ animate: true, respectReduced: true })}`,
   '/two': `<h1>Two surfaces</h1>${glCanvas({ animate: false, respectReduced: true })}${glCanvas({ animate: false, respectReduced: true })}`,
   '/ignores-reduced': `<h1>Keeps moving</h1>${glCanvas({ animate: true, respectReduced: false })}`,
+  '/keeps-canvas-without-gpu': `<canvas width="200" height="120" style="width:200px;height:120px"></canvas><script>document.currentScript.previousElementSibling.getContext('webgl');</script>`,
   '/logs-error': `<h1>Logs</h1><script>console.error('surface failed to start')</script>`,
   // Stands in for a Paper Shaders surface: a holder with a controller and a canvas drawn from the frame number.
   '/paper': `<div id="holder" style="width:100px;height:60px"><canvas width="100" height="60"></canvas></div>
@@ -145,6 +146,14 @@ test('probe fails a surface that keeps moving under reduced motion', async (t) =
   assert.equal(moving.status, 1);
   assert.equal(moving.verdict('still under reduced motion'), false);
   assert.equal(moving.verdict('one GPU surface at most'), true);
+});
+
+test('probe fails a page that leaves its canvas attached without a GPU', async (t) => {
+  if (skip) return t.skip(skip);
+  const stuck = await probe('/keeps-canvas-without-gpu');
+  assert.equal(stuck.status, 1);
+  assert.equal(stuck.verdict('no canvas without a GPU'), false);
+  assert.equal(stuck.verdict('one GPU surface at most'), true);
 });
 
 test('probe fails a page that logs a console error', async (t) => {

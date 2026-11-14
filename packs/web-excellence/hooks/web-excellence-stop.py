@@ -201,7 +201,22 @@ def probed(text: str) -> bool:
     low = text.lower()
     if "cannot probe:" in low:
         return True
-    return "gpu surface probe \u2014" in low and not PROBE_FAIL.search(text)
+    if "gpu surface probe \u2014" in low and not PROBE_FAIL.search(text):
+        return True
+    stripped = text.strip()
+    if stripped.startswith("{"):
+        try:
+            report = json.loads(stripped)
+        except ValueError:
+            report = None
+        if isinstance(report, dict) and isinstance(report.get("url"), str):
+            checks = report.get("checks")
+            if isinstance(checks, list) and checks and all(
+                isinstance(c, dict) and isinstance(c.get("name"), str) and c.get("pass") is True
+                for c in checks
+            ):
+                return True
+    return False
 
 
 # How a fetch that did not fail as a call can still have failed: a tool that

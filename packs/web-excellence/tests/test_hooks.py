@@ -1155,6 +1155,23 @@ def test_stop_asks_for_the_probe_after_canvas_work() -> None:
         "pr1", "Cannot probe: Playwright is not available in this project."))
     check("an honest 'Cannot probe:' line counts, like 'Cannot capture:'", out is None, reason_of(out))
 
+    probe_json_cmd = f"{PROBE_CMD} --json"
+    probe_json_pass = json.dumps({
+        "url": "http://localhost:3000",
+        "checks": [{"name": "one GPU surface at most", "pass": True}],
+    })
+    probe_json_fail = json.dumps({
+        "url": "http://localhost:3000",
+        "checks": [{"name": "no canvas without a GPU", "pass": False}],
+    })
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    out = stop_run(sid, base + tool_use("pr1", "Bash", {"command": probe_json_cmd}) + tool_result("pr1", probe_json_pass))
+    check("a passing JSON probe run closes the gate", out is None, reason_of(out))
+
+    arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
+    out = stop_run(sid, base + tool_use("pr1", "Bash", {"command": probe_json_cmd}) + tool_result("pr1", probe_json_fail))
+    check("a JSON probe report with a failed check is not proof", out is not None and "probe.mjs" in reason_of(out), reason_of(out)[-200:])
+
     arm(sid, "components/Scene.tsx", CANVAS_SOURCE)
     out = stop_run(sid, base + tool_use("pr2", "Bash", {"command": "cat .claude/skills/gpu-surface/probe.mjs"}) + tool_result("pr2", PROBE_PASS))
     check("reading probe.mjs, or any non-node command, is not a run", out is not None and "probe.mjs" in reason_of(out), reason_of(out)[-200:])
