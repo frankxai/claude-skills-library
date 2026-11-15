@@ -44,6 +44,91 @@ def set_asides(target: str) -> list[str]:
     return sorted(d for d in os.listdir(root) if d.startswith(SKILL + "."))
 
 
+def read(path: str) -> str:
+    with open(path, encoding="utf-8", newline="") as fh:
+        return fh.read()
+
+
+def claude_md_cases() -> None:
+    """--claude-md writes one fenced block, replaces it in place, and never overwrites a hand-written section."""
+    BEGIN, END = "<!-- web-excellence:begin -->", "<!-- web-excellence:end -->"
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        r = install(t)
+        check("without --claude-md no prompt file is created",
+              r.returncode == 0 and not os.path.exists(os.path.join(t, "CLAUDE.md")) and not os.path.exists(os.path.join(t, "AGENTS.md")))
+        full = subprocess.run(["bash", INSTALL, t, "--no-db", "--no-ci", "--no-agents"], capture_output=True, text=True)
+        check("a full install without the flag says how to get the block, and writes no prompt file",
+              full.returncode == 0 and "--claude-md" in full.stdout and not os.path.exists(os.path.join(t, "CLAUDE.md")), full.stdout[-300:])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        r = install(t, "--claude-md")
+        text = read(os.path.join(t, "CLAUDE.md")) if os.path.isfile(os.path.join(t, "CLAUDE.md")) else ""
+        check("--claude-md creates CLAUDE.md when no prompt file exists", r.returncode == 0 and BEGIN in text and END in text, r.stdout[-300:])
+        check("the block names the governor, the four recipes, the site map and the probe",
+              all(w in text for w in ("`gpu-surface`", "`liquid-logo`", "`shader-backdrop`", "`liquid-glass`", "`r3f-scene`", "`material-system`", "probe.mjs")))
+        check("the block names the three web agents",
+              all(w in text for w in ("worker-web-builder", "worker-visual-qa", "worker-web-steward")))
+        before = text
+        r = install(t, "--claude-md")
+        check("a second run leaves the file byte-identical", read(os.path.join(t, "CLAUDE.md")) == before and "gate block is current" in r.stdout, r.stdout[-200:])
+        check("the block appears once", before.count(BEGIN) == 1)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        with open(os.path.join(t, "CLAUDE.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write("# Repo\n\nOwn rules above.\n\n" + BEGIN + "\nstale text\n" + END + "\n\n## Below\nOwn rules below.\n")
+        with open(os.path.join(t, "AGENTS.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write("# Agents\n")
+        r = install(t, "--claude-md")
+        c, a = read(os.path.join(t, "CLAUDE.md")), read(os.path.join(t, "AGENTS.md"))
+        check("a stale block is replaced in place and the text around it is untouched",
+              "stale text" not in c and c.startswith("# Repo\n\nOwn rules above.\n\n" + BEGIN)
+              and c.endswith("## Below\nOwn rules below.\n") and "`gpu-surface`" in c, c[:200])
+        check("AGENTS.md gets the block too, below its existing content",
+              a.startswith("# Agents\n") and BEGIN in a and "`gpu-surface`" in a, a[:200])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        own = "# Repo\n\n## Web design gate \u2014 load-bearing\n\nOur own wording.\n"
+        with open(os.path.join(t, "CLAUDE.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write(own)
+        r = install(t, "--claude-md")
+        check("a hand-written web design gate section is kept untouched",
+              read(os.path.join(t, "CLAUDE.md")) == own and "keep   CLAUDE.md" in r.stdout and "gpu-surface" in r.stdout, r.stdout[-300:])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        with open(os.path.join(t, "CLAUDE.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write("# Repo\r\n\r\nRules.\r\n")
+        install(t, "--claude-md")
+        raw = open(os.path.join(t, "CLAUDE.md"), "rb").read()
+        check("a CRLF file stays CRLF throughout", b"\r\n" in raw and raw.count(b"\n") == raw.count(b"\r\n"))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        real = os.path.join(tmp, "elsewhere.md")
+        with open(real, "w", encoding="utf-8") as fh:
+            fh.write("target\n")
+        os.symlink(real, os.path.join(t, "CLAUDE.md"))
+        r = install(t, "--claude-md")
+        check("a symlinked prompt file is not written through", read(real) == "target\n" and "symlink" in r.stdout, r.stdout[-200:])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        r = install(t, "--claude-md", "--dry-run")
+        check("--dry-run reports the block and writes nothing",
+              r.returncode == 0 and "would: add the gate block in CLAUDE.md" in r.stdout and not os.path.exists(os.path.join(t, "CLAUDE.md")), r.stdout[-300:])
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         target = os.path.join(tmp, "repo")
@@ -112,6 +197,8 @@ def main() -> int:
         r = install(target, "--dry-run")
         check("dry run exits 0", r.returncode == 0, r.stderr)
         check("dry run adds no set-aside", len(set_asides(target)) == 4)
+
+    claude_md_cases()
 
     print()
     if failures:

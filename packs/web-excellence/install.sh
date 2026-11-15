@@ -6,6 +6,7 @@
 #   ./install.sh /path/to/repo --skills-only
 #   ./install.sh /path/to/repo --no-agents   # skip the three web workers
 #   ./install.sh /path/to/repo --no-db      # skip ui-ux-pro-max (~1.8 MB of CSV)
+#   ./install.sh /path/to/repo --claude-md  # also write the gate block into CLAUDE.md / AGENTS.md
 #
 # From anywhere, without cloning first:
 #   git clone --depth 1 https://github.com/frankxai/claude-skills-library /tmp/csl \
@@ -18,7 +19,7 @@ set -euo pipefail
 PACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${1:-}"
 shift || true
-DRY=0; SKILLS_ONLY=0; NO_DB=0; NO_CI=0; NO_AGENTS=0
+DRY=0; SKILLS_ONLY=0; NO_DB=0; NO_CI=0; NO_AGENTS=0; CLAUDE_MD=0
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
@@ -26,12 +27,13 @@ for a in "$@"; do
     --no-db) NO_DB=1 ;;
     --no-ci) NO_CI=1 ;;
     --no-agents) NO_AGENTS=1 ;;
+    --claude-md) CLAUDE_MD=1 ;;
     *) echo "unknown flag: $a" >&2; exit 2 ;;
   esac
 done
 
 if [ -z "$TARGET" ] || [ ! -d "$TARGET" ]; then
-  echo "usage: install.sh <path-to-repo> [--dry-run] [--skills-only] [--no-db] [--no-ci] [--no-agents]" >&2
+  echo "usage: install.sh <path-to-repo> [--dry-run] [--skills-only] [--no-db] [--no-ci] [--no-agents] [--claude-md]" >&2
   exit 2
 fi
 TARGET="$(cd "$TARGET" && pwd)"
@@ -122,6 +124,55 @@ if [ $NO_AGENTS -eq 0 ] && [ $SKILLS_ONLY -eq 0 ] && [ -d "$PACK_DIR/agents" ]; 
     run cp "$src" "$dest"
     warn_ignored ".claude/agents/$name" ".claude/agents/$name"
   done
+fi
+
+# ------------------------------------------------- CLAUDE.md / AGENTS.md
+# The prompt is where a session first learns the gate exists, and where a
+# harness that never loads .claude/skills (Codex, Grok) reads it from. Opt-in:
+# these files are repo contracts. Writes one fenced block, replaced in place on
+# a re-run, and never touches a hand-written web design gate section.
+if [ $CLAUDE_MD -eq 1 ]; then
+  python3 - "$TARGET" "$PACK_DIR/claude-md.snippet.md" "$DRY" <<'PY'
+import os, re, sys
+
+target, snippet_path, dry = sys.argv[1], sys.argv[2], sys.argv[3] == "1"
+BEGIN, END = "<!-- web-excellence:begin -->", "<!-- web-excellence:end -->"
+body = open(snippet_path, encoding="utf-8").read().strip("\n")
+block = f"{BEGIN}\n{body}\n{END}"
+names = [n for n in ("CLAUDE.md", "AGENTS.md") if os.path.lexists(os.path.join(target, n))] or ["CLAUDE.md"]
+
+for name in names:
+    path = os.path.join(target, name)
+    if os.path.islink(path):
+        print(f"  keep   {name} (a symlink is never written through)")
+        continue
+    text = ""
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8", newline="") as fh:
+            text = fh.read()
+    eol = "\r\n" if "\r\n" in text else "\n"
+    fenced = block.replace("\n", eol)
+    if BEGIN in text and END in text:
+        head, rest = text.split(BEGIN, 1)
+        _, tail = rest.split(END, 1)
+        new, status = head + fenced + tail, "update"
+        if new == text:
+            print(f"  ok     {name} (gate block is current)")
+            continue
+    elif re.search(r"web design gate", text, re.I):
+        note = "" if "gpu-surface" in text else "; it does not name gpu-surface, so add the second paragraph of claude-md.snippet.md"
+        print(f"  keep   {name} (has its own web design gate section{note})")
+        continue
+    else:
+        gap = "" if not text else (eol if text.endswith(eol * 2) else (eol if text.endswith(eol) else eol * 2))
+        new, status = text + gap + fenced + eol, "add"
+    if dry:
+        print(f"  would: {status} the gate block in {name}")
+        continue
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        fh.write(new)
+    print(f"  {status:<6} {name} (gate block)")
+PY
 fi
 
 if [ $SKILLS_ONLY -eq 1 ]; then
@@ -231,7 +282,7 @@ fi
 # ---------------------------------------------------------------- gitignore
 # Line by line, so a repo installed by an older version picks up new entries.
 GI="$TARGET/.gitignore"
-IGNORES=(.visual-proof/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/' .claude/agents.replaced/)
+IGNORES=(.visual-proof/ .gpu-export/ .lighthouse.json .extract-design-system/ .claude/skills/.replaced/ '.claude/skills/**/__pycache__/' .claude/agents.replaced/)
 if [ $DRY -eq 1 ]; then
   say "  would: ensure ${IGNORES[*]} are gitignored"
 else
@@ -254,5 +305,7 @@ say "Installed. Verify with:"
 say "  python3 -c \"import json;d=json.load(open('$TARGET/.claude/settings.json'));print(list(d['hooks']))\""
 say "  echo '{}' | python3 $TARGET/.claude/hooks/web-excellence-session.py"
 say ""
-say "Then add one line to the repo CLAUDE.md so the contract is in the prompt, not just the hook:"
-say "  Website / web-design work goes through the \`web-release-gate\` skill first. See .claude/skills/web-release-gate/SKILL.md."
+if [ $CLAUDE_MD -eq 0 ]; then
+  say "Then put the contract in the prompt, not just the hook. Re-run with --claude-md to write"
+  say "the block into CLAUDE.md / AGENTS.md, or paste $PACK_DIR/claude-md.snippet.md by hand."
+fi
