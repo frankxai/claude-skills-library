@@ -92,15 +92,66 @@ def claude_md_cases() -> None:
         check("AGENTS.md gets the block too, below its existing content",
               a.startswith("# Agents\n") and BEGIN in a and "`gpu-surface`" in a, a[:200])
 
+    GB, GE = "<!-- web-excellence:gpu:begin -->", "<!-- web-excellence:gpu:end -->"
+    own = "# Repo\n\n## Web design gate \u2014 load-bearing\n\nOur own wording.\n"
     with tempfile.TemporaryDirectory() as tmp:
         t = os.path.join(tmp, "repo")
         os.makedirs(t)
-        own = "# Repo\n\n## Web design gate \u2014 load-bearing\n\nOur own wording.\n"
         with open(os.path.join(t, "CLAUDE.md"), "w", encoding="utf-8", newline="") as fh:
             fh.write(own)
         r = install(t, "--claude-md")
-        check("a hand-written web design gate section is kept untouched",
-              read(os.path.join(t, "CLAUDE.md")) == own and "keep   CLAUDE.md" in r.stdout and "gpu-surface" in r.stdout, r.stdout[-300:])
+        c = read(os.path.join(t, "CLAUDE.md"))
+        check("a hand-written gate section is never edited, and it gains the GPU block after it",
+              c.startswith(own) and c.count(GB) == 1 and c.count(GE) == 1 and BEGIN not in c
+              and "add    CLAUDE.md (GPU block)" in r.stdout, r.stdout[-300:])
+        check("the GPU block names the governor, the four recipes, the site map, the probe and the agents",
+              all(w in c for w in ("`gpu-surface`", "`liquid-logo`", "`shader-backdrop`", "`liquid-glass`", "`r3f-scene`",
+                                   "`material-system`", "probe.mjs", "worker-web-builder", "worker-visual-qa")))
+        r2 = install(t, "--claude-md")
+        check("a second run leaves it byte-identical", read(os.path.join(t, "CLAUDE.md")) == c and "GPU block is current" in r2.stdout, r2.stdout[-200:])
+        stale = c.replace(c[c.index(GB):c.index(GE)], GB + "\nstale gpu text\n")
+        with open(os.path.join(t, "CLAUDE.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write(stale)
+        install(t, "--claude-md")
+        fixed = read(os.path.join(t, "CLAUDE.md"))
+        check("a stale GPU block is replaced in place", "stale gpu text" not in fixed and fixed == c, fixed[-300:])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        named = own + "\nShaders go through `gpu-surface` first, in our own words.\n"
+        with open(os.path.join(t, "CLAUDE.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write(named)
+        r = install(t, "--claude-md")
+        check("a hand-written section that already names gpu-surface is left alone",
+              read(os.path.join(t, "CLAUDE.md")) == named and "names gpu-surface" in r.stdout, r.stdout[-300:])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        with open(os.path.join(t, "CLAUDE.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write(own)
+        r = install(t, "--claude-md", "--dry-run")
+        check("--dry-run reports the GPU block and writes nothing",
+              read(os.path.join(t, "CLAUDE.md")) == own and "would: add the GPU block in CLAUDE.md" in r.stdout, r.stdout[-300:])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = os.path.join(tmp, "repo")
+        os.makedirs(t)
+        with open(os.path.join(t, "CLAUDE.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write(own)
+        with open(os.path.join(t, "AGENTS.md"), "w", encoding="utf-8", newline="") as fh:
+            fh.write("# Agents\n\nBand C rules.\n")
+        install(t, "--claude-md")
+        check("a repo with a hand-written section in CLAUDE.md only gets the full block in AGENTS.md, for harnesses that never read CLAUDE.md",
+              BEGIN in read(os.path.join(t, "AGENTS.md")) and GB not in read(os.path.join(t, "AGENTS.md"))
+              and GB in read(os.path.join(t, "CLAUDE.md")))
+
+    full = read(os.path.join(PACK, "claude-md.snippet.md"))
+    gpu = read(os.path.join(PACK, "claude-md-gpu.snippet.md"))
+    paragraphs = [p for p in gpu.strip().split("\n\n")[1:]]
+    check("the GPU snippet is the full snippet's GPU and agent paragraphs word for word, so the two cannot drift",
+          len(paragraphs) == 2 and all(p in full for p in paragraphs), str(paragraphs)[:200])
 
     with tempfile.TemporaryDirectory() as tmp:
         t = os.path.join(tmp, "repo")
