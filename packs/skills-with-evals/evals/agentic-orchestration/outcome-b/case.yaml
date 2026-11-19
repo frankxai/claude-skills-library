@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: agentic-orchestration--outcome-b
+description: "Should trigger agentic-orchestration; outcome graded."
+tags: [agentic-orchestration, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "My multi-agent system loses context at every handoff and one failed agent kills the whole run. Debug the design."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?agentic-orchestration\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it addresses both problems: state or context travelling with the task at handoffs, and graceful degradation or failure isolation, with concrete mechanisms rather than slogans."

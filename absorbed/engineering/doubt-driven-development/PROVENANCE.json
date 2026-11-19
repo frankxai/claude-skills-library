@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "engineering/doubt-driven-development",
+  "source": {
+    "repository": "https://github.com/addyosmani/agent-skills",
+    "commit": "301b02b12bff98e4688e6984af6556802322bbde",
+    "path": "skills/doubt-driven-development/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-11-12",
+    "by": "claude"
+  },
+  "changed": "Kept the claim-extract-doubt-reconcile-stop cycle, non-trivial definition, claim-free adversarial prompt, finding classes and three-cycle bound; made cross-model review mandatory for consequential output per the estate gate, named the estate reviewer channels (codex review, read-only codex exec, Grok, Cloudflare plane), added the RAM-floor fallback and pr-gate block-laundering red flags; dropped the persona-loading section.",
+  "distinctness": {
+    "nearest": "absorbed/harness/search-first/SKILL.md",
+    "similarity": 0.003
+  }
+}

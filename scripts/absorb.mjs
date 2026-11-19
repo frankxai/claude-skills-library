@@ -25,6 +25,7 @@ import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
+const relPosix = (p) => relative(REPO, p).replace(/\\/g, '/');
 const args = process.argv.slice(2);
 const opt = (n, d = null) => { const a = args.find((x) => x.startsWith(`--${n}=`)); return a ? a.slice(n.length + 3) : d; };
 const DRY = args.includes('--dry-run');
@@ -78,7 +79,7 @@ gate(2, shaOk && repoOk && changeOk,
 const stagedDir = join(REPO, staging, domain, name);
 const stagedSkill = join(stagedDir, 'SKILL.md');
 if (!existsSync(stagedSkill)) {
-  console.error(`refused: nothing staged at ${relative(REPO, stagedSkill)} — stage the artifact you have READ, not one fetched blind.`);
+  console.error(`refused: nothing staged at ${relPosix(stagedSkill)} — stage the artifact you have READ, not one fetched blind.`);
   process.exit(2);
 }
 const body = readFileSync(stagedSkill, 'utf8');
@@ -127,7 +128,7 @@ let nearest = { path: null, score: 0 };
 if (mine.size >= MIN_SHINGLES) {
   for (const p of existingSkills()) {
     const s = jaccard(mine, shingles(readFileSync(p, 'utf8'), width));
-    if (s > nearest.score) nearest = { path: relative(REPO, p), score: s };
+    if (s > nearest.score) nearest = { path: relPosix(p), score: s };
   }
 }
 const comparable = mine.size >= MIN_SHINGLES;

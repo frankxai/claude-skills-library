@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: todo-discipline--outcome-b
+description: "Should trigger todo-discipline; outcome graded."
+tags: [todo-discipline, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Before you declare this finished: I asked for four things (a, b, c, d) and you only did a and b. Confirm the real state and say whether you can call it complete."
+  max_turns: 6
+  allowed_tools: [Skill, Read, TodoWrite]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?todo-discipline\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it states that only a and b are done, that c and d remain, and refuses to call the task complete."

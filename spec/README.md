@@ -31,11 +31,12 @@ description: What it does AND when to use it, with trigger keywords. Third perso
 
 | Field | Rules |
 |---|---|
-| `name` | **Required.** Lowercase, hyphenated, ≤ 64 chars, matches `^[a-z0-9][a-z0-9-]*$`. Conventionally identical to the folder name. Prefer a clear, specific name (gerunds like `processing-pdfs` read well). Avoid `helper`/`utils`/`tools`. Do not use the reserved words `anthropic` or `claude` as the whole name. |
+| `name` | **Required.** Lowercase, hyphenated, ≤ 64 chars, matches `^[a-z0-9][a-z0-9-]*$`, no trailing or doubled hyphen. Must be identical to the folder name. Prefer a clear, specific name (gerunds like `processing-pdfs` read well). Avoid `helper`/`utils`/`tools`. Do not use the reserved words `anthropic` or `claude` as the whole name. |
 | `description` | **Required.** Non-empty, ≤ 1024 chars, no XML tags. The single most important line — it is the only text preloaded for routing. State **what the skill does and when to load it**, in the **third person**, with explicit **trigger keywords**. Claude tends to *undertrigger*, so be specific and a little "pushy". |
 
-> This repo also tolerates an optional `version` field. It is not part of the minimal open
-> standard but is harmless and useful for tracking.
+> Optional spec fields: `license`, `compatibility` (≤ 500 chars), `metadata` (string keys and
+> values; put a version here) and `allowed-tools`. `scripts/validate_skills.py` warns on any other
+> top-level key that is not a known Claude Code extension, because other clients ignore it.
 
 ## Progressive disclosure (the core idea)
 
@@ -60,3 +61,5 @@ Skills load in three levels, so a large library costs almost nothing until a ski
 - [ ] `python3 scripts/validate_skills.py` passes with no new warnings.
 
 Start from [`../template/SKILL.md`](../template/SKILL.md).
+
+Agent definitions have their own standard: see [`AGENT.md`](AGENT.md).

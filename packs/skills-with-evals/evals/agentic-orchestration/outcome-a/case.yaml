@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: agentic-orchestration--outcome-a
+description: "Should trigger agentic-orchestration; outcome graded."
+tags: [agentic-orchestration, should-trigger]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I need to split a large refactor across sub-agents. Which orchestration topology should I use and what should the handoff contract between agents contain?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?agentic-orchestration\""
+  - name: judged-0
+    type: llm
+    criteria: "PASS only if it picks a named topology with a reason (hierarchical, parallel, pipeline or similar), and specifies a handoff contract that includes the task, the context or state that travels with it, and expected output or acceptance criteria."

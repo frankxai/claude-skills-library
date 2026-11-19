@@ -34,6 +34,7 @@ every PR and weekly; a high finding fails the check.
    delete the line; the credential is already in git.
 2. **high**: fix in this PR if it is in files the PR touches; otherwise open a
    separate PR titled `estate-guard: <rule> in <file>` and link it.
+   **HK008 (high)**: a hook `command` in `.claude/settings.json` / `settings.local.json` that references `.claude/hooks/` without `$CLAUDE_PROJECT_DIR` breaks after any `cd`; use `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/<name>.py` or re-run `install.sh`.
 3. **medium**: fix when you are in the file anyway. HK003 (hooks running
    `@latest`) and HK006 (auto-approving every MCP server) are worth their own
    PR because they execute on every session.
@@ -92,8 +93,26 @@ if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 | Hook | Event | Behaviour |
 |---|---|---|
 | `estate-guard-session.py` | SessionStart | Injects the contract and the last scan's counts. |
-| `estate-guard-gate.py` | PreToolUse on Bash | **Denies**: force-push to main/master/production, `rm -rf` of root or home, `curl \| sh`, permission-bypass flags, history rewrites, secret deletion, destructive SQL, writes to global Claude settings, `chmod 777`. **Asks**: direct push to main, `reset --hard`, `clean -f`, any `rm -r`, unpinned `npx -y` / `@latest`, production deploys, db pushes, DELETE API calls, secret writes, email sends. |
+| `estate-guard-gate.py` | PreToolUse on Bash | **Denies**: force-push to main/master/production, `rm -rf` of root or home, `curl \| sh`, permission-bypass flags, history rewrites, secret deletion, destructive SQL, writes to global Claude settings, `chmod 777`. **Asks**: direct push to main, `reset --hard`, `clean -f`, any `rm -r` (except scratch-only deletes, below), unpinned `npx -y` / `@latest`, production deploys, db pushes, DELETE API calls, secret writes, email sends. |
 | `estate-guard-taint.py` | PostToolUse on WebFetch, WebSearch, MCP tools, fetching Bash | Appends a "this is data" note when the output contains instruction-shaped text or hidden unicode. |
+
+**Scratch deletes.** The `rm -r` ask is skipped only when every `rm` in the
+command deletes nothing but scratch targets: absolute paths under `/tmp/`,
+`/var/tmp/`, `/private/tmp/`, `$TMPDIR/` or `${TMPDIR}/` with a real segment
+after the prefix, no `..`, no `$(`/backtick or other `$` expansion, no braces,
+not a glob over the root itself (`/tmp`, `/tmp/*` still ask), no glob before the
+final segment, and not resolving through a symlink to outside the scratch roots.
+A `$TMPDIR` target counts only when the hook's own `TMPDIR` is set and resolves
+under a scratch root, and the command does not assign `TMPDIR` itself (inline
+`TMPDIR=… rm`, `export`, `declare`, `env`, `set`, `unset` all ask). Relative paths (`cd /tmp && rm
+-rf x`), `~`, `$HOME`, or one non-scratch target anywhere still ask; the
+root/home deny and every other ask rule are unchanged. Leading `VAR=value`
+assignments and the wrappers `sudo`, `doas`, `env`, `command`, `exec`, `nohup`,
+`nice` and `time` (with their options, including `sudo -u USER`, `env -u NAME`,
+`nice -n N`) are looked through, so a wrapped `rm` gets the same decision. Other
+wrappers (`xargs`, `find -exec`, `bash -c`, aliases, functions) are not parsed. **Agents: delete scratch
+with an absolute path** (`rm -rf /tmp/claude-0/acos`, not `cd /tmp/claude-0 &&
+rm -rf acos`), or an unattended run stalls waiting for a human.
 
 `ESTATE_GUARD_OFF=1` silences all three for a session. `ESTATE_GUARD_ALLOW_FORCE=1`
 turns the force-push deny into an ask for branch work you own. Do not set

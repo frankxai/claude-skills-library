@@ -3,6 +3,7 @@
 //
 //   node capture.mjs --url http://localhost:3000/ --label before
 //   node capture.mjs --url https://example.com/x --label after --widths 390,1280 --full
+//   node capture.mjs --url http://localhost:3000/ --label after-reduced --reduced-motion
 //
 // Writes <out>/<label>/<width>-<theme>.png and prints every path it wrote.
 // Exits non-zero with a plain-English reason if it cannot capture, or if any
@@ -28,10 +29,12 @@ const label = String(arg('label', 'shot')).replace(/[^A-Za-z0-9._-]/g, '-').repl
 const widths = String(arg('widths', '375,768,1440')).split(',').map(n => parseInt(n, 10));
 const themes = String(arg('themes', 'light,dark')).split(',');
 const fullPage = Boolean(arg('full', false));
+// Emulates prefers-reduced-motion: reduce, to prove the still state is designed.
+const reducedMotion = Boolean(arg('reduced-motion', false));
 const outRoot = String(arg('out', '.visual-proof'));
 
 if (!url || url === true) {
-  console.error('usage: capture.mjs --url <url> [--label before] [--widths 375,768,1440] [--themes light,dark] [--full] [--out .visual-proof]');
+  console.error('usage: capture.mjs --url <url> [--label before] [--widths 375,768,1440] [--themes light,dark] [--full] [--reduced-motion] [--out .visual-proof]');
   process.exit(2);
 }
 
@@ -73,6 +76,7 @@ for (const theme of themes) {
       viewport: { width, height: Math.round(width * 1.6) },
       deviceScaleFactor: 2,
       colorScheme: theme === 'dark' ? 'dark' : 'light',
+      ...(reducedMotion ? { reducedMotion: 'reduce' } : {}),
     });
     const page = await context.newPage();
     try {
@@ -119,6 +123,7 @@ if (!written.length) {
 }
 
 console.log(`\ncaptured ${written.length} shot(s) for "${label}":`);
+if (reducedMotion) console.log('  (prefers-reduced-motion: reduce emulated)');
 for (const p of written) console.log(`  ${p}`);
 if (failed) {
   // A partial matrix is not proof of the whole one. Exit non-zero so one good

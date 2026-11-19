@@ -1,13 +1,14 @@
 # 📚 Skills Catalog
-The complete index of all **114 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
+The complete index of all **116 skills** in this library. Every skill ships as a self-contained `SKILL.md` with spec-compliant frontmatter (`name`, `description`) and works across Claude Code, Claude.ai, and other agentic runtimes (see [`runtimes/`](../runtimes/)).
 
 > This file is generated. After adding or renaming a skill, run `python3 scripts/generate_catalog.py` to regenerate it, then `python3 scripts/validate_skills.py` to verify compliance.
 
 ## AI Agents & Orchestration
-_16 skills_
+_17 skills_
 
 | Skill | Description |
 |---|---|
+| [`agent-hygiene`](../free-skills/agent-hygiene/SKILL.md) | The quality bar for any agent working on agent definitions, skills, commands, hooks, AGENTS.md or CLAUDE.md, in any repo and any harness. Use at session start, before editing a... |
 | [`agentic-jujutsu`](../free-skills/agentic-jujutsu/SKILL.md) | Quantum-resistant, self-learning version control for AI agents, with ReasoningBank intelligence and multi-agent coordination. Use when designing agent memory/versioning, coordin... |
 | [`agentic-orchestration`](../free-skills/agentic-orchestration/SKILL.md) | Patterns for multi-agent coordination, task decomposition, handoffs, and workflow orchestration. Best practices for building and managing agent systems. Use when designing how m... |
 | [`ai-architect-review`](../free-skills/ai-architect-review/SKILL.md) | Review the architecture of a system that calls a language model. Use when adding an agent loop, a retrieval path, a tool surface, or an MCP server to a codebase; when a system t... |
@@ -173,10 +174,11 @@ _1 skill_
 | [`contribute-catalog`](../free-skills/contribute-catalog/SKILL.md) | Author a new HyperFrames registry block (caption style, VFX block, transition, lower third) or component (text effect, overlay, snippet) and ship it as an upstream PR to the hyp... |
 
 ## Other
-_5 skills_
+_6 skills_
 
 | Skill | Description |
 |---|---|
+| [`design-asset-intake`](../free-skills/design-asset-intake/SKILL.md) | Triage an external GitHub design/UI/motion/shader library before wiring it into any site's design system. Use when someone shares a "free design asset library" repo/link (social... |
 | [`feynman-thinking`](../free-skills/feynman-thinking/SKILL.md) | Transform Claude into a Feynman mentor. Focuses on simple explanations, architectural models, Socratic questioning, and stripping away unnecessary complexity. Triggers on: feynm... |
 | [`loop-designer`](../free-skills/loop-designer/SKILL.md) | Compile a goal into a durable, file-backed agent loop — a .loop/<name>/ charter any coding agent (Claude Code, Codex, Gemini, Grok) can execute unattended. Use when the user wan... |
 | [`loop-orchestrator`](../free-skills/loop-orchestrator/SKILL.md) | Operate a fleet of durable agent loops under .loop/ — schedule which loop runs next, assign agents to roles (maker vs checker), enforce promotion gates from propose-only to writ... |

@@ -45,12 +45,26 @@ run mkdir -p "$DEST_SKILLS"
 for src in "$PACK_DIR"/skills/*/; do
   name="$(basename "$src")"
   if [ -d "$DEST_SKILLS/$name" ]; then
+    # An installed copy identical to the pack's is already canonical: leave
+    # it and create no set-aside, or every re-run would mint one.
+    # A symlink is never canonical, whatever it points at, whether the skill
+    # directory itself or any file inside it: the install must be a
+    # self-contained copy, so it falls through to the set-aside below.
+    if [ ! -L "${DEST_SKILLS%/}/$name" ] \
+       && [ -z "$(find "$DEST_SKILLS/$name" -type l -print -quit)" ] \
+       && diff -rq "$src" "$DEST_SKILLS/$name" >/dev/null 2>&1; then
+      say "  ok     $name (already canonical)"
+      continue
+    fi
     # Never delete a skill already here — an existing copy may be a fork with
     # local-only files. Set it aside instead.
-    say "  update $name (previous copy → .claude/skills/.replaced/$name)"
+    say "  update $name (previous copy → .claude/skills/.replaced/$name.<timestamp>)"
     run mkdir -p "$DEST_SKILLS/.replaced"
-    run rm -rf "$DEST_SKILLS/.replaced/$name"
-    run mv "$DEST_SKILLS/$name" "$DEST_SKILLS/.replaced/$name"
+    # Versioned set-aside: never overwrite an earlier set-aside copy, so a
+    # customised skill survives any number of re-runs.
+    aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ)"
+    n=0; while [ -e "$aside" ]; do n=$((n+1)); aside="$DEST_SKILLS/.replaced/$name.$(date -u +%Y%m%dT%H%M%SZ).$n"; done
+    run mv "$DEST_SKILLS/$name" "$aside"
   else
     say "  add    $name"
   fi

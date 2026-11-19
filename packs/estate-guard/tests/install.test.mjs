@@ -75,3 +75,23 @@ test('dry-run mode', () => {
   assert.match(out, /\(dry run — nothing will be written\)/);
   assert.match(out, /would: mkdir -p/);
 });
+
+test('re-install upgrades relative hook paths in place instead of duplicating them', () => {
+  const root = repo();
+  fs.mkdirSync(path.join(root, '.claude'), { recursive: true });
+  const old = {
+    hooks: {
+      PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: 'python3 .claude/hooks/estate-guard-gate.py', timeout: 10 }] }],
+    },
+  };
+  fs.writeFileSync(path.join(root, '.claude/settings.json'), JSON.stringify(old));
+
+  runInstall(root, ['--no-ci']);
+
+  const settings = JSON.parse(fs.readFileSync(path.join(root, '.claude/settings.json'), 'utf8'));
+  const commands = Object.values(settings.hooks).flat().flatMap((e) => e.hooks.map((h) => h.command));
+  const gate = commands.filter((c) => c.includes('estate-guard-gate.py'));
+  assert.equal(gate.length, 1);
+  assert.match(gate[0], /\$CLAUDE_PROJECT_DIR/);
+  assert.equal(commands.some((c) => c.includes(' .claude/hooks/')), false);
+});

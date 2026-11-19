@@ -38,7 +38,7 @@ Built on SIP.
 /** Enough distinct prose to clear MIN_SHINGLES at the 5-word width. */
 const LONG = Array.from({ length: 40 }, (_, i) => `step ${i} does a distinct thing worth writing down here`).join('\n');
 
-function fixture({ staged = VALID('absorb-probe', LONG), existing = {} } = {}) {
+function fixture({ staged = VALID('probe', LONG), existing = {} } = {}) {
   const repo = mkdtempSync(join(tmpdir(), 'absorb-'));
   mkdirSync(join(repo, 'scripts'), { recursive: true });
   for (const f of COPIED) copyFileSync(join(SCRIPTS, f), join(repo, 'scripts', f));
@@ -124,12 +124,13 @@ test('gate 2 refuses a short SHA, a non-GitHub source, and a lazy change stateme
 });
 
 test('gate 3 refuses an artifact that is >=85% identical to an existing skill', () => {
-  const dup = VALID('absorb-probe', LONG);
+  const dup = VALID('probe', LONG);
   withRepo({ staged: dup, existing: { 'already-here': dup } }, (repo) => {
     const { code, out } = absorb(repo);
     assert.equal(code, 1, out);
     assert.equal(verdict(out, 3), 'REFUSE', out);
     assert.match(out, /identical to free-skills\/already-here/);
+    assert.doesNotMatch(out, /free-skills\\/);
     assert.ok(!landed(repo), 'duplicate landed');
   });
 });
@@ -137,7 +138,7 @@ test('gate 3 refuses an artifact that is >=85% identical to an existing skill', 
 test('gate 3 refuses an artifact too short to compare, instead of passing it unchecked', () => {
   // Regression: this returned "distinctness unchecked" and PASSED, so a near
   // duplicate short enough to dodge the shingle floor could land unexamined.
-  const tiny = '---\nname: absorb-probe\ndescription: Tiny.\n---\n\nUse it well.\n\nBuilt on SIP.\n';
+  const tiny = '---\nname: probe\ndescription: Tiny.\n---\n\nUse it well.\n\nBuilt on SIP.\n';
   withRepo({ staged: tiny }, (repo) => {
     const { code, out } = absorb(repo);
     assert.equal(code, 1, `a 3-word skill was allowed through\n${out}`);
@@ -159,7 +160,7 @@ test('gate 3 compares a short-but-real artifact on the narrow window and clears 
   // Regression: 18 five-word shingles fell under the old floor of 40, so this
   // artifact was passed with "distinctness unchecked" — cleared without a
   // comparison ever running. It must now be compared and shown distinct.
-  withRepo({ staged: BAND('absorb-probe', 'unmistakably'), existing: { 'unrelated': VALID('unrelated', LONG) } }, (repo) => {
+  withRepo({ staged: BAND('probe', 'unmistakably'), existing: { 'unrelated': VALID('unrelated', LONG) } }, (repo) => {
     const { code, out } = absorb(repo);
     assert.equal(verdict(out, 3), 'pass', out);
     assert.match(out, /compared on 3-word shingles/, `the narrow window did not run\n${out}`);
@@ -170,7 +171,7 @@ test('gate 3 compares a short-but-real artifact on the narrow window and clears 
 });
 
 test('gate 3 catches a duplicate that only the narrow window can see', () => {
-  withRepo({ staged: BAND('absorb-probe', 'identical'), existing: { 'near-twin': BAND('near-twin', 'identical') } }, (repo) => {
+  withRepo({ staged: BAND('probe', 'identical'), existing: { 'near-twin': BAND('near-twin', 'identical') } }, (repo) => {
     const { code, out } = absorb(repo);
     assert.equal(verdict(out, 3), 'REFUSE', out);
     assert.match(out, /identical to free-skills\/near-twin/, out);
@@ -180,7 +181,7 @@ test('gate 3 catches a duplicate that only the narrow window can see', () => {
 });
 
 test('gate 4 refuses a missing attestation footer', () => {
-  withRepo({ staged: VALID('absorb-probe', LONG).replace('Built on SIP.', '') }, (repo) => {
+  withRepo({ staged: VALID('probe', LONG).replace('Built on SIP.', '') }, (repo) => {
     const { code, out } = absorb(repo);
     assert.equal(code, 1, out);
     assert.equal(verdict(out, 4), 'REFUSE', out);
@@ -196,9 +197,9 @@ test('gate 4 refuses a malformed SKILL.md that carries the footer', () => {
   const malformed = {
     'no frontmatter': `# absorb probe\n\n${LONG}\n\nBuilt on SIP.\n`,
     'missing name': `---\ndescription: No name key at all.\n---\n\n${LONG}\n\nBuilt on SIP.\n`,
-    'missing description': `---\nname: absorb-probe\n---\n\n${LONG}\n\nBuilt on SIP.\n`,
+    'missing description': `---\nname: probe\n---\n\n${LONG}\n\nBuilt on SIP.\n`,
     'name not kebab-case': `---\nname: Absorb_Probe\ndescription: Bad name.\n---\n\n${LONG}\n\nBuilt on SIP.\n`,
-    'unterminated frontmatter': `---\nname: absorb-probe\ndescription: Never closed.\n\n${LONG}\n\nBuilt on SIP.\n`,
+    'unterminated frontmatter': `---\nname: probe\ndescription: Never closed.\n\n${LONG}\n\nBuilt on SIP.\n`,
   };
   for (const [label, staged] of Object.entries(malformed)) {
     withRepo({ staged }, (repo) => {

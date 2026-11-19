@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--no-trigger-boundary
+description: "Should NOT trigger feynman-thinking: a mechanical format conversion with an explicit request for no explanation."
+tags: [feynman-thinking, should-not-trigger, boundary]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: 'Do not explain anything, just convert this JSON to YAML: {"name": "api", "replicas": 3, "ports": [80, 443]}'
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+    min: 0
+    max: 0
+    arm: both

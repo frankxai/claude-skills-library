@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: model-routing--no-trigger-boundary
+description: "Should NOT trigger model-routing: a Django model and database cost share keywords with model routing but involve no Claude model choice."
+tags: [model-routing, should-not-trigger, boundary]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "This Django view is slow and our database bill is high: for order in Order.objects.all(): print(order.customer.name). Optimize the model query to cut the cost. Code only."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""
+    min: 0
+    max: 0
+    arm: both

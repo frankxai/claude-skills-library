@@ -23,10 +23,11 @@ checklist — lives in [`spec/README.md`](spec/README.md). Start a new skill by 
 [`scripts/validate_skills.py`](scripts/validate_skills.py). Concretely, each `SKILL.md` must:
 
 - Be named exactly `SKILL.md`, be valid UTF-8, and not be empty.
-- Start with YAML frontmatter containing `name` and `description` (the two required fields). An
-  optional `version` is fine but not required.
-- Use a `name` that is lowercase, hyphenated, ≤ 64 characters, and matches `^[a-z0-9][a-z0-9-]*$`
-  (conventionally identical to the skill's folder name).
+- Start with YAML frontmatter containing `name` and `description` (the two required fields). Put
+  anything else portable, such as a version, under `metadata`; other top-level keys draw a warning.
+- Use a `name` that is lowercase, hyphenated, ≤ 64 characters, and matches `^[a-z0-9][a-z0-9-]*$`,
+  with no trailing or doubled hyphen, and identical to the skill's folder name (the validator fails
+  a mismatch, as the Agent Skills spec does).
 - Provide a specific, non-empty `description` (≤ 1024 chars) that tells the model **what the skill
   does AND when** to use it, in the third person, with explicit trigger keywords.
 

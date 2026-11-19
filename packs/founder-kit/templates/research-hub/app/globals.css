@@ -1,0 +1,49 @@
+:root {
+  --bg: #ffffff;
+  --fg: #16181d;
+  --muted: #4a505c;
+  --line: #d9dce3;
+  --accent: #1d4ed8;
+  --note: #f3f4f7;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --fg: #eceef2;
+    --muted: #a3a9b6;
+    --line: #2b303b;
+    --accent: #8ab4ff;
+    --note: #181b22;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 1.0625rem/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main, header.site, footer.site { max-width: 42rem; margin: 0 auto; padding: 1.5rem 1rem; }
+a { color: var(--accent); text-underline-offset: 0.15em; }
+a:focus-visible, button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 1rem; top: 1rem; background: var(--bg); padding: 0.5rem 1rem; z-index: 10; }
+h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 0.5rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; }
+.meta { color: var(--muted); font-size: 0.9rem; }
+.list { list-style: none; padding: 0; }
+.list li { border-top: 1px solid var(--line); padding: 1rem 0; }
+.list h2 { margin: 0 0 0.25rem; font-size: 1.15rem; }
+.badge { display: inline-block; border: 1px solid var(--line); border-radius: 4px; padding: 0 0.4rem; font-size: 0.8rem; color: var(--muted); }
+.note { background: var(--note); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+.sources li { margin-bottom: 0.6rem; }
+@media (prefers-reduced-motion: no-preference) {
+  a { transition: color 0.15s ease; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

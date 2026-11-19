@@ -4,15 +4,24 @@ A portable pack that makes website and web-design work go through the same
 sequence in every repo, whether the session is running on a laptop or in a cloud
 container.
 
-It is three things:
+It is four things:
 
 1. **Eleven vendored skills** from the best public sources (Vercel, Emil Kowalski,
    nextlevelbuilder, arvindrk, Leonxlnx) — pinned to commits, re-syncable, MIT.
    See [SOURCES.md](SOURCES.md) for provenance and the assessment of each.
-2. **Three native skills** that fill what none of them do: sequencing
-   (`web-release-gate`), measurement (`core-web-vitals`), and evidence
-   (`visual-proof`).
+2. **Ten native skills** that fill what none of them do: sequencing
+   (`web-release-gate`), measurement (`core-web-vitals`), evidence
+   (`visual-proof`), dependency upkeep with a peer check (`web-steward`), and
+   the GPU surface set: one governed shader or 3D surface per page with a
+   probe that checks it (`gpu-surface`), a recipe per engine (`liquid-logo`,
+   `shader-backdrop`, `liquid-glass`, `r3f-scene`), and one material and
+   surface map per site (`material-system`).
 3. **Three hooks** that make the sequence the default instead of a suggestion.
+4. **Three agents** that hold the roles: `worker-web-builder` (the maker),
+   `worker-visual-qa` (the judge, on a different model), and
+   `worker-web-steward` (dependency and skill upkeep). They are compiled and
+   evaluated in agentic-creator-os and carried here pinned to a commit, so they
+   reach every repo the skills reach. See [SOURCES.md](SOURCES.md).
 
 ## Install
 
@@ -25,8 +34,12 @@ git clone --depth 1 https://github.com/frankxai/claude-skills-library /tmp/csl \
   && /tmp/csl/packs/web-excellence/install.sh "$PWD"
 ```
 
-Idempotent — re-run to upgrade. `--dry-run` shows the diff first. `--no-db`
-skips `ui-ux-pro-max` (~1.8 MB of CSV) if repo size matters.
+Re-run to upgrade; an installed skill that differs is set aside under
+`.claude/skills/.replaced/<name>.<timestamp>/`, never overwritten. `--dry-run` shows the diff first. `--no-db`
+skips `ui-ux-pro-max` (~1.8 MB of CSV) if repo size matters. `--no-agents`
+skips the three agents. A local agent file that differs from the pack's is set
+aside to `.claude/agents.replaced/<name>.<timestamp>.md` (outside `.claude/agents/`,
+so the harness never loads two agents with one name) and named in the output.
 
 Then add one line to the repo's `CLAUDE.md`:
 
@@ -108,12 +121,27 @@ gating), so the installer reports the difference instead.
 
 ```bash
 python3 packs/web-excellence/tests/test_hooks.py
+node --test packs/web-excellence/tests/peer-check.test.mjs packs/web-excellence/tests/install-agents.test.mjs
 ```
 
 22 checks, no dependencies: gate path matching, fire-once-per-session, stop
 blocks-then-never-again, no chaining, opt-out, case-insensitive contract
 detection, `0600` state file, path-traversal-safe session ids, and the linter's
 ratchet semantics both ways.
+
+`peer-check.test.mjs` runs offline, and CI picks it up through the
+`packs/*/tests/*.test.mjs` glob. It covers the semver range parser against the
+peer ranges npm packages actually declare, the drift classes (a `0.x` minor
+counts as breaking), and the pnpm importer reader.
+
+`install-agents.test.mjs` installs into throwaway git repos and checks the
+agents arrive byte for byte, an identical re-run leaves them alone, a diverged
+local copy is set aside rather than deleted, and `--no-agents`,
+`--skills-only`, and `--dry-run` write none. It also checks each vendored agent
+is a compiled file whose name matches, with a model tier and no `Agent` tool,
+and that the installer names any skill or agent the repo's `.gitignore` would
+keep out of git. Repos that allowlist pack skills one by one otherwise lose
+each new skill silently.
 
 ## Cloud sessions
 
@@ -146,19 +174,61 @@ Hooks cover the session. For drift between sessions, schedule the audit:
 - A **CI job** running the static half — the `web-design-guidelines` rule list
   is a fetchable markdown file, so a grep-based subset works without a model.
 
+## What activates on its own
+
+Nothing is a suggestion that a session can skip by not reading it. Each layer
+catches the work at a different moment, and each one is tested.
+
+| Layer | Fires when | What it does | Lives in |
+|---|---|---|---|
+| Skill descriptions | A request matches: "liquid metal logo", "mesh gradient hero", "frosted glass nav", "react-three-fiber scene", a ShaderGradient or Liquid Glass link | The model loads `gpu-surface` or the matching recipe | each `SKILL.md` `description` |
+| `SessionStart` hook | Every session in a repo with the pack | Names the routing: shader, glass, mark or 3D work goes through `gpu-surface` first, then its recipe; the site-wide look goes through `material-system` | `web-excellence-session.py` |
+| `PreToolUse` hook | An edit adds a canvas, shader, or 3D element (`<Canvas`, `@react-three/`, `@paper-design/`, `ShaderMount`, a WebGL context), or uses `backdrop-filter` | Injects the pointer to the recipe at that edit, even if the general reminder already fired. A canvas edit also arms the probe requirement | `web-excellence-gate.py` |
+| `Stop` hook | A turn ends after a canvas edit | Blocks once unless `probe.mjs` ran after the last edit with every check passing, or printed its own `Cannot probe:` line. A failed report, a `cat` of the script, or pasted output does not count | `web-excellence-stop.py` |
+| `CLAUDE.md` / `AGENTS.md` block | A harness reads the prompt, including Codex and Grok, which never load `.claude/skills` | Routes by name to the gate, the governor, the recipes and the three agents | `install.sh --claude-md`, from `claude-md.snippet.md` |
+| Agents | A build or review is delegated | `worker-web-builder` routes to the recipes and runs the probe; `worker-visual-qa` runs the probe on any page with a canvas and treats a failed check as blocking | `agents/`, compiled in agentic-creator-os |
+
+### Turn it on in a repo
+
+```bash
+packs/web-excellence/install.sh /path/to/repo --claude-md
+```
+
+Re-running upgrades the skills, hooks and agents in place. `--claude-md` writes
+one fenced block (`<!-- web-excellence:begin -->` to `<!-- web-excellence:end -->`),
+replaces it in place on every run, and never touches a hand-written "Web design
+gate" section: it tells you when that section does not name `gpu-surface`.
+
+### What it does not do
+
+- **A package installed from the shell is not seen.** `pnpm add three` runs
+  through Bash, and the gate hooks only watch edits. The skill descriptions and
+  the prompt block are what catch it; `gpu-surface` section 2 says to run the
+  peer check before installing.
+- **Repos that already have the pack need a re-install** to receive the recipes
+  and the new hooks. Nothing updates them by itself.
+- **A site's material is an owner decision.** `material-system` drafts a block
+  and a surface map as a proposal. No hook can approve it, and
+  `worker-web-builder` is forbidden from writing it into `design.md`.
+- **The probe checks the states exist, not that they look good.** The stills
+  still have to be opened and judged.
+
 ## Layout
 
 ```
 packs/web-excellence/
 ├── README.md              this file
 ├── SOURCES.md             upstream pins + why each skill was adopted or skipped
-├── install.sh             install into a repo (idempotent)
+├── install.sh             install into a repo (re-runnable; sets differing skills aside)
 ├── sync-upstream.sh       re-vendor from upstream, rewrite the pin table
+├── sync-agents.sh         re-vendor the agents from an agentic-creator-os checkout
 ├── settings.snippet.json  the hooks block install.sh merges
+├── claude-md.snippet.md   the CLAUDE.md / AGENTS.md block install.sh --claude-md writes
 ├── ci/                    the model-free linter + its workflow
 ├── hooks/                 the three hooks
-├── tests/                 test_hooks.py — run it after touching a hook
-└── skills/                14 skills — 11 vendored, 3 native
+├── tests/                 test_hooks.py, peer-check.test.mjs, install-agents.test.mjs, gpu-scripts.test.mjs
+├── agents/                3 agents — compiled in agentic-creator-os, never edited here
+└── skills/                21 skills — 11 vendored, 10 native
 ```
 
 Vendored skills are verbatim copies. Never hand-edit one — `sync-upstream.sh`

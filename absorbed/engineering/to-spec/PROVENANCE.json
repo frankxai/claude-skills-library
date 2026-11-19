@@ -1,0 +1,19 @@
+{
+  "schema": "starlight.absorption-provenance.v1",
+  "skill": "engineering/to-spec",
+  "source": {
+    "repository": "https://github.com/mattpocock/skills",
+    "commit": "4ae2317ddb22b046e26455e4f9c9b3aaaf62212d",
+    "path": "skills/engineering/to-spec/SKILL.md"
+  },
+  "license": "MIT",
+  "absorbed": {
+    "date": "2026-11-12",
+    "by": "claude"
+  },
+  "changed": "Kept the no-interview synthesis, single-seam testing advice and spec sections; replaced the generic tracker and setup-skill dependency with a GitHub issue on the verified product repo plus a duplicate check, added an OPEN section, the Frank-approval flag for gated areas and the humanizer rule.",
+  "distinctness": {
+    "nearest": "absorbed/harness/search-first/SKILL.md",
+    "similarity": 0.004
+  }
+}
