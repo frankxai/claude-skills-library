@@ -106,6 +106,7 @@ def main() -> int:
       <span class="pill"><b>{len(data)}</b> skills</span>
       <span class="pill"><b>{len(cats)}</b> categories</span>
       <span class="pill">MIT licensed</span>
+      <span class="pill"><a href="./examples/easing-study.html">Explore motion easing</a></span>
       <span class="pill"><a href="https://www.frankx.ai/skills">Web hub ↗</a></span>
       <span class="pill"><a href="{REPO_URL}">GitHub ↗</a></span>
     </div>
