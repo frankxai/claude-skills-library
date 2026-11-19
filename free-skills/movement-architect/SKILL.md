@@ -22,8 +22,10 @@ Someone has a brand, a product idea, a community, or a vague "this should be hug
 it turned into a movement with a working ladder underneath: who leads it, what it stands for,
 what the new opportunity is, what is free, what is paid, how the first thing is delivered, and
 how success is reported honestly. Also use it to diagnose a funnel or launch that is not
-converting; nine times out of ten the fault is a sophistication or awareness mismatch, not the
-button colour.
+converting. Rule out the mechanical causes first, with evidence: is the traffic the right
+buyer, does the page load and the checkout complete, does delivery arrive, is the offer one
+people want at that price. A sophistication or awareness mismatch is one more hypothesis, and
+the one this skill is built to test; do not assume it before the others are checked.
 
 Do not use it for single-asset copywriting (one email, one ad) with the movement already
 defined, or for pricing a B2B enterprise contract. Hand those to the relevant specialist.
@@ -61,10 +63,10 @@ Then place the market on two scales, and keep them apart:
 
 - **Sophistication** (how many times the whole market has heard the claim): stage 1 state the
   claim; stage 2 enlarge it; stage 3 introduce a new mechanism; stage 4 elaborate the
-  mechanism; stage 5 shift to identification. AI tooling and creator markets in 2026 usually
-  sit at stage 4 or 5: claims are exhausted, mechanisms are everywhere, so identity is what
-  is left to sell. Check it against your competitor table rather than assuming it; when it
-  holds, it is exactly why a movement outperforms a product page.
+  mechanism; stage 5 shift to identification. Place the market from evidence, never from the
+  category name: what rivals claim, and what buyers say they have already heard and stopped
+  believing. Where claims and mechanisms are both worn out, identity is what is left to
+  sell, and that is the case in which a movement can outperform a product page.
 - **Awareness** (where one prospect is right now): unaware, problem-aware, solution-aware,
   product-aware, most aware. Every asset later gets tagged with the stage it meets.
 
@@ -94,8 +96,10 @@ Fill the five rows of the shape table for this brand. Rules that save rework:
   plus a slogan members can say. Then write the identity label (what members call
   themselves). If the label embarrasses you, it will embarrass them.
 - The new opportunity names the old vehicle it replaces and why the old one cannot get there.
-  Improvement offers ("better, faster, cheaper") lose to opportunity offers ("a different
-  way") in sophisticated markets.
+  Brunson's claim is that improvement offers ("better, faster, cheaper") lose to opportunity
+  offers ("a different way"). Treat that as a positioning hypothesis to test, not a law:
+  improving a product buyers already like is a sound strategy, and the buyer evidence from
+  step 1 decides which framing to lead with.
 - Rituals: one recurring format (a weekly letter, a live build, a monthly ship list), one
   piece of shared vocabulary, one visible badge of membership.
 
@@ -105,7 +109,9 @@ Alex Hormozi's value equation: Value = (Dream Outcome × Perceived Likelihood) �
 Effort). Raise the top line with specificity and proof; cut the bottom line with templates,
 done-for-you pieces and fast first wins. Stack the offer until the obvious objections are
 each answered by a component. Price on value, never on cost, and never discount; discounts
-need an anchor price you have not earned yet.
+need an anchor price you have not earned yet. Value sets the price and cost sets the floor,
+so write down what one more customer costs you to serve (hosting, API calls, payment fees,
+support time) before fixing a price or promising lifetime access.
 
 Risk reversal must be true. A guarantee you cannot honour, a count you seeded, or a timer
 that resets costs the movement permanently, because movements run on trust in the leader.
@@ -119,13 +125,19 @@ end profits, continuity is the linchpin.
 |---|---|---|
 | Free | Prove the new opportunity works, in the member's own hands, inside minutes | open-source core, a skill, a template, a calculator, a chapter |
 | Entry | First money, first result, funds acquisition | a focused pack, a short guide, a single template bundle |
-| Core | The full method, outcome-complete | a playbook, a course, a boilerplate with docs |
+| Core | The full method for one result, with nothing else to buy to get there | a playbook, a course, a boilerplate with docs |
 | Continuity | The room, the updates, the cadence | membership with perks, updates, live rituals |
 | Premium | Depth or access for the few who want it | cohort, all-access, implementation |
 
-Rules: every rung's gift is a carved-out slice of the real product, never a brochure. Nothing
-shows a checkout until it is actually finished and checked; until then the rung is a waitlist
-that asks what people would pay. One repo, one line, one call to action per surface.
+Rules: every rung's gift is a carved-out slice of the real product, never a brochure. One
+repo, one line, one call to action per surface.
+
+Keep two questions apart: is it ready to deliver, and will people pay this price. A finished,
+checked product can open a checkout while its price is still being tested. An unfinished one
+can test price with behaviour, which is stronger evidence than a survey: a paid pilot with a
+few named buyers, or a pre-order that states plainly what exists today, the delivery date and
+the refund terms. A waitlist that asks what people would pay is the fallback when neither is
+possible. Never show a checkout that implies a finished product when it is not.
 
 ### 6. Build the lead magnet
 
@@ -160,14 +172,26 @@ average), receipts delivered, retention of the ritual. Never publish a count bel
 threshold where it looks impressive; silence beats "join 12 others". Report what you measured,
 how, and when, next to what you did not measure.
 
-## Output: the Movement Brief
+## Output
 
-Produce one document with these blocks, in this order, and nothing else as a deliverable:
+Match the deliverable to the request.
+
+- Asked for the strategy ("build the movement", "what do we sell and how"): produce the
+  Movement Brief below as one document.
+- Asked for one asset (a manifesto, a sales page, a lead magnet, a launch sequence): produce
+  that asset. Work the brief blocks it depends on first, briefly, and show them as a short
+  assumptions list above the asset so the reader can correct them. A manifesto depends on
+  blocks 1 to 3, a lead magnet on 1, 2, 5 and 6, a sales page on 1 to 5.
+- Asked to diagnose: report what the evidence rules in and out before proposing changes.
+
+### The Movement Brief
+
+Ten blocks, in this order:
 
 1. Market reality (sophistication stage, awareness map, competitor-language table, swipe log)
 2. Buyer and bar (best-fit customer, alternatives, three references to beat)
 3. Movement core (leader, cause and label, new opportunity and old vehicle, rituals, proof plan)
-4. Offer (value equation worked, stack, price hypothesis, honest risk reversal)
+4. Offer (value equation worked, stack, cost to serve, price hypothesis and its evidence, honest risk reversal)
 5. Ladder (five rungs with the gift, the shape and the gate state of each)
 6. Lead magnet (archetype, promise, delivery, capture, three questions)
 7. Packaging (shape, marketplace, install or open path, version)
@@ -176,6 +200,14 @@ Produce one document with these blocks, in this order, and nothing else as a del
 10. Open rulings (the decisions only the founder can take)
 
 Template with field notes: `references/movement-brief.md`.
+
+### A manifesto
+
+A manifesto is the movement core in the leader's voice, on one page. Order: the world as
+members live it now, in their words; the old vehicle and why it cannot get them there; the
+future state; who we are (the label) and what we do differently; what we refuse to do; the
+invitation, with one small first act of joining. Identity and feeling carry it. Use a number
+only when it is measured and sourced, and never make the enemy a person or a company.
 
 ## Honesty rails
 
@@ -187,7 +219,7 @@ not finished.
 | Invented or secondary-sourced numbers ("trusted by 10,000", a founder's revenue claim) | measured count with method and date, or cut |
 | Seeded scarcity: fake counts, undecided deadlines, resetting timers | real window (founding cohort closes at launch), real positions, or silence |
 | Discount with no earned anchor price | price lock, named credit, lifetime access instead |
-| Improvement pitch in a stage 4 or 5 market | new opportunity with a named old vehicle |
+| Improvement pitch where buyers say they have heard it all before | test a new-opportunity framing, with a named old vehicle, against it |
 | Proof-led headline in an identity market | identity and feeling in the headline, proof one scroll down |
 | Vocabulary from nowhere: "unleash", "seamless", "10x", "revolutionary" | the buyer's own noun, the measured number, the verb the product does |
 | Enemy is a person or a company | the enemy is the old vehicle |
@@ -197,16 +229,23 @@ not finished.
 
 A solo founder who runs a fleet of coding agents wants to sell to other builders.
 
-- Market: stage 5 (every AI tool claims speed and quality). Buyers speak of "babysitting",
-  "slop", "it looked done", "I can't trust the output".
+- Market: stage 5 on the evidence collected. Five rival pages all claim speed and quality,
+  and buyers in reviews say they no longer believe it. They speak of "babysitting", "slop",
+  "it looked done", "I can't trust the output".
 - Buyer: builders who already run two or more agents and are tired of being the only
   reviewer. Alternatives: do it by hand, a bigger prompt, another orchestrator.
 - Core: leader is the founder who runs the fleet in public, flaws and failures included.
   Cause: "one person, a fleet, work that stands on its own." Label: operators. New
   opportunity: the agent team as the unit of work, replacing the single chat window. Ritual: a
   weekly public ship list.
-- Offer: outcome-complete playbooks with worked receipts, priced on value; guarantee is a
-  real refund window.
+- Offer: one playbook, "The second reviewer". The buyer's task: every change an agent
+  proposes gets checked by a different model before it merges. What they get: the setup
+  steps, the review prompt, a script that blocks a merge with no review, and one filled
+  example. Proof a stranger can reproduce: the buyer runs one command before and after that
+  counts merges with no review in the last two weeks, and keeps both outputs. Price test,
+  labelled as a test: a pre-order page that states what exists today, the delivery date and a
+  full refund until delivery, at one price for two weeks; record visits, checkout starts and
+  orders, then decide. This example is illustrative, not a measured case.
 - Ladder: open-source core (free) → first playbook (core) → membership with the room and
   updates as perks (continuity) → all-access.
 - Lead magnet: the one skill from the playbook that saves an hour this week, installed in

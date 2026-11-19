@@ -28,10 +28,14 @@ his own software. Take the architecture, leave the pressure tactics.
 *for* people with their permission. Use for who-is-it-for and for the ethics of attention.
 Blind spot: inspirational, not operational; little on pricing or sequencing.
 
-**Kevin Kelly, "1,000 True Fans" (2008 essay).** A creator needs a thousand people who will
-buy anything you make, not a million followers. The economic floor of a movement. Blind spot:
-the essay predates platform fees and discovery costs; Kelly himself later noted the number
-moves with price and margin.
+**Kevin Kelly, "1,000 True Fans" (2008 essay; revised 2016).** A creator can make a living
+from roughly a thousand true fans rather than a million followers, under two conditions the
+essay itself states: each fan is worth about 100 dollars a year to you (the revision says
+profit), and you deal with them directly so that money stays with you. The number is
+arithmetic, not a constant. Halve what a fan is worth per year and you need twice as many;
+add a co-creator and you need more again. Use it to size the smallest audience that pays for
+the work. This skill's own caveat, not Kelly's: the essay says little about what it costs to
+find those fans in the first place, so budget for discovery separately.
 
 ## Offer and ladder
 
@@ -105,14 +109,16 @@ account of what powerful AI could do for health, poverty and governance. Use as 
 future-based cause at civilisational scale, written by a lab leader rather than a marketer.
 *Secondary*: press-reported odds about a one-person billion-dollar company; verify.
 
-**The 2026 macro vibe (what is globally happening, as of this writing).** The "one person plus
-agents" company is the dominant founder narrative: ministers, labs and venture blogs all
-repeat it; the sceptical counter is redundancy and burnout (one person is a single point of
-failure). Agent skills, prompt packs and templates are the fastest-growing digital product
-categories by count; software development is the largest category by revenue on at least one
-large creator marketplace (vendor data, directional). A movement built on "one founder, a
-fleet, work that stands on its own" is riding the current, so its proof has to be real
-because every competitor is making the same claim.
+**The 2026 backdrop (unverified, read 2026-11-03; not market evidence).** A web search on
+that date returned many pages repeating a "one person plus agents" company narrative: a UAE
+minister quoted in Khaleej Times, venture and newsletter blogs, and secondary reports of the
+Altman and Amodei predictions above. That shows the narrative circulates in those sources. It
+does not measure how many founders hold it. The same search returned the sceptical counter
+that one person is a single point of failure. One vendor analysis (InsightRaider, about
+146,000 Gumroad products, period not stated) puts Software Development first by total revenue
+on Gumroad, which describes one marketplace through one vendor's sample. This file makes no
+claim about which product categories are growing fastest; no dataset was found. A brief that
+leans on any of this must cite its own source, sample and date, or leave it out.
 
 ## Sciences behind it
 
@@ -132,15 +138,22 @@ delivered in sixty seconds is an ability fix; a weekly ritual is a prompt.
 seeded anchor price is both dishonest and fragile, and why a real founding window works.
 
 **Clayton Christensen, jobs to be done.** People hire a product to make progress in a
-situation. The "new opportunity" is a new way to do the job, which is why improvements lose.
+particular circumstance. Use it to find the job before choosing a framing. The theory does not
+say improvements lose: improving a product for a job it serves badly is an ordinary result of
+this analysis. Whether a "new opportunity" framing beats an improvement framing for your
+buyer is Brunson's claim, and a separate hypothesis to test.
 
 ## How to read competitor language (Schwartz, operationalised)
 
 1. Collect ten to twenty sources: sales pages, reviews (one to three stars are the richest),
    community threads, support docs, the competitor's own changelog.
 2. Log every recurring claim, mechanism name, identity word and price, with source and date.
-3. Count how often each claim appears. Three or more competitors making the same claim means
-   the market is past stage 2 for that claim; do not make it again.
+3. Count how often each claim appears. A claim several rivals repeat is a prompt to look
+   closer, not a verdict. This counting step is this skill's working heuristic, not
+   Schwartz's, and no threshold is validated. Sophistication is about what buyers have heard
+   and stopped believing, so confirm with buyer evidence (reviews, threads or interviews where
+   buyers say they have heard the promise before or no longer trust it) before dropping a
+   claim.
 4. Find the mechanism nobody has named, or the identity nobody is offering. That is the gap.
 5. Write your headline in the buyer's words from the log, not yours. Keep the log in the
    brief so the next person can see where the words came from.

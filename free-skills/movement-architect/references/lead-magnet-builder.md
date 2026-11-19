@@ -44,7 +44,8 @@ Step one asks for the email only. Step two, after they are in, asks the three qu
 turn a list into evidence. Each is skippable:
 
 1. **Expected price** for the full thing, as a band (for example under 50, 50 to 150, 150 to
-   350, more). This is the only price evidence a pre-launch product has.
+   350, more). Stated willingness is weak evidence. A paid pilot or a clearly disclosed
+   pre-order is stronger and can run alongside it (see `product-ladder.md`).
 2. **Who they are**, as a role they would recognise.
 3. **What they are trying to do**, free text, one line.
 
@@ -59,20 +60,22 @@ Scarcity is the window (a founding cohort that closes at launch and never reopen
 units of an infinite digital good. Publish real counts only above the threshold where they
 help; below it, say nothing. Offer status and permanence (price lock, named credit, input
 rights, lifetime access), never a discount, because a discount needs an anchor price nobody
-has paid yet. A milestone announced with no date, or a count reached with no promise kept, is
+has paid yet. Promise lifetime access only where one more member costs close to nothing to
+serve. A milestone announced with no date, or a count reached with no promise kept, is
 a defect of the highest severity.
 
 ## 7. Benchmarks, and why not to trust them
 
 Published figures disagree by an order of magnitude because they define the visitor, the
-offer and the traffic source differently. Use them only to sanity-check, then beat your own
-baseline.
+offer and the traffic source differently. The rows below were taken from secondary summaries
+on 2026-11-03. The underlying reports were not opened, so every row is unverified: open the
+report and confirm the sample and the denominator before quoting one. Use them only to
+sanity-check, then beat your own baseline.
 
-| Figure | Source (read 2026-11-03) | Caveat |
+| Figure | Reported by (report not opened) | Caveat |
 |---|---|---|
 | ~6.6% median landing page conversion, all industries | Unbounce analysis of ~41,000 pages (Q4 2024), via Leadpages 2026 benchmark post | mixes opt-in pages with demo and purchase pages |
 | ~19.3% for email-sourced traffic, ~11.3% paid search | same dataset, via Digital Applied summary | channel medians, not opt-in specific |
-| ~23% average for sign-up optimised pages | ClickMinded 2026 benchmark | vendor dataset |
 | 2% to 8% for a decent cold-traffic magnet page | Lilach Bullock | practitioner estimate |
 | 40%+ opt-in on quizzes | Interact, ~2,100 live quizzes | denominator often excludes bounces before the quiz |
 

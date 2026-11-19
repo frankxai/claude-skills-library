@@ -1,8 +1,11 @@
 # Product ladder: shapes, marketplaces, packaging
 
 Digitally distributable means a stranger can buy, download or install it with nobody from
-your side in the room, and you pay nothing per extra copy. Pick the shape by what the buyer's
-job needs, not by what is easiest to make.
+your side in the room, and copying it costs you close to nothing. Serving a customer is a
+different cost. Hosted servers, API calls, payment fees and support all rise with each buyer,
+most of all for hosted MCP servers and memberships. Before fixing a price or promising
+lifetime access, write down what one more customer costs you per month and per year. Pick the
+shape by what the buyer's job needs, not by what is easiest to make.
 
 ## 1. Product shapes
 
@@ -15,7 +18,7 @@ job needs, not by what is easiest to make.
 | Boilerplate or starter | a repo with docs, tests and a deploy path | core | the most-starred starter in the same stack |
 | Guide or ebook | EPUB plus PDF plus a web chapter; a free chapter as the slice | entry, core | the current bestseller on the same shelf |
 | Course | self-paced, no cohort dependency, the buyer's agent can follow it | core | the two courses the buyer would otherwise take |
-| Playbook | outcome-complete method with worked examples, checklists and receipts | core | the consultancy deliverable it replaces |
+| Playbook | the full method for one result, with a filled example, checklists and a way to check it worked | core | the consultancy deliverable it replaces |
 | Membership | the room, updates, rituals, perks | continuity | the two communities the buyer is already in |
 | Cohort or all-access | time-boxed depth or everything at once | premium | the paid program the buyer would otherwise join |
 
@@ -45,9 +48,13 @@ before choosing, and record the date you read them. What is stable enough to pla
 
 Vendor guides and listings cluster prompt packs at roughly 2 to 19 dollars, templates at
 9 to 79, courses anywhere from tens to thousands depending on outcome and support. None of
-this is your price. Your price comes from the value equation and from the band buyers chose
-on your own waitlist. Until you hold that evidence, every price on your page is a guess and
-the surface is a waitlist, not a checkout.
+this is your price. Your price comes from the value equation and from evidence, strongest
+first: paid orders, a paid pilot, a clearly disclosed pre-order (what exists today, the
+delivery date, the refund terms), then the band buyers chose on a waitlist. Price evidence and
+readiness to deliver are separate questions. A finished product can sell while its price is
+still being tested, and an unfinished one can test price through a pilot or a disclosed
+pre-order. Until you hold some evidence, the price on your page is a guess and should be
+labelled a test.
 
 ## 4. Packaging checklist by shape
 

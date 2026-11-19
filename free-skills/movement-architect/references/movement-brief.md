@@ -11,8 +11,8 @@ Author, date, revision. Sources read (with dates).
 
 ## 1. Market reality
 
-- **Sophistication stage** (1 to 5) and the evidence (which claims three or more competitors
-  already make).
+- **Sophistication stage** (1 to 5) and the evidence: which claims rivals repeat, and what
+  buyers say they have heard before or no longer believe.
 - **Awareness map**: estimated share of the traffic you will meet at each stage, and where it
   comes from.
 - **Competitor-language table**: five closest alternatives (include "do nothing" and the
@@ -42,7 +42,10 @@ Author, date, revision. Sources read (with dates).
 - **Value equation worked**: dream outcome, likelihood (and its proof), time to first result,
   effort removed.
 - **Stack**: components, each mapped to the objection it answers.
-- **Price hypothesis** and the evidence state (`none yet`, `waitlist bands`, `paid orders`).
+- **Price hypothesis** and the evidence state (`none yet`, `waitlist bands`,
+  `disclosed pre-order`, `paid pilot`, `paid orders`).
+- **Cost to serve**: what one more customer costs per month (hosting, API calls, payment fees,
+  support time).
 - **Risk reversal**, honest, with the exact terms.
 
 ## 5. Ladder
@@ -55,8 +58,9 @@ Author, date, revision. Sources read (with dates).
 | Continuity | | | | | |
 | Premium | | | | | |
 
-Gate state is `waitlist`, `gated`, or `checkout open`, and `checkout open` requires that the
-product is finished and checked.
+Gate state is `waitlist`, `pilot`, `pre-order (disclosed)` or `checkout open`. `checkout open`
+requires that the product is finished and checked. A pre-order states what exists today, the
+delivery date and the refund terms.
 
 ## 6. Lead magnet
 
@@ -91,9 +95,10 @@ external sends. One line each, with the recommendation and the evidence behind i
 ## Field notes
 
 - A brief that reads well but has empty "measured" fields is a plan, not a brief. Say so.
-- If block 1 shows stage 4 or 5 and block 3 still offers an improvement, stop and rewrite
-  block 3.
+- If block 1 shows buyers no longer believe the category's claims and block 3 still offers an
+  improvement, test a new-opportunity framing against it before shipping either.
 - If block 6's magnet serves a different buyer than block 2, pick one buyer.
-- If block 5 shows a checkout on a rung with gate state `waitlist`, that is a defect.
+- If block 5 shows a checkout on a rung with gate state `waitlist`, that is a defect. So is a
+  pre-order that does not say what exists today.
 - The brief is the artefact; the sales page, emails and product pages are built from it, not
   the other way round.
