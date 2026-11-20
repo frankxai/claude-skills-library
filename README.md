@@ -49,7 +49,7 @@ For the skills themselves, see [the skill ranking](docs/SKILL-RANKING-2026-11.md
 > full promptfoo eval suite and the run output that shows exactly where it fails. If you would pay
 > for skills that arrive proven, say which one should be first and what that is worth to you:
 > **[join the eval-pack list](https://www.frankx.ai/waitlist?intent=claude-skills-library)**. Two
-> steps, every question skippable. Founding members name the next skill to be evaluated.
+> steps, every question skippable. Founding members name the next skill to be evaluated, and the [eval priority thread](https://github.com/frankxai/claude-skills-library/discussions/130) is open to everyone.
 
 Three ways in. Pick one.
 
