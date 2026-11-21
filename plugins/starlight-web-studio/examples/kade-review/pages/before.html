@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KADE</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #333; background: #fff; }
+  a:focus, button:focus { outline: none; }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 13px 27px; border-bottom: 1px solid #eee; }
+  .top .logo { font-size: 19px; letter-spacing: 6px; font-weight: 700; }
+  .top nav a { margin-left: 21px; color: #777; font-size: 13px; text-decoration: none; }
+  .top nav .icon { display: inline-block; width: 18px; height: 18px; vertical-align: middle; }
+  .hero { position: relative; padding: 37px 27px 61px; text-align: center; background: linear-gradient(#fbf7f2, #fff); }
+  .hero h1 { font-size: 72px; letter-spacing: 14px; margin: 23px 0 11px; text-transform: uppercase; }
+  .hero .kicker { color: #aaa; font-size: 15px; text-transform: uppercase; letter-spacing: 3px; }
+  .hero .sub { color: #9a9a9a; font-size: 17px; margin: 0 0 31px; }
+  .hero img { width: 100%; max-width: 980px; display: block; margin: 0 auto 27px; animation: bob 4s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-9px); } }
+  .btn { display: inline-block; padding: 13px 23px; margin: 5px; border-radius: 30px; font-size: 15px; text-decoration: none; }
+  .btn.primary { background: #e07a3f; color: #fff; }
+  .btn.ghost { border: 1px solid #ccc; color: #555; }
+  .btn.dark { background: #222; color: #fff; }
+  .section { padding: 57px 27px; }
+  .section h1, .section h2 { font-size: 46px; margin: 0 0 19px; }
+  .section h3 { font-size: 22px; margin: 0 0 7px; }
+  .section p { font-size: 17px; line-height: 1.5; color: #9a9a9a; }
+  .lead { font-size: 19px !important; }
+  .grid { display: flex; gap: 27px; }
+  .grid > div { flex: 1; padding: 21px; border: 1px solid #f0f0f0; border-radius: 9px; }
+  .grid .num { font-size: 38px; color: #e07a3f; font-weight: 700; }
+  .grid small { font-size: 11px; color: #bbb; }
+  .reveal { opacity: 0; transform: translateY(30px); transition: all .9s; }
+  .reveal.in { opacity: 1; transform: none; }
+  table.spec { width: 640px; border-collapse: collapse; font-size: 15px; }
+  table.spec td { padding: 9px 13px; border-bottom: 1px solid #eee; color: #888; }
+  .quote { font-size: 31px; font-style: italic; color: #bbb; text-align: center; padding: 61px 27px; }
+  .price { font-size: 58px; font-weight: 700; }
+  footer { padding: 27px; font-size: 11px; color: #ccc; }
+  .promo { background: #222; color: #fff; text-align: center; font-size: 13px; padding: 15px; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo">KADE</div>
+  <nav>
+    <a href="#studio">Studio</a><a href="#how">How</a><a href="#price">Price</a>
+    <a href="https://instagram.com"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="#777" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="#777" stroke-width="2"/></svg></a>
+    <a href="mailto:hello@example.com"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" fill="none" stroke="#777" stroke-width="2"/><path d="M2 5l10 8 10-8" fill="none" stroke="#777" stroke-width="2"/></svg></a>
+  </nav>
+</div>
+
+<div class="hero">
+  <div class="kicker">The future of living on water</div>
+  <h1>Kade</h1>
+  <p class="sub">Innovative, sustainable, next-generation floating studios that redefine how you live, work and create.</p>
+  <img src="hero.svg">
+  <a class="btn primary" href="#book">Book a call</a>
+  <a class="btn ghost" href="#brochure">Download brochure</a>
+  <a class="btn dark" href="#film">Watch the film</a>
+</div>
+
+<div class="section reveal" id="how">
+  <h1>Why Kade?</h1>
+  <p class="lead">We believe the future of work is fluid. Our studios are designed from the ground up to deliver a seamless, holistic experience that combines cutting-edge technology with timeless craftsmanship, empowering you to unlock your creative potential wherever the water takes you, all while leaving a minimal footprint on the planet and the communities we moor beside, because sustainability is not an add-on for us but the foundation of everything we build.</p>
+  <div class="grid">
+    <div><div class="num">100%</div><h3>Solar</h3><p>Powered entirely by the sun, all year round, in every season.</p><small>*conditions apply</small></div>
+    <div><div class="num">38m²</div><h3>Space</h3><p>Room to think, create and breathe.</p></div>
+    <div><div class="num">0</div><h3>Emissions</h3><p>A truly zero-impact way to work.</p></div>
+  </div>
+</div>
+
+<div class="section reveal" id="studio">
+  <h2>The studio</h2>
+  <p>Every Kade studio is built by hand in our Zaandam yard from FSC larch over a concrete hull, with triple glazing, a heat pump, a 9 kWp solar roof and a 30 kWh battery that keeps the lights on through a grey Dutch week. Inside you get one open room, a kitchen wall, a wet room and a sleeping loft, finished in oiled oak and lime plaster.</p>
+  <table class="spec">
+    <tr><td>Floor area</td><td>38 m² plus 9 m² loft</td><td>Hull</td><td>Concrete, 14 × 4.2 m</td></tr>
+    <tr><td>Solar</td><td>9 kWp</td><td>Battery</td><td>30 kWh LFP</td></tr>
+    <tr><td>Heating</td><td>Air-water heat pump</td><td>Build time</td><td>7 months</td></tr>
+  </table>
+</div>
+
+<div class="quote reveal">"It's like working inside a lantern on the water."</div>
+
+<div class="section reveal" id="price">
+  <h2>Pricing</h2>
+  <div class="price">€248k</div>
+  <p>Starting price. Mooring not included. Contact us for details.</p>
+</div>
+
+<footer>© Kade. All rights reserved.</footer>
+
+<script>
+  // reveal on scroll
+  const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('in')));
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  // analytics bootstrap (synchronous)
+  const t = performance.now(); while (performance.now() - t < 350) {}
+  // promo bar
+  setTimeout(() => {
+    const b = document.createElement('div'); b.className = 'promo';
+    b.textContent = 'Autumn viewing days in Amsterdam Noord, book now!';
+    document.body.prepend(b);
+  }, 700);
+</script>
+</body>
+</html>

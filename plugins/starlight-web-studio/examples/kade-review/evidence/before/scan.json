@@ -1,0 +1,152 @@
+{
+  "url": "http://127.0.0.1:8765/before.html",
+  "scannedAt": "2026-11-21T02:31:41.218Z",
+  "status": 200,
+  "score": 19.5,
+  "max": 30,
+  "scores": {
+    "search": 0,
+    "answer": 4,
+    "mobile": 3,
+    "access": 3.5,
+    "craft": 4,
+    "speed": 5
+  },
+  "facts": {
+    "title": "KADE",
+    "description": null,
+    "lang": null,
+    "words": 259,
+    "htmlKB": 6,
+    "ttfbMs": 6,
+    "h1": [
+      "Kade",
+      "Why Kade?"
+    ],
+    "jsonLdTypes": [],
+    "llmsTxt": false,
+    "aiSearchBlocked": [],
+    "aiTrainingBlocked": []
+  },
+  "findings": [
+    {
+      "dimension": "search",
+      "severity": "P1",
+      "id": "description-missing",
+      "evidence": "No meta description.",
+      "fix": "Write a 70-160 character description that answers \"what is this and for whom\"."
+    },
+    {
+      "dimension": "search",
+      "severity": "P1",
+      "id": "canonical-missing",
+      "evidence": "No rel=canonical.",
+      "fix": "Add an absolute canonical URL on the canonical host."
+    },
+    {
+      "dimension": "search",
+      "severity": "P1",
+      "id": "lang-missing",
+      "evidence": "<html> has no lang.",
+      "fix": "Set <html lang> so search and screen readers pick the right language."
+    },
+    {
+      "dimension": "answer",
+      "severity": "P1",
+      "id": "jsonld-missing",
+      "evidence": "No JSON-LD structured data.",
+      "fix": "Add JSON-LD for the entity the page is about (Organization/Person + WebSite, then Product, Article or FAQPage as true)."
+    },
+    {
+      "dimension": "access",
+      "severity": "P1",
+      "id": "link-no-name",
+      "evidence": "2 links have no accessible name.",
+      "fix": "Give icon links an aria-label or visually hidden text."
+    },
+    {
+      "dimension": "craft",
+      "severity": "P1",
+      "id": "stock-vocabulary",
+      "evidence": "Stock words: seamless, next-gen, next-generation, empower, empowering, cutting-edge, unlock your.",
+      "fix": "Replace with the noun the buyer uses, the number you measured, the verb the product does."
+    },
+    {
+      "dimension": "search",
+      "severity": "P2",
+      "id": "title-length",
+      "evidence": "Title is 4 chars: \"KADE\"",
+      "fix": "Keep the title between 15 and 65 characters so it is not truncated or vague."
+    },
+    {
+      "dimension": "search",
+      "severity": "P2",
+      "id": "h1-multiple",
+      "evidence": "2 h1 elements.",
+      "fix": "Keep one h1; demote the rest."
+    },
+    {
+      "dimension": "search",
+      "severity": "P2",
+      "id": "heading-skip",
+      "evidence": "h1 → h3 at \"Solar\"",
+      "fix": "Do not skip heading levels; size headings with CSS, not tag choice."
+    },
+    {
+      "dimension": "search",
+      "severity": "P2",
+      "id": "open-graph-incomplete",
+      "evidence": "Missing og:title, og:description, og:image.",
+      "fix": "Add Open Graph title, description and a 1200x630 image so shared links render."
+    },
+    {
+      "dimension": "search",
+      "severity": "P2",
+      "id": "sitemap-missing",
+      "evidence": "No sitemap at robots Sitemap: or /sitemap.xml.",
+      "fix": "Publish sitemap.xml and reference it from robots.txt."
+    },
+    {
+      "dimension": "mobile",
+      "severity": "P2",
+      "id": "viewport-fit",
+      "evidence": "viewport-fit=cover not set.",
+      "fix": "Set viewportFit: \"cover\" or every env(safe-area-inset-*) resolves to 0."
+    },
+    {
+      "dimension": "mobile",
+      "severity": "P2",
+      "id": "theme-color-missing",
+      "evidence": "No theme-color.",
+      "fix": "Declare theme-color per scheme so the status bar matches."
+    },
+    {
+      "dimension": "mobile",
+      "severity": "P2",
+      "id": "manifest-missing",
+      "evidence": "No web app manifest link.",
+      "fix": "Ship app/manifest.ts with display \"standalone\" and real icons."
+    },
+    {
+      "dimension": "mobile",
+      "severity": "P2",
+      "id": "touch-icon-missing",
+      "evidence": "No apple-touch-icon.",
+      "fix": "Add a 180x180 apple-touch-icon."
+    },
+    {
+      "dimension": "access",
+      "severity": "P2",
+      "id": "img-alt-missing",
+      "evidence": "1 of 1 <img> have no alt attribute.",
+      "fix": "Give every image alt text, or alt=\"\" when decorative."
+    },
+    {
+      "dimension": "answer",
+      "severity": "info",
+      "id": "llms-txt-missing",
+      "evidence": "No /llms.txt.",
+      "fix": "Optional: publish /llms.txt as a markdown index of the pages an agent should read first."
+    }
+  ]
+}

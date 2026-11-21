@@ -1,0 +1,68 @@
+{
+  "url": "http://127.0.0.1:8765/v2.html",
+  "scannedAt": "2026-11-21T02:31:51.542Z",
+  "status": 200,
+  "score": 28.5,
+  "max": 30,
+  "scores": {
+    "search": 4.5,
+    "answer": 5,
+    "mobile": 4,
+    "access": 5,
+    "craft": 5,
+    "speed": 5
+  },
+  "facts": {
+    "title": "Kade: a solar floating studio you can moor in a city canal",
+    "description": "Kade builds 38 m² timber floating studios with a 9 kWp solar roof and a 30 kWh battery, hand-built in Zaandam in seven months. From €248,000, mooring excluded.",
+    "canonical": "https://kade.example/",
+    "lang": "en",
+    "words": 355,
+    "htmlKB": 12,
+    "ttfbMs": 8,
+    "h1": [
+      "A solar studio you can moor in a city canal."
+    ],
+    "jsonLdTypes": [
+      "Answer",
+      "FAQPage",
+      "Offer",
+      "Organization",
+      "Product",
+      "Question"
+    ],
+    "llmsTxt": false,
+    "aiSearchBlocked": [],
+    "aiTrainingBlocked": []
+  },
+  "findings": [
+    {
+      "dimension": "search",
+      "severity": "P2",
+      "id": "sitemap-missing",
+      "evidence": "No sitemap at robots Sitemap: or /sitemap.xml.",
+      "fix": "Publish sitemap.xml and reference it from robots.txt."
+    },
+    {
+      "dimension": "mobile",
+      "severity": "P2",
+      "id": "manifest-missing",
+      "evidence": "No web app manifest link.",
+      "fix": "Ship app/manifest.ts with display \"standalone\" and real icons."
+    },
+    {
+      "dimension": "mobile",
+      "severity": "P2",
+      "id": "touch-icon-missing",
+      "evidence": "No apple-touch-icon.",
+      "fix": "Add a 180x180 apple-touch-icon."
+    },
+    {
+      "dimension": "answer",
+      "severity": "info",
+      "id": "llms-txt-missing",
+      "evidence": "No /llms.txt.",
+      "fix": "Optional: publish /llms.txt as a markdown index of the pages an agent should read first."
+    }
+  ]
+}
