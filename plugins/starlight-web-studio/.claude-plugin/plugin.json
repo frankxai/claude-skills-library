@@ -1,0 +1,26 @@
+{
+  "name": "starlight-web-studio",
+  "version": "0.1.0",
+  "description": "A proactive web design studio as a Claude Code team: eleven specialist agents, a routed graph from audit to shipped page, a model-free scanner for search, answer-engine, mobile, access, craft and speed, and gates that keep the maker away from the checker.",
+  "author": {
+    "name": "FrankX",
+    "url": "https://github.com/frankxai"
+  },
+  "homepage": "https://github.com/frankxai/claude-skills-library/tree/main/plugins/starlight-web-studio",
+  "repository": "https://github.com/frankxai/claude-skills-library",
+  "license": "MIT",
+  "keywords": [
+    "web-design",
+    "design-team",
+    "multi-agent",
+    "seo",
+    "aeo",
+    "answer-engine",
+    "copywriting",
+    "motion",
+    "gsap",
+    "webgl",
+    "visual-qa",
+    "accessibility"
+  ]
+}
