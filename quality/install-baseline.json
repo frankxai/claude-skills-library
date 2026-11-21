@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "dimension": "installer-roundtrip",
+  "sourceRevision": "99bcd5efe64e9575450f667c528838d475ff0e6e",
+  "observedAt": "2026-11-19T03:05:40.309649+00:00",
+  "installerVersion": "1.9.0",
+  "profileSha256": "c6c81a49af97313513079cb05a2940fd0802bef0765a65d2bf31a5e6764a9678",
+  "results": [
+    {
+      "skill": "gsap",
+      "target": "claude-code",
+      "fileCount": 3,
+      "entrypointSha256": "d65cfadd0040f3b72377b43e5ccc088925a1397f19fcd258abcf4ed72100aa16",
+      "payload": "pass",
+      "scopedRemoval": "pass",
+      "projectClean": true,
+      "status": "pass"
+    },
+    {
+      "skill": "css-animations",
+      "target": "claude-code",
+      "fileCount": 1,
+      "entrypointSha256": "a8239c96ac9400e40b806ad0b14a059cf643c58fcef4bfdc630723fa130f93ef",
+      "payload": "pass",
+      "scopedRemoval": "pass",
+      "projectClean": true,
+      "status": "pass"
+    },
+    {
+      "skill": "remotion-to-hyperframes",
+      "target": "claude-code",
+      "fileCount": 70,
+      "entrypointSha256": "1f02264b42290b4e170edaba7d6d1d04b7ae399b4b5e4b43ecc9c1d9e8b2a34b",
+      "payload": "pass",
+      "scopedRemoval": "pass",
+      "projectClean": true,
+      "status": "pass"
+    },
+    {
+      "skill": "gsap",
+      "target": "codex",
+      "fileCount": 3,
+      "entrypointSha256": "d65cfadd0040f3b72377b43e5ccc088925a1397f19fcd258abcf4ed72100aa16",
+      "payload": "pass",
+      "scopedRemoval": "pass",
+      "projectClean": true,
+      "status": "pass"
+    },
+    {
+      "skill": "css-animations",
+      "target": "codex",
+      "fileCount": 1,
+      "entrypointSha256": "a8239c96ac9400e40b806ad0b14a059cf643c58fcef4bfdc630723fa130f93ef",
+      "payload": "pass",
+      "scopedRemoval": "pass",
+      "projectClean": true,
+      "status": "pass"
+    },
+    {
+      "skill": "remotion-to-hyperframes",
+      "target": "codex",
+      "fileCount": 70,
+      "entrypointSha256": "1f02264b42290b4e170edaba7d6d1d04b7ae399b4b5e4b43ecc9c1d9e8b2a34b",
+      "payload": "pass",
+      "scopedRemoval": "pass",
+      "projectClean": true,
+      "status": "pass"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "sourceRoot": "free-skills",
+  "skills": [
+    "gsap",
+    "css-animations",
+    "remotion-to-hyperframes"
+  ],
+  "targets": [
+    "claude-code",
+    "codex"
+  ]
+}

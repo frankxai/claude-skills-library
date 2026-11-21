@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Easing, plotted. | Motion studies</title>
+  <style>
+    :root {
+      --paper: #f4f1e8;
+      --ink: #1c253a;
+      --blue: #2544bb;
+      --hot: #ff916c;
+      --rule: #b8b9b4;
+      --mono: ui-monospace, monospace;
+      color: var(--ink);
+      background: var(--paper);
+      font:
+        17px/1.48 Arial,
+        Helvetica,
+        sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      max-width: 1440px;
+      margin: auto;
+      padding: clamp(24px, 5vw, 72px);
+    }
+    header,
+    footer,
+    .buttons,
+    .meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+    header,
+    footer,
+    .meta,
+    .formula {
+      font: 13px/1.4 var(--mono);
+    }
+    header {
+      padding-bottom: 19px;
+      border-bottom: 1px solid var(--ink);
+      letter-spacing: 0.07em;
+    }
+    h1 {
+      font-size: clamp(66px, 7.7vw, 116px);
+      line-height: 0.94;
+      letter-spacing: -0.078em;
+      font-weight: 550;
+      margin: 0 0 23px;
+    }
+    h1 span {
+      display: block;
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 0.83fr) minmax(0, 1.17fr);
+      gap: clamp(25px, 5vw, 84px);
+      align-items: center;
+      padding: clamp(35px, 6vw, 89px) 0;
+    }
+    p {
+      max-width: 39ch;
+      margin: 0 0 25px;
+    }
+    figure {
+      margin: 0;
+      background: var(--blue);
+      color: white;
+    }
+    figure svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    figcaption {
+      padding: 14px 8% 23px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font: 13px var(--mono);
+      color: #eff1ff;
+    }
+    fieldset {
+      border: 0;
+      padding: 0;
+      margin: 0 0 20px;
+    }
+    legend {
+      padding: 0;
+      margin-bottom: 8px;
+      font: 12px var(--mono);
+      letter-spacing: 0.06em;
+    }
+    .choice {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .choice label {
+      position: relative;
+    }
+    .choice span,
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 8px 12px;
+      font:
+        15px Arial,
+        sans-serif;
+      border: 1px solid var(--rule);
+      cursor: pointer;
+    }
+    .choice input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+    .choice input:checked + span {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+    .choice input:focus-visible + span,
+    button:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 3px;
+    }
+    button {
+      gap: 8px;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid var(--ink);
+      padding-inline: 1px;
+    }
+    button svg {
+      width: 13px;
+      height: 13px;
+    }
+    .buttons {
+      justify-content: flex-start;
+    }
+    footer {
+      align-items: start;
+      border-top: 1px solid var(--ink);
+      padding-top: 15px;
+    }
+    footer span:last-child {
+      text-align: right;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    noscript p {
+      margin: 12px 0;
+    }
+    @media (max-width: 750px) {
+      .plot-labels {
+        font-size: 22px;
+      }
+      main {
+        grid-template-columns: 1fr;
+        gap: 26px;
+        padding: 33px 0;
+      }
+      h1 span {
+        display: inline;
+      }
+      h1 {
+        font-size: clamp(58px, 13vw, 89px);
+      }
+      header,
+      footer {
+        font-size: 11px;
+      }
+      .choice span {
+        font-size: 14px;
+      }
+    }
+  </style>
+  <header><b>MOTION STUDIES</b><span>TIME / POSITION</span></header>
+  <main>
+    <section aria-labelledby="title">
+      <h1 id="title">Easing, <span>plotted.</span></h1>
+      <p>
+        Move the same distance in one second. Change the curve to see where that
+        second goes.
+      </p>
+      <div id="controls" hidden>
+        <fieldset>
+          <legend>CURVE</legend>
+          <div class="choice">
+            <label
+              ><input type="radio" name="curve" value="0" /><span
+                >Linear</span
+              ></label
+            >
+            <label
+              ><input type="radio" name="curve" value="1" checked /><span
+                >Ease out</span
+              ></label
+            >
+            <label
+              ><input type="radio" name="curve" value="2" /><span
+                >Ease in–out</span
+              ></label
+            >
+          </div>
+        </fieldset>
+        <div class="buttons">
+          <button id="play" type="button">
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path fill="currentColor" d="M2 1l9 5-9 5z" /></svg
+            ><span>Play one second</span>
+          </button>
+        </div>
+      </div>
+      <noscript
+        ><p>
+          Linear motion travels at constant speed. Ease out starts fast and
+          settles. Ease in–out starts and ends slowly.
+        </p></noscript
+      >
+    </section>
+    <figure>
+      <div id="plot">
+        <svg viewBox="0 0 610 379" aria-hidden="true">
+          <path
+            fill="none"
+            stroke="#f4f1e8"
+            stroke-width="3"
+            d="M50 310C220 86 390 86 560 86"
+          />
+          <circle cx="560" cy="86" r="9" fill="#ff916c" />
+        </svg>
+      </div>
+      <figcaption>
+        <span id="curve-name">Ease out</span
+        ><span id="equation">p(t) = 1 − (1 − t)³</span>
+      </figcaption>
+    </figure>
+  </main>
+  <footer>
+    <span>READ THE PLOT</span
+    ><span id="note" aria-live="polite"
+      >Cover distance early. Settle gently.</span
+    >
+  </footer>
+  <script>
+/* Shared numerical model and drawing used by the interactive and the two film adapters. */
+(function (scope) {
+  const studies = [
+    {
+      name: "Linear",
+      formula: "p(t) = t",
+      note: "Equal intervals cover equal distances.",
+      ease: (t) => t,
+    },
+    {
+      name: "Ease out",
+      formula: "p(t) = 1 − (1 − t)³",
+      note: "Cover distance early. Settle gently.",
+      ease: (t) => 1 - (1 - t) ** 3,
+    },
+    {
+      name: "Ease in–out",
+      formula: "p(t) = 3t² − 2t³",
+      note: "Accelerate, cross, then settle.",
+      ease: (t) => t * t * (3 - 2 * t),
+    },
+  ];
+  const blue = "#2544bb",
+    ink = "#1c253a",
+    white = "#f4f1e8",
+    hot = "#ff916c";
+  const sans = "Arial, Helvetica, sans-serif",
+    mono = "monospace";
+  const round = (value) => Number(value.toFixed(2));
+  function pathFor(ease, band) {
+    const points = [];
+    for (let i = 0; i <= 80; i++) {
+      const t = i / 80;
+      const envelope = Math.sin(Math.PI * t);
+      points.push(
+        (i === 0 ? "M" : "L") +
+          round(50 + t * 510 + band * 0.32 * envelope) +
+          " " +
+          round(310 - 224 * ease(t) + band * envelope),
+      );
+    }
+    return points.join(" ");
+  }
+  function geometry(index) {
+    const ease = studies[index].ease;
+    let grid = "",
+      lines = "",
+      samples = "";
+    for (let i = 0; i <= 10; i++) {
+      const x = 50 + i * 51;
+      grid += '<path d="M' + x + ' 58V328" stroke-dasharray="2 8"/>';
+    }
+    for (let i = 0; i <= 4; i++) {
+      const y = 310 - i * 56;
+      grid += '<path d="M40 ' + y + 'H570" stroke-dasharray="2 8"/>';
+    }
+    for (let i = 0; i < 23; i++) {
+      const band = 1.6 + 2.15 * i;
+      lines +=
+        '<path d="' +
+        pathFor(ease, band) +
+        '" fill="none" stroke="#d0dcff" stroke-opacity="' +
+        round(0.76 - i * 0.019) +
+        '" stroke-width="1.15"/>';
+    }
+    for (let i = 0; i <= 10; i++) {
+      const t = i / 10;
+      samples +=
+        '<circle cx="' +
+        (50 + 510 * t) +
+        '" cy="' +
+        round(310 - 224 * ease(t)) +
+        '" r="2.9" fill="' +
+        white +
+        '"/>';
+    }
+    return (
+      '<g fill="none" stroke="#b9ceff" stroke-opacity=".39">' +
+      grid +
+      "</g>" +
+      lines +
+      '<path d="' +
+      pathFor(ease, 0) +
+      '" fill="none" stroke="' +
+      white +
+      '" stroke-width="2.3"/>' +
+      samples +
+      '<g class="plot-labels" font-family="' +
+      mono +
+      '" font-size="13" fill="#d4ddff"><text x="49" y="352">0.0 s</text><text x="560" y="352" text-anchor="end">1.0 s</text><text x="47" y="36">POSITION / TIME</text></g>'
+    );
+  }
+  const plots = studies.map((_, index) => geometry(index));
+  function marker(index, t) {
+    const x = round(50 + 510 * t),
+      y = round(310 - 224 * studies[index].ease(t));
+    return (
+      '<path d="M' +
+      x +
+      " " +
+      y +
+      'V317" stroke="' +
+      hot +
+      '" stroke-dasharray="3 5"/><circle cx="' +
+      x +
+      '" cy="' +
+      y +
+      '" r="8.5" fill="' +
+      hot +
+      '" stroke="' +
+      ink +
+      '" stroke-width="2"/>'
+    );
+  }
+  function chart(index, t) {
+    return (
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 610 379" aria-hidden="true">' +
+      plots[index] +
+      "<g data-cursor>" +
+      marker(index, t) +
+      "</g></svg>"
+    );
+  }
+  function text(x, y, size, content, options = {}) {
+    return (
+      '<text x="' +
+      x +
+      '" y="' +
+      y +
+      '" font-family="' +
+      (options.font || sans) +
+      '" font-size="' +
+      size +
+      '" fill="' +
+      (options.fill || ink) +
+      '" ' +
+      (options.attrs || "") +
+      ">" +
+      content +
+      "</text>"
+    );
+  }
+  // Three three-second plates. A fixed hold brackets the one-second demonstration.
+  function filmFrame(seconds, width, height) {
+    const index = Math.max(0, Math.min(2, Math.floor(seconds / 3)));
+    const t = Math.max(0, Math.min(1, seconds - index * 3 - 0.72));
+    const item = studies[index],
+      portrait = height > width;
+    const w = portrait ? 720 : 1280,
+      h = portrait ? 1280 : 720;
+    const pad = portrait ? 50 : 68,
+      plateX = portrait ? 34 : 574,
+      plateY = portrait ? 471 : 137;
+    const plateW = portrait ? 652 : 654,
+      plateH = portrait ? 453 : 433;
+    const graphic =
+      '<g transform="translate(' +
+      plateX +
+      " " +
+      plateY +
+      ')"><rect width="' +
+      plateW +
+      '" height="' +
+      plateH +
+      '" fill="' +
+      blue +
+      '"/><g transform="translate(0 10) scale(' +
+      round(plateW / 610) +
+      ')">' +
+      plots[index] +
+      marker(index, t) +
+      "</g></g>";
+    let paper =
+      '<rect width="' +
+      w +
+      '" height="' +
+      h +
+      '" fill="' +
+      white +
+      '"/><path d="M' +
+      pad +
+      " 98H" +
+      (w - pad) +
+      '" stroke="' +
+      ink +
+      '"/>';
+    paper +=
+      text(pad, 74, 19, "MOTION STUDIES", { font: mono }) +
+      text(w - pad, 74, 19, "TIME / POSITION", {
+        font: mono,
+        attrs: 'text-anchor="end"',
+      });
+    const lineTop = portrait ? 191 : 198;
+    paper += text(pad, lineTop, 21, "Easing, plotted.", { font: mono });
+    const words =
+      index === 2
+        ? ["Ease", "in–out"]
+        : index === 1
+          ? ["Ease", "out"]
+          : ["Linear"];
+    words.forEach((word, i) => {
+      paper += text(pad, lineTop + 103 + i * 91, portrait ? 105 : 96, word, {
+        attrs: 'letter-spacing="-6" font-weight="600"',
+      });
+    });
+    const position = portrait ? 1013 : 505;
+    paper +=
+      graphic +
+      text(pad, position, portrait ? 34 : 25, item.note) +
+      text(pad, position + 50, portrait ? 25 : 21, item.formula, {
+        font: mono,
+      });
+    // Each plate uses the same clock and moving mass so distance can be compared.
+    const y = portrait ? 1162 : 627,
+      end = w - pad,
+      travel = end - pad;
+    paper +=
+      '<path d="M' +
+      pad +
+      " " +
+      y +
+      "H" +
+      end +
+      '" stroke="' +
+      ink +
+      '" stroke-width="2"/>';
+    for (let i = 0; i <= 10; i++)
+      paper +=
+        '<path d="M' +
+        (pad + (travel * i) / 10) +
+        " " +
+        (y - 6) +
+        'v12" stroke="' +
+        ink +
+        '"/>';
+    const x = round(pad + travel * item.ease(t));
+    paper +=
+      '<circle cx="' +
+      x +
+      '" cy="' +
+      y +
+      '" r="12" fill="' +
+      hot +
+      '" stroke="' +
+      ink +
+      '" stroke-width="2"/>';
+    paper +=
+      text(pad, y + 45, 18, "DISTANCE", { font: mono }) +
+      text(end, y + 45, 18, "1 SECOND", {
+        font: mono,
+        attrs: 'text-anchor="end"',
+      });
+    return (
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' +
+      width +
+      '" height="' +
+      height +
+      '" viewBox="0 0 ' +
+      w +
+      " " +
+      h +
+      '">' +
+      paper +
+      "</svg>"
+    );
+  }
+  scope.MotionStudy = { studies, chart, marker, filmFrame };
+})(globalThis);
+
+</script>
+  <script>
+    const { studies, chart, marker } = MotionStudy;
+    const controls = document.getElementById("controls"),
+      plot = document.getElementById("plot"),
+      button = document.getElementById("play");
+    const preference = matchMedia("(prefers-reduced-motion: reduce)");
+    let index = 1,
+      frame = null;
+    function stop() {
+      cancelAnimationFrame(frame);
+      frame = null;
+    }
+    function show(i) {
+      stop();
+      index = i;
+      plot.innerHTML = chart(i, 1);
+      document.getElementById("curve-name").textContent = studies[i].name;
+      document.getElementById("equation").textContent = studies[i].formula;
+      document.getElementById("note").textContent = studies[i].note;
+    }
+    function preferenceChanged() {
+      show(index);
+      if (preference.matches && button === document.activeElement) {
+        controls.querySelector("input:checked").focus();
+      }
+      button.hidden = preference.matches;
+    }
+    controls.addEventListener("change", (event) =>
+      show(Number(event.target.value)),
+    );
+    button.addEventListener("click", () => {
+      stop();
+      if (preference.matches) return;
+      const start = performance.now(),
+        cursor = plot.querySelector("[data-cursor]");
+      function advance(now) {
+        const t = Math.min(1, Math.max(0, (now - start) / 1000));
+        cursor.innerHTML = marker(index, t);
+        frame = t < 1 ? requestAnimationFrame(advance) : null;
+      }
+      advance(start);
+    });
+    preference.addEventListener("change", preferenceChanged);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) show(index);
+    });
+    window.addEventListener("pagehide", stop);
+    preferenceChanged();
+    controls.hidden = false;
+  </script>
+</html>
