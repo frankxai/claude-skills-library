@@ -72,8 +72,8 @@ export function check(cwd = process.cwd()) {
   const providers = ['codex', 'gemini', 'agy', 'grok'].filter(onPath);
   const items = [
     { need: 'core', name: 'Node.js >= 20 (scanner, sweep)', ok: nodeMajor >= MIN_NODE, fix: `Install Node ${MIN_NODE} or newer.` },
-    { need: 'evidence', name: 'Playwright + Chromium (screenshots)', ok: playwrightAvailable(cwd), fix: 'pnpm add -D playwright && pnpm exec playwright install chromium, or set PLAYWRIGHT_CHROMIUM_EXECUTABLE.' },
-    { need: 'evidence', name: 'visual-proof skill (capture runner)', ok: skillInstalled('visual-proof', cwd), fix: 'Install the web-excellence pack: packs/web-excellence/install.sh <repo>.' },
+    { need: 'evidence', name: 'Playwright + Chromium (studio-eye: screenshots, vitals, contrast, focus)', ok: playwrightAvailable(cwd), fix: 'pnpm add -D playwright && pnpm exec playwright install chromium, or set PLAYWRIGHT_CHROMIUM_EXECUTABLE.' },
+    { need: 'craft', name: 'visual-proof skill (optional capture runner; bin/studio-eye.mjs covers capture)', ok: skillInstalled('visual-proof', cwd), fix: 'Optional: install the web-excellence pack, packs/web-excellence/install.sh <repo>.' },
     { need: 'independence', name: `second-provider CLI for the critic${providers.length ? ` (${providers.join(', ')})` : ''}`, ok: providers.length > 0, fix: 'Install and sign in to one of: codex, gemini, agy, grok. Without it every critique is recorded as same-model.' },
     { need: 'craft', name: 'web-release-gate skill (build contract)', ok: skillInstalled('web-release-gate', cwd), fix: 'Install the web-excellence pack.' },
     { need: 'craft', name: 'humanizer skill (copy pass)', ok: skillInstalled('humanizer', cwd), fix: 'Optional: install a humanizer skill for the final copy pass.' },

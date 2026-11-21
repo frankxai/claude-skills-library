@@ -26,6 +26,7 @@ node plugins/starlight-web-studio/bin/studio-doctor.mjs                         
 node plugins/starlight-web-studio/bin/studio-scan.mjs https://example.com          # markdown report
 node plugins/starlight-web-studio/bin/studio-scan.mjs https://example.com --json   # exit 1 on any P0
 node plugins/starlight-web-studio/bin/studio-scan.mjs http://localhost:3000 --allow-private   # private and loopback addresses are refused without it, on every redirect and sitemap hop
+node plugins/starlight-web-studio/bin/studio-eye.mjs https://example.com --out .studio/x/eye  # browser pass: screenshots, vitals, contrast, focus, targets, type, composition; /25
 node plugins/starlight-web-studio/bin/studio-sweep.mjs --targets targets.json --out .studio/sweeps
 node plugins/starlight-web-studio/bin/materials-gate.mjs <repo> [--json]         # DESIGN.md, gated refraction, renderer count per route, motion score; exit 1 on error
 ```
@@ -83,8 +84,27 @@ llms.txt and the sitemap. Six dimensions, five points each:
 - **craft**: all-caps runs, stock vocabulary, placeholder copy, unbacked social proof
 - **speed**: HTML weight, time to first byte, script count, font families
 
-It cannot see layout, motion or contrast over imagery. That is the scout's
-screenshot pass and the ten-dimension eye rubric in `skills/studio-audit`.
+It cannot see layout, motion or contrast. That is `bin/studio-eye.mjs`.
+
+## The browser pass
+
+`bin/studio-eye.mjs` opens the page in Chromium (Playwright) at 375, 768 and 1440,
+again at 375 with reduced motion and at 1440 in dark scheme, writes every
+screenshot, and measures what only a rendered page shows. Five dimensions, five
+points each:
+
+- **speed**: LCP, CLS, TBT on the phone under a 4x CPU, 150 ms, 1.6 Mbps lab profile; script time before first paint; bytes
+- **access**: contrast on solid backdrops (text over imagery is listed as unverified, never passed), names, h1, landmarks, lang, alt, and a keyboard pass that compares every stop focused and at rest
+- **mobile**: sideways scroll against the emulated screen (not the widened layout viewport), viewport meta, tap targets at the 24 px WCAG 2.5.8 floor and the 44 px aim
+- **type**: characters per line, number of sizes, regularity of the scale's ratios, phone text under 12 px
+- **composition**: h1 and one action on the first screen at both widths, competing actions, shared left edges, 4 px spacing grid, text left at opacity 0, animation that ignores reduced motion
+
+Text waiting at opacity 0 for a scroll reveal is reported, then measured in its
+revealed state, so a reveal cannot hide grey body copy from the contrast check.
+The numbers are evidence for the eye rubric, never a replacement for it.
+
+A complete review using all three layers on an original page, before and after,
+with an independent critique, is in [examples/kade-review](examples/kade-review/README.md).
 
 Two judgement calls are built in. Blocking AI training crawlers is reported but
 costs no points; blocking AI search agents costs a point. A missing llms.txt is
@@ -113,7 +133,7 @@ moving or reinstalling the plugin.
 
 The repo's own `design.md` and `taste.md` outrank every skill here. The studio
 loads these when installed: the `web-excellence` pack in this repo
-(`web-release-gate`, `visual-proof`, `core-web-vitals`, `gpu-surface`),
+(`web-release-gate`, `visual-proof` as an alternative capture runner, `core-web-vitals`, `gpu-surface`),
 `impeccable`, `taste-skill`, `ui-ux-pro-max`, `frontend-design`, Emil Kowalski's
 skills, GreenSock's `gsap-skills`, and `humanizer`.
 
@@ -129,14 +149,17 @@ mirror or bulk-download a library, which both libraries' terms forbid.
 ## Tests and evals
 
 ```bash
-node --test plugins/starlight-web-studio/tests/*.test.mjs    # 176 tests: scanner and its network guard, RFC 9309 robots, sweep, workflow, GPU gate, materials gate
+node --test plugins/starlight-web-studio/tests/*.test.mjs    # scanner and its network guard, RFC 9309 robots, browser pass (real Chromium when Playwright is present), sweep, workflow, GPU gate, materials gate
 claude plugin eval plugins/starlight-web-studio
 ```
 
 The workflow test runs the real `workflows/studio-audit.js` against stub agents,
 so "a site with an incomplete review is never ranked" is checked, not claimed.
 
-The evals check three behaviours: the scout scans before scoring and makes no
+The evals check five behaviours: the scout scans before scoring and makes no
 visual claim without a screenshot, the critic never passes off a same-model
-review as independent, and a sweep refuses to merge or publish a new route on
-its own while still doing the work that needs no approval.
+review as independent, references are carded rather than mirrored, a sweep
+refuses to merge or publish a new route on its own while still doing the work
+that needs no approval, and a perfect measured score is never taken as a ship
+decision when the page carries unbacked proof (`measured-is-not-judged`, from the
+Kade review, where exactly that happened).

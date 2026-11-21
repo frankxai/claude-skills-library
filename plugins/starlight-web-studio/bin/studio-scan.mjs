@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Model-free audit of one live page: search, answer-engine, mobile, access, craft, speed.
 // It reads what a crawler reads (server HTML, robots.txt, llms.txt, sitemap), so it
-// cannot see layout or motion. Those need eyes: the visual-proof capture and the
+// cannot see layout or motion. Those need eyes: the studio-eye browser pass and the
 // studio rubric. A clean scan is necessary, never sufficient.
 //
 // Exit codes: 0 scanned, no P0 · 1 scanned, at least one P0 · 3 page could not be fetched

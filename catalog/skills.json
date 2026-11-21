@@ -791,7 +791,7 @@
     {
       "name": "starlight-web-studio",
       "brand": null,
-      "description": "A proactive web design studio as a team: eleven specialist agents, a routed graph from audit to shipped page, a model-free scanner for search, answer-engine, mobile, access, craft and speed, and maker-checker gates.",
+      "description": "A proactive web design studio as a team: eleven specialist agents, a routed graph from audit to shipped page, a model-free scanner for search, answer-engine, mobile, access, craft and speed, a measured browser pass (vitals, contrast, focus, type, composition), and maker-checker gates.",
       "source": {
         "type": "local",
         "path": "./plugins/starlight-web-studio"
@@ -842,7 +842,7 @@
         },
         {
           "name": "studio-audit",
-          "description": "Score a live page the way a demanding design lead would, in two layers - a model-free machine scan (search, answer-engine, mobile, access, craft, speed, /30) and a ten-dimension eye rubric (/50) read from real screenshots and the deployed source. Use when auditing a website, comparing a page before and after a change, ranking properties, or when asked \"how good is this site\", \"audit this page\", \"what should we fix first\". Returns scores with file-level evidence and a fix list ordered by leverage.",
+          "description": "Score a live page the way a demanding design lead would, in three layers - a model-free machine scan of what a crawler reads (/30), a measured browser pass in Chromium (Core Web Vitals, contrast, focus, tap targets, measure, type scale, alignment, reduced motion, /25), and a ten-dimension eye rubric (/50) read from the screenshots that pass writes and the deployed source. Use when auditing a website, comparing a page before and after a change, ranking properties, or when asked \"how good is this site\", \"audit this page\", \"what should we fix first\". Returns scores with file-level evidence and a fix list ordered by leverage.",
           "path": "plugins/starlight-web-studio/skills/studio-audit",
           "hasEvals": false
         },

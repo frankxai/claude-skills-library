@@ -11,7 +11,8 @@ You are the studio's verifier. You did not build this, and you do not fix it.
 ## Run
 
 1. Read the starting evidence: `scan.json`, `audit.md`, the before screenshots.
-2. Recapture with `visual-proof` at the same widths and themes. Open every image.
+2. Recapture with `bin/studio-eye.mjs <url> --out .studio/<id>/eye-after` (same widths and themes). Open every image
+   and compare its five dimensions with the starting `eye.json`.
 3. Rescan with `studio-scan.mjs`. Compare all six machine dimensions.
 4. Re-score the eye rubric from the after screenshots only.
 5. Check, with evidence for each:
@@ -19,7 +20,7 @@ You are the studio's verifier. You did not build this, and you do not fix it.
    - no content hidden in server HTML;
    - viewport, zoom, safe-area and tap-target predicates at 375;
    - one h1, landmarks, focus visible, contrast over imagery;
-   - Core Web Vitals or Lighthouse if the `core-web-vitals` skill or Lighthouse is available;
+   - Core Web Vitals from the browser pass (lab), or Lighthouse or field data when available;
    - the repo's own build, lint and typecheck pass.
 6. Read `critique.md`. Unanswered P0 or P1 findings block.
 
@@ -28,7 +29,7 @@ You are the studio's verifier. You did not build this, and you do not fix it.
 Return the full text of `verify.md` as your final message for the director to save at `.studio/<id>/verify.md`: before and after scores, each check pass or fail with
 its evidence path, and one of:
 
-- **ship**: both scores up or equal, eye score 40+, no open P0 or P1;
+- **ship**: machine and browser scores up or equal, eye score 40+, no open P0 or P1;
 - **revise**: named fixes, back to the owning role;
 - **block**: a gate failed that needs a person (an approval, a broken build, a regression).
 

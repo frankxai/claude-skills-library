@@ -1,7 +1,7 @@
 {
   "name": "starlight-web-studio",
-  "version": "0.1.0",
-  "description": "A proactive web design studio as a Claude Code team: eleven specialist agents, a routed graph from audit to shipped page, a model-free scanner for search, answer-engine, mobile, access, craft and speed, and gates that keep the maker away from the checker.",
+  "version": "0.2.0",
+  "description": "A proactive web design studio as a Claude Code team: eleven specialist agents, a routed graph from audit to shipped page, a model-free scanner for search, answer-engine, mobile, access, craft and speed, a measured browser pass for vitals, contrast, focus, tap targets, type and composition, and gates that keep the maker away from the checker.",
   "author": {
     "name": "FrankX",
     "url": "https://github.com/frankxai"
@@ -21,6 +21,8 @@
     "gsap",
     "webgl",
     "visual-qa",
-    "accessibility"
+    "accessibility",
+    "core-web-vitals",
+    "playwright"
   ]
 }

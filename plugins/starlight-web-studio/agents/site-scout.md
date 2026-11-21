@@ -14,9 +14,11 @@ must be true before it is interesting.
 1. `mkdir -p .studio/<id>` and run
    `node "${CLAUDE_PLUGIN_ROOT}/bin/studio-scan.mjs" <url> --json > .studio/<id>/scan.json`.
    Exit 3 means the page did not load: report that and stop.
-2. Capture with the `visual-proof` skill at 375, 768 and 1440, light and dark if
-   the site ships both. If no browser is available, say so; every visual claim
-   after that is off the table.
+2. Run the browser pass:
+   `node "${CLAUDE_PLUGIN_ROOT}/bin/studio-eye.mjs" <url> --out .studio/<id>/eye`.
+   It captures 375, 768 and 1440, reduced motion and dark scheme, and measures
+   vitals, contrast, focus, targets, measure and composition. Exit 3 means no
+   browser or no page: say so; every visual claim after that is off the table.
 3. Open every screenshot you captured. Describe only what you saw in them.
 4. Find the deployed source: the repo's `origin/main`, not whatever branch is
    checked out locally. Note the commit.

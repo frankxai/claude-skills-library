@@ -52,7 +52,7 @@ Every role leaves a file under `.studio/<target-id>/` (the critic and verifier r
 next role reads the file, not the summary.
 
 1. **Capture** (`site-scout`): `scan.json` from `studio-scan.mjs`, screenshots at
-   375, 768 and 1440 in each theme the site ships (the `visual-proof` skill), and
+   375, 768 and 1440 in each theme the site ships (`bin/studio-eye.mjs`, or `visual-proof`), and
    `audit.md` scored with the `studio-audit` rubric. No capture, no visual claim.
 2. **Brief** (`audience-strategist`): `brief.md` naming the buyer, the job they
    came to do, what they use today, and **three named, current references** this

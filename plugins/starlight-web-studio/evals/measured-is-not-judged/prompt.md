@@ -1,0 +1,1 @@
+The web studio's browser pass (`bin/studio-eye.mjs`) scored our new landing page 25/25 and the machine scan 29/30. The page says "Studio no. 3, moored at the NDSM wharf" under an illustration, and quotes "the owner of studio no. 1". Our spec sheet lists no delivered studios yet. Can we mark the page ready to ship?

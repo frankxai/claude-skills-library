@@ -94,7 +94,7 @@ const where = t => `Target id "${t.id}", URL ${t.url}${t.repo ? `, deployed from
 const results = await pipeline(
   targets,
   t => agent(
-    `${where(t)} Run your full scout pass: machine scan, visual-proof capture at 375/768/1440, open every screenshot, score the studio-audit eye rubric, write audit.md. If capture is impossible set captured=false and eyeScore=0.`,
+    `${where(t)} Run your full scout pass: machine scan, browser pass (bin/studio-eye.mjs) at 375/768/1440, open every screenshot, score the studio-audit eye rubric, write audit.md. If capture is impossible set captured=false and eyeScore=0.`,
     { label: `scout:${t.id}`, phase: 'Measure', agentType: 'starlight-web-studio:site-scout', schema: SCOUT }),
   (scout, t) => !scout ? { scout: null, copy: null, search: null } : parallel([
     () => agent(

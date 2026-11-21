@@ -1,13 +1,14 @@
 ---
 name: studio-audit
-description: Score a live page the way a demanding design lead would, in two layers - a model-free machine scan (search, answer-engine, mobile, access, craft, speed, /30) and a ten-dimension eye rubric (/50) read from real screenshots and the deployed source. Use when auditing a website, comparing a page before and after a change, ranking properties, or when asked "how good is this site", "audit this page", "what should we fix first". Returns scores with file-level evidence and a fix list ordered by leverage.
+description: Score a live page the way a demanding design lead would, in three layers - a model-free machine scan of what a crawler reads (/30), a measured browser pass in Chromium (Core Web Vitals, contrast, focus, tap targets, measure, type scale, alignment, reduced motion, /25), and a ten-dimension eye rubric (/50) read from the screenshots that pass writes and the deployed source. Use when auditing a website, comparing a page before and after a change, ranking properties, or when asked "how good is this site", "audit this page", "what should we fix first". Returns scores with file-level evidence and a fix list ordered by leverage.
 ---
 
 # Studio audit
 
-Two layers, never merged into one number. The machine layer is what a crawler
-sees. The eye layer is what a person feels. A page can score 30/30 on the first
-and 20/50 on the second; that gap is usually the whole story.
+Three layers, never merged into one number. The machine layer is what a crawler
+sees. The browser layer is what a rendered page measures. The eye layer is what a
+person feels. A page can score 30/30 and 25/25 and still 20/50 on the eye; that gap
+is usually the whole story.
 
 ## Layer 1: machine scan (/30)
 
@@ -23,10 +24,37 @@ cannot see layout, motion or contrast over imagery.
 A P0 is not automatically a bug. `noindex` on a funnel page may be deliberate.
 Confirm intent from the repo or the registry before proposing a fix.
 
-## Layer 2: eye rubric (/50)
+## Layer 2: browser pass (/25)
 
-Capture first with `visual-proof` at 375, 768 and 1440, light and dark if the
-site ships both. Open every screenshot. Read the deployed source (`origin/main`,
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/bin/studio-eye.mjs" <url> --out .studio/<id>/eye   # add --allow-private for localhost
+```
+
+Opens the page in Chromium at 375, 768 and 1440, plus 375 with reduced motion and
+1440 in dark scheme, and writes `eye.json`, `eye.md` and the screenshots. Five
+dimensions (speed, access, mobile, type, composition), 5 points each, costed like
+the scan. What it measures and how it decides:
+
+- **speed**: LCP, CLS and TBT on the phone under a lab profile (4x CPU, 150 ms RTT,
+  1.6 Mbps), plus script time before first paint, bytes and requests. Lab, not field.
+- **access**: contrast for text on a solid backdrop (text over an image or gradient
+  is listed as unverified, never passed), accessible names, h1 count, landmarks,
+  lang, image alt, and a real keyboard pass that compares each stop focused and at rest.
+- **mobile**: sideways scroll against the emulated screen, viewport meta, tap
+  targets against the 24 px WCAG 2.5.8 floor and the 44 px aim; inline links exempt.
+- **type**: characters per line, distinct sizes, how regular the scale's ratios are,
+  text under 12 px on a phone.
+- **composition**: h1 and one primary action on the first screen at both ends,
+  competing actions, shared left edges, spacing on a 4 px grid, text left at
+  opacity 0, animations that ignore reduced motion.
+
+Exit 3 means it did not run (no Playwright, page did not load, refused target).
+Report that layer as not run; never fill it in by eye.
+
+## Layer 3: eye rubric (/50)
+
+Open every screenshot the browser pass wrote (or capture with `visual-proof` at 375,
+768 and 1440, light and dark, when that is the house runner). Read the deployed source (`origin/main`,
 not a local branch that may be ahead or divergent). Score each dimension 0 to 5
 and name the file at fault.
 
@@ -51,7 +79,7 @@ estate's existing excellence scoreboard, so a run here can append to it.
 `.studio/<id>/audit.md`:
 
 1. Header: domain, tier, both scores, date, deployed commit.
-2. The two score tables with one-line justifications that name files.
+2. The three score tables with one-line justifications that name files.
 3. Fix list: number, fix, where, change, effort (S/M/L), ordered by leverage.
 4. "What excellent feels like here": one paragraph, the target state in plain words.
 
@@ -65,6 +93,8 @@ Inside the Starlight estate, also append one line to
 ## Rules
 
 - No score without the screenshot it came from.
+- A browser-layer number is evidence for an eye score, not a substitute for it: 25/25 with a
+  generic first screen is still a generic first screen.
 - A blank stretch in a full-page screenshot is not yet a finding. Full-page captures never scroll, so
   scroll-driven content (CSS `animation-timeline: view()`, ScrollTrigger reveals, IntersectionObserver fades)
   stays at its starting state. Read the section's source first: if it has a designed reduced-motion and
