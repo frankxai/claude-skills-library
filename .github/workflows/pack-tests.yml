@@ -4,11 +4,13 @@ on:
   pull_request:
     paths:
       - 'packs/**'
+      - 'plugins/**'
       - '.github/workflows/pack-tests.yml'
   push:
     branches: [main]
     paths:
       - 'packs/**'
+      - 'plugins/**'
 
 jobs:
   node-pack-tests:
@@ -18,11 +20,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run every pack's node test suite
+      - name: Run every pack's and plugin's node test suite
         run: |
           set -euo pipefail
           shopt -s nullglob
-          files=(packs/*/tests/*.test.mjs)
+          files=(packs/*/tests/*.test.mjs plugins/*/tests/*.test.mjs)
           if [ ${#files[@]} -eq 0 ]; then echo "no node pack tests found"; exit 0; fi
           git config --global user.email ci@example.invalid
           git config --global user.name ci

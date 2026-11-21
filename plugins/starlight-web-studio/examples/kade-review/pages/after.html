@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kade: a 38 m² solar floating studio, from €248,000</title>
+<meta name="description" content="A 38 m² solar floating studio on a concrete hull, built in Zaandam in seven months. From €248,000, mooring excluded.">
+<link rel="canonical" href="https://kade.example/">
+<meta property="og:title" content="Kade floating studios">
+<meta property="og:description" content="38 m² plus a 9 m² loft on a concrete hull. 9 kWp solar, 30 kWh battery. From €248,000, mooring excluded.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://kade.example/hero.svg">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1d24" media="(prefers-color-scheme: dark)">
+<link rel="preload" as="image" href="hero.svg" fetchpriority="high">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"Organization","@id":"https://kade.example/#org","name":"Kade","url":"https://kade.example/"},
+ {"@type":"Product","name":"Kade floating studio","brand":{"@id":"https://kade.example/#org"},
+  "description":"38 m² timber floating studio with a 9 m² loft on a 14 × 4.2 m concrete hull; FSC larch, triple glazing, air-water heat pump, 9 kWp solar roof and 30 kWh LFP battery.",
+  "offers":{"@type":"Offer","price":"248000","priceCurrency":"EUR","priceSpecification":{"@type":"PriceSpecification","minPrice":"248000","priceCurrency":"EUR"},"availability":"https://schema.org/PreOrder"}}]}
+</script>
+<style>
+  :root {
+    --paper: #f4f1ea; --ink: #13232b; --ink-2: #3c4b52; --rule: #d9d3c7;
+    --copper: #9c4520; --copper-fill: #b5562b; --on-copper: #fff; --card: #fbf9f4;
+    --plan-line: #13232b; --plan-fill: #fbf9f4; --art-edge: transparent;
+    --step--1: 0.8125rem; --step-0: 1rem; --step-1: 1.25rem; --step-2: 1.5625rem;
+    --step-3: 1.9375rem; --step-4: 2.4375rem; --step-5: 3.0625rem;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px;
+    --measure: 62ch; --edge: clamp(16px, 5vw, 64px); --wrap: 1200px;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, "Book Antiqua", Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #0f1d24; --ink: #eee8dc; --ink-2: #b9c2c4; --rule: #2a3b43; --copper: #e39a6c; --copper-fill: #e39a6c; --on-copper: #13232b; --card: #15262e;
+      --plan-line: #eee8dc; --plan-fill: #15262e; --art-edge: #3a4d56; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: var(--step-0)/1.6 var(--sans); }
+  img, svg { max-width: 100%; height: auto; display: block; }
+  a { color: inherit; text-underline-offset: 0.2em; }
+  :focus-visible { outline: 3px solid var(--copper); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding-inline: var(--edge); }
+  .skip { position: absolute; left: var(--s4); top: -64px; display: inline-flex; align-items: center; min-height: 44px; background: var(--ink); color: var(--paper); padding: 0 var(--s4); z-index: 10; }
+  .skip:focus { top: var(--s4); }
+
+  header.top { border-bottom: 1px solid var(--rule); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 64px; gap: var(--s4); }
+  .mark { display: inline-flex; align-items: center; min-height: 44px; font: 600 var(--step-1)/1 var(--serif); text-decoration: none; letter-spacing: 0.02em; }
+  nav ul { display: flex; list-style: none; margin: 0 calc(-1 * var(--s3)) 0 0; padding: 0; }
+  nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 var(--s3); text-decoration: none; color: var(--ink-2); }
+  nav a:hover { color: var(--ink); }
+  @media (max-width: 420px) { nav a { padding: 0 var(--s2); font-size: var(--step--1); } nav ul { margin-right: calc(-1 * var(--s2)); } }
+
+  /* Hero: text is flush with the image's top edge, not centred against image plus caption. */
+  .hero { padding-block: var(--s7) var(--s8); }
+  .hero .wrap { display: grid; gap: var(--s6); align-items: start; }
+  @media (min-width: 900px) { .hero .wrap { grid-template-columns: 5fr 7fr; gap: var(--s8); } }
+  .eyebrow { font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--copper); margin: 0 0 var(--s4); line-height: 1; }
+  h1 { font: 500 var(--step-4)/1.08 var(--serif); letter-spacing: -0.015em; margin: 0 0 var(--s5); text-wrap: balance; }
+  @media (min-width: 900px) { h1 { font-size: var(--step-5); } }
+  .sub { font-size: var(--step-1); line-height: 1.5; color: var(--ink-2); margin: 0 0 var(--s5); max-width: 36ch; text-wrap: pretty; }
+  .from { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; margin: 0 0 var(--s6); padding-top: var(--s4); border-top: 1px solid var(--rule); }
+  .from b { font: 500 var(--step-3)/1 var(--serif); }
+  .from span { color: var(--ink-2); }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s5); }
+  .btn { display: inline-flex; align-items: center; min-height: 48px; padding: 0 var(--s5); border-radius: 4px; background: var(--copper-fill); color: var(--on-copper); text-decoration: none; font-weight: 600; }
+  .btn:hover { filter: brightness(1.06); }
+  .text-link { display: inline-flex; align-items: center; min-height: 48px; color: var(--ink); font-weight: 600; }
+  .hero figure { margin: 0; }
+  .hero img { border-radius: 4px; aspect-ratio: 3 / 2; object-fit: cover; outline: 1px solid var(--art-edge); outline-offset: -1px; }
+  @media (prefers-color-scheme: dark) { .hero img { box-shadow: 0 24px 48px -24px #000; } }
+  .hero figcaption { font-size: var(--step--1); color: var(--ink-2); margin-top: var(--s3); }
+
+  section { padding-block: var(--s8); border-top: 1px solid var(--rule); }
+  h2 { font: 500 var(--step-3)/1.15 var(--serif); margin: 0 0 var(--s5); letter-spacing: -0.01em; text-wrap: balance; }
+  h3 { font: 600 var(--step-0)/1.4 var(--sans); margin: 0 0 var(--s2); }
+  p { max-width: var(--measure); margin: 0 0 var(--s4); }
+  .lede { font-size: var(--step-1); color: var(--ink-2); }
+
+  /* Plan: the drawing owns the wide column; the spec reads beside it. */
+  .plan-grid { display: grid; gap: var(--s6); grid-template-areas: "text" "plan" "spec"; }
+  @media (min-width: 900px) { .plan-grid { grid-template-columns: 5fr 7fr; grid-template-areas: "text plan" "spec plan"; column-gap: var(--s8); row-gap: 0; align-items: start; } }
+  .plan-text { grid-area: text; } .plan { grid-area: plan; } dl.spec { grid-area: spec; }
+  .plan { align-self: start; margin: 0; background: var(--plan-fill); border: 1px solid var(--rule); border-radius: 4px; padding: var(--s5); }
+  .plan svg text { font: 16px var(--sans); fill: var(--ink-2); }
+  .plan svg .zone { font: 600 18px var(--sans); fill: var(--ink); }
+  .plan .portrait { display: none; }
+  @media (max-width: 600px) { .plan .landscape { display: none; } .plan .portrait { display: block; max-width: 300px; margin-inline: auto; } }
+  .plan-grid > * { min-width: 0; }
+  .plan figcaption { font-size: var(--step--1); color: var(--ink-2); margin-top: var(--s4); }
+  dl.spec { display: grid; grid-template-columns: max-content 1fr; gap: var(--s3) var(--s5); margin: 0; }
+  dl.spec dt { color: var(--ink-2); }
+  dl.spec dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+  .buy { background: var(--card); }
+  .buy .wrap { display: grid; gap: var(--s6); }
+  @media (min-width: 900px) { .buy .wrap { grid-template-columns: 5fr 7fr; gap: var(--s8); } }
+  .price { font: 500 var(--step-4)/1 var(--serif); margin: 0 0 var(--s3); }
+  .price small { font: var(--step-1)/1 var(--sans); color: var(--ink-2); margin-right: var(--s2); }
+  footer.site { padding-block: var(--s6); border-top: 1px solid var(--rule); font-size: var(--step--1); color: var(--ink-2); }
+
+  /* No motion: nothing on this page changes state, so nothing moves. */
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="/" aria-label="Kade, home">Kade</a>
+    <nav aria-label="Primary">
+      <ul><li><a href="#plan">Plan</a></li><li><a href="#buy">Price</a></li></ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">Floating studios · built in Zaandam</p>
+        <h1>A solar studio you can moor in a city canal.</h1>
+        <p class="sub">38 m² and a sleeping loft on a concrete hull, with its own solar roof, battery and heat pump.</p>
+        <p class="from"><b>From €248,000</b><span>mooring excluded</span></p>
+        <div class="actions">
+          <a class="btn" href="mailto:viewings@kade.example?subject=Viewing%20request">Request a viewing in Amsterdam</a>
+          <a class="text-link" href="#plan">See the plan</a>
+        </div>
+      </div>
+      <figure>
+        <img src="hero.svg" width="1200" height="800" alt="Illustration of a timber floating studio with a solar roof on a still canal at dusk, its windows lit." fetchpriority="high">
+        <figcaption>Illustration of a Kade studio. Photographs follow the first launch.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <section id="plan" aria-labelledby="plan-h">
+    <div class="wrap plan-grid">
+      <div class="plan-text">
+        <h2 id="plan-h">One room on a 14 metre hull</h2>
+        <p>38 m² with a 9 m² sleeping loft, in FSC larch with triple glazing, on a concrete hull 14 metres long and 4.2 wide.</p>
+      </div>
+      <figure class="plan">
+        <svg class="landscape" viewBox="0 0 700 290" role="img" aria-labelledby="plan-t">
+          <title id="plan-t">Illustrative floor plan on a hull 14 by 4.2 metres: wet room at the left end, kitchen wall, open room, stair to the loft at the right end.</title>
+          <g fill="none" stroke="var(--plan-line)">
+            <rect x="20" y="44" width="640" height="200" rx="6" stroke-width="1" stroke-dasharray="4 4"/>
+            <rect x="50" y="66" width="580" height="156" stroke-width="3"/>
+            <line x1="170" y1="66" x2="170" y2="222" stroke-width="2"/>
+            <path d="M170 134 A30 30 0 0 1 200 164" stroke-width="1"/>
+            <rect x="182" y="66" width="160" height="30" stroke-width="1.5"/>
+            <g stroke-width="1"><line x1="530" y1="150" x2="630" y2="150"/><line x1="530" y1="168" x2="630" y2="168"/><line x1="530" y1="186" x2="630" y2="186"/><line x1="530" y1="204" x2="630" y2="204"/><line x1="530" y1="150" x2="530" y2="222"/></g>
+          </g>
+          <line x1="260" y1="222" x2="460" y2="222" stroke-width="6" stroke="var(--copper)"/>
+          <text x="110" y="150" text-anchor="middle" class="zone">Wet room</text>
+          <text x="262" y="87" text-anchor="middle">Kitchen wall</text>
+          <text x="360" y="160" text-anchor="middle" class="zone">Open room</text>
+          <text x="580" y="138" text-anchor="middle">Stair to loft</text>
+          <text x="360" y="276" text-anchor="middle">Glazed canal side</text>
+          <g stroke="var(--plan-line)" stroke-width="1"><line x1="20" y1="22" x2="660" y2="22"/><line x1="20" y1="15" x2="20" y2="29"/><line x1="660" y1="15" x2="660" y2="29"/></g>
+          <text x="340" y="14" text-anchor="middle">Hull 14 m</text>
+          <text x="678" y="144" text-anchor="middle" transform="rotate(90 678 144)">4.2 m</text>
+        </svg>
+        <svg class="portrait" viewBox="0 0 290 700" role="img" aria-labelledby="plan-tp">
+          <title id="plan-tp">Illustrative floor plan on a hull 14 by 4.2 metres, drawn upright: wet room at the top, kitchen wall, open room, stair to the loft at the bottom.</title>
+          <g fill="none" stroke="var(--plan-line)">
+            <rect x="46" y="20" width="200" height="640" rx="6" stroke-width="1" stroke-dasharray="4 4"/>
+            <rect x="68" y="50" width="156" height="580" stroke-width="3"/>
+            <line x1="68" y1="170" x2="224" y2="170" stroke-width="2"/>
+            <path d="M136 170 A30 30 0 0 0 166 200" stroke-width="1"/>
+            <rect x="194" y="182" width="30" height="160" stroke-width="1.5"/>
+            <g stroke-width="1"><line x1="140" y1="530" x2="140" y2="630"/><line x1="158" y1="530" x2="158" y2="630"/><line x1="176" y1="530" x2="176" y2="630"/><line x1="194" y1="530" x2="194" y2="630"/><line x1="140" y1="530" x2="224" y2="530"/></g>
+          </g>
+          <line x1="68" y1="260" x2="68" y2="460" stroke-width="6" stroke="var(--copper)"/>
+          <text x="146" y="116" text-anchor="middle" class="zone">Wet room</text>
+          <text x="146" y="380" text-anchor="middle" class="zone">Open room</text>
+          <text x="209" y="262" text-anchor="middle" transform="rotate(90 209 262)">Kitchen wall</text>
+          <text x="100" y="585" text-anchor="middle">Stair</text>
+          <text x="100" y="605" text-anchor="middle">to loft</text>
+          <text x="30" y="360" text-anchor="middle" transform="rotate(-90 30 360)">Glazed canal side</text>
+          <g stroke="var(--plan-line)" stroke-width="1"><line x1="268" y1="20" x2="268" y2="660"/><line x1="261" y1="20" x2="275" y2="20"/><line x1="261" y1="660" x2="275" y2="660"/></g>
+          <text x="286" y="340" text-anchor="middle" transform="rotate(-90 286 340)">Hull 14 m</text>
+          <text x="146" y="684" text-anchor="middle">4.2 m</text>
+        </svg>
+        <figcaption>Illustrative layout. The room programme is not yet confirmed by construction drawings.</figcaption>
+      </figure>
+      <dl class="spec">
+        <dt>Floor area</dt><dd>38 m², plus a 9 m² loft</dd>
+        <dt>Hull</dt><dd>Concrete, 14 × 4.2 m</dd>
+        <dt>Cladding</dt><dd>FSC larch</dd>
+        <dt>Glazing</dt><dd>Triple</dd>
+        <dt>Solar roof</dt><dd>9 kWp</dd>
+        <dt>Battery</dt><dd>30 kWh LFP</dd>
+        <dt>Heating</dt><dd>Air-water heat pump</dd>
+        <dt>Build</dt><dd>7 months, Zaandam</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="buy" class="buy" aria-labelledby="buy-h">
+    <div class="wrap">
+      <div>
+        <h2 id="buy-h">Price</h2>
+        <p class="price"><small>from</small>€248,000</p>
+        <p>The mooring is not included.</p>
+      </div>
+      <div>
+        <h3>Request a viewing</h3>
+        <p>The button opens an email to us. Tell us where your mooring is and which weeks suit you; we confirm the date and the address in Amsterdam in our reply.</p>
+        <p><a class="btn" href="mailto:viewings@kade.example?subject=Viewing%20request">Request a viewing in Amsterdam</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site"><div class="wrap">Kade is a fictional studio made for the starlight-web-studio worked review. © Kade.</div></footer>
+</body>
+</html>

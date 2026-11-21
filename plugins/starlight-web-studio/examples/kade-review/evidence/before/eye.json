@@ -1,0 +1,331 @@
+{
+  "url": "http://127.0.0.1:8765/before.html",
+  "layer": "browser",
+  "scores": {
+    "speed": 4.5,
+    "access": 0,
+    "mobile": 1,
+    "type": 2.5,
+    "composition": 0.5,
+    "total": 8.5
+  },
+  "findings": [
+    {
+      "dim": "speed",
+      "severity": "P2",
+      "id": "blocked-before-paint",
+      "msg": "Script held the main thread 351 ms before first paint."
+    },
+    {
+      "dim": "access",
+      "severity": "P1",
+      "id": "contrast",
+      "msg": "27 text block(s) below WCAG AA contrast on a solid background.",
+      "evidence": [
+        "a \"Studio\" 4.48:1 (needs 4.5)",
+        "a \"How\" 4.48:1 (needs 4.5)",
+        "a \"Price\" 4.48:1 (needs 4.5)",
+        "a.btn.primary \"Book a call\" 2.99:1 (needs 4.5)",
+        "p.lead \"We believe the future of work is fluid. \" 2.81:1 (needs 4.5)"
+      ]
+    },
+    {
+      "dim": "access",
+      "severity": "info",
+      "id": "contrast-unverified",
+      "msg": "4 text block(s) sit on an image or gradient; contrast unverified, check by eye.",
+      "evidence": [
+        "div.kicker \"The future of living on water\"",
+        "h1 \"Kade\"",
+        "p.sub \"Innovative, sustainable, next-generation\"",
+        "a.btn.ghost \"Download brochure\""
+      ]
+    },
+    {
+      "dim": "access",
+      "severity": "P1",
+      "id": "no-name",
+      "msg": "2 link(s) or button(s) without an accessible name.",
+      "evidence": [
+        "a",
+        "a"
+      ]
+    },
+    {
+      "dim": "access",
+      "severity": "P2",
+      "id": "h1-count",
+      "msg": "2 h1 element(s) rendered; one is expected."
+    },
+    {
+      "dim": "access",
+      "severity": "P2",
+      "id": "landmarks",
+      "msg": "Missing landmark(s): main."
+    },
+    {
+      "dim": "access",
+      "severity": "P1",
+      "id": "lang",
+      "msg": "The html element has no lang."
+    },
+    {
+      "dim": "access",
+      "severity": "P1",
+      "id": "img-alt",
+      "msg": "1 image(s) without an alt attribute.",
+      "evidence": [
+        "img"
+      ]
+    },
+    {
+      "dim": "access",
+      "severity": "P1",
+      "id": "focus-invisible",
+      "msg": "8 of 8 keyboard stops show no visible focus change.",
+      "evidence": [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ]
+    },
+    {
+      "dim": "mobile",
+      "severity": "P0",
+      "id": "overflow-x",
+      "msg": "The page is 292px wider than a 375px screen; it scrolls sideways.",
+      "evidence": [
+        "div",
+        "div.num",
+        "h3",
+        "p",
+        "table.spec"
+      ]
+    },
+    {
+      "dim": "mobile",
+      "severity": "P1",
+      "id": "target-tiny",
+      "msg": "5 tap target(s) under 24px at 375 wide (WCAG 2.5.8).",
+      "evidence": [
+        "a 37x15",
+        "a 26x15",
+        "a 30x15",
+        "a 18x15",
+        "a 18x15"
+      ]
+    },
+    {
+      "dim": "type",
+      "severity": "P1",
+      "id": "measure-wide",
+      "msg": "2 paragraph(s) run past 90 characters per line at 1440.",
+      "evidence": [
+        "p.lead ~165 cpl",
+        "p ~182 cpl"
+      ]
+    },
+    {
+      "dim": "type",
+      "severity": "P2",
+      "id": "too-many-sizes",
+      "msg": "11 distinct font sizes at 1440; a scale needs six to eight."
+    },
+    {
+      "dim": "type",
+      "severity": "P1",
+      "id": "text-tiny",
+      "msg": "1 text block(s) under 12px on a phone.",
+      "evidence": [
+        "footer 11px"
+      ]
+    },
+    {
+      "dim": "composition",
+      "severity": "P2",
+      "id": "competing-actions-375",
+      "msg": "3 button-styled actions compete on the first screen at 375 wide.",
+      "evidence": [
+        "Book a call",
+        "Download brochure",
+        "Watch the film"
+      ]
+    },
+    {
+      "dim": "composition",
+      "severity": "P2",
+      "id": "no-action-1440",
+      "msg": "No button-styled action on the first screen at 1440 wide."
+    },
+    {
+      "dim": "composition",
+      "severity": "P2",
+      "id": "off-grid",
+      "msg": "0% of margins, paddings and gaps sit on a 4px grid."
+    },
+    {
+      "dim": "composition",
+      "severity": "P1",
+      "id": "hidden-at-rest",
+      "msg": "18 text block(s) still at opacity 0 after load; content waits on script or scroll.",
+      "evidence": [
+        "h2 \"The studio\"",
+        "p \"Every Kade studio is built by hand in ou\"",
+        "td \"Floor area\"",
+        "td \"38 m² plus 9 m² loft\"",
+        "td \"Hull\""
+      ]
+    },
+    {
+      "dim": "composition",
+      "severity": "P1",
+      "id": "reduced-motion-ignored",
+      "msg": "1 animation(s) keep running with prefers-reduced-motion: reduce.",
+      "evidence": [
+        "bob"
+      ]
+    },
+    {
+      "dim": "composition",
+      "severity": "P1",
+      "id": "reduced-motion-hidden",
+      "msg": "4 text block(s) stay invisible with reduced motion on."
+    },
+    {
+      "dim": "composition",
+      "severity": "info",
+      "id": "single-scheme",
+      "msg": "The page does not respond to prefers-color-scheme: dark. Fine if declared; confirm intent."
+    }
+  ],
+  "shots": [
+    "375.png",
+    "375-full.png",
+    "768.png",
+    "768-full.png",
+    "1440.png",
+    "1440-full.png",
+    "375-reduced-motion.png"
+  ],
+  "metrics": {
+    "perf": {
+      "lcp": 1552,
+      "lcpElement": [
+        "p.lead"
+      ],
+      "cls": 0.0554,
+      "shifted": [
+        "div.hero",
+        "div.top"
+      ],
+      "tbt": 0,
+      "preFcpBlock": 351,
+      "fcp": 228,
+      "bytes": 9320,
+      "requests": 2,
+      "profile": {
+        "cpu": 4,
+        "latencyMs": 150,
+        "downKbps": 1600,
+        "upKbps": 750
+      }
+    },
+    "measure": {
+      "medianCpl": 173.5,
+      "paragraphs": 2
+    },
+    "typeScale": {
+      "distinct": 11,
+      "ratios": [
+        1.182,
+        1.154,
+        1.133,
+        1.118,
+        1.158,
+        1.409,
+        1.226,
+        1.211,
+        1.261,
+        1.241
+      ],
+      "cv": 0.384
+    },
+    "edges": [
+      {
+        "x": 27,
+        "count": 14
+      },
+      {
+        "x": 49,
+        "count": 4
+      },
+      {
+        "x": 0,
+        "count": 3
+      },
+      {
+        "x": 145,
+        "count": 3
+      },
+      {
+        "x": 345,
+        "count": 3
+      },
+      {
+        "x": 460,
+        "count": 3
+      },
+      {
+        "x": 520,
+        "count": 3
+      },
+      {
+        "x": 991,
+        "count": 2
+      }
+    ],
+    "gridAdherence": 0,
+    "fold": {
+      "phone": {
+        "h1Above": true,
+        "actions": 3,
+        "actionLabels": [
+          "Book a call",
+          "Download brochure",
+          "Watch the film"
+        ]
+      },
+      "desktop": {
+        "h1Above": true,
+        "actions": 0,
+        "actionLabels": []
+      }
+    },
+    "focus": {
+      "tried": 8,
+      "invisible": [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a.btn",
+        "a.btn",
+        "a.btn"
+      ]
+    },
+    "reduced": {
+      "running": 1,
+      "examples": [
+        "bob"
+      ],
+      "hiddenText": 4
+    },
+    "dark": {
+      "responds": false,
+      "measuredText": 0
+    }
+  }
+}
