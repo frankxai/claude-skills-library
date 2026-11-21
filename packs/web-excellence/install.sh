@@ -7,6 +7,7 @@
 #   ./install.sh /path/to/repo --no-agents   # skip the three web workers
 #   ./install.sh /path/to/repo --no-db      # skip ui-ux-pro-max (~1.8 MB of CSV)
 #   ./install.sh /path/to/repo --claude-md  # also write the gate block into CLAUDE.md / AGENTS.md
+#                                           # (a hand-written gate section gets a separate GPU block)
 #
 # From anywhere, without cloning first:
 #   git clone --depth 1 https://github.com/frankxai/claude-skills-library /tmp/csl \
@@ -132,13 +133,35 @@ fi
 # these files are repo contracts. Writes one fenced block, replaced in place on
 # a re-run, and never touches a hand-written web design gate section.
 if [ $CLAUDE_MD -eq 1 ]; then
-  python3 - "$TARGET" "$PACK_DIR/claude-md.snippet.md" "$DRY" <<'PY'
+  python3 - "$TARGET" "$PACK_DIR/claude-md.snippet.md" "$PACK_DIR/claude-md-gpu.snippet.md" "$DRY" <<'PY'
 import os, re, sys
 
-target, snippet_path, dry = sys.argv[1], sys.argv[2], sys.argv[3] == "1"
-BEGIN, END = "<!-- web-excellence:begin -->", "<!-- web-excellence:end -->"
-body = open(snippet_path, encoding="utf-8").read().strip("\n")
-block = f"{BEGIN}\n{body}\n{END}"
+target, full_path, gpu_path, dry = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] == "1"
+FULL = ("<!-- web-excellence:begin -->", "<!-- web-excellence:end -->")
+GPU = ("<!-- web-excellence:gpu:begin -->", "<!-- web-excellence:gpu:end -->")
+
+
+def fence(markers, path):
+    body = open(path, encoding="utf-8").read().strip("\n")
+    return f"{markers[0]}\n{body}\n{markers[1]}"
+
+
+def replace_block(text, markers, fenced):
+    head, rest = text.split(markers[0], 1)
+    _, tail = rest.split(markers[1], 1)
+    return head + fenced + tail
+
+
+def append_block(text, eol, fenced):
+    gap = "" if not text else (eol if text.endswith(eol * 2) else (eol if text.endswith(eol) else eol * 2))
+    return text + gap + fenced + eol
+
+
+def has(text, markers):
+    return markers[0] in text and markers[1] in text
+
+
+full_block, gpu_block = fence(FULL, full_path), fence(GPU, gpu_path)
 names = [n for n in ("CLAUDE.md", "AGENTS.md") if os.path.lexists(os.path.join(target, n))] or ["CLAUDE.md"]
 
 for name in names:
@@ -151,27 +174,28 @@ for name in names:
         with open(path, encoding="utf-8", newline="") as fh:
             text = fh.read()
     eol = "\r\n" if "\r\n" in text else "\n"
-    fenced = block.replace("\n", eol)
-    if BEGIN in text and END in text:
-        head, rest = text.split(BEGIN, 1)
-        _, tail = rest.split(END, 1)
-        new, status = head + fenced + tail, "update"
-        if new == text:
-            print(f"  ok     {name} (gate block is current)")
-            continue
+    if has(text, FULL):
+        new, status, what = replace_block(text, FULL, full_block.replace("\n", eol)), "update", "gate block"
+    elif has(text, GPU):
+        new, status, what = replace_block(text, GPU, gpu_block.replace("\n", eol)), "update", "GPU block"
     elif re.search(r"web design gate", text, re.I):
-        note = "" if "gpu-surface" in text else "; it does not name gpu-surface, so add the second paragraph of claude-md.snippet.md"
-        print(f"  keep   {name} (has its own web design gate section{note})")
-        continue
+        # A hand-written section is the repo's own wording and is never edited.
+        # What it may lack is the GPU routing, which goes in a separate block.
+        if "gpu-surface" in text:
+            print(f"  keep   {name} (has its own web design gate section, and it names gpu-surface)")
+            continue
+        new, status, what = append_block(text, eol, gpu_block.replace("\n", eol)), "add", "GPU block"
     else:
-        gap = "" if not text else (eol if text.endswith(eol * 2) else (eol if text.endswith(eol) else eol * 2))
-        new, status = text + gap + fenced + eol, "add"
+        new, status, what = append_block(text, eol, full_block.replace("\n", eol)), "add", "gate block"
+    if new == text:
+        print(f"  ok     {name} ({what} is current)")
+        continue
     if dry:
-        print(f"  would: {status} the gate block in {name}")
+        print(f"  would: {status} the {what} in {name}")
         continue
     with open(path, "w", encoding="utf-8", newline="") as fh:
         fh.write(new)
-    print(f"  {status:<6} {name} (gate block)")
+    print(f"  {status:<6} {name} ({what})")
 PY
 fi
 

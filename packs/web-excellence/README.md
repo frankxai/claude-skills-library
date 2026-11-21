@@ -195,9 +195,13 @@ packs/web-excellence/install.sh /path/to/repo --claude-md
 ```
 
 Re-running upgrades the skills, hooks and agents in place. `--claude-md` writes
-one fenced block (`<!-- web-excellence:begin -->` to `<!-- web-excellence:end -->`),
-replaces it in place on every run, and never touches a hand-written "Web design
-gate" section: it tells you when that section does not name `gpu-surface`.
+one fenced block (`<!-- web-excellence:begin -->` to `<!-- web-excellence:end -->`)
+and replaces it in place on every run. A repo that already has its own "Web
+design gate" section keeps its wording untouched: the installer adds a second,
+separate block (`<!-- web-excellence:gpu:begin -->`) holding only the GPU routing
+and the agent hand-offs, unless that section already names `gpu-surface`. It
+writes to `CLAUDE.md` and `AGENTS.md` alike, so a harness that never reads one of
+them still gets the contract. A symlinked prompt file is never written through.
 
 ### What it does not do
 
@@ -224,6 +228,7 @@ packs/web-excellence/
 ├── sync-agents.sh         re-vendor the agents from an agentic-creator-os checkout
 ├── settings.snippet.json  the hooks block install.sh merges
 ├── claude-md.snippet.md   the CLAUDE.md / AGENTS.md block install.sh --claude-md writes
+├── claude-md-gpu.snippet.md   the GPU-only block, added beside a hand-written gate section
 ├── ci/                    the model-free linter + its workflow
 ├── hooks/                 the three hooks
 ├── tests/                 test_hooks.py, peer-check.test.mjs, install-agents.test.mjs, gpu-scripts.test.mjs
