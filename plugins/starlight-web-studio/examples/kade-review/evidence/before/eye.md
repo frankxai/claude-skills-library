@@ -1,4 +1,4 @@
-# Browser layer: http://127.0.0.1:8765/before.html
+# Browser layer: `http://127.0.0.1:8765/before.html`
 
 **8.5 / 25** · measured in Chromium; lab profile 4x CPU, 150 ms RTT, 1600 kbps
 

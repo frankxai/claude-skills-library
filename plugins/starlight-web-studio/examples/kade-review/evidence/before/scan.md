@@ -1,6 +1,6 @@
-# http://127.0.0.1:8765/before.html — machine score 19.5/30
+# `http://127.0.0.1:8765/before.html` — machine score 19.5/30
 
-Scanned 2026-11-21T02:31:41.282Z. HTTP 200, 6 KB, TTFB 6 ms, 259 words of server text.
+Scanned 2026-11-21T02:31:41.218Z. HTTP 200, 6 KB, TTFB 6 ms, 259 words of server text.
 
 | Dimension | Score |
 |---|---|

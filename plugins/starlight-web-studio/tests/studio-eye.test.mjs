@@ -172,6 +172,23 @@ test('scoring floors at zero per dimension and totals over five dimensions', () 
   assert.deepEqual(Object.keys(s).filter(k => k !== 'total'), DIMENSIONS);
 });
 
+// ------------------------------------------------------------------ report format
+
+test('a committed report names its target as code, not a live link a link checker will follow', async () => {
+  const { toMarkdown: scanMd } = await import('../bin/studio-scan.mjs');
+  const url = 'http://127.0.0.1:8765/after.html';
+  const eye = toMarkdown({ url, scores: score([]), findings: [], shots: [], metrics: {
+    perf: {}, measure: { medianCpl: null, paragraphs: 0 }, typeScale: { distinct: 0, cv: 0 }, edges: [], gridAdherence: 1,
+    fold: { phone: { h1Above: true, actions: 1 }, desktop: { h1Above: true, actions: 1 } }, focus: { tried: 0, invisible: [] }, reduced: {}, dark: {} } });
+  const scan = scanMd({ url, score: 30, max: 30, scannedAt: 'now', status: 200, facts: { htmlKB: 1, ttfbMs: 1, words: 1 },
+    scores: { search: 5, answer: 5, mobile: 5, access: 5, craft: 5, speed: 5 }, findings: [] });
+  for (const md of [eye, scan]) {
+    const head = md.split('\n')[0];
+    assert.ok(head.includes('`' + url + '`'), head);
+    assert.equal(head.replaceAll('`' + url + '`', '').includes('http'), false, head);
+  }
+});
+
 // ------------------------------------------------------------------ target safety
 
 test('private, loopback and file targets need --allow-private; other schemes are refused', async () => {

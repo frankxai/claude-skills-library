@@ -573,7 +573,8 @@ export async function fetchPage(url, opts = {}) {
 }
 
 export function toMarkdown(r) {
-  const lines = [`# ${r.url} — machine score ${r.score}/${r.max}`, '', `Scanned ${r.scannedAt}. HTTP ${r.status}, ${r.facts.htmlKB} KB, TTFB ${r.facts.ttfbMs ?? '—'} ms, ${r.facts.words} words of server text.`, '',
+  // The target is code, not a link: a committed report must not send a link checker to a host it audited.
+  const lines = [`# \`${r.url}\` — machine score ${r.score}/${r.max}`, '', `Scanned ${r.scannedAt}. HTTP ${r.status}, ${r.facts.htmlKB} KB, TTFB ${r.facts.ttfbMs ?? '—'} ms, ${r.facts.words} words of server text.`, '',
     '| Dimension | Score |', '|---|---|', ...DIMENSIONS.map(d => `| ${d} | ${r.scores[d]}/5 |`), '', '## Findings', ''];
   if (!r.findings.length) lines.push('None. This scan only reads server HTML; layout, motion and taste need the visual pass.');
   for (const f of r.findings) lines.push(`- **${f.severity} ${f.dimension}/${f.id}** — ${f.evidence} Fix: ${f.fix}`);

@@ -1,6 +1,6 @@
-# http://127.0.0.1:8765/after.html — machine score 28.5/30
+# `http://127.0.0.1:8765/after.html` — machine score 28.5/30
 
-Scanned 2026-11-21T02:32:01.947Z. HTTP 200, 15 KB, TTFB 9 ms, 201 words of server text.
+Scanned 2026-11-21T02:32:01.872Z. HTTP 200, 15 KB, TTFB 6 ms, 201 words of server text.
 
 | Dimension | Score |
 |---|---|

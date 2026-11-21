@@ -1,6 +1,6 @@
-# http://127.0.0.1:8765/v2.html — machine score 28.5/30
+# `http://127.0.0.1:8765/v2.html` — machine score 28.5/30
 
-Scanned 2026-11-21T02:31:51.623Z. HTTP 200, 12 KB, TTFB 8 ms, 355 words of server text.
+Scanned 2026-11-21T02:31:51.542Z. HTTP 200, 12 KB, TTFB 8 ms, 355 words of server text.
 
 | Dimension | Score |
 |---|---|

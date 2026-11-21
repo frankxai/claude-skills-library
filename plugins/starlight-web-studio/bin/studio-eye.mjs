@@ -511,7 +511,7 @@ export async function eyeUrl(url, { out = null, allowPrivate = false, throttle =
 
 export function toMarkdown(r) {
   const L = [];
-  L.push(`# Browser layer: ${r.url}`, '', `**${r.scores.total} / 25** · measured in Chromium; lab profile ${r.metrics.perf?.profile === 'unthrottled' ? 'unthrottled' : `${LAB.cpu}x CPU, ${LAB.latencyMs} ms RTT, ${LAB.downKbps} kbps`}`, '');
+  L.push(`# Browser layer: \`${r.url}\``, '', `**${r.scores.total} / 25** · measured in Chromium; lab profile ${r.metrics.perf?.profile === 'unthrottled' ? 'unthrottled' : `${LAB.cpu}x CPU, ${LAB.latencyMs} ms RTT, ${LAB.downKbps} kbps`}`, '');
   L.push('| Dimension | Score |', '|---|---|');
   for (const d of DIMENSIONS) L.push(`| ${d} | ${r.scores[d]} / 5 |`);
   const p = r.metrics.perf || {};
