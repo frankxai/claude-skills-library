@@ -384,13 +384,25 @@ export async function assertTarget(url, { allowPrivate = false } = {}) {
   return u;
 }
 
+// Every navigation goes through here, so none can score a page that did not load: an HTTP error
+// or a timeout on any of the five loads (three widths, reduced motion, dark scheme) means the
+// layer was not run. A preference load that fails is never measured as the page at rest.
+async function load(page, url, where, timeoutMs) {
+  let resp;
+  try { resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs }); }
+  catch (e) { throw Object.assign(new Error(`${where} load did not complete: ${e.message.split('\n')[0]}`), { notRun: true }); }
+  if (!resp) throw Object.assign(new Error(`${where} load returned no response`), { notRun: true });
+  if (resp.status() >= 400) throw Object.assign(new Error(`${where} load answered HTTP ${resp.status()}`), { notRun: true });
+  return resp;
+}
+
 async function settle(page) {
   await page.waitForLoadState('load', { timeout: 30000 }).catch(() => {});
   await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
   await page.waitForTimeout(1200);
 }
 
-export async function eyeUrl(url, { out = null, allowPrivate = false, throttle = true } = {}) {
+export async function eyeUrl(url, { out = null, allowPrivate = false, throttle = true, navTimeoutMs = 45000 } = {}) {
   await assertTarget(url, { allowPrivate });
   const pw = loadPlaywright();
   if (!pw) { const e = new Error('playwright is not installed; the browser layer was not run'); e.notRun = true; throw e; }
@@ -414,8 +426,7 @@ export async function eyeUrl(url, { out = null, allowPrivate = false, throttle =
           await cdp.send('Emulation.setCPUThrottlingRate', { rate: LAB.cpu });
         }
       }
-      const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 }).catch(e => { throw Object.assign(new Error(`page did not load: ${e.message}`), { notRun: true }); });
-      if (resp && resp.status() >= 400) throw Object.assign(new Error(`page answered HTTP ${resp.status()}`), { notRun: true });
+      await load(page, url, `${vp.width}px`, navTimeoutMs);
       await settle(page);
       if (measurePerf) {
         const e = await page.evaluate(() => window.__eye);
@@ -464,7 +475,7 @@ export async function eyeUrl(url, { out = null, allowPrivate = false, throttle =
     {
       const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, reducedMotion: 'reduce' });
       const page = await ctx.newPage();
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await load(page, url, 'reduced motion', navTimeoutMs);
       await settle(page);
       reduced = await page.evaluate(() => {
         const running = document.getAnimations().filter(a => a.playState === 'running' && (a.effect?.getTiming().iterations === Infinity || (a.effect?.getTiming().duration || 0) > 200));
@@ -481,7 +492,7 @@ export async function eyeUrl(url, { out = null, allowPrivate = false, throttle =
     {
       const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
       const page = await ctx.newPage();
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await load(page, url, 'dark scheme', navTimeoutMs);
       await settle(page);
       const bg = await page.evaluate(() => [getComputedStyle(document.body).backgroundColor, getComputedStyle(document.documentElement).backgroundColor]);
       dark = { responds: bg[0] !== views.desktop.bodyBg || bg[1] !== views.desktop.rootBg };

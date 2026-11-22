@@ -48,7 +48,8 @@ the scan. What it measures and how it decides:
   competing actions, shared left edges, spacing on a 4 px grid, text left at
   opacity 0, animations that ignore reduced motion.
 
-Exit 3 means it did not run (no Playwright, page did not load, refused target).
+Exit 3 means it did not run: no Playwright, a refused target, or any of its five loads (three
+widths, reduced motion, dark scheme) answering an HTTP error or timing out.
 Report that layer as not run; never fill it in by eye.
 
 ## Layer 3: eye rubric (/50)

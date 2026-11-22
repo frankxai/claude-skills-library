@@ -241,6 +241,43 @@ test('the first draft is caught on every planted defect', { skip: browserSkip, t
   } finally { srv.close(); }
 });
 
+// Five navigations in a fixed order: phone, tablet, desktop, reduced motion, dark scheme.
+// A server that fails only the nth page request proves every one of them fails closed.
+function serveFailingAt(n, mode) {
+  let pageHits = 0;
+  const srv = createServer((req, res) => {
+    const name = new URL(req.url, 'http://x').pathname.replace(/^\/+/, '');
+    if (name === 'hero.svg') { res.writeHead(200, { 'content-type': 'image/svg+xml' }).end(readFileSync(join(SITE, 'hero.svg'))); return; }
+    pageHits += 1;
+    if (pageHits === n && mode === 'hang') return; // never answers
+    if (pageHits === n) { res.writeHead(503, { 'content-type': 'text/html' }).end('<h1>Service unavailable</h1>'); return; }
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(readFileSync(join(SITE, 'after.html')));
+  });
+  return new Promise(r => srv.listen(0, '127.0.0.1', () => r(srv)));
+}
+
+for (const [n, where] of [[1, 'phone'], [2, 'tablet'], [3, 'desktop'], [4, 'reduced motion'], [5, 'dark scheme']]) {
+  test(`a 503 on the ${where} load makes the layer not run, never a score`, { skip: browserSkip, timeout: 120000 }, async () => {
+    const srv = await serveFailingAt(n, '503');
+    try {
+      await assert.rejects(
+        eyeUrl(`http://127.0.0.1:${srv.address().port}/after.html`, { allowPrivate: true, throttle: false }),
+        e => e.notRun === true && /503/.test(e.message),
+      );
+    } finally { srv.close(); srv.closeAllConnections?.(); }
+  });
+}
+
+test('a load that never answers makes the layer not run', { skip: browserSkip, timeout: 120000 }, async () => {
+  const srv = await serveFailingAt(4, 'hang');
+  try {
+    await assert.rejects(
+      eyeUrl(`http://127.0.0.1:${srv.address().port}/after.html`, { allowPrivate: true, throttle: false, navTimeoutMs: 2000 }),
+      e => e.notRun === true && /reduced motion/.test(e.message),
+    );
+  } finally { srv.close(); srv.closeAllConnections?.(); }
+});
+
 test('the revision clears every P0 and P1 and answers dark mode', { skip: browserSkip, timeout: 120000 }, async () => {
   const srv = await serve();
   try {
