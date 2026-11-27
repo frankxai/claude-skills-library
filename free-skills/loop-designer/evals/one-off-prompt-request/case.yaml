@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: loop-designer--one-off-prompt-request
+description: "Should NOT trigger loop-designer. Expected (not graded): Agent writes a single prompt for a one-shot session; no .loop/ directory, state.json, or loop charter is produced."
+tags: [loop-designer, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write me a really good prompt I can paste into a fresh Claude session tomorrow to clean up our test fixtures — just the prompt text, nothing else, it's a one-time job."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?loop-designer\""
+    min: 0
+    max: 0
+    arm: both

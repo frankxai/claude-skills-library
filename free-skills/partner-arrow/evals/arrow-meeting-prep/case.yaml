@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: partner-arrow--arrow-meeting-prep
+description: "Should trigger partner-arrow."
+tags: [partner-arrow, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I've got a call with the Arrow ECS folks next week — can you prep a briefing on where the strategic conversation stands and what the Oracle x NVIDIA accelerator pack means for the channel?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?partner-arrow\""

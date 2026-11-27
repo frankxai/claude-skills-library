@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: cost-aware-llm-pipeline--grammar-question
+description: "Should NOT trigger cost-aware-llm-pipeline. Expected (not graded): General knowledge question; no model routing involved."
+tags: [cost-aware-llm-pipeline, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What's the difference between CSV and Parquet file formats?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?cost-aware-llm-pipeline\""
+    min: 0
+    max: 0
+    arm: both

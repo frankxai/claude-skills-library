@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: to-spec--wants-a-doc-not-issue
+description: "Should NOT trigger to-spec. Expected (not graded): Agent does not file a GitHub issue; produces a local markdown file instead."
+tags: [to-spec, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write me a short design doc file in docs/ summarizing today's discussion, I want to keep it in the repo as markdown, not an issue."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?to-spec\""
+    min: 0
+    max: 0
+    arm: both

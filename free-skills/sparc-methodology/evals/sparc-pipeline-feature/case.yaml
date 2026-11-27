@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: sparc-methodology--sparc-pipeline-feature
+description: "Should trigger sparc-methodology. Expected (not graded): Skill activates and the response covers Specification and Architecture phases (requirements plus component/interface design) and explicitly defers implementation to later refinement phases"
+tags: [sparc-methodology, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Run the full sparc pipeline for a CSV import feature, but I only care about the early phases right now — plan the specification and architecture, don't write code yet"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?sparc-methodology\""

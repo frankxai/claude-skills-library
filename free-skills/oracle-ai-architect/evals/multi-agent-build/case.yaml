@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: oracle-ai-architect--multi-agent-build
+description: "Should trigger oracle-ai-architect. Expected (not graded): Response references Oracle ADK agents with tools and workflow orchestration"
+tags: [oracle-ai-architect, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Help me architect a multi-agent system using Oracle ADK where one agent queries sales data and another writes the report"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?oracle-ai-architect\""

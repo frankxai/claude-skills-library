@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: ui-ux-design-expert--server-performance
+description: "Should NOT trigger ui-ux-design-expert."
+tags: [ui-ux-design-expert, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Our web app is slow. How do I profile and optimize our Node.js backend response times?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ui-ux-design-expert\""
+    min: 0
+    max: 0
+    arm: both

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: memory-prune--end-of-heavy-week
+description: "Should trigger memory-prune. Expected (not graded): Skill triggers on session-end-after-heavy-week condition; walks the memory dir and prompts Frank per-entry with [k]eep/[a]rchive/[p]in/[s]kip"
+tags: [memory-prune, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "That was a brutal week of heavy sessions — wrap up the week and prune the memory of old project snapshots"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?memory-prune\""

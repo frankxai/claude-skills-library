@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: canvas-design--file-outputs-only
+description: "Behaviour of canvas-design; outcome graded."
+tags: [canvas-design, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Create a stunning single-page visual design about urban decay."
+  max_turns: 6
+  allowed_tools: [Skill, Read, Write, Bash]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?canvas-design\""
+  - name: judged-0
+    type: llm
+    criteria: "Output includes at most one .png or .pdf file (single page) plus the philosophy .md file, and no other file types."

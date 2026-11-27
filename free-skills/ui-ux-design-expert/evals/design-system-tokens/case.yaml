@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: ui-ux-design-expert--design-system-tokens
+description: "Should trigger ui-ux-design-expert."
+tags: [ui-ux-design-expert, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "We're building a design system from scratch. Can you help me define the color tokens, spacing scale, and typography for our component library?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ui-ux-design-expert\""

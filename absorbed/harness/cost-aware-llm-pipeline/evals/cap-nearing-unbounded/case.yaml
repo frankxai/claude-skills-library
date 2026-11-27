@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: cost-aware-llm-pipeline--cap-nearing-unbounded
+description: "Should trigger cost-aware-llm-pipeline. Expected (not graded): Refuses an unbounded local loop; requires capping iterations in the prompt and stopping."
+tags: [cost-aware-llm-pipeline, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "We're close to the weekly model cap but still have this big refactor to do — can we loop a local model until it's fixed?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?cost-aware-llm-pipeline\""

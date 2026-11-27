@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: diagnosing-bugs--code-review-request
+description: "Should NOT trigger diagnosing-bugs. Expected (not graded): Review task, not a bug, outage, slowdown or recurring failure"
+tags: [diagnosing-bugs, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Review this PR and tell me if the code style and architecture look reasonable."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?diagnosing-bugs\""
+    min: 0
+    max: 0
+    arm: both

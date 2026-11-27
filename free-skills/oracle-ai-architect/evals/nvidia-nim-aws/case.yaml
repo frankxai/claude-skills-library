@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: oracle-ai-architect--nvidia-nim-aws
+description: "Should NOT trigger oracle-ai-architect. Expected (not graded): Skill not triggered; response is about AWS, not OCI Oracle AI architecture"
+tags: [oracle-ai-architect, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want to deploy an NVIDIA NIM inference server on an AWS EC2 g5 instance with Terraform"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?oracle-ai-architect\""
+    min: 0
+    max: 0
+    arm: both

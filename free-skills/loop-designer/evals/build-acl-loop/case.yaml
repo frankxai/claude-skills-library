@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: loop-designer--build-acl-loop
+description: "Should trigger loop-designer. Expected (not graded): Agent creates a .loop/<name>/ directory containing LOOP.md, state.json, and backlog.md, with a named archetype and a Done-when expressed as an exact command that exits 0 when all pages pass the audit."
+tags: [loop-designer, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I have 40 hub pages that keep failing the a11y audit. Instead of asking you each time, I want you to design a loop an agent can run unattended overnight to grind through them until they all pass."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?loop-designer\""

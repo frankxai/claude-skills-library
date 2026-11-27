@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: prompt-hub--prompt-word-but-no-flow
+description: "Should NOT trigger prompt-hub. Expected (not graded): No prompt-hub agents dispatched; the term 'prompt' here is a shell prompt, not a prompt-engineering ask, so no flow matches"
+tags: [prompt-hub, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What does the word 'prompt' mean in Bash scripting? Explain briefly, no need for anything elaborate."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?prompt-hub\""
+    min: 0
+    max: 0
+    arm: both

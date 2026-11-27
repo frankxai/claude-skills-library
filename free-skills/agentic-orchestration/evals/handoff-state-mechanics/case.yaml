@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: agentic-orchestration--handoff-state-mechanics
+description: "Should trigger agentic-orchestration. Expected (not graded): Response specifies structured handoff contents: original request, work completed, current state, next steps, and artifacts/decisions, plus mention of compressing context at handoff boundaries."
+tags: [agentic-orchestration, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "When my architect agent finishes a design and passes work to a developer agent, essential context keeps getting lost. What exactly should travel in a handoff between agents so nothing important is dropped?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?agentic-orchestration\""

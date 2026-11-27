@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: oracle-confidentiality--git-commit-client-folder
+description: "Should trigger oracle-confidentiality. Expected (not graded): Agent runs git status/diff checks and verifies clients/.gitignore blocks deliverables before allowing commit."
+tags: [oracle-confidentiality, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Before I commit the clients/K folder to git, make sure nothing confidential gets in."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?oracle-confidentiality\""

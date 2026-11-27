@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: performance-analysis--html-metrics-report
+description: "Should trigger performance-analysis. Expected (not graded): Agent runs npx claude-flow analysis performance-report with --format html --include-metrics and an output path such that reports/performance.html is created as an HTML file"
+tags: [performance-analysis, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Generate an HTML performance report with metrics included for the claude-flow swarm and save it to reports/performance.html."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?performance-analysis\""

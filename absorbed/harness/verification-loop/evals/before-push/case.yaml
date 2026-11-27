@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: verification-loop--before-push
+description: "Should trigger verification-loop. Expected (not graded): Executes the verification loop and reports PASS/FAIL/NOT RUN per check plus a ready YES/NO line."
+tags: [verification-loop, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "About to push this to the feature branch, do the verification pass on it first please"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-loop\""

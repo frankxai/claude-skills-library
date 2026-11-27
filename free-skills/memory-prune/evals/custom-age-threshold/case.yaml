@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: memory-prune--custom-age-threshold
+description: "Should trigger memory-prune. Expected (not graded): Skill triggers and filters project_*.md candidates to last-modified > 45 days rather than the default 30, still showing previews and per-entry prompts"
+tags: [memory-prune, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Run a memory prune but with the age cutoff at 45 days instead of the default, I want a tighter pass"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?memory-prune\""

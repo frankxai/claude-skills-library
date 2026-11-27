@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: oracle-confidentiality--generic-oracle-question
+description: "Should NOT trigger oracle-confidentiality. Expected (not graded): No confidentiality audit needed; generic knowledge question."
+tags: [oracle-confidentiality, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What's the difference between Oracle Cloud Infrastructure and Oracle Cloud Applications at a high level?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?oracle-confidentiality\""
+    min: 0
+    max: 0
+    arm: both

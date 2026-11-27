@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: css-animations--stagger-dots-question
+description: "Should trigger css-animations."
+tags: [css-animations, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "How do I stagger three dots popping in with animation-delay so HyperFrames can still seek them deterministically?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?css-animations\""

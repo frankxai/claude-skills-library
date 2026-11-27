@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: feynman-thinking--review-overabstracted-design
+description: "Should trigger feynman-thinking. Expected (not graded): Skill activates; response flags speculative abstraction/factory layers as unnecessary complexity and proposes a simpler direct design."
+tags: [feynman-thinking, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Here's my design proposal for a plugin-based storage layer with three levels of factories so we can support future backends. Can you review the architecture and explain the logic?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""

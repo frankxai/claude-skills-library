@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: performance-analysis--threshold-tuning-advice
+description: "Behaviour of performance-analysis; outcome graded."
+tags: [performance-analysis, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "We want to set up bottleneck detection for our production swarm. What threshold should we use and what command should we run?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?performance-analysis\""
+  - name: judged-0
+    type: llm
+    criteria: "Agent recommends a lower threshold of 10-15 for production per the skill's threshold tuning guidance and provides a concrete bottleneck detect command with that --threshold value"

@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: loop-designer--state-files-and-promotion
+description: "Behaviour of loop-designer; outcome graded."
+tags: [loop-designer, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want a loop that autonomously triages and closes stale issues in our GitHub repo every hour — propose branch commits but nothing lands on main without my review."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?loop-designer\""
+  - name: judged-0
+    type: llm
+    criteria: "Agent emits .loop/<name>/state.json with status 'designed', iteration 0, and promotion mode 'propose-only' with a required_cycles clean-cycle count, plus a signs.md seeded with known failure patterns for this domain."

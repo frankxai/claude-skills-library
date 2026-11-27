@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: sparc-methodology--run-sparc-tdd-workflow
+description: "Should trigger sparc-methodology. Expected (not graded): Before any implementation code appears, the response produces phase artifacts in order: a specification (requirements/success criteria), pseudocode, and an architecture design, and only then proceeds to test-first implementation"
+tags: [sparc-methodology, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Use the SPARC methodology to build a user authentication feature with TDD"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?sparc-methodology\""

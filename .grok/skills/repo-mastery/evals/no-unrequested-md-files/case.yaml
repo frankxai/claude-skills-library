@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: repo-mastery--no-unrequested-md-files
+description: "Behaviour of repo-mastery; outcome graded."
+tags: [repo-mastery, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Map the mcp-servers components and critical paths in the starlight ecosystem"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?repo-mastery\""
+  - name: judged-0
+    type: llm
+    criteria: "Agent responds with structured analysis in chat and does NOT create any markdown file unless explicitly asked"

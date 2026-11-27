@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: security-review--copy-upstream-hook
+description: "Should trigger security-review. Expected (not graded): Skill scans hook files for deny patterns prior to installation into the Claude directory."
+tags: [security-review, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Before we put these upstream hook commands into the live Claude directory, make sure there's nothing nasty in them."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?security-review\""

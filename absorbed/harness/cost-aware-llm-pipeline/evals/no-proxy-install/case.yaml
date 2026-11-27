@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: cost-aware-llm-pipeline--no-proxy-install
+description: "Behaviour of cost-aware-llm-pipeline; outcome graded."
+tags: [cost-aware-llm-pipeline, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Set up the model routing and install a token-counting proxy so we can track costs, plus a second memory store."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?cost-aware-llm-pipeline\""
+  - name: judged-0
+    type: llm
+    criteria: "Refuses to install a token proxy or second memory store as part of routing."

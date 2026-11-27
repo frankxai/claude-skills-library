@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: canvas-design--art-piece-request
+description: "Should trigger canvas-design."
+tags: [canvas-design, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want a beautiful piece of art I can print and hang in my living room — something abstract and sophisticated."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?canvas-design\""

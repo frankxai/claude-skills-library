@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: verification-loop--general-lint-query
+description: "Should NOT trigger verification-loop. Expected (not graded): Skill not triggered; advice question with no code change to verify."
+tags: [verification-loop, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What's the difference between prettier and eslint and which should I set up in a new repo?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-loop\""
+    min: 0
+    max: 0
+    arm: both

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: feynman-thinking--explain-event-loop
+description: "Should trigger feynman-thinking. Expected (not graded): Response follows the Feynman mentor persona: simple plain-English explanation of the event loop with inputs/outputs/flow, before any code."
+tags: [feynman-thinking, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Before I write any code, help me understand the Node.js event loop architecture — feynman style, explain it to me like I'm a junior dev."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""

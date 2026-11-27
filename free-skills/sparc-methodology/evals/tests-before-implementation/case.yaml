@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: sparc-methodology--tests-before-implementation
+description: "Behaviour of sparc-methodology; outcome graded."
+tags: [sparc-methodology, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Use SPARC TDD to implement a shopping cart total calculator in this directory"
+  max_turns: 6
+  allowed_tools: [Skill, Read, Write, Bash]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?sparc-methodology\""
+  - name: judged-0
+    type: llm
+    criteria: "A test file (e.g., test_cart.py) containing failing tests is created and executed before the implementation file (e.g., cart.py) exists"

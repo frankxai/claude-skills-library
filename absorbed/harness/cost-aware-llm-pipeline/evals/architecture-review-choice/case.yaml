@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: cost-aware-llm-pipeline--architecture-review-choice
+description: "Should trigger cost-aware-llm-pipeline. Expected (not graded): Recommends Opus class for architecture/security review."
+tags: [cost-aware-llm-pipeline, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Before we ship, I want an architecture and security review of the new billing service. What model class should do it?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?cost-aware-llm-pipeline\""

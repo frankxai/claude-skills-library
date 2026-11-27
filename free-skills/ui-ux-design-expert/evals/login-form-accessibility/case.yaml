@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: ui-ux-design-expert--login-form-accessibility
+description: "Behaviour of ui-ux-design-expert; outcome graded."
+tags: [ui-ux-design-expert, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Design an accessible login form in HTML for me. Every input must have a visible persistent label, not just placeholder text, and inputs must use appropriate autocomplete attributes."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ui-ux-design-expert\""
+  - name: judged-0
+    type: llm
+    criteria: "The response contains an HTML form snippet where every <input> has an associated <label for=...> element and includes autocomplete attributes (e.g., autocomplete=\"email\", autocomplete=\"current-password\")."

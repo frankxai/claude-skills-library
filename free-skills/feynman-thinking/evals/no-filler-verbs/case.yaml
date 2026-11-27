@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--no-filler-verbs
+description: "Behaviour of feynman-thinking; outcome graded."
+tags: [feynman-thinking, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Review this summary of our new caching design: 'We leverage a robust abstraction layer to streamline cache invalidation and optimize overall throughput.' Explain what's wrong with it."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+  - name: judged-0
+    type: llm
+    criteria: "Response flags the filler verbs (leverage, streamline, optimize, robust) and rewrites the summary naming the concrete mechanism (e.g., specific cache key invalidation strategy)."

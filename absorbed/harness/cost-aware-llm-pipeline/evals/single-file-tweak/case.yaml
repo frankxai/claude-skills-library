@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: cost-aware-llm-pipeline--single-file-tweak
+description: "Should NOT trigger cost-aware-llm-pipeline. Expected (not graded): Trivial single-line edit; routing a model class adds no value."
+tags: [cost-aware-llm-pipeline, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Fix the typo in the README title, that's all."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?cost-aware-llm-pipeline\""
+    min: 0
+    max: 0
+    arm: both

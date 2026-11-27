@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: partner-arrow--arrow-content-voice-rules
+description: "Behaviour of partner-arrow; outcome graded."
+tags: [partner-arrow, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Generate a partner-facing overview of the AI CoE proposal for Arrow with a section on what the engagement is not."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?partner-arrow\""
+  - name: judged-0
+    type: llm
+    criteria: "Output includes a 'What this is not' section keeping the verbatim lines (not hours-for-money trainer, not exclusive, not a replacement for Arrow's solution architect bench) and contains no emojis or banned words (delve, transform, journey, empower, unlock)."

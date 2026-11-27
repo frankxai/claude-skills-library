@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: neutron-log--write-a-compressor
+description: "Should NOT trigger neutron-log. Expected (not graded): Skill not triggered; this is building a tool, not measuring savings with the neutron protocol."
+tags: [neutron-log, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want to write my own shell output filter that strips ANSI codes and truncates long diffs. Where do I start?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?neutron-log\""
+    min: 0
+    max: 0
+    arm: both

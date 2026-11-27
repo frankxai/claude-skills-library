@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: reasoningbank-intelligence--behaviour-best-practices-section
+description: "Behaviour of reasoningbank-intelligence; outcome graded."
+tags: [reasoningbank-intelligence, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Explain how to use ReasoningBank in my agent project and give me best practices and troubleshooting tips."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?reasoningbank-intelligence\""
+  - name: judged-0
+    type: llm
+    criteria: "The answer includes a best practices list mentioning recording all outcomes (not just successes) and a troubleshooting note recommending 100+ experiences per task type for good recommendations."

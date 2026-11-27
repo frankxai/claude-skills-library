@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: cost-aware-llm-pipeline--route-doc-search
+description: "Should trigger cost-aware-llm-pipeline. Expected (not graded): Suggests routing to the smaller/faster model for search and doc summary work."
+tags: [cost-aware-llm-pipeline, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I need to find where we handle retry logic across the repo and summarize the docs — which model should handle that?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?cost-aware-llm-pipeline\""

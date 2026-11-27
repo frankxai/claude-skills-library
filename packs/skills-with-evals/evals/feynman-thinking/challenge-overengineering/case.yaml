@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: feynman-thinking--challenge-overengineering
+description: "Should trigger feynman-thinking."
+tags: [feynman-thinking, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Here's our request-handling code. Someone said the design is over-engineered — can you build a simple mental model of the flow and tell us which layers are needless abstraction?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""

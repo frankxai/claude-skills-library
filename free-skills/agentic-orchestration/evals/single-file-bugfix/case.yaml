@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: agentic-orchestration--single-file-bugfix
+description: "Should NOT trigger agentic-orchestration. Expected (not graded): Response fixes the single-file bug directly without proposing multi-agent orchestration or swarm decomposition."
+tags: [agentic-orchestration, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Fix the null-pointer crash in src/utils/date.ts — it's a one-file bug, just patch it."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?agentic-orchestration\""
+    min: 0
+    max: 0
+    arm: both

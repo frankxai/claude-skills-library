@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: health-nutrition-expert--generic-cooking-recipe
+description: "Should NOT trigger health-nutrition-expert. Expected (not graded): Skill does not activate; request is a plain recipe, not nutrition/longevity/metabolic guidance."
+tags: [health-nutrition-expert, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Give me a quick pasta carbonara recipe for dinner tonight"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?health-nutrition-expert\""
+    min: 0
+    max: 0
+    arm: both

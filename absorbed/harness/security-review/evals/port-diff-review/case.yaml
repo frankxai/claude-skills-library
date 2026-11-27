@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: security-review--port-diff-review
+description: "Should trigger security-review. Expected (not graded): Skill reads the diff and scans the new ported skill/hook files for prompt-injection, credentials, curl|shell, and hidden-unicode patterns."
+tags: [security-review, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Here's the diff for the port of the upstream ECC skill and its hooks into our repo — give it a security review before we copy these files in."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?security-review\""

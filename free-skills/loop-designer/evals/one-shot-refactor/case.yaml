@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: loop-designer--one-shot-refactor
+description: "Should NOT trigger loop-designer. Expected (not graded): Agent performs the refactor as a one-shot in-session task; no .loop/ directory or loop charter files are created."
+tags: [loop-designer, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Refactor the auth module in this repo to use the new token service, and make sure the tests pass when you're done."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?loop-designer\""
+    min: 0
+    max: 0
+    arm: both

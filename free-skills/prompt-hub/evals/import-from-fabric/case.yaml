@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: prompt-hub--import-from-fabric
+description: "Should trigger prompt-hub. Expected (not graded): Routes as flow-harvest (harvester → red-team → librarian) with provenance frontmatter and an ATTRIBUTION.md entry per the attribution-mandatory invariant"
+tags: [prompt-hub, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Harvest patterns from Fabric and the awesome-chatgpt-prompts repo into my prompt library"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?prompt-hub\""

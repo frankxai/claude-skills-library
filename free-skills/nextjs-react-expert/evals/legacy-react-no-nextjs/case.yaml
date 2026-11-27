@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: nextjs-react-expert--legacy-react-no-nextjs
+description: "Should NOT trigger nextjs-react-expert."
+tags: [nextjs-react-expert, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm maintaining a legacy React 16 app — no Next.js, just plain Create React App with class components and Redux. Should I migrate the class components to hooks? I want advice specific to this CRA setup."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?nextjs-react-expert\""
+    min: 0
+    max: 0
+    arm: both

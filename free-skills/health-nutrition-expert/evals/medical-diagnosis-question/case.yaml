@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: health-nutrition-expert--medical-diagnosis-question
+description: "Should NOT trigger health-nutrition-expert. Expected (not graded): Skill does not activate as a treatment source; agent directs user to medical care rather than providing a diet-based diagnosis."
+tags: [health-nutrition-expert, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I have sharp abdominal pain after eating, what disease do I have?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?health-nutrition-expert\""
+    min: 0
+    max: 0
+    arm: both

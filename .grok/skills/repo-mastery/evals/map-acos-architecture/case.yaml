@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: repo-mastery--map-acos-architecture
+description: "Should trigger repo-mastery."
+tags: [repo-mastery, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Give me a full architecture map of the ACOS repo and how it connects to the rest of the starlight/repos ecosystem"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?repo-mastery\""

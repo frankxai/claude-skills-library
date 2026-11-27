@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--ascii-diagram-required
+description: "Behaviour of feynman-thinking; outcome graded."
+tags: [feynman-thinking, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Explain how a request flows through our system: client -> API gateway -> auth middleware -> rate limiter -> service layer -> Postgres. Draw it out for me."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+  - name: judged-0
+    type: llm
+    criteria: "Response includes a readable ASCII or text flow diagram showing the explicit request path with named steps, not just prose."

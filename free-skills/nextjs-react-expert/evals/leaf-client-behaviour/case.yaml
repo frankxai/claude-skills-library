@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: nextjs-react-expert--leaf-client-behaviour
+description: "Behaviour of nextjs-react-expert; outcome graded."
+tags: [nextjs-react-expert, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Review this Next.js page and refactor it per best practices. File app/products/page.tsx: \\`\\`\\`\\n'use client';\\nimport { useState } from 'react';\\nconst products = [{ id: 1, name: 'Mug', price: 9 }, { id: 2, name: 'Lamp', price: 25 }];\\nexport default function Page() {\\n  const [cart, setCart] = useState(0);\\n  return (\\n    <ul>\\n      {products.map(p => (\\n        <li key={p.id}>{p.name} — ${p.price}\\n          <button onClick={() => setCart(c => c + 1)}>Add to cart</button>\\n        </li>))}\\n    </ul>\\n  );\\n}\\n\\`\\`\\`"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?nextjs-react-expert\""
+  - name: judged-0
+    type: llm
+    criteria: "The response removes 'use client' from page.tsx so it is a Server Component; only a small client component wrapping the 'Add to cart' button (holding the useState) is added, and the product list rendering stays server-side."

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: security-review--scan-pr-before-copy
+description: "Should trigger security-review. Expected (not graded): Skill runs a pre-copy scan of the new files for the listed patterns (ignore-directions, private keys, sk-ant tokens, curl|shell, enableAllProjectMcpServers, hidden unicode) and reports findings before copying."
+tags: [security-review, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm copying this upstream skill folder from affaan-m/ECC into my repo, can you check it's safe first?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?security-review\""

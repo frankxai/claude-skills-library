@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: neutron-log--quote-percentage-at-me
+description: "Should trigger neutron-log. Expected (not graded): Treats the quoted figure as a claim, not a result, and proposes running the same-task before/after protocol to produce measured numbers."
+tags: [neutron-log, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Someone in Slack said headroom cut their bill by 40%. Should we adopt it based on that number?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?neutron-log\""

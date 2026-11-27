@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: diagnosing-bugs--gate-fails-open
+description: "Should trigger diagnosing-bugs. Expected (not graded): Agent verifies with an actual request before concluding whether the gate is broken"
+tags: [diagnosing-bugs, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "We think our auth gate might be letting unauthenticated requests through in production. Can you diagnose it?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?diagnosing-bugs\""

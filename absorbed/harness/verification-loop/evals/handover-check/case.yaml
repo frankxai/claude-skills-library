@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: verification-loop--handover-check
+description: "Should trigger verification-loop. Expected (not graded): Runs verification including git diff --stat and untracked file count; untracked files make ready NO."
+tags: [verification-loop, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm handing my changes off to the review harness now — verify the diff before we commit"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-loop\""

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: worker-integration--record-agent-feedback
+description: "Should trigger worker-integration. Expected (not graded): Skill shows the recordFeedback API usage"
+tags: [worker-integration, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I need to record execution feedback (success, latency, quality) for the coder agent so selection improves over time"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?worker-integration\""

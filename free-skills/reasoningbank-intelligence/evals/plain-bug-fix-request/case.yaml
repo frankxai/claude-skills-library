@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: reasoningbank-intelligence--plain-bug-fix-request
+description: "Should NOT trigger reasoningbank-intelligence."
+tags: [reasoningbank-intelligence, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "My code has a null pointer exception in the checkout flow, can you help me debug and fix it?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?reasoningbank-intelligence\""
+    min: 0
+    max: 0
+    arm: both

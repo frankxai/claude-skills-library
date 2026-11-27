@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: css-animations--validation-command
+description: "Behaviour of css-animations; outcome graded."
+tags: [css-animations, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I've finished editing my CSS animation composition in my HyperFrames project. Check that it's valid."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?css-animations\""
+  - name: judged-0
+    type: llm
+    criteria: "The response runs or instructs running `npx hyperframes lint` and `npx hyperframes validate` (or equivalent hyperframes validation commands)."

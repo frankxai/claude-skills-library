@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: performance-analysis--detect-bottlenecks-with-artifact
+description: "Should trigger performance-analysis. Expected (not graded): Agent runs a claude-flow bottleneck detect command with a JSON export (e.g. --export bottlenecks.json or --format json --output) and a bottlenecks.json artifact is produced"
+tags: [performance-analysis, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Our swarm's task latency rose from 200ms to 900ms after last week's topology change. Run bottleneck detection and export the results to bottlenecks.json so I can inspect them."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?performance-analysis\""

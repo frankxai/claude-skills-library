@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: ui-ux-design-expert--usability-test-plan
+description: "Should trigger ui-ux-design-expert."
+tags: [ui-ux-design-expert, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm about to run usability tests on our new onboarding flow. How many participants should I recruit and what tasks should I give them?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ui-ux-design-expert\""

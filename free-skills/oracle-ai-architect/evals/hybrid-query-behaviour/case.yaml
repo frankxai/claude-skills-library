@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: oracle-ai-architect--hybrid-query-behaviour
+description: "Behaviour of oracle-ai-architect; outcome graded."
+tags: [oracle-ai-architect, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "In Oracle Database 26ai, write me a SQL query that does a hybrid search: vector similarity on my embedding column combined with a pre-filter so only rows with category = 'technical' and created within the last 30 days are considered before ranking"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?oracle-ai-architect\""
+  - name: judged-0
+    type: llm
+    criteria: "Query contains VECTOR_DISTANCE and a WHERE clause with both the category filter and the created_date > SYSDATE - 30 filter"

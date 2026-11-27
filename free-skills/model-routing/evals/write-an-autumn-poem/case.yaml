@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: model-routing--write-an-autumn-poem
+description: "Should NOT trigger model-routing. Expected (not graded): Just a poem; no routing/tier/model discussion — the request is creative writing with no model-selection component."
+tags: [model-routing, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write me a short poem about autumn leaves for my poetry class."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""
+    min: 0
+    max: 0
+    arm: both

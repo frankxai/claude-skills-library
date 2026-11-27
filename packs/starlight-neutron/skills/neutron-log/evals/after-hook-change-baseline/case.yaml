@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: neutron-log--after-hook-change-baseline
+description: "Should trigger neutron-log. Expected (not graded): Re-runs a before/after comparison from the same commit, checks quality (tests/acceptance criteria) passes in the candidate, and records the delta."
+tags: [neutron-log, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I just edited the output-filter hook in our Claude config. I want to know if it still saves tokens and whether the agent's answers are still correct."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?neutron-log\""

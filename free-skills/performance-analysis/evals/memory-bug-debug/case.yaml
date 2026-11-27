@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: performance-analysis--memory-bug-debug
+description: "Should NOT trigger performance-analysis. Expected (not graded): Agent does not invoke performance-analysis skill or any claude-flow performance commands"
+tags: [performance-analysis, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm getting a NullPointerException in my Java code, help me fix it."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?performance-analysis\""
+    min: 0
+    max: 0
+    arm: both

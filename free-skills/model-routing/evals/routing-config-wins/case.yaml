@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: model-routing--routing-config-wins
+description: "Behaviour of model-routing; outcome graded."
+tags: [model-routing, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "starlight-evals/routing-table.json says API integration work should route to haiku, but your skill doc says Sonnet. Which should I configure?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""
+  - name: judged-0
+    type: llm
+    criteria: "States that the evidence-derived routing-table.json is the source of truth and its route wins over the skill's judgment-call rules."
