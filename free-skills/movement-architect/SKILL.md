@@ -263,4 +263,4 @@ A solo founder who runs a fleet of coding agents wants to sell to other builders
 - `references/product-ladder.md`: product shapes, marketplaces, price bands, packaging
   checklist, marketplace policy traps.
 - `references/movement-brief.md`: the output template with field notes.
-- `evals/evals.json`: test prompts for this skill.
+- `evals/<case>/case.yaml`: three behaviour cases (library-to-movement, diagnose-stalled-shop, write-the-manifesto) in the library's schema 1.1 format.
