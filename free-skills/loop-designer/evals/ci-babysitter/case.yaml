@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: loop-designer--ci-babysitter
+description: "Should trigger loop-designer. Expected (not graded): Agent produces a watch/babysitter loop whose LOOP.md names the babysitter archetype and includes a silence contract: an explicit OK-token for no-change cycles and a cap on proactive reports, plus escalation for terminal states."
+tags: [loop-designer, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Build a babysitter loop that polls the state of our external CI on open PRs every 20 minutes, kicks failed checks by retrying, and only messages me when a PR reaches a terminal state — I don't want a report unless something actually changed."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?loop-designer\""

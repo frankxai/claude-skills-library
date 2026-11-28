@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: worker-integration--audit-agent-mapping
+description: "Behaviour of worker-integration; outcome graded."
+tags: [worker-integration, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Which agents does the audit trigger dispatch to, and what's the fallback agent?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?worker-integration\""
+  - name: judged-0
+    type: llm
+    criteria: "Answer lists security-analyst and tester as primary agents and reviewer as fallback"

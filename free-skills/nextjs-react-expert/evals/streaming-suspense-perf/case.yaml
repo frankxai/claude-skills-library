@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: nextjs-react-expert--streaming-suspense-perf
+description: "Should trigger nextjs-react-expert."
+tags: [nextjs-react-expert, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "My Next.js App Router dashboard has one slow analytics query that blocks the whole page from rendering, hurting LCP. How should I restructure the data fetching and rendering so the rest of the page streams in immediately?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?nextjs-react-expert\""

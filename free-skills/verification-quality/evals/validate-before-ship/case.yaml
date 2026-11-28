@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: verification-quality--validate-before-ship
+description: "Should trigger verification-quality. Expected (not graded): Agent runs claude-flow verify check (or equivalent) and reports the truth score against a threshold"
+tags: [verification-quality, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Before we ship this release, can you run a verification check on the codebase and make sure the quality score passes?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-quality\""

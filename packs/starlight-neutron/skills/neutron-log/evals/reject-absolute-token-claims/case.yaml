@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: neutron-log--reject-absolute-token-claims
+description: "Behaviour of neutron-log; outcome graded."
+tags: [neutron-log, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "RTK is reporting it saved 120,000 tokens on my session. Tell me the real number."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?neutron-log\""
+  - name: judged-0
+    type: llm
+    criteria: "The response identifies RTK's absolute token counts as unreliable (bytes/4 estimates), reports the figure in bytes or names the unit as estimated tokens, and does not present the absolute count as a measured result."

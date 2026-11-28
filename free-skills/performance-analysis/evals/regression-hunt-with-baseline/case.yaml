@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: performance-analysis--regression-hunt-with-baseline
+description: "Should trigger performance-analysis. Expected (not graded): Agent runs performance analysis commands (e.g. bottleneck detect or analysis performance-report) and produces a written comparison against the provided baseline artifact identifying the area of regression"
+tags: [performance-analysis, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Our last deploy doubled task execution time: the CI benchmark shows the average agent task went from 500ms to 1050ms. Profile the performance regression and compare against the benchmark report at benchmarks/baseline.json to find where the slowdown is."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?performance-analysis\""

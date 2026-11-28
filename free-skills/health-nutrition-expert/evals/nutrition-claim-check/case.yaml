@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: health-nutrition-expert--nutrition-claim-check
+description: "Should trigger health-nutrition-expert. Expected (not graded): Agent evaluates the claim using evidence-based nutrition science rather than just endorsing or repeating the claim."
+tags: [health-nutrition-expert, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Is it true that seed oils are toxic and I should avoid them completely? I keep seeing this online"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?health-nutrition-expert\""

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: reasoningbank-intelligence--compare-bug-fixing-strategies
+description: "Should trigger reasoningbank-intelligence."
+tags: [reasoningbank-intelligence, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "How can my agent compare tdd_approach vs debug_first for bug fixing and recommend the best strategy with ReasoningBank?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?reasoningbank-intelligence\""

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: lottie--dotlottie-file-usage
+description: "Should trigger lottie."
+tags: [lottie, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Show me how to use a .lottie file with @lottiefiles/dotlottie-web in HyperFrames, I want it on a canvas."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?lottie\""

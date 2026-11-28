@@ -565,7 +565,7 @@ MOBILE-FIRST DESIGN:
 5. Add desktop-only enhancements
 
 TOUCH TARGETS:
-Minimum: 44×44px (WCAG 2.2)
+Minimum: 24×24px for WCAG 2.2 AA (2.5.8); 44×44px meets AAA (2.5.5)
 Recommended: 48×48px
 Spacing: 8px between targets
 ```

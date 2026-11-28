@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: worker-integration--dispatch-tasks-to-worker-pool
+description: "Should trigger worker-integration. Expected (not graded): Skill provides agent mapping/routing guidance for the optimize trigger"
+tags: [worker-integration, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want to route my optimize tasks to the best agent in the worker pool automatically — how do I set that up?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?worker-integration\""

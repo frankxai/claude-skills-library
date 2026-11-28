@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: worker-integration--hire-human-consultant
+description: "Should NOT trigger worker-integration. Expected (not graded): Skill not used; response is about human workforce management, not worker-agent integration"
+tags: [worker-integration, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What's the best way to track performance of my remote team members who work different hours?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?worker-integration\""
+    min: 0
+    max: 0
+    arm: both

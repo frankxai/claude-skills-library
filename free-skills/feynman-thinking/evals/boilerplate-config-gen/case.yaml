@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--boilerplate-config-gen
+description: "Should NOT trigger feynman-thinking. Expected (not graded): Skill does not activate; response is just boilerplate config generation with no mental model walkthrough or abstraction review."
+tags: [feynman-thinking, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Generate a standard Dockerfile and docker-compose.yml for a simple Express app, nothing fancy."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+    min: 0
+    max: 0
+    arm: both

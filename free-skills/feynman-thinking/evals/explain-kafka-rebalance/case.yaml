@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: feynman-thinking--explain-kafka-rebalance
+description: "Should trigger feynman-thinking. Expected (not graded): Response gives a plain-English explanation and a mental model of Kafka rebalancing, ideally with a simple diagram or step-by-step data flow."
+tags: [feynman-thinking, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I keep getting lost trying to understand how Kafka consumer group rebalancing actually works. Can you explain the concept simply and build a mental model for me?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""

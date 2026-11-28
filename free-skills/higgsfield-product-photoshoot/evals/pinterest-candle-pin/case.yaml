@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: higgsfield-product-photoshoot--pinterest-candle-pin
+description: "Should trigger higgsfield-product-photoshoot. Expected (not graded): Runs higgsfield product-photoshoot create with --mode moodboard_pin"
+tags: [higgsfield-product-photoshoot, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Can you make a Pinterest pin for my candle brand? Something cottagecore"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?higgsfield-product-photoshoot\""

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: prompt-hub--design-customer-support-prompt
+description: "Should trigger prompt-hub. Expected (not graded): Routes through @prompt-conductor via flow-design (architect → lab-spec → red-team → evaluator), not inline authoring"
+tags: [prompt-hub, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Design a prompt for a customer support bot that stays polite under abuse and escalates billing disputes"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?prompt-hub\""

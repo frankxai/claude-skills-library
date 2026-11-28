@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: nextjs-react-expert--effect-fetch-flag
+description: "Behaviour of nextjs-react-expert; outcome graded."
+tags: [nextjs-react-expert, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Here is my dashboard component. Instead of just adding cleanup or loading states, tell me whether this data-fetching pattern itself is appropriate for Next.js, and if not, fix the underlying pattern: \\`\\`\\`\\n'use client';\\nexport default function Dashboard() {\\n  const [stats, setStats] = useState(null);\\n  useEffect(() => { fetch('/api/stats').then(r => r.json()).then(setStats) }, []);\\n  return <div>{stats ? <StatsChart data={stats} /> : null}</div>;\\n}\\n\\`\\`\\`"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?nextjs-react-expert\""
+  - name: judged-0
+    type: llm
+    criteria: "The response explicitly identifies fetching inside useEffect as an anti-pattern for this Next.js app and moves the /api/stats data fetching into an async Server Component (fetching on the server and passing data as props), rather than merely patching the useEffect with cleanup or loading states."

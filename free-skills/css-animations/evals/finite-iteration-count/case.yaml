@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: css-animations--finite-iteration-count
+description: "Behaviour of css-animations; outcome graded."
+tags: [css-animations, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write a CSS animation for a glow ring in HyperFrames that plays for the visible clip duration and can be seeked by the runtime adapter."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?css-animations\""
+  - name: judged-0
+    type: llm
+    criteria: "The produced CSS sets a finite animation-iteration-count (not infinite) and includes animation-fill-mode: both; the animated element has data-start and data-duration attributes."

@@ -18,7 +18,7 @@
   "totals": {
     "pluginsWithListedSkills": 1,
     "skills": 116,
-    "skillsWithEvals": 10,
+    "skillsWithEvals": 27,
     "skillsWithEvalVerdict": 23,
     "skillsWithVersion": 61,
     "skillsOwnedElsewhere": 13,
@@ -104,6 +104,7 @@
           "version": "2.0.0",
           "hasEvals": true,
           "evalSuites": [
+            "free-skills/agentic-orchestration/evals",
             "packs/skills-with-evals/evals/agentic-orchestration"
           ],
           "eval": {
@@ -226,8 +227,10 @@
           "description": "Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs, never copying existing artists' work to avoid copyright violations.",
           "path": "free-skills/anthropic/canvas-design",
           "version": null,
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/anthropic/canvas-design/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -338,8 +341,10 @@
           "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs. Use when testing or debugging a local web app, verifying frontend behavior, or capturing browser screenshots and logs.",
           "path": "free-skills/anthropic/webapp-testing",
           "version": null,
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/anthropic/webapp-testing/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -532,8 +537,10 @@
           "description": "CSS animation adapter patterns for HyperFrames. Use when authoring CSS keyframes, animation-delay based timing, animation-fill-mode, animation-play-state, or CSS-only motion that HyperFrames must seek deterministically during preview and rendering.",
           "path": "free-skills/css-animations",
           "version": null,
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/css-animations/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -598,6 +605,7 @@
           "version": "2.0.0",
           "hasEvals": true,
           "evalSuites": [
+            "free-skills/feynman-thinking/evals",
             "packs/skills-with-evals/evals/feynman-thinking"
           ],
           "eval": {
@@ -742,8 +750,10 @@
           "description": "Apply cutting-edge 2025 nutrition science on longevity, metabolic health, gut microbiome, and evidence-based dietary patterns for optimal vitality and disease prevention. Use when planning a diet, evaluating a nutrition claim, or applying evidence-based guidance on longevity, metabolic, and gut health.",
           "path": "free-skills/health-nutrition-expert",
           "version": "1.0.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/health-nutrition-expert/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -784,8 +794,10 @@
           "description": "Generate brand-quality product images through Higgsfield product-photoshoot\nprompt enhancement on GPT Image 2 / gpt_image_2. Entry point for professional\nbrand/product visuals.\nUse when: \"product photo\", \"studio shot\", \"lifestyle image\", \"Pinterest pin\",\n\"hero/banner\", \"carousel\", \"ad creative\", \"Meta ads\", \"virtual try-on\",\n\"model wearing\", \"person holding product\", \"closeup with hands\",\n\"levitating/floating/splash product\", \"CGI/surreal product\", \"restyle\",\n\"seasonal/aesthetic variation\", or any product, brand, or paid-social creative.\nModes: product_shot, lifestyle_scene, closeup_product_with_person,\nmoodboard_pin, hero_banner, social_carousel, ad_creative_pack,\nvirtual_model_tryout, conceptual_product, restyle. Backend assembles the final\nprompt; never freehand it.\nNOT for: no-product text-to-image (use higgsfield-generate), branded avatar\nvideo (use higgsfield-generate Marketing Studio), marketplace listing cards\n(use higgsfield-marketplace-cards), Soul Character training (use\nhiggsfield-soul-id).",
           "path": "free-skills/higgsfield-product-photoshoot",
           "version": "0.3.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/higgsfield-product-photoshoot/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -910,6 +922,7 @@
           "version": "2.0.0",
           "hasEvals": true,
           "evalSuites": [
+            "free-skills/loop-designer/evals",
             "packs/skills-with-evals/evals/loop-designer"
           ],
           "eval": {
@@ -956,8 +969,10 @@
           "description": "Lottie and dotLottie adapter patterns for HyperFrames. Use when embedding lottie-web JSON animations, .lottie files, @lottiefiles/dotlottie-web players, registering instances on window.__hfLottie, or making After Effects exports deterministic in HyperFrames.",
           "path": "free-skills/lottie",
           "version": null,
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/lottie/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1008,8 +1023,10 @@
           "description": "Manual reviewable prune of stale memory entries. Lists project_* entries older than 30 days with content preview; Frank decides per-entry [keep | archive | pin]. Keeps MEMORY.md under the auto-load 200-line truncation. Use when MEMORY.md exceeds 180 lines or session-end after a heavy work week.",
           "path": "free-skills/memory-prune",
           "version": null,
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/memory-prune/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1024,6 +1041,7 @@
           "version": "1.0.0",
           "hasEvals": true,
           "evalSuites": [
+            "free-skills/model-routing/evals",
             "packs/skills-with-evals/evals/model-routing"
           ],
           "eval": {
@@ -1070,8 +1088,10 @@
           "description": "Advanced Next.js (App Router) and React engineering for architecture, server/client boundaries, data fetching, caching, performance, and production operations. Use when building, reviewing, or debugging modern React/Next.js applications.",
           "path": "free-skills/nextjs-react-expert",
           "version": "1.0.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/nextjs-react-expert/evals"
+          ],
           "eval": {
             "verdict": "PASS",
             "evaluatedAt": "2026-10-25",
@@ -1190,8 +1210,10 @@
           "description": "Deep reference for Oracle AI architecture with end-to-end technical implementations. Use when architecting Oracle AI/GenAI solutions, designing enterprise Oracle AI systems, or needing detailed Oracle AI reference patterns.",
           "path": "free-skills/oracle-ai-architect",
           "version": "1.0.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/oracle-ai-architect/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1204,8 +1226,10 @@
           "description": "Enforce confidentiality across Oracle deliverables — pre-delivery audits, codename enforcement, and content sanitization. Use before any Oracle client handoff, when sanitizing documents, or when checking deliverables for confidential leaks.",
           "path": "free-skills/oracle-confidentiality",
           "version": "1.0.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/oracle-confidentiality/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1274,8 +1298,10 @@
           "description": "Arrow Electronics ECS intelligence — ArrowSphere marketplace, AI Accelerator program, Oracle Global Distributor of the Year 2025, Oracle x NVIDIA accelerator pack, May 2026 state, Frank's active strategic conversation, integration patterns. Use when generating Arrow content, writing about ArrowSphere or the EMEA distribution channel, partnership-conversation prep for Arrow, or evaluating new Arrow programs.",
           "path": "free-skills/partner-arrow",
           "version": null,
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/partner-arrow/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1330,8 +1356,10 @@
           "description": "Performance analysis, bottleneck detection, and optimization recommendations. Use when profiling slow code or systems, hunting a performance regression, or producing an optimization plan with measurable targets.",
           "path": "free-skills/performance-analysis",
           "version": "1.0.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/performance-analysis/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1362,8 +1390,10 @@
           "description": "Compose the 13-agent Prompt Hub team via @prompt-conductor. Use when designing prompts, optimizing prompts, evaluating prompts, importing patterns from Fabric / awesome-chatgpt-prompts / awesome-claude-prompts, running IFS introspection or psychometric profiling, or building knowledge-base prompt sets. Auto-trigger on phrases like \"design a prompt for X\", \"optimize this prompt\", \"evaluate my system prompt\", \"harvest patterns from Y\", \"rerank category Z\", \"IFS session\", \"profile me on Big Five\", \"build RAG prompts for X\". The Hub is horizontal substrate — every FrankX pillar can use it. Composes into /acos-meta + /superintelligence.",
           "path": "free-skills/prompt-hub",
           "version": null,
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/prompt-hub/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1390,8 +1420,10 @@
           "description": "Implement adaptive learning with ReasoningBank for pattern recognition, strategy optimization, and continuous improvement. Use when building self-learning agents, optimizing workflows, or implementing meta-cognitive systems.",
           "path": "free-skills/reasoningbank-intelligence",
           "version": null,
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/reasoningbank-intelligence/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1464,8 +1496,10 @@
           "description": "SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) development methodology with multi-agent orchestration. Use when running a structured spec-to-code workflow or decomposing a feature through the SPARC phases.",
           "path": "free-skills/sparc-methodology",
           "version": "2.7.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/sparc-methodology/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",
@@ -1642,8 +1676,10 @@
           "description": "Expert guidance on UI/UX design, design systems, accessibility (WCAG 2.2), user research, and creating inclusive, user-centered interfaces with 2025 best practices. Use when designing or auditing an interface, building a design system, or checking accessibility against WCAG 2.2.",
           "path": "free-skills/ui-ux-design-expert",
           "version": "1.0.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/ui-ux-design-expert/evals"
+          ],
           "eval": {
             "verdict": "PASS",
             "evaluatedAt": "2026-10-25",
@@ -1676,6 +1712,7 @@
           "version": "2.0.0",
           "hasEvals": true,
           "evalSuites": [
+            "free-skills/verification-quality/evals",
             "packs/skills-with-evals/evals/verification-quality"
           ],
           "eval": {
@@ -1764,8 +1801,10 @@
           "description": "Worker–agent integration for intelligent task dispatch and performance tracking. Use when wiring agents to a worker pool, routing tasks to workers, or instrumenting worker performance.",
           "path": "free-skills/worker-integration",
           "version": "1.0.0",
-          "hasEvals": false,
-          "evalSuites": [],
+          "hasEvals": true,
+          "evalSuites": [
+            "free-skills/worker-integration/evals"
+          ],
           "eval": null,
           "owner": {
             "repo": "frankxai/claude-skills-library",

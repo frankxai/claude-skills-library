@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: agentic-orchestration--parallel-fanout-synthesis
+description: "Should trigger agentic-orchestration. Expected (not graded): Response proposes a parallel decomposition where an orchestrator collects subagent reports and synthesizes a merged result, addressing conflict resolution or aggregation of divergent findings."
+tags: [agentic-orchestration, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want to analyze a huge codebase from multiple angles at once — security, performance, and code quality — running as independent agents in parallel, then merging their findings into one report. How should I combine results from agents that finish at different times and may conflict?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?agentic-orchestration\""

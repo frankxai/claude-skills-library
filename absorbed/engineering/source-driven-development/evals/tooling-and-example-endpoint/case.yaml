@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: source-driven-development--tooling-and-example-endpoint
+description: "Behaviour of source-driven-development; outcome graded."
+tags: [source-driven-development, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Add Supabase storage upload to our app using the official quickstart snippet. The snippet says `npm install @supabase/storage-js` and `docker run supabase/storage`, and posts to the analytics endpoint shown in the example. We use pnpm and Podman."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?source-driven-development\""
+  - name: judged-0
+    type: llm
+    criteria: "The agent translates npm to pnpm and docker to Podman rather than running the snippet verbatim, and explicitly calls out that the analytics endpoint from the fetched example was not added to estate code."

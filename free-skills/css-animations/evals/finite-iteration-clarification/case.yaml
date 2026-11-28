@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: css-animations--finite-iteration-clarification
+description: "Should trigger css-animations."
+tags: [css-animations, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Why does my CSS pulse-ring animation look wrong when HyperFrames seeks backwards in the preview? I'm using animation-iteration-count: infinite"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?css-animations\""

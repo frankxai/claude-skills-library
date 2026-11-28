@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: reasoningbank-intelligence--record-experiences-agentdb
+description: "Should trigger reasoningbank-intelligence."
+tags: [reasoningbank-intelligence, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Show me how to persist ReasoningBank experiences and patterns to AgentDB with vector search enabled."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?reasoningbank-intelligence\""

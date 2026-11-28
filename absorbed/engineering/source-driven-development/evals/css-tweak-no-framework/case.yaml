@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: source-driven-development--css-tweak-no-framework
+description: "Should NOT trigger source-driven-development."
+tags: [source-driven-development, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Fix the CSS on our pricing page — the third card's button is 2px off-center in Firefox. It's plain hand-written CSS with no CSS framework, reset or library stylesheets in the project; we vendor nothing."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?source-driven-development\""
+    min: 0
+    max: 0
+    arm: both

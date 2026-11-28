@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: health-nutrition-expert--longevity-foods-question
+description: "Should trigger health-nutrition-expert. Expected (not graded): Agent gives longevity- and gut-health-focused dietary guidance grounded in the skill's principles."
+tags: [health-nutrition-expert, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What should I eat to live longer and keep my gut microbiome healthy?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?health-nutrition-expert\""

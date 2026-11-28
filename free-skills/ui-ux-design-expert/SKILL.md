@@ -52,7 +52,7 @@ KEYBOARD NAVIGATION:
 - No keyboard traps (users can navigate away from all elements)
 
 TOUCH TARGETS:
-- Minimum size: 44×44 CSS pixels (WCAG 2.2)
+- Minimum size: 24×24 CSS pixels for WCAG 2.2 AA (2.5.8); 44×44 for AAA (2.5.5)
 - Adequate spacing between targets (8px minimum)
 - Larger targets for primary actions (48×48px recommended)
 
@@ -684,7 +684,7 @@ When providing UI/UX guidance:
 1. **Visible, Persistent Labels**: Never use placeholder-only labels (WCAG 3.3.2)
 2. **Show Password Toggle**: Reduces errors, improves UX (especially mobile)
 3. **Autocomplete Attributes**: Enables password managers, reduces friction
-4. **Large Touch Targets**: Minimum 44×44px for buttons/inputs (WCAG 2.5.5)
+4. **Large Touch Targets**: Minimum 24×24px for WCAG 2.2 AA (2.5.8); 44×44px meets AAA (2.5.5)
 5. **Clear Error Messages**: Specific guidance, not just "Invalid login"
 6. **Keyboard Accessible**: Full keyboard navigation, visible focus indicators
 7. **Contrast**: Minimum 4.5:1 for text, 3:1 for form borders (WCAG 1.4.3)

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: partner-arrow--arrowsphere-content-request
+description: "Should trigger partner-arrow."
+tags: [partner-arrow, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write a partner-facing blog post about ArrowSphere AI and how resellers can list AI services through the marketplace."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?partner-arrow\""

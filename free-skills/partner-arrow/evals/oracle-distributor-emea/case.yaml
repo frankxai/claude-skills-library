@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: partner-arrow--oracle-distributor-emea
+description: "Should trigger partner-arrow."
+tags: [partner-arrow, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Draft a LinkedIn post about Arrow being named Oracle Global Distributor of the Year 2025 and what that means for the EMEA reseller channel."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?partner-arrow\""

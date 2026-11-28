@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: reasoningbank-intelligence--behaviour-runnable-example
+description: "Behaviour of reasoningbank-intelligence; outcome graded."
+tags: [reasoningbank-intelligence, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write a TypeScript example that initializes ReasoningBank with persistence enabled, records a code_review experience with success metrics, and then calls recommendStrategy."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?reasoningbank-intelligence\""
+  - name: judged-0
+    type: llm
+    criteria: "The produced code includes `new ReasoningBank(` with `persist: true`, a call to `rb.recordExperience` with an outcome containing metrics, and a call to `rb.recommendStrategy`."

@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: ui-ux-design-expert--contrast-standards
+description: "Behaviour of ui-ux-design-expert; outcome graded."
+tags: [ui-ux-design-expert, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What contrast ratios do I need for text and UI components to pass WCAG AA? Also what's the minimum touch target size under WCAG 2.2?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ui-ux-design-expert\""
+  - name: judged-0
+    type: llm
+    criteria: "The response states 4.5:1 for normal text, 3:1 for large text and UI components/graphics, and a minimum touch target size of 24×24 CSS pixels for WCAG 2.2 AA (2.5.8); it may note 44×44 as the AAA level (2.5.5)."

@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: ui-ux-design-expert--css-flexbox-bug
+description: "Should NOT trigger ui-ux-design-expert."
+tags: [ui-ux-design-expert, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "My flexbox children are overflowing their container in Safari. Why won't flex-shrink apply to these items?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ui-ux-design-expert\""
+    min: 0
+    max: 0
+    arm: both

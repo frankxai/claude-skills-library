@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--mechanical-syntax-fix
+description: "Should NOT trigger feynman-thinking. Expected (not graded): Skill does not activate; response is a direct config fix without Feynman-style explanation, Socratic questions, or architectural diagrams."
+tags: [feynman-thinking, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "My formatter keeps removing trailing commas and breaking my lint config. Just fix the .prettierrc so it stops, don't lecture me."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+    min: 0
+    max: 0
+    arm: both

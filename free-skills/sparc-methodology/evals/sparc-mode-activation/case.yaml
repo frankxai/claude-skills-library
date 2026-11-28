@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: sparc-methodology--sparc-mode-activation
+description: "Should trigger sparc-methodology. Expected (not graded): Response names the `architect` mode and gives the exact activation command `npx claude-flow sparc run architect \"task\"` (or the equivalent MCP call mcp__claude-flow__sparc_mode with mode architect)"
+tags: [sparc-methodology, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want to use sparc modes to have an architect agent design my system — which mode do I use and what is the exact command to run it from the CLI?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?sparc-methodology\""

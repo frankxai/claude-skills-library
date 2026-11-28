@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: reasoningbank-intelligence--build-self-improving-agent
+description: "Should trigger reasoningbank-intelligence."
+tags: [reasoningbank-intelligence, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want to build an agent that learns from its past task outcomes and picks better strategies over time using agentic-flow. How do I set that up?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?reasoningbank-intelligence\""

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: source-driven-development--model-price-fact
+description: "Should trigger source-driven-development."
+tags: [source-driven-development, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What's the price per million tokens for the Claude Haiku model we use in production? I need it for a cost estimate doc. The estate keeps model facts in starlight/intel/INTEL-BRIEF.md."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?source-driven-development\""

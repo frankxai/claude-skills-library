@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: lottie--embed-logo-json
+description: "Should trigger lottie."
+tags: [lottie, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I have an After Effects logo reveal exported as bodymovin JSON — how do I add it to my HyperFrames composition so the frame renderer can control it?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?lottie\""

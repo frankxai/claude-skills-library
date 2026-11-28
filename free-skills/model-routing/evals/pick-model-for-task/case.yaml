@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: model-routing--pick-model-for-task
+description: "Should trigger model-routing. Expected (not graded): Routes each task per the matrix: lint/config formatting to Haiku, PR review to Sonnet, and architecture design to Opus, with cost/complexity reasoning."
+tags: [model-routing, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I have three tasks queued: linting and formatting a config file, reviewing a PR, and designing the architecture for a multi-tenant SaaS platform. Which model tier should each go to?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""

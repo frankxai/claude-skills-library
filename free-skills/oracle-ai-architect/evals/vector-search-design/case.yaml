@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: oracle-ai-architect--vector-search-design
+description: "Should trigger oracle-ai-architect. Expected (not graded): Response includes SQL with a VECTOR column definition and VECTOR_DISTANCE usage"
+tags: [oracle-ai-architect, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm designing a semantic search feature on our Oracle Database 26ai and need help creating vector tables and writing cosine similarity queries"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?oracle-ai-architect\""

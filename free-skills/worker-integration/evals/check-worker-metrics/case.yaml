@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: worker-integration--check-worker-metrics
+description: "Should trigger worker-integration. Expected (not graded): Skill surfaces the workers metrics / stats --integration commands"
+tags: [worker-integration, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "How can I see performance metrics and feedback stats for my workers?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?worker-integration\""

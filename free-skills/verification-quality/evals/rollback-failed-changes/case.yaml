@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: verification-quality--rollback-failed-changes
+description: "Should trigger verification-quality. Expected (not graded): Agent runs verification and performs/uses verify rollback --last-good"
+tags: [verification-quality, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "The last commit made things worse — verify the current state and if it fails, roll back to the last known good version."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-quality\""

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: neutron-log--verify-readme-savings
+description: "Should trigger neutron-log. Expected (not graded): Runs the neutron bench protocol on the user's repo, records measured bytes with a named unit, machine and date, and labels anything unmeasured as unmeasured."
+tags: [neutron-log, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "The RTK README claims 60% token savings on shell output. Can we actually verify that on our repo before we roll it out to the team?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?neutron-log\""

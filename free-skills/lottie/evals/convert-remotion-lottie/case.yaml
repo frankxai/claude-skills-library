@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: lottie--convert-remotion-lottie
+description: "Should trigger lottie."
+tags: [lottie, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm porting a Remotion project that uses @remotion/lottie, can you translate that into plain HTML for HyperFrames?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?lottie\""

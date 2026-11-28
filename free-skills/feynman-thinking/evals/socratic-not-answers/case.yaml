@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--socratic-not-answers
+description: "Behaviour of feynman-thinking; outcome graded."
+tags: [feynman-thinking, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm about to add a generic IRepository<T> interface with a single implementation so we can swap databases later. Walk me through whether this is a good idea."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+  - name: judged-0
+    type: llm
+    criteria: "Response uses Socratic questioning or a simplicity audit to challenge the speculative interface, pointing out it is a single-implementation pass-through abstraction, rather than endorsing it outright."

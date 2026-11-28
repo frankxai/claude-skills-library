@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: cost-aware-llm-pipeline--cost-record-line
+description: "Behaviour of cost-aware-llm-pipeline; outcome graded."
+tags: [cost-aware-llm-pipeline, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Route my multi-file test refactor and tell me what record you leave."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?cost-aware-llm-pipeline\""
+  - name: judged-0
+    type: llm
+    criteria: "Leaves exactly one line noting task class, model used, and whether the result was kept, with no invented dollar figure."

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: webapp-testing--test-contact-form
+description: "Should trigger webapp-testing."
+tags: [webapp-testing, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I built a contact form in my Flask app, can you check that it actually submits and shows the success message?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?webapp-testing\""

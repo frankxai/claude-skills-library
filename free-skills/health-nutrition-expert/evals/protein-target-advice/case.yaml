@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: health-nutrition-expert--protein-target-advice
+description: "Behaviour of health-nutrition-expert; outcome graded."
+tags: [health-nutrition-expert, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm 55 and losing muscle. How much protein should I eat daily at 180 lbs?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?health-nutrition-expert\""
+  - name: judged-0
+    type: llm
+    criteria: "Agent recommends roughly 180g protein per day (1g+ per pound bodyweight) and explains the muscle-longevity rationale."

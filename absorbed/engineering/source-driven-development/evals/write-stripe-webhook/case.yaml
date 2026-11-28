@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: source-driven-development--write-stripe-webhook
+description: "Should trigger source-driven-development."
+tags: [source-driven-development, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Add a Stripe webhook endpoint to our Express app that verifies the signature and handles checkout.session.completed events."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?source-driven-development\""

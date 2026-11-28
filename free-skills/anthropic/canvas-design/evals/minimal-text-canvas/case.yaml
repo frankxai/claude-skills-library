@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: canvas-design--minimal-text-canvas
+description: "Behaviour of canvas-design; outcome graded."
+tags: [canvas-design, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Make me an art poster about the feeling of insomnia."
+  max_turns: 6
+  allowed_tools: [Skill, Read, Write, Bash]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?canvas-design\""
+  - name: judged-0
+    type: llm
+    criteria: "The final canvas contains only sparse text (no paragraphs of explanatory prose) with all elements contained within the page margins and no overlapping text or graphics."

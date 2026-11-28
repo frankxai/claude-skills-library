@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: diagnosing-bugs--flaky-ci-test
+description: "Should trigger diagnosing-bugs. Expected (not graded): Agent builds a looped reproduction before proposing causes"
+tags: [diagnosing-bugs, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Our checkout API test fails about one run in five in CI with a 500 but always passes locally. Can you figure out what's going on?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?diagnosing-bugs\""

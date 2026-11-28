@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: ui-ux-design-expert--audit-wcag-compliance
+description: "Should trigger ui-ux-design-expert."
+tags: [ui-ux-design-expert, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Can you audit my checkout page for accessibility issues? I need to make sure it meets WCAG 2.2 before the European Accessibility Act deadline."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ui-ux-design-expert\""

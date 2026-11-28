@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: css-animations--gsap-choreography
+description: "Should NOT trigger css-animations."
+tags: [css-animations, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I need to choreograph a scene where text fades, then a box slides, then the camera zooms — should I use GSAP timelines for this?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?css-animations\""
+    min: 0
+    max: 0
+    arm: both

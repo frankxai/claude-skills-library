@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: higgsfield-product-photoshoot--meta-ad-pack-serum
+description: "Should trigger higgsfield-product-photoshoot. Expected (not graded): Uses --mode ad_creative_pack"
+tags: [higgsfield-product-photoshoot, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I need ad creatives for Meta ads for my skincare serum, a few different variants"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?higgsfield-product-photoshoot\""

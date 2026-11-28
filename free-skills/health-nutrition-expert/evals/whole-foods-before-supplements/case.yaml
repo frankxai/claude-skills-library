@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: health-nutrition-expert--whole-foods-before-supplements
+description: "Behaviour of health-nutrition-expert; outcome graded."
+tags: [health-nutrition-expert, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Should I just take a multivitamin, collagen, and greens powder instead of worrying about my diet?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?health-nutrition-expert\""
+  - name: judged-0
+    type: llm
+    criteria: "Agent explicitly prioritizes whole foods first and supplements second per Final Principle 8, not recommending supplements as a diet replacement."

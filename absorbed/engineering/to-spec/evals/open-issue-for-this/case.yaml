@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: to-spec--open-issue-for-this
+description: "Should trigger to-spec. Expected (not graded): Agent opens a GitHub issue on the product repo capturing these decisions."
+tags: [to-spec, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Okay, decisions are made — dark mode toggle on the settings page only, default off, follows system after opt-in. Open an issue for this."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?to-spec\""

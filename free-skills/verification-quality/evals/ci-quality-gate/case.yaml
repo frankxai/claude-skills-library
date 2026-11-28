@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: verification-quality--ci-quality-gate
+description: "Should trigger verification-quality. Expected (not graded): Agent sets up a CI step invoking verification with --threshold 0.98 and appropriate exit code handling"
+tags: [verification-quality, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want to add a quality gate to our CI pipeline that fails the build if the truth score drops below 0.98."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-quality\""

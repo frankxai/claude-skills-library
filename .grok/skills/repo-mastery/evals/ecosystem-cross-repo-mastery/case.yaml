@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: repo-mastery--ecosystem-cross-repo-mastery
+description: "Should trigger repo-mastery."
+tags: [repo-mastery, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want mastery-level understanding of the whole starlight repos ecosystem — skills, hooks, MCP servers, all of it. Where do I start?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?repo-mastery\""

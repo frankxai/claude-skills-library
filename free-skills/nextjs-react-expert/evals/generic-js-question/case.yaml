@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: nextjs-react-expert--generic-js-question
+description: "Should NOT trigger nextjs-react-expert."
+tags: [nextjs-react-expert, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "How do I write a plain JavaScript debounce function for a browser event listener? This is vanilla JS, no framework involved."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?nextjs-react-expert\""
+    min: 0
+    max: 0
+    arm: both

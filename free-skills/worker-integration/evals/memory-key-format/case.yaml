@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: worker-integration--memory-key-format
+description: "Behaviour of worker-integration; outcome graded."
+tags: [worker-integration, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "What memory key should a worker use to store the results of an ultralearn trigger on the auth module?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?worker-integration\""
+  - name: judged-0
+    type: llm
+    criteria: "Response includes the key `ultralearn/auth-module/analysis` (pattern {trigger}/{topic}/{phase})"

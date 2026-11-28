@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: repo-mastery--write-a-repo-readme
+description: "Should NOT trigger repo-mastery. Expected (not graded): Should just write a README; no ecosystem inventory, no MCP/subagent mapping steps"
+tags: [repo-mastery, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write a README.md for my new Python repository"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?repo-mastery\""
+    min: 0
+    max: 0
+    arm: both

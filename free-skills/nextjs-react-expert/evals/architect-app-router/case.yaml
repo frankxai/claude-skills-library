@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: nextjs-react-expert--architect-app-router
+description: "Should trigger nextjs-react-expert."
+tags: [nextjs-react-expert, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm starting a new Next.js App Router project for an e-commerce site. How should I structure the app directory and decide which components should be server vs client?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?nextjs-react-expert\""

@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: model-routing--database-performance-tuning
+description: "Should NOT trigger model-routing. Expected (not graded): No model routing tiers, model IDs, or pricing invoked; answers the database question directly despite the 'optimize' keyword."
+tags: [model-routing, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Our Postgres queries are slow. Can you help me optimize the indexes on our orders table?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?model-routing\""
+    min: 0
+    max: 0
+    arm: both

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: css-animations--shimmer-glow-request
+description: "Should trigger css-animations."
+tags: [css-animations, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I want a subtle shimmer effect sweeping across my loading bar in HyperFrames, purely with CSS if possible"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?css-animations\""

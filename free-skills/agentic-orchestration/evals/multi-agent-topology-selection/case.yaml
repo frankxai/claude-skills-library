@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: agentic-orchestration--multi-agent-topology-selection
+description: "Should trigger agentic-orchestration. Expected (not graded): Response compares at least two named topologies (conductor/pipeline/swarm/blackboard) with a stated suitability tradeoff and recommends one with a reason."
+tags: [agentic-orchestration, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm designing a system where a main agent routes work to specialist subagents. How do I decide between conductor, pipeline, swarm, and blackboard topologies, and which fits a complex project with many interdependent stages?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?agentic-orchestration\""

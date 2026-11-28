@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: reasoningbank-intelligence--behaviour-learning-config
+description: "Behaviour of reasoningbank-intelligence; outcome graded."
+tags: [reasoningbank-intelligence, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Set up continuous learning for my agent so it only learns from high-confidence outcomes and updates models periodically."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?reasoningbank-intelligence\""
+  - name: judged-0
+    type: llm
+    criteria: "The provided code calls enableAutoLearning with a threshold parameter and an updateFrequency parameter, and the threshold value is documented as filtering low-confidence outcomes."

@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: oracle-ai-architect--select-ai-nl2sql
+description: "Should trigger oracle-ai-architect. Expected (not graded): Response includes a DBMS_CLOUD_AI.CREATE_PROFILE call whose attributes JSON contains an object_list entry with name ORDERS"
+tags: [oracle-ai-architect, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "How do I set up Select AI on our Autonomous Database so business users can ask natural language questions about the ORDERS table?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?oracle-ai-architect\""

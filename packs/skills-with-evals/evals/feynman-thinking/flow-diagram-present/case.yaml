@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: feynman-thinking--flow-diagram-present
+description: "Behaviour of feynman-thinking; outcome graded."
+tags: [feynman-thinking, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Explain the control flow of this image upload service: client uploads, server resizes, then stores to S3 and invalidates the CDN."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""
+  - name: judged-0
+    type: llm
+    criteria: "Response includes a text or ASCII flow diagram showing the steps (upload → resize → store → invalidate)."

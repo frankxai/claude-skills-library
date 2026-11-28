@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: feynman-thinking--explain-arch-like-junior
+description: "Should trigger feynman-thinking."
+tags: [feynman-thinking, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I'm onboarding a junior dev and I need to explain how our event-driven order system works — Kafka, the consumer service, the payments API — can you explain it simply so they get a mental model?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?feynman-thinking\""

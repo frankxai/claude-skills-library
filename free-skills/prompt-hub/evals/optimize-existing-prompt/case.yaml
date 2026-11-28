@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: prompt-hub--optimize-existing-prompt
+description: "Should trigger prompt-hub. Expected (not graded): Dispatches to @prompt-conductor as flow-optimize (optimizer → lab-spec → evaluator), not edited inline"
+tags: [prompt-hub, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Optimize this prompt — my extraction prompt keeps outputting malformed JSON, can you refine it? /po"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?prompt-hub\""

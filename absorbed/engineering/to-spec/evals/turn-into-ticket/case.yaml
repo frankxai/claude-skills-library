@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: to-spec--turn-into-ticket
+description: "Should trigger to-spec. Expected (not graded): Agent files the spec as an issue without asking the user further questions."
+tags: [to-spec, should-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "That's enough discussion, we agreed on the CSV export with a 10k row cap and async delivery by email. Turn this into a ticket."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?to-spec\""

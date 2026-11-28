@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: oracle-ai-architect--generic-postgres-fts
+description: "Should NOT trigger oracle-ai-architect. Expected (not graded): Skill not triggered; no Oracle-specific reference material used"
+tags: [oracle-ai-architect, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "How do I set up full-text search with tsvector columns in PostgreSQL?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?oracle-ai-architect\""
+    min: 0
+    max: 0
+    arm: both

@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: verification-quality--unit-test-bug-report
+description: "Should NOT trigger verification-quality. Expected (not graded): No verification/rollback commands run; debugging proceeds normally"
+tags: [verification-quality, should-not-trigger, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "My jest unit tests are failing on a flaky timer test, can you help me debug it?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-not-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?verification-quality\""
+    min: 0
+    max: 0
+    arm: both
