@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="t">
+  <title id="t">A timber floating studio with a solar roof, moored on a still canal at dusk</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2f3a"/><stop offset=".62" stop-color="#c98a5b"/><stop offset="1" stop-color="#e9c9a1"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b4f57"/><stop offset="1" stop-color="#0f1d24"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6d9a8"/><stop offset="1" stop-color="#e2a86a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#sky)"/>
+  <g fill="#22343c" opacity=".55">
+    <rect x="0" y="380" width="70" height="140"/><rect x="74" y="350" width="58" height="170"/><polygon points="136,520 136,360 166,330 196,360 196,520"/>
+    <rect x="200" y="392" width="64" height="128"/><polygon points="980,520 980,350 1012,318 1044,350 1044,520"/><rect x="1048" y="372" width="62" height="148"/><rect x="1114" y="396" width="86" height="124"/>
+  </g>
+  <rect y="520" width="1200" height="280" fill="url(#water)"/>
+  <g>
+    <rect x="360" y="472" width="520" height="40" rx="4" fill="#0f1d24"/>
+    <rect x="392" y="352" width="456" height="122" fill="#8a5a3c"/>
+    <g stroke="#6e4630" stroke-width="2">
+      <line x1="420" y1="352" x2="420" y2="474"/><line x1="448" y1="352" x2="448" y2="474"/><line x1="792" y1="352" x2="792" y2="474"/><line x1="820" y1="352" x2="820" y2="474"/>
+    </g>
+    <rect x="470" y="372" width="300" height="86" fill="url(#glass)"/>
+    <g stroke="#8a5a3c" stroke-width="6"><line x1="570" y1="372" x2="570" y2="458"/><line x1="670" y1="372" x2="670" y2="458"/></g>
+    <polygon points="372,352 868,352 832,320 408,320" fill="#1d2d35"/>
+    <g fill="#2f4b5a" stroke="#4f7385" stroke-width="2">
+      <rect x="424" y="304" width="88" height="14" transform="skewX(-20)"/><rect x="530" y="304" width="88" height="14" transform="skewX(-20)"/><rect x="636" y="304" width="88" height="14" transform="skewX(-20)"/><rect x="742" y="304" width="88" height="14" transform="skewX(-20)"/>
+    </g>
+  </g>
+  <g opacity=".35"><rect x="392" y="520" width="456" height="70" fill="#8a5a3c"/><rect x="470" y="526" width="300" height="40" fill="#e2a86a"/></g>
+  <g stroke="#e9c9a1" stroke-opacity=".35" stroke-width="2"><line x1="300" y1="610" x2="520" y2="610"/><line x1="640" y1="640" x2="940" y2="640"/><line x1="180" y1="690" x2="360" y2="690"/><line x1="760" y1="720" x2="1010" y2="720"/></g>
+</svg>

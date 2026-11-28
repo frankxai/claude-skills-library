@@ -1,0 +1,123 @@
+{
+  "url": "http://127.0.0.1:8765/after.html",
+  "layer": "browser",
+  "scores": {
+    "speed": 5,
+    "access": 5,
+    "mobile": 5,
+    "type": 5,
+    "composition": 5,
+    "total": 25
+  },
+  "findings": [],
+  "shots": [
+    "375.png",
+    "375-full.png",
+    "768.png",
+    "768-full.png",
+    "1440.png",
+    "1440-full.png",
+    "375-reduced-motion.png",
+    "1440-dark.png"
+  ],
+  "metrics": {
+    "perf": {
+      "lcp": 388,
+      "lcpElement": [
+        "img"
+      ],
+      "cls": 0,
+      "shifted": [],
+      "tbt": 0,
+      "preFcpBlock": 0,
+      "fcp": 260,
+      "bytes": 18176,
+      "requests": 2,
+      "profile": {
+        "cpu": 4,
+        "latencyMs": 150,
+        "downKbps": 1600,
+        "upKbps": 750
+      }
+    },
+    "measure": {
+      "medianCpl": 57,
+      "paragraphs": 3
+    },
+    "typeScale": {
+      "distinct": 6,
+      "ratios": [
+        1.231,
+        1.25,
+        1.55,
+        1.258,
+        1.256
+      ],
+      "cv": 0.391
+    },
+    "edges": [
+      {
+        "x": 184,
+        "count": 20
+      },
+      {
+        "x": 284,
+        "count": 8
+      },
+      {
+        "x": 668,
+        "count": 5
+      },
+      {
+        "x": 693,
+        "count": 2
+      },
+      {
+        "x": 120,
+        "count": 1
+      },
+      {
+        "x": 387,
+        "count": 1
+      },
+      {
+        "x": 508,
+        "count": 1
+      },
+      {
+        "x": 1149,
+        "count": 1
+      }
+    ],
+    "gridAdherence": 1,
+    "fold": {
+      "phone": {
+        "h1Above": true,
+        "actions": 1,
+        "actionLabels": [
+          "Request a viewing in Amsterdam"
+        ]
+      },
+      "desktop": {
+        "h1Above": true,
+        "actions": 1,
+        "actionLabels": [
+          "Request a viewing in Amsterdam"
+        ]
+      }
+    },
+    "focus": {
+      "tried": 7,
+      "invisible": []
+    },
+    "reduced": {
+      "running": 0,
+      "examples": [],
+      "hiddenText": 0
+    },
+    "dark": {
+      "responds": true,
+      "measuredText": 39
+    }
+  }
+}

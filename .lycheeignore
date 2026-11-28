@@ -5,5 +5,6 @@
 ^https://openai\.com/
 ^https://github\.com/signup
 ^https://neptune\.ai/
+^https://([a-z0-9-]+\.)?medium\.com/
 # Placeholder links inside templates that teach how to write a skill or README.
 ^https://github\.com/example/

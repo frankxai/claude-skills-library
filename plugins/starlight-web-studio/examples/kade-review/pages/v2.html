@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kade: a solar floating studio you can moor in a city canal</title>
+<meta name="description" content="Kade builds 38 m² timber floating studios with a 9 kWp solar roof and a 30 kWh battery, hand-built in Zaandam in seven months. From €248,000, mooring excluded.">
+<link rel="canonical" href="https://kade.example/">
+<meta property="og:title" content="Kade floating studios">
+<meta property="og:description" content="A 38 m² solar-electric studio on a concrete hull, built by hand in Zaandam.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://kade.example/hero.svg">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1d24" media="(prefers-color-scheme: dark)">
+<link rel="preload" as="image" href="hero.svg" fetchpriority="high">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"Organization","@id":"https://kade.example/#org","name":"Kade","url":"https://kade.example/"},
+ {"@type":"Product","name":"Kade floating studio","brand":{"@id":"https://kade.example/#org"},
+  "description":"38 m² timber floating studio on a concrete hull with a 9 kWp solar roof, 30 kWh LFP battery and air-water heat pump.",
+  "offers":{"@type":"Offer","price":"248000","priceCurrency":"EUR","availability":"https://schema.org/PreOrder"}},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Does the price include a mooring?","acceptedAnswer":{"@type":"Answer","text":"No. Kade helps with the permit application, but the mooring right is bought or leased separately from the municipality or a private owner."}},
+  {"@type":"Question","name":"Can it run without a grid connection?","acceptedAnswer":{"@type":"Answer","text":"From April to September, yes, on a typical Dutch roof yield. In winter the 30 kWh battery covers about four grey days; after that it draws from shore power."}}]}
+]}
+</script>
+<style>
+  :root {
+    --paper: #f4f1ea; --ink: #13232b; --ink-2: #3c4b52; --rule: #d9d3c7;
+    --copper: #9c4520; --copper-fill: #b5562b; --on-copper: #fff;
+    --card: #fbf9f4;
+    --step--1: 0.8125rem; --step-0: 1rem; --step-1: 1.25rem; --step-2: 1.5625rem;
+    --step-3: 1.9375rem; --step-4: 2.4375rem; --step-5: 3.0625rem;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px;
+    --measure: 62ch; --edge: clamp(16px, 5vw, 64px); --wrap: 1200px;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, "Book Antiqua", Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #0f1d24; --ink: #eee8dc; --ink-2: #b9c2c4; --rule: #2a3b43; --copper: #e39a6c; --copper-fill: #e39a6c; --on-copper: #13232b; --card: #15262e; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: var(--step-0)/1.6 var(--sans); }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: inherit; text-underline-offset: 0.2em; }
+  :focus-visible { outline: 3px solid var(--copper); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding-inline: var(--edge); }
+  .skip { position: absolute; left: var(--s4); top: -64px; display: inline-flex; align-items: center; min-height: 44px; background: var(--ink); color: var(--paper); padding: 0 var(--s4); z-index: 10; }
+  .skip:focus { top: var(--s4); }
+
+  header.top { border-bottom: 1px solid var(--rule); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 64px; gap: var(--s4); }
+  .mark { display: inline-flex; align-items: center; min-height: 44px; font: 600 var(--step-1)/1 var(--serif); text-decoration: none; letter-spacing: 0.02em; }
+  nav ul { display: flex; gap: var(--s1); list-style: none; margin: 0; padding: 0; }
+  nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s3); text-decoration: none; color: var(--ink-2); font-size: var(--step--1); letter-spacing: 0.04em; }
+  nav a:hover { color: var(--ink); }
+
+  .hero { padding-block: var(--s7) var(--s8); }
+  .hero .wrap { display: grid; gap: var(--s6); align-items: center; }
+  @media (min-width: 900px) { .hero .wrap { grid-template-columns: 5fr 7fr; gap: var(--s8); } }
+  .eyebrow { font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--copper); margin: 0 0 var(--s4); }
+  h1 { font: 500 var(--step-4)/1.08 var(--serif); letter-spacing: -0.015em; margin: 0 0 var(--s5); text-wrap: balance; }
+  @media (min-width: 900px) { h1 { font-size: var(--step-5); } }
+  .sub { font-size: var(--step-1); line-height: 1.5; color: var(--ink-2); margin: 0 0 var(--s6); max-width: 34ch; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s5); }
+  .btn { display: inline-flex; align-items: center; min-height: 48px; padding: 0 var(--s5); border-radius: 4px; background: var(--copper-fill); color: var(--on-copper); text-decoration: none; font-weight: 600; }
+  .btn:hover { filter: brightness(1.06); }
+  .text-link { display: inline-flex; align-items: center; min-height: 48px; color: var(--ink); font-weight: 600; }
+  .hero figure { margin: 0; }
+  .hero img { border-radius: 4px; aspect-ratio: 3 / 2; object-fit: cover; }
+  .hero figcaption { font-size: var(--step--1); color: var(--ink-2); margin-top: var(--s3); }
+
+  section { padding-block: var(--s8); border-top: 1px solid var(--rule); }
+  h2 { font: 500 var(--step-3)/1.15 var(--serif); margin: 0 0 var(--s5); letter-spacing: -0.01em; }
+  h3 { font: 600 var(--step-1)/1.3 var(--sans); margin: 0 0 var(--s2); }
+  p { max-width: var(--measure); margin: 0 0 var(--s4); }
+  .lede { font-size: var(--step-1); color: var(--ink-2); }
+
+  .facts { display: grid; gap: var(--s5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); margin-top: var(--s6); padding: 0; list-style: none; }
+  .facts li { background: var(--card); border: 1px solid var(--rule); border-radius: 4px; padding: var(--s5); }
+  .facts strong { display: block; font: 500 var(--step-3)/1.1 var(--serif); color: var(--copper); margin-bottom: var(--s2); }
+  .facts span { color: var(--ink-2); }
+
+  .split { display: grid; gap: var(--s6); }
+  @media (min-width: 900px) { .split { grid-template-columns: 5fr 7fr; gap: var(--s8); } }
+  dl.spec { display: grid; grid-template-columns: max-content 1fr; gap: var(--s3) var(--s5); margin: 0; }
+  dl.spec dt { color: var(--ink-2); }
+  dl.spec dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s5); }
+  @media (min-width: 900px) { ol.steps { grid-template-columns: repeat(3, 1fr); } }
+  ol.steps li { counter-increment: s; border-top: 2px solid var(--ink); padding-top: var(--s4); }
+  ol.steps li::before { content: "0" counter(s); display: block; font: 500 var(--step--1)/1 var(--sans); letter-spacing: 0.08em; color: var(--copper); margin-bottom: var(--s3); }
+
+  blockquote { margin: 0; font: 400 var(--step-3)/1.3 var(--serif); max-width: 28ch; }
+  blockquote footer { font: var(--step--1)/1.5 var(--sans); color: var(--ink-2); margin-top: var(--s4); }
+
+  .price { font: 500 var(--step-5)/1 var(--serif); margin: 0 0 var(--s3); }
+  details { border-top: 1px solid var(--rule); padding-block: var(--s4); max-width: var(--measure); }
+  details:last-of-type { border-bottom: 1px solid var(--rule); }
+  summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+  footer.site { padding-block: var(--s6); border-top: 1px solid var(--rule); font-size: var(--step--1); color: var(--ink-2); }
+
+  /* One motion: the lit windows warm once on load. Reduced motion gets the final state. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero img { animation: warm 1.6s ease-out both; }
+    @keyframes warm { from { filter: saturate(.6) brightness(.9); } }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="/" aria-label="Kade, home">Kade</a>
+    <nav aria-label="Primary">
+      <ul><li><a href="#studio">The studio</a></li><li><a href="#how">How it works</a></li><li><a href="#price">Price</a></li></ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">Floating studios · Zaandam</p>
+        <h1>A solar studio you can moor in a city canal.</h1>
+        <p class="sub">38 m² of oak and lime plaster on a concrete hull, powered by its own roof.</p>
+        <div class="actions">
+          <a class="btn" href="#visit">Book a viewing in Amsterdam</a>
+          <a class="text-link" href="#studio">See the plans</a>
+        </div>
+      </div>
+      <figure>
+        <img src="hero.svg" width="1200" height="800" alt="A timber floating studio with a solar roof, moored on a still canal at dusk, its windows lit." fetchpriority="high">
+        <figcaption>Studio no. 3, moored at the NDSM wharf. Illustration.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <section id="studio" aria-labelledby="studio-h">
+    <div class="wrap split">
+      <div>
+        <h2 id="studio-h">One room, built to last on water</h2>
+        <p class="lede">Each studio is built by hand in our Zaandam yard over seven months: FSC larch over a concrete hull, triple glazing and a heat pump.</p>
+        <p>Inside is one open room, a kitchen wall, a wet room and a sleeping loft. The roof carries 9 kWp of solar; the battery holds about four grey days.</p>
+      </div>
+      <dl class="spec">
+        <dt>Floor area</dt><dd>38 m², plus a 9 m² loft</dd>
+        <dt>Hull</dt><dd>Concrete, 14 × 4.2 m</dd>
+        <dt>Solar roof</dt><dd>9 kWp</dd>
+        <dt>Battery</dt><dd>30 kWh LFP</dd>
+        <dt>Heating</dt><dd>Air-water heat pump</dd>
+        <dt>Build time</dt><dd>7 months</dd>
+      </dl>
+    </div>
+    <div class="wrap">
+      <ul class="facts">
+        <li><strong>Apr–Sep</strong><span>off-grid on a typical Dutch roof yield</span></li>
+        <li><strong>~4 days</strong><span>of winter cover from the battery before shore power</span></li>
+        <li><strong>7 months</strong><span>from signed plans to launch</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <h2 id="how-h">How it works</h2>
+      <ol class="steps">
+        <li><h3>Secure a mooring</h3><p>Buy or lease a mooring right. We help with the permit file; the mooring is yours, not ours.</p></li>
+        <li><h3>Fix the plan</h3><p>Choose the loft, the kitchen wall and the finish. The price is fixed when the plan is.</p></li>
+        <li><h3>Launch and tow</h3><p>We launch in Zaandam and tow the studio to your mooring, then connect shore power and water.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-label="What an owner says">
+    <div class="wrap">
+      <blockquote>“It’s like working inside a lantern on the water.”<footer>Owner of studio no. 1, Amsterdam Noord</footer></blockquote>
+    </div>
+  </section>
+
+  <section id="price" aria-labelledby="price-h">
+    <div class="wrap split">
+      <div>
+        <h2 id="price-h">Price</h2>
+        <p class="price">€248,000</p>
+        <p>Fixed once the plan is signed. Mooring, permits and the tow beyond 40 km are not included.</p>
+        <p id="visit"><a class="btn" href="mailto:viewings@kade.example">Book a viewing in Amsterdam</a></p>
+      </div>
+      <div>
+        <details><summary>Does the price include a mooring?</summary><p>No. We help with the permit application, but the mooring right is bought or leased separately from the municipality or a private owner.</p></details>
+        <details><summary>Can it run without a grid connection?</summary><p>From April to September, yes, on a typical Dutch roof yield. In winter the battery covers about four grey days; after that it draws from shore power.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site"><div class="wrap">Kade is a fictional studio made for the starlight-web-studio worked review. © Kade.</div></footer>
+</body>
+</html>
