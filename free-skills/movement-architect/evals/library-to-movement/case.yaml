@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: movement-architect--library-to-movement
+description: "Behaviour of movement-architect; outcome graded."
+tags: [movement-architect, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "I run a small open-source library for Claude Code skills (about 40 stars, a few hundred visitors a week, mostly from Google). I want to turn it into something people join, not just a repo they star. Give me the movement, the free thing, what I'd charge for and how, and how I'd know it's working. Don't make up numbers."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?movement-architect\""
+  - name: judged-0
+    type: llm
+    criteria: "The response produces a Movement Brief covering the leader/cause/label/new-opportunity core and names the old vehicle it replaces, judges market sophistication or awareness stage with evidence rather than assumption, lays out a value ladder whose free rungs are slices of the paid product, matches a lead magnet to an awareness stage with a delivery path, and defines a scoreboard of measured counts. Any unknown fact is marked open rather than invented; the response contains no fabricated statistics, revenue figures or seeded scarcity."

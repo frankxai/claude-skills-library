@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: movement-architect--diagnose-stalled-shop
+description: "Behaviour of movement-architect; outcome graded."
+tags: [movement-architect, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Our Notion template shop on Gumroad does about 30 sales a month at $19. Conversion on the sales page is around 1% and we have no email list. Someone told me to 'build a funnel'. What do we actually do first?"
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?movement-architect\""
+  - name: judged-0
+    type: llm
+    criteria: "The response checks the mechanical causes with evidence before proposing funnel work: traffic fit, page and checkout completion, delivery, and whether the offer is wanted at that price. It treats an awareness or sophistication mismatch as one hypothesis to test, not a given. It proposes a lead magnet sliced from a real template with a one-outcome promise, delivered quickly, plus a ladder from the free slice to the $19 template and upward, and it tells the user to beat their own baseline rather than quoting benchmarks as targets."
