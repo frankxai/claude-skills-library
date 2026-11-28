@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: movement-architect--write-the-manifesto
+description: "Behaviour of movement-architect; outcome graded."
+tags: [movement-architect, behaviour, generated]
+runs: 2
+execution:
+  model: claude-sonnet-5
+  prompt: "Write the manifesto for a brand whose idea is 'one founder running a fleet of AI agents'. Make it feel like something people want to be part of, not a product page."
+  max_turns: 6
+  allowed_tools: [Skill, Read]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?movement-architect\""
+  - name: judged-0
+    type: llm
+    criteria: "The response delivers the manifesto itself rather than only a plan, preceded by a short list of assumptions. It leads with identity and a future-based cause, names the old vehicle (the single chat window, the solo grind) instead of attacking people or named companies, offers an identity label a member would put in a bio, keeps proof out of the headline, and avoids stock AI vocabulary such as 'unleash', 'seamless' or '10x'. It contains no invented statistics or outcome promises."
